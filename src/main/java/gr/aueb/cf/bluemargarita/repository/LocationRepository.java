@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface LocationRepository extends JpaRepository<Location, Long>,
         JpaSpecificationExecutor<Location> {
+    boolean existsByDescription(String description);
 }

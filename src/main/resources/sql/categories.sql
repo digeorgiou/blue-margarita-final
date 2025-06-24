@@ -1,4 +1,4 @@
-INSERT INTO categories (id, description, is_active) VALUES
+INSERT INTO categories (id, name, is_active) VALUES
 (1, 'ΣΚΟΥΛΑΡΙΚΙΑ', 'true'),
 (2, 'ΚΟΛΙΕ', 'true'),
 (3, 'ΔΑΧΤΥΛΙΔΙΑ', 'true'),

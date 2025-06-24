@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface MaterialRepository extends JpaRepository<Material, Long>,
         JpaSpecificationExecutor<Material> {
+    boolean existsByDescription(String description);
 }

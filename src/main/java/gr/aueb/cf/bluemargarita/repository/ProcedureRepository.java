@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface ProcedureRepository extends JpaRepository<Procedure, Long>,
         JpaSpecificationExecutor<Procedure> {
+    boolean existsByDescription(String description);
 }

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -29,10 +30,15 @@ public abstract class AbstractEntity {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    @ManyToOne
+    @CreatedBy
+    @JoinColumn(name = "created_by_id", updatable = false)
+    private User createdBy;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @LastModifiedBy
-    @JoinColumn(name = "last_updater_id")
-    private User lastUpdater;
+    @JoinColumn(name = "last_updated_by")
+    private User lastUpdatedBy;
 
     @Column(unique = true, updatable = false, nullable = false, length = 36)
     private String uuid;

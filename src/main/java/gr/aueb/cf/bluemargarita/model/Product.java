@@ -44,6 +44,12 @@ public class Product extends AbstractEntity {
     @Column(name = "minutes_to_make")
     private Integer minutesToMake;
 
+    @Column(name = "stock")
+    private Integer stock;
+
+    @Column(name = "low_stock_alert")
+    private Integer lowStockAlert;
+
     @ColumnDefault("true")
     @Column(name = "is_active")
     private Boolean isActive= true;

@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface SupplierRepository extends JpaRepository<Supplier, Long>,
         JpaSpecificationExecutor<Supplier> {
+    boolean existsByTin(String tin);
+    boolean existsByEmail(String email);
 }
