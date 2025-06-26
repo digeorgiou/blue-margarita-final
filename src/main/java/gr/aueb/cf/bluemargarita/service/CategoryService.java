@@ -10,6 +10,9 @@ import gr.aueb.cf.bluemargarita.model.Category;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.CategoryRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryService implements ICategoryService{
@@ -122,5 +127,31 @@ public class CategoryService implements ICategoryService{
         return mapper.mapToCategoryReadOnlyDTO(category);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryReadOnlyDTO> getAllCategories() {
+
+        List<Category> categories = categoryRepository.findAll();
+
+        return categories.stream()
+                .map(mapper::mapToCategoryReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CategoryReadOnlyDTO> getAllCategoriesPaginated(int page,
+                                                             int size){
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Category> categoryPage = categoryRepository.findAll(pageable);
+        return categoryPage.map(mapper::mapToCategoryReadOnlyDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean nameExists(String name) {
+        return categoryRepository.existsByName(name);
+    }
 
 }

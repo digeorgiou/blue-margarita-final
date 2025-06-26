@@ -35,8 +35,11 @@ public class Product extends AbstractEntity {
     @Column(unique = true, nullable = false)
     private String code;
 
-    @Column(name = "suggested_selling_price", precision = 10, scale = 2)
-    private BigDecimal suggestedSellingPrice;
+    @Column(name = "suggested_retail_selling_price", precision = 10, scale = 2)
+    private BigDecimal suggestedRetailSellingPrice;
+
+    @Column(name = "suggested_wholesale_selling_price")
+    private BigDecimal suggestedWholeSaleSellingPrice;
 
     @Column(name = "final_selling_price", precision = 10, scale = 2)
     private BigDecimal finalSellingPrice;

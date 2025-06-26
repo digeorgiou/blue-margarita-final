@@ -10,6 +10,9 @@ import gr.aueb.cf.bluemargarita.model.Location;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.LocationRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +42,9 @@ public class LocationService implements ILocationService {
     @Transactional(rollbackFor = Exception.class)
     public LocationReadOnlyDTO createLocation(LocationInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        if (locationRepository.existsByDescription(dto.description())) {
-            throw new EntityAlreadyExistsException("Location", "Location with description " + dto.description() + " already exists");
+        if (locationRepository.existsByName(dto.name())) {
+            throw new EntityAlreadyExistsException("Location", "Location with" +
+                    " description " + dto.name() + " already exists");
         }
 
         Location location = mapper.mapLocationInsertToModel(dto);
@@ -65,8 +69,9 @@ public class LocationService implements ILocationService {
         Location existingLocation = locationRepository.findById(dto.locationId())
                 .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + dto.locationId() + " was not found"));
 
-        if (!existingLocation.getDescription().equals(dto.description()) && locationRepository.existsByDescription(dto.description())) {
-            throw new EntityAlreadyExistsException("Location", "Location with description " + dto.description() + " already exists");
+        if (!existingLocation.getName().equals(dto.name()) && locationRepository.existsByName(dto.name())) {
+            throw new EntityAlreadyExistsException("Location", "Location with" +
+                    " description " + dto.name() + " already exists");
         }
 
         User updater = userRepository.findById(dto.updaterUserId())
@@ -77,7 +82,8 @@ public class LocationService implements ILocationService {
 
         Location savedLocation = locationRepository.save(updatedLocation);
 
-        LOGGER.info("Location {} updated by user {}", savedLocation.getDescription(), updater.getUsername());
+        LOGGER.info("Location {} updated by user {}", savedLocation.getName(),
+                updater.getUsername());
 
         return mapper.mapToLocationReadOnlyDTO(savedLocation);
     }
@@ -95,11 +101,13 @@ public class LocationService implements ILocationService {
             location.setDeletedAt(LocalDateTime.now());
             locationRepository.save(location);
 
-            LOGGER.info("Location {} soft deleted. Used in {} sales", location.getDescription(), location.getAllSales().size());
+            LOGGER.info("Location {} soft deleted. Used in {} sales",
+                    location.getName(), location.getAllSales().size());
         } else {
             // Hard delete if location not used anywhere
             locationRepository.delete(location);
-            LOGGER.info("Location {} hard deleted (not used in any sales)", location.getDescription());
+            LOGGER.info("Location {} hard deleted (not used in any sales)",
+                    location.getName());
         }
     }
 
@@ -113,12 +121,29 @@ public class LocationService implements ILocationService {
         return mapper.mapToLocationReadOnlyDTO(location);
     }
 
-    public List<LocationReadOnlyDTO> getAllLocations(){
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocationReadOnlyDTO> getAllLocations() {
 
         List<Location> locations = locationRepository.findAll();
 
         return locations.stream()
                 .map(mapper::mapToLocationReadOnlyDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LocationReadOnlyDTO> getAllLocationsPaginated(int page,
+                                                              int size){
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Location> locationPage = locationRepository.findAll(pageable);
+        return locationPage.map(mapper::mapToLocationReadOnlyDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean nameExists(String name){
+        return locationRepository.existsByName(name);
     }
 }

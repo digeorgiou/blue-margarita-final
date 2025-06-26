@@ -151,20 +151,20 @@ public class Mapper {
 
     public Location mapLocationInsertToModel(LocationInsertDTO dto){
         return Location.builder()
-                .description(dto.description())
+                .name(dto.name())
                 .isActive(true)
                 .build();
     }
 
     public Location mapLocationUpdateToModel(LocationUpdateDTO dto, Location existingLocation){
-        existingLocation.setDescription(dto.description());
+        existingLocation.setName(dto.name());
         return existingLocation;
     }
 
     public LocationReadOnlyDTO mapToLocationReadOnlyDTO(Location location){
         return new LocationReadOnlyDTO(
                 location.getId(),
-                location.getDescription(),
+                location.getName(),
                 location.getCreatedAt(),
                 location.getUpdatedAt(),
                 location.getCreatedBy().getUsername(),

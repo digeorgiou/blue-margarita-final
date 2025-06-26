@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 public record LocationInsertDTO(
         @NotEmpty(message = "Παρακαλώ εισάγετε περιγραφή τοποθεσίας")
         @Size(min = 2, max = 255, message = "Η περιγραφή πρέπει να έχει 2 ως 255 χαρακτήρες")
-        String description,
+        String name,
         Long creatorUserId
 )
 {}

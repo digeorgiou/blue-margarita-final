@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record LocationReadOnlyDTO(
         Long locationId,
-        String description,
+        String name,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         String createdBy,
