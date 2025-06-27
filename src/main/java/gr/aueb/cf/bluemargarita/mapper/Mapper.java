@@ -211,20 +211,20 @@ public class Mapper {
 
     public Procedure mapProcedureInsertToModel(ProcedureInsertDTO dto){
         return Procedure.builder()
-                .description(dto.description())
+                .name(dto.name())
                 .isActive(true)
                 .build();
     }
 
     public Procedure mapProcedureUpdateToModel(ProcedureUpdateDTO dto, Procedure existingProcedure){
-        existingProcedure.setDescription(dto.description());
+        existingProcedure.setName(dto.name());
         return existingProcedure;
     }
 
     public ProcedureReadOnlyDTO mapToProcedureReadOnlyDTO(Procedure procedure){
         return new ProcedureReadOnlyDTO(
                 procedure.getId(),
-                procedure.getDescription(),
+                procedure.getName(),
                 procedure.getCreatedAt(),
                 procedure.getUpdatedAt(),
                 procedure.getCreatedBy().getUsername(),

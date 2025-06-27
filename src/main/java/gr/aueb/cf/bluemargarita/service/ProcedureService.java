@@ -38,7 +38,7 @@ public class ProcedureService implements IProcedureService {
     @Transactional(rollbackFor = Exception.class)
     public ProcedureReadOnlyDTO createProcedure(ProcedureInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        if (procedureRepository.existsByDescription(dto.description())) {
+        if (procedureRepository.existsByName(dto.name())) {
             throw new EntityAlreadyExistsException("Procedure", "Procedure with description " + dto.description() + " already exists");
         }
 
@@ -64,8 +64,8 @@ public class ProcedureService implements IProcedureService {
         Procedure existingProcedure = procedureRepository.findById(dto.procedureId())
                 .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + dto.procedureId() + " was not found"));
 
-        if (!existingProcedure.getDescription().equals(dto.description()) && procedureRepository.existsByDescription(dto.description())) {
-            throw new EntityAlreadyExistsException("Procedure", "Procedure with description " + dto.description() + " already exists");
+        if (!existingProcedure.getName().equals(dto.name()) && procedureRepository.existsByName(dto.name())) {
+            throw new EntityAlreadyExistsException("Procedure", "Procedure with description " + dto.name() + " already exists");
         }
 
         User updater = userRepository.findById(dto.updaterUserId())
@@ -76,7 +76,7 @@ public class ProcedureService implements IProcedureService {
 
         Procedure savedProcedure = procedureRepository.save(updatedProcedure);
 
-        LOGGER.info("Procedure {} updated by user {}", savedProcedure.getDescription(), updater.getUsername());
+        LOGGER.info("Procedure {} updated by user {}", savedProcedure.getName(), updater.getUsername());
 
         return mapper.mapToProcedureReadOnlyDTO(savedProcedure);
     }
@@ -94,11 +94,11 @@ public class ProcedureService implements IProcedureService {
             procedure.setDeletedAt(LocalDateTime.now());
             procedureRepository.save(procedure);
 
-            LOGGER.info("Procedure {} soft deleted. Used in {} products", procedure.getDescription(), procedure.getAllProcedureProducts().size());
+            LOGGER.info("Procedure {} soft deleted. Used in {} products", procedure.getName(), procedure.getAllProcedureProducts().size());
         } else {
             // Hard delete if procedure not used anywhere
             procedureRepository.delete(procedure);
-            LOGGER.info("Procedure {} hard deleted (not used in any products)", procedure.getDescription());
+            LOGGER.info("Procedure {} hard deleted (not used in any products)", procedure.getName());
         }
     }
 

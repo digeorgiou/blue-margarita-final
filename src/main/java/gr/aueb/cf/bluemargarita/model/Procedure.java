@@ -30,7 +30,7 @@ public class Procedure extends AbstractEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String description;
+    private String name;
 
     @ColumnDefault("true")
     @Column(name = "is_active")
