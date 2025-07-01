@@ -16,10 +16,6 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE locations SET is_active = false WHERE id = ?")
-@FilterDef(name = "activeLocationsFilter", parameters = @ParamDef(name =
-        "isActive", type = Boolean.class))
-@Filter(name = "activeLocationsFilter", condition = "is_active = :isActive")
 @Table(name = "locations")
 public class Location extends AbstractEntity {
 

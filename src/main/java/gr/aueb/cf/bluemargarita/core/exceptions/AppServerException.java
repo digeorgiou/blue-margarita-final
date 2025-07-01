@@ -1,8 +1,13 @@
 package gr.aueb.cf.bluemargarita.core.exceptions;
 
-public class AppServerException extends EntityGenericException {
+import lombok.Getter;
+
+@Getter
+public class AppServerException extends Exception {
+    private final String code;
 
     public AppServerException(String code, String message) {
-        super(code, message);
+        super(message);
+        this.code = code;
     }
 }

@@ -18,10 +18,6 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE procedures SET is_active = false WHERE id = ?")
-@FilterDef(name = "activeProceduresFilter", parameters = @ParamDef(name =
-        "isActive", type = Boolean.class))
-@Filter(name = "activeProceduresFilter", condition = "is_active = :isActive")
 @Table(name = "procedures")
 public class Procedure extends AbstractEntity {
 

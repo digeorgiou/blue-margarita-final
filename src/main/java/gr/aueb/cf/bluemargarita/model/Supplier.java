@@ -16,10 +16,6 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE suppliers SET is_active = false WHERE id = ?")
-@FilterDef(name = "activeSuppliersFilter", parameters = @ParamDef(name =
-        "isActive", type = Boolean.class))
-@Filter(name = "activeSuppliersFilter", condition = "is_active = :isActive")
 @Table(name = "suppliers")
 public class Supplier extends AbstractEntity {
 

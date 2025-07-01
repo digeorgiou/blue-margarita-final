@@ -17,10 +17,6 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 @Table(name = "categories")
-@SQLDelete(sql = "UPDATE categories SET is_active = false WHERE id = ?")
-@FilterDef(name = "activeCategoriesFilter", parameters = @ParamDef(name =
-        "isActive", type = Boolean.class))
-@Filter(name = "activeCategoriesFilter", condition = "is_active = :isActive")
 public class Category extends AbstractEntity {
 
     @Id

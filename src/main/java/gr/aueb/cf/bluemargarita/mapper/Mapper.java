@@ -99,8 +99,8 @@ public class Mapper {
                 customer.getTin(),
                 customer.getCreatedAt(),
                 customer.getUpdatedAt(),
-                customer.getCreatedBy().getUsername(),
-                customer.getLastUpdatedBy().getUsername(),
+                customer.getCreatedBy() != null ? customer.getCreatedBy().getUsername() : "system",
+                customer.getLastUpdatedBy() != null ? customer.getLastUpdatedBy().getUsername() : "system",
                 customer.getIsActive(),
                 customer.getDeletedAt()
         );
@@ -275,9 +275,12 @@ public class Mapper {
 
     //User
 
+//User
+
     public User mapUserInsertToModel(UserInsertDTO dto){
         return User.builder()
                 .username(dto.username())
+                .password(dto.password())
                 .role(Role.USER)
                 .isActive(true)
                 .build();
@@ -285,6 +288,7 @@ public class Mapper {
 
     public User mapUserUpdateToModel(UserUpdateDTO dto, User existingUser){
         existingUser.setUsername(dto.username());
+        // Add other fields if needed for updates
         return existingUser;
     }
 
@@ -297,8 +301,8 @@ public class Mapper {
                 user.getDeletedAt(),
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
-                user.getCreatedBy().getUsername(),
-                user.getLastUpdatedBy().getUsername()
+                user.getCreatedBy() == null ? "system" : user.getCreatedBy().getUsername(),
+                user.getLastUpdatedBy() == null ? "system" : user.getLastUpdatedBy().getUsername()
         );
     }
 

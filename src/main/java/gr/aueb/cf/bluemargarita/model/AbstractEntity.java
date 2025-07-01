@@ -32,12 +32,12 @@ public abstract class AbstractEntity {
 
     @ManyToOne
     @CreatedBy
-    @JoinColumn(name = "created_by_id", updatable = false)
+    @JoinColumn(name = "created_by_id", updatable = false, nullable = true)
     private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @LastModifiedBy
-    @JoinColumn(name = "last_updated_by")
+    @JoinColumn(name = "last_updated_by", nullable = true)
     private User lastUpdatedBy;
 
     @Column(unique = true, updatable = false, nullable = false, length = 36)

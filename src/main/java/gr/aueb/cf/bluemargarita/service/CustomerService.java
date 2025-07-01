@@ -3,6 +3,9 @@ package gr.aueb.cf.bluemargarita.service;
 import gr.aueb.cf.bluemargarita.core.enums.GenderType;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.CustomerFilters;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.specifications.CustomerSpecification;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerUpdateDTO;
@@ -13,7 +16,10 @@ import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.CustomerRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerService implements ICustomerService {
@@ -124,52 +132,55 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public Page<CustomerReadOnlyDTO> searchCustomers(String searchTerm, Pageable pageable) {
-        return null;
+    @Transactional(readOnly = true)
+    public Page<CustomerReadOnlyDTO> getPaginatedCustomers(int page, int size){
+
+        String defaultSort = "id";
+
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(defaultSort).ascending());
+
+        return customerRepository.findAll(pageable).map(mapper::mapToCustomerReadOnlyDTO);
+
     }
 
     @Override
-    public Page<CustomerReadOnlyDTO> getCustomersByGender(GenderType gender, Pageable pageable) {
-        return null;
+    @Transactional(readOnly = true)
+    public Page<CustomerReadOnlyDTO> getPaginatedSortedCustomers(int page,
+                                                                 int size,
+                                                                 String sortBy, String sortDirection){
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return customerRepository.findAll(pageable).map(mapper::mapToCustomerReadOnlyDTO);
+
     }
 
-    @Override
-    public Page<CustomerReadOnlyDTO> getCustomersByActiveStatus(Boolean isActive, Pageable pageable) {
-        return null;
+    public List<CustomerReadOnlyDTO> getFilteredCustomers(CustomerFilters filters){
+        return customerRepository.findAll(getSpecsFromFilters(filters)).stream()
+                .map(mapper::mapToCustomerReadOnlyDTO).collect(Collectors.toList());
     }
 
-    @Override
-    public Page<CustomerReadOnlyDTO> searchAndFilterCustomers(String searchTerm, GenderType gender, Boolean isActive, Pageable pageable) {
-        return null;
+    public Paginated<CustomerReadOnlyDTO> getCustomersFilteredPaginated(CustomerFilters filters){
+
+        var filtered =
+                customerRepository.findAll(getSpecsFromFilters(filters),
+                        filters.getPageable());
+
+        return new Paginated<>(filtered.map(mapper::mapToCustomerReadOnlyDTO));
     }
 
-    @Override
-    public Long getTotalCustomerCount() {
-        return 0;
-    }
-
-    @Override
-    public Long getActiveCustomerCount() {
-        return 0;
-    }
-
-    @Override
-    public Long getNewCustomersThisMonth() {
-        return 0;
-    }
-
-    @Override
-    public Long getCustomersWithOrdersCount() {
-        return 0;
-    }
-
-    @Override
-    public CustomerWithSalesDTO getCustomerWithSales(Long customerId) {
-        return null;
-    }
-
-    @Override
-    public Page<CustomerWithSalesDTO> getCustomersWithSalesStats(Pageable pageable) {
-        return null;
+    private Specification<Customer> getSpecsFromFilters(CustomerFilters filters) {
+        return Specification
+                .where(CustomerSpecification.customerStringFieldLike("email",
+                        filters.getEmail()))
+                .and(CustomerSpecification.customerStringFieldLike("lastname"
+                        ,filters.getLastname()))
+                .and(CustomerSpecification.customerStringFieldLike("tin",
+                        filters.getTin()))
+                .and(CustomerSpecification.customerStringFieldLike(
+                        "phone_number", filters.getPhoneNumber()))
+                .and(CustomerSpecification.customerIsActive(filters.getIsActive()));
     }
 }

@@ -20,9 +20,6 @@ import java.util.List;
 @Builder
 @Setter
 @Table(name = "users")
-@SQLDelete(sql = "UPDATE users SET is_active = false WHERE id = ?")
-@FilterDef(name = "activeUserFilter", parameters = @ParamDef(name = "isActive", type = Boolean.class))
-@Filter(name = "activeUserFilter", condition = "is_active = :isActive")
 public class User extends AbstractEntity implements UserDetails {
 
     @Id
