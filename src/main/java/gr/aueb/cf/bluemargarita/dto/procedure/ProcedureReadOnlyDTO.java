@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record ProcedureReadOnlyDTO(
         Long procedureId,
-        String description,
+        String name,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         String createdBy,
