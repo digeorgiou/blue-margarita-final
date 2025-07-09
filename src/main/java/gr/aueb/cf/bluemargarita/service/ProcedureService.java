@@ -2,6 +2,9 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
+import gr.aueb.cf.bluemargarita.core.specifications.ProcedureSpecification;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureUpdateDTO;
@@ -11,6 +14,7 @@ import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.ProcedureRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import gr.aueb.cf.bluemargarita.service.IProcedureService;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProcedureService implements IProcedureService {
@@ -39,7 +45,7 @@ public class ProcedureService implements IProcedureService {
     public ProcedureReadOnlyDTO createProcedure(ProcedureInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
         if (procedureRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Procedure", "Procedure with description " + dto.description() + " already exists");
+            throw new EntityAlreadyExistsException("Procedure", "Procedure with name " + dto.name() + " already exists");
         }
 
         Procedure procedure = mapper.mapProcedureInsertToModel(dto);
@@ -65,7 +71,7 @@ public class ProcedureService implements IProcedureService {
                 .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + dto.procedureId() + " was not found"));
 
         if (!existingProcedure.getName().equals(dto.name()) && procedureRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Procedure", "Procedure with description " + dto.name() + " already exists");
+            throw new EntityAlreadyExistsException("Procedure", "Procedure with name " + dto.name() + " already exists");
         }
 
         User updater = userRepository.findById(dto.updaterUserId())
@@ -110,5 +116,30 @@ public class ProcedureService implements IProcedureService {
                 .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + id + " was not found"));
 
         return mapper.mapToProcedureReadOnlyDTO(procedure);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProcedureReadOnlyDTO> getFilteredProcedures(ProcedureFilters filters) {
+        return procedureRepository.findAll(getSpecsFromFilters(filters))
+                .stream()
+                .map(mapper::mapToProcedureReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<ProcedureReadOnlyDTO> getProceduresFilteredPaginated(ProcedureFilters filters) {
+        var filtered = procedureRepository.findAll(
+                getSpecsFromFilters(filters),
+                filters.getPageable()
+        );
+        return new Paginated<>(filtered.map(mapper::mapToProcedureReadOnlyDTO));
+    }
+
+    private Specification<Procedure> getSpecsFromFilters(ProcedureFilters filters) {
+        return Specification
+                .where(ProcedureSpecification.procedureNameLike(filters.getName()))
+                .and(ProcedureSpecification.procedureIsActive(filters.getIsActive()));
     }
 }

@@ -12,7 +12,7 @@ public record MaterialUpdateDTO(
 
         @NotEmpty(message = "Παρακαλώ εισάγετε περιγραφή")
         @Size(min = 2, max = 255, message = "Η περιγραφή πρέπει να έχει 2 ως 255 χαρακτήρες")
-        String description,
+        String name,
 
         @Positive(message = "Το κόστος μονάδας πρέπει να είναι θετικό")
         BigDecimal currentUnitCost,

@@ -2,6 +2,9 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.specifications.CategorySpecification;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
@@ -13,6 +16,7 @@ import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,18 +144,24 @@ public class CategoryService implements ICategoryService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CategoryReadOnlyDTO> getAllCategoriesPaginated(int page,
-                                                             int size){
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Category> categoryPage = categoryRepository.findAll(pageable);
-        return categoryPage.map(mapper::mapToCategoryReadOnlyDTO);
+    public boolean nameExists(String name) {
+        return categoryRepository.existsByName(name);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean nameExists(String name) {
-        return categoryRepository.existsByName(name);
+    public Paginated<CategoryReadOnlyDTO> getCategoriesFilteredPaginated(CategoryFilters filters) {
+        var filtered = categoryRepository.findAll(
+                getSpecsFromFilters(filters),
+                filters.getPageable()
+        );
+        return new Paginated<>(filtered.map(mapper::mapToCategoryReadOnlyDTO));
+    }
+
+    private Specification<Category> getSpecsFromFilters(CategoryFilters filters) {
+        return Specification
+                .where(CategorySpecification.categoryNameLike(filters.getName()))
+                .and(CategorySpecification.categoryIsActive(filters.getIsActive()));
     }
 
 }

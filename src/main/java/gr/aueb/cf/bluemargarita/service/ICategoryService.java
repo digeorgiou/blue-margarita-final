@@ -2,6 +2,8 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
@@ -15,8 +17,7 @@ public interface ICategoryService {
     void deleteCategory(Long id) throws EntityNotFoundException;
     CategoryReadOnlyDTO getCategoryById(Long id) throws EntityNotFoundException;
     List<CategoryReadOnlyDTO> getAllCategories();
-    Page<CategoryReadOnlyDTO> getAllCategoriesPaginated(int page,
-                                                        int size);
+    Paginated<CategoryReadOnlyDTO> getCategoriesFilteredPaginated(CategoryFilters filters);
     boolean nameExists(String name);
 
 }

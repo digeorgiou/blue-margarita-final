@@ -2,6 +2,9 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.specifications.LocationSpecification;
 import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
@@ -13,6 +16,7 @@ import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,4 +150,31 @@ public class LocationService implements ILocationService {
     public boolean nameExists(String name){
         return locationRepository.existsByName(name);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocationReadOnlyDTO> getFilteredLocations(LocationFilters filters) {
+        return locationRepository.findAll(getSpecsFromFilters(filters))
+                .stream()
+                .map(mapper::mapToLocationReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<LocationReadOnlyDTO> getLocationsFilteredPaginated(LocationFilters filters) {
+        var filtered = locationRepository.findAll(
+                getSpecsFromFilters(filters),
+                filters.getPageable()
+        );
+        return new Paginated<>(filtered.map(mapper::mapToLocationReadOnlyDTO));
+    }
+
+    private Specification<Location> getSpecsFromFilters(LocationFilters filters) {
+        return Specification
+                .where(LocationSpecification.locationNameLike(filters.getName()))
+                .and(LocationSpecification.locationIsActive(filters.getIsActive()));
+    }
+
+
 }

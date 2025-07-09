@@ -61,8 +61,9 @@ public class Sale extends AbstractEntity {
         SaleProduct saleProduct = new SaleProduct();
         saleProduct.setQuantity(quantity);
         saleProduct.setSale(this);
-        saleProduct.setProductDescriptionSnapshot(product.getDescription());
-        saleProduct.setPriceAtTheTime(product.getFinalSellingPrice());
+        saleProduct.setProductDescriptionSnapshot(product.getName());
+        saleProduct.setPriceAtTheTime(product.getFinalSellingPriceRetail());
+        saleProduct.setWholesalePriceAtTheTime(product.getFinalSellingPriceWholesale());
         product.addSaleProduct(saleProduct);
         saleProducts.add(saleProduct);
     }

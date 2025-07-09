@@ -2,6 +2,9 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.SupplierFilters;
+import gr.aueb.cf.bluemargarita.core.specifications.SupplierSpecification;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierUpdateDTO;
@@ -10,6 +13,7 @@ import gr.aueb.cf.bluemargarita.model.Supplier;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.SupplierRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SupplierService implements ISupplierService {
@@ -118,4 +124,34 @@ public class SupplierService implements ISupplierService {
 
         return mapper.mapToSupplierReadOnlyDTO(supplier);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SupplierReadOnlyDTO> getFilteredSuppliers(SupplierFilters filters) {
+        return supplierRepository.findAll(getSpecsFromFilters(filters))
+                .stream()
+                .map(mapper::mapToSupplierReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<SupplierReadOnlyDTO> getSuppliersFilteredPaginated(SupplierFilters filters) {
+        var filtered = supplierRepository.findAll(
+                getSpecsFromFilters(filters),
+                filters.getPageable()
+        );
+        return new Paginated<>(filtered.map(mapper::mapToSupplierReadOnlyDTO));
+    }
+
+    private Specification<Supplier> getSpecsFromFilters(SupplierFilters filters) {
+        return Specification
+                .where(SupplierSpecification.supplierNameLike(filters.getName()))
+                .and(SupplierSpecification.supplierEmailLike(filters.getEmail()))
+                .and(SupplierSpecification.supplierTinLike(filters.getTin()))
+                .and(SupplierSpecification.supplierPhoneNumberLike(filters.getPhoneNumber()))
+                .and(SupplierSpecification.supplierAddressLike(filters.getAddress()))
+                .and(SupplierSpecification.supplierIsActive(filters.getIsActive()));
+    }
+
 }

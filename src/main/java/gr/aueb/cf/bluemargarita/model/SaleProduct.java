@@ -39,4 +39,7 @@ public class SaleProduct {
     @Column(name = "price_at_the_time", precision = 10, scale = 2)
     private BigDecimal priceAtTheTime;
 
+    @Column(name = "wholesale_price_at_the_time", precision = 10, scale = 2)
+    private BigDecimal wholesalePriceAtTheTime;
+
 }

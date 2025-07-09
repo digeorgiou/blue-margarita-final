@@ -26,7 +26,7 @@ public class Product extends AbstractEntity {
     private Long id;
 
     @Column(nullable = false)
-    private String description;
+    private String name;
 
     @Column(unique = true, nullable = false)
     private String code;
@@ -37,8 +37,11 @@ public class Product extends AbstractEntity {
     @Column(name = "suggested_wholesale_selling_price")
     private BigDecimal suggestedWholeSaleSellingPrice;
 
-    @Column(name = "final_selling_price", precision = 10, scale = 2)
-    private BigDecimal finalSellingPrice;
+    @Column(name = "final_selling_price_retail", precision = 10, scale = 2)
+    private BigDecimal finalSellingPriceRetail;
+
+    @Column(name = "final_selling_price_wholesale", precision = 10, scale = 2)
+    private BigDecimal finalSellingPriceWholesale;
 
     @Column(name = "minutes_to_make")
     private Integer minutesToMake;

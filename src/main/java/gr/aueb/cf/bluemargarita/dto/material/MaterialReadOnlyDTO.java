@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public record MaterialReadOnlyDTO(
         Long materialId,
-        String description,
+        String name,
         BigDecimal currentUnitCost,
         String unitOfMeasure,
         LocalDateTime createdAt,

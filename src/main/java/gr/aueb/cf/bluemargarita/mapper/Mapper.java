@@ -17,6 +17,7 @@ import gr.aueb.cf.bluemargarita.dto.material.MaterialUpdateDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.product.*;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierUpdateDTO;
@@ -27,7 +28,11 @@ import gr.aueb.cf.bluemargarita.model.*;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 public class Mapper {
@@ -178,7 +183,7 @@ public class Mapper {
 
     public Material mapMaterialInsertToModel(MaterialInsertDTO dto){
         return Material.builder()
-                .description(dto.description())
+                .name(dto.name())
                 .currentUnitCost(dto.currentUnitCost())
                 .unitOfMeasure(dto.unitOfMeasure())
                 .isActive(true)
@@ -186,7 +191,7 @@ public class Mapper {
     }
 
     public Material mapMaterialUpdateToModel(MaterialUpdateDTO dto, Material existingMaterial){
-        existingMaterial.setDescription(dto.description());
+        existingMaterial.setName(dto.name());
         existingMaterial.setCurrentUnitCost(dto.currentUnitCost());
         existingMaterial.setUnitOfMeasure(dto.unitOfMeasure());
         return existingMaterial;
@@ -195,7 +200,7 @@ public class Mapper {
     public MaterialReadOnlyDTO mapToMaterialReadOnlyDTO(Material material){
         return new MaterialReadOnlyDTO(
                 material.getId(),
-                material.getDescription(),
+                material.getName(),
                 material.getCurrentUnitCost(),
                 material.getUnitOfMeasure(),
                 material.getCreatedAt(),
@@ -231,6 +236,56 @@ public class Mapper {
                 procedure.getLastUpdatedBy().getUsername(),
                 procedure.getIsActive(),
                 procedure.getDeletedAt()
+        );
+    }
+
+    //Product
+
+    public Product mapProductInsertToModel(ProductInsertDTO dto) {
+        return Product.builder()
+                .name(dto.name())
+                .code(dto.code())
+                .finalSellingPriceRetail(dto.finalSellingPriceRetail())
+                .finalSellingPriceWholesale(dto.finalSellingPriceWholesale())
+                .minutesToMake(dto.minutesToMake())
+                .stock(dto.stock())
+                .lowStockAlert(dto.lowStockAlert())
+                .isActive(true)
+                .build();
+    }
+
+    public Product mapProductUpdateToModel(ProductUpdateDTO dto, Product existingProduct) {
+        existingProduct.setName(dto.name());
+        existingProduct.setCode(dto.code());
+        existingProduct.setFinalSellingPriceRetail(dto.finalSellingPriceRetail());
+        existingProduct.setFinalSellingPriceWholesale(dto.finalSellingPriceWholesale());
+        existingProduct.setMinutesToMake(dto.minutesToMake());
+        existingProduct.setStock(dto.stock());
+        existingProduct.setLowStockAlert(dto.lowStockAlert());
+        return existingProduct;
+    }
+
+
+    public ProductReadOnlyDTO mapToProductReadOnlyDTO(Product product) {
+        return new ProductReadOnlyDTO(
+                product.getId(),
+                product.getName(),
+                product.getCode(),
+                product.getCategory() != null ? product.getCategory().getName() : null,
+                product.getCategory() != null ? product.getCategory().getId() : null,
+                product.getSuggestedRetailSellingPrice(),
+                product.getSuggestedWholeSaleSellingPrice(),
+                product.getFinalSellingPriceRetail(),
+                product.getFinalSellingPriceWholesale(),
+                product.getMinutesToMake(),
+                product.getStock(),
+                product.getLowStockAlert(),
+                product.getIsActive(),
+                product.getCreatedAt(),
+                product.getUpdatedAt(),
+                product.getCreatedBy() != null ? product.getCreatedBy().getUsername() : "system",
+                product.getLastUpdatedBy() != null ? product.getLastUpdatedBy().getUsername() : "system",
+                product.getDeletedAt()
         );
     }
 

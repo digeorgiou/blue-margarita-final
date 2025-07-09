@@ -69,7 +69,7 @@ public class Purchase extends AbstractEntity {
 
         PurchaseMaterial purchaseMaterial = new PurchaseMaterial();
         purchaseMaterial.setQuantity(quantity);
-        purchaseMaterial.setMaterialDescriptionSnapshot(material.getDescription());
+        purchaseMaterial.setMaterialDescriptionSnapshot(material.getName());
         purchaseMaterial.setPriceAtTheTime(material.getCurrentUnitCost());
         purchaseMaterial.setPurchase(this);
         material.addPurchaseMaterial(purchaseMaterial);

@@ -2,6 +2,8 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
@@ -19,4 +21,6 @@ public interface ILocationService {
     Page<LocationReadOnlyDTO> getAllLocationsPaginated(int page,
                                                        int size);
     boolean nameExists(String name);
+    List<LocationReadOnlyDTO> getFilteredLocations(LocationFilters filters);
+    Paginated<LocationReadOnlyDTO> getLocationsFilteredPaginated(LocationFilters filters);
 }

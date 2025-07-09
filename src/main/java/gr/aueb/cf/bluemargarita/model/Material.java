@@ -25,7 +25,7 @@ public class Material extends AbstractEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String description;
+    private String name;
 
     @Column(name = "current_unit_cost", precision = 10, scale = 2)
     private BigDecimal currentUnitCost;

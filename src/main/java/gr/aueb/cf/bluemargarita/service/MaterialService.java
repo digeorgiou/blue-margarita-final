@@ -2,6 +2,9 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.specifications.MaterialSpecification;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialUpdateDTO;
@@ -10,6 +13,7 @@ import gr.aueb.cf.bluemargarita.model.Material;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.MaterialRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MaterialService implements IMaterialService {
@@ -37,8 +43,8 @@ public class MaterialService implements IMaterialService {
     @Transactional(rollbackFor = Exception.class)
     public MaterialReadOnlyDTO createMaterial(MaterialInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        if (materialRepository.existsByDescription(dto.description())) {
-            throw new EntityAlreadyExistsException("Material", "Material with description " + dto.description() + " already exists");
+        if (materialRepository.existsByDescription(dto.name())) {
+            throw new EntityAlreadyExistsException("Material", "Material with description " + dto.name() + " already exists");
         }
 
         Material material = mapper.mapMaterialInsertToModel(dto);
@@ -63,8 +69,8 @@ public class MaterialService implements IMaterialService {
         Material existingMaterial = materialRepository.findById(dto.materialId())
                 .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + dto.materialId() + " was not found"));
 
-        if (!existingMaterial.getDescription().equals(dto.description()) && materialRepository.existsByDescription(dto.description())) {
-            throw new EntityAlreadyExistsException("Material", "Material with description " + dto.description() + " already exists");
+        if (!existingMaterial.getName().equals(dto.name()) && materialRepository.existsByDescription(dto.name())) {
+            throw new EntityAlreadyExistsException("Material", "Material with description " + dto.name() + " already exists");
         }
 
         User updater = userRepository.findById(dto.updaterUserId())
@@ -75,7 +81,7 @@ public class MaterialService implements IMaterialService {
 
         Material savedMaterial = materialRepository.save(updatedMaterial);
 
-        LOGGER.info("Material {} updated by user {}", savedMaterial.getDescription(), updater.getUsername());
+        LOGGER.info("Material {} updated by user {}", savedMaterial.getName(), updater.getUsername());
 
         return mapper.mapToMaterialReadOnlyDTO(savedMaterial);
     }
@@ -94,13 +100,13 @@ public class MaterialService implements IMaterialService {
             materialRepository.save(material);
 
             LOGGER.info("Material {} soft deleted. Used in {} purchases and {} products",
-                    material.getDescription(),
+                    material.getName(),
                     material.getAllPurchaseMaterials().size(),
                     material.getAllProductMaterials().size());
         } else {
             // Hard delete if material not used anywhere
             materialRepository.delete(material);
-            LOGGER.info("Material {} hard deleted (not used in any purchases or products)", material.getDescription());
+            LOGGER.info("Material {} hard deleted (not used in any purchases or products)", material.getName());
         }
     }
 
@@ -113,5 +119,31 @@ public class MaterialService implements IMaterialService {
 
         return mapper.mapToMaterialReadOnlyDTO(material);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MaterialReadOnlyDTO> getFilteredMaterials(MaterialFilters filters) {
+        return materialRepository.findAll(getSpecsFromFilters(filters))
+                .stream()
+                .map(mapper::mapToMaterialReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<MaterialReadOnlyDTO> getMaterialsFilteredPaginated(MaterialFilters filters) {
+        var filtered = materialRepository.findAll(
+                getSpecsFromFilters(filters),
+                filters.getPageable()
+        );
+        return new Paginated<>(filtered.map(mapper::mapToMaterialReadOnlyDTO));
+    }
+
+    private Specification<Material> getSpecsFromFilters(MaterialFilters filters) {
+        return Specification
+                .where(MaterialSpecification.materialNameLike(filters.getName()))
+                .and(MaterialSpecification.materialIsActive(filters.getIsActive()));
+    }
+
 }
 
