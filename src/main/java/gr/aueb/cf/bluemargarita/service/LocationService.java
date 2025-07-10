@@ -138,12 +138,15 @@ public class LocationService implements ILocationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<LocationReadOnlyDTO> getAllLocationsPaginated(int page,
-                                                              int size){
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Location> locationPage = locationRepository.findAll(pageable);
-        return locationPage.map(mapper::mapToLocationReadOnlyDTO);
+    public List<LocationReadOnlyDTO> getAllActiveLocations() {
+
+        List<Location> locations = locationRepository.findByIsActiveTrue();
+
+        return locations.stream()
+                .map(mapper::mapToLocationReadOnlyDTO)
+                .collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional(readOnly = true)

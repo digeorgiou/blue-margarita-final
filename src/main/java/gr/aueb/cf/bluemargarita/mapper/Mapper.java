@@ -107,7 +107,8 @@ public class Mapper {
                 customer.getCreatedBy() != null ? customer.getCreatedBy().getUsername() : "system",
                 customer.getLastUpdatedBy() != null ? customer.getLastUpdatedBy().getUsername() : "system",
                 customer.getIsActive(),
-                customer.getDeletedAt()
+                customer.getDeletedAt(),
+                customer.getFirstSaleDate()
         );
     }
 

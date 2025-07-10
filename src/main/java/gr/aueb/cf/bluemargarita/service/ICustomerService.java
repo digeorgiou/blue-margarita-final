@@ -1,7 +1,9 @@
 package gr.aueb.cf.bluemargarita.service;
-import gr.aueb.cf.bluemargarita.core.enums.GenderType;
+
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.CustomerFilters;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerUpdateDTO;
@@ -9,45 +11,231 @@ import gr.aueb.cf.bluemargarita.dto.customer.CustomerWithSalesDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+/**
+ * Service interface for managing customers in the jewelry business application.
+ * Handles customer CRUD operations, validation, analytics, and customer-centric revenue calculations.
+ */
 public interface ICustomerService {
-    CustomerReadOnlyDTO createCustomer(CustomerInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException;
-    CustomerReadOnlyDTO updateCustomer(CustomerUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException;
+
+    // Core CRUD Operations
+
+    /**
+     * Creates a new customer with unique email and TIN validation
+     * @param dto Customer creation data
+     * @return Created customer as DTO
+     * @throws EntityAlreadyExistsException if customer email or TIN already exists
+     * @throws EntityNotFoundException if creator user not found
+     */
+    CustomerReadOnlyDTO createCustomer(CustomerInsertDTO dto)
+            throws EntityAlreadyExistsException, EntityNotFoundException;
+
+    /**
+     * Updates an existing customer's information
+     * @param dto Customer update data
+     * @return Updated customer as DTO
+     * @throws EntityAlreadyExistsException if new email or TIN conflicts with existing customer
+     * @throws EntityNotFoundException if customer or updater user not found
+     */
+    CustomerReadOnlyDTO updateCustomer(CustomerUpdateDTO dto)
+            throws EntityAlreadyExistsException, EntityNotFoundException;
+
+    /**
+     * Deletes a customer. Performs soft delete if customer has sales history, hard delete otherwise
+     * @param id Customer ID to delete
+     * @throws EntityNotFoundException if customer not found
+     */
     void deleteCustomer(Long id) throws EntityNotFoundException;
+
+    /**
+     * Retrieves a customer by ID
+     * @param id Customer ID
+     * @return Customer as DTO
+     * @throws EntityNotFoundException if customer not found
+     */
     CustomerReadOnlyDTO getCustomerById(Long id) throws EntityNotFoundException;
+
+    // Pagination and Sorting Operations
+
+    /**
+     * Retrieves customers with pagination using default sorting (by ID ascending)
+     * @param page Page number (0-based)
+     * @param size Number of items per page
+     * @return Paginated customer results
+     */
     Page<CustomerReadOnlyDTO> getPaginatedCustomers(int page, int size);
-    Page<CustomerReadOnlyDTO> getPaginatedSortedCustomers(int page,int size,
-                                                          String sortBy, String sortDirection);
-//    // Search customers by various criteria
-//    Page<CustomerReadOnlyDTO> searchCustomers(String searchTerm, Pageable pageable);
-//    // Filter by gender
-//    Page<CustomerReadOnlyDTO> getCustomersByGender(GenderType gender, Pageable pageable);
-//    // Filter by active status
-//    Page<CustomerReadOnlyDTO> getCustomersByActiveStatus(Boolean isActive, Pageable pageable);
-//    // Combined search and filter
-//    Page<CustomerReadOnlyDTO> searchAndFilterCustomers(
-//            String searchTerm,
-//            GenderType gender,
-//            Boolean isActive,
-//            Pageable pageable
-//    );
-//
-//    //Statistics
-//
-//    // Get total customer count
-//    Long getTotalCustomerCount();
-//
-//    // Get active customers count
-//    Long getActiveCustomerCount();
-//
-//    // Get new customers this month
-//    Long getNewCustomersThisMonth();
-//
-//    // Get customers with orders
-//    Long getCustomersWithOrdersCount();
-//
-//    // Get customer with sales summary
-//    CustomerWithSalesDTO getCustomerWithSales(Long customerId);
-//
-//    // Get customers with sales statistics
-//    Page<CustomerWithSalesDTO> getCustomersWithSalesStats(Pageable pageable);
+
+    /**
+     * Retrieves customers with pagination and custom sorting
+     * @param page Page number (0-based)
+     * @param size Number of items per page
+     * @param sortBy Field to sort by
+     * @param sortDirection Sort direction ("asc" or "desc")
+     * @return Paginated and sorted customer results
+     */
+    Page<CustomerReadOnlyDTO> getPaginatedSortedCustomers(int page, int size, String sortBy, String sortDirection);
+
+    // Filtering Operations
+
+    /**
+     * Retrieves customers based on filter criteria
+     * @param filters Filter criteria for customers
+     * @return List of customers matching filters
+     */
+    List<CustomerReadOnlyDTO> getFilteredCustomers(CustomerFilters filters);
+
+    /**
+     * Retrieves customers with pagination based on filter criteria
+     * @param filters Filter criteria including pagination info
+     * @return Paginated result of customers matching filters
+     */
+    Paginated<CustomerReadOnlyDTO> getCustomersFilteredPaginated(CustomerFilters filters);
+
+    // Search Operations
+
+    /**
+     * Searches customers by term with pagination
+     * @param searchTerm Search term to match against customer fields
+     * @param pageable Pagination information
+     * @return Paginated search results
+     */
+    Paginated<CustomerReadOnlyDTO> searchCustomersPaginated(String searchTerm, Pageable pageable);
+
+    // Customer Revenue Analytics
+
+    /**
+     * Calculates total revenue generated by a specific customer across all time
+     * @param customerId Customer ID
+     * @return Total revenue from customer
+     * @throws EntityNotFoundException if customer not found
+     */
+    BigDecimal getCustomerTotalRevenue(Long customerId) throws EntityNotFoundException;
+
+    /**
+     * Gets the total number of sales (count) for a specific customer
+     * @param customerId Customer ID
+     * @return Number of sales made by the customer
+     * @throws EntityNotFoundException if customer not found
+     */
+    public int getCustomerTotalNumberOfSales(Long customerId) throws EntityNotFoundException;
+
+
+    /**
+     * Calculates revenue generated by a customer within a specific date range
+     * @param customerId Customer ID
+     * @param startDate Start date (inclusive)
+     * @param endDate End date (inclusive)
+     * @return Revenue from customer in date range
+     * @throws EntityNotFoundException if customer not found
+     */
+
+    BigDecimal getCustomerRevenueByDateRange(Long customerId, LocalDate startDate, LocalDate endDate)
+            throws EntityNotFoundException;
+
+    /**
+     * Calculates total purchases by a customer within a specific date range
+     * @param customerId Customer ID
+     * @param startDate Start date (inclusive)
+     * @param endDate End date (inclusive)
+     * @return number of sales to a customer in date range
+     * @throws EntityNotFoundException if customer not found
+     */
+
+    int getCustomerNumberOfSalesByDateRange(Long customerId, LocalDate startDate, LocalDate endDate) throws EntityNotFoundException;
+
+    /**
+     * Gets detailed sales analytics for a customer including sales history
+     * @param customerId Customer ID
+     * @return Customer with comprehensive sales statistics
+     * @throws EntityNotFoundException if customer not found
+     */
+    CustomerWithSalesDTO getCustomerWithSalesAnalytics(Long customerId) throws EntityNotFoundException;
+
+    // Customer Retrieval Operations
+
+    /**
+     * Retrieves all active customers
+     * @return List of all active customers
+     */
+    List<CustomerReadOnlyDTO> getAllActiveCustomers();
+
+    /**
+     * Finds customer by email address
+     * @param email Email to search for
+     * @return Customer if found
+     * @throws EntityNotFoundException if customer not found
+     */
+    CustomerReadOnlyDTO getCustomerByEmail(String email) throws EntityNotFoundException;
+
+    /**
+     * Finds customer by TIN (Tax Identification Number)
+     * @param tin TIN to search for
+     * @return Customer if found
+     * @throws EntityNotFoundException if customer not found
+     */
+    CustomerReadOnlyDTO getCustomerByTin(String tin) throws EntityNotFoundException;
+
+    // Customer Analytics and Top Customers
+
+    /**
+     * Gets top customers by total revenue within a date range
+     * @param limit Number of top customers to return
+     * @param startDate Start date (inclusive)
+     * @param endDate End date (inclusive)
+     * @return List of customers ordered by revenue descending
+     */
+    List<CustomerReadOnlyDTO> getTopCustomersByRevenueByDateRange(int limit, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * Gets top customers by total number of orders within a date range
+     * @param limit Number of top customers to return
+     * @param startDate Start date (inclusive)
+     * @param endDate End date (inclusive)
+     * @return List of customers ordered by order count descending
+     */
+    List<CustomerReadOnlyDTO> getTopCustomersByOrderCountByDateRange(int limit, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * Gets customers who made their first purchase within a date range
+     * @param startDate Start date (inclusive)
+     * @param endDate End date (inclusive)
+     * @param pageable Pagination information
+     * @return Paginated list of new customers in period
+     */
+    Paginated<CustomerReadOnlyDTO> getNewCustomersInPeriod(LocalDate startDate, LocalDate endDate, Pageable pageable);
+
+    // Customer Validation Utilities
+
+    /**
+     * Checks if email already exists (useful for frontend validation)
+     * @param email Email to check
+     * @return true if email exists, false otherwise
+     */
+    boolean emailExists(String email);
+
+    /**
+     * Checks if TIN already exists (useful for frontend validation)
+     * @param tin TIN to check
+     * @return true if TIN exists, false otherwise
+     */
+    boolean tinExists(String tin);
+
+    // Customer Statistics
+
+    /**
+     * Gets total count of active customers
+     * @return Number of active customers
+     */
+    int getActiveCustomerCount();
+
+    /**
+     * Gets count of customers who made their first purchase in a date range
+     * @param startDate Start date (inclusive)
+     * @param endDate End date (inclusive)
+     * @return Number of new customers (by first purchase) in period
+     */
+    int getNewCustomerCount(LocalDate startDate, LocalDate endDate);
 }

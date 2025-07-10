@@ -120,6 +120,15 @@ public class ProcedureService implements IProcedureService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ProcedureReadOnlyDTO> getAllActiveProcedures() {
+        List<Procedure> procedures = procedureRepository.findByIsActiveTrue();
+
+        return procedures.stream().map(mapper::mapToProcedureReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ProcedureReadOnlyDTO> getFilteredProcedures(ProcedureFilters filters) {
         return procedureRepository.findAll(getSpecsFromFilters(filters))
                 .stream()

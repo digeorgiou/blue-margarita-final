@@ -1,6 +1,8 @@
 package gr.aueb.cf.bluemargarita.dto.customer;
 
 import gr.aueb.cf.bluemargarita.core.enums.GenderType;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record CustomerReadOnlyDTO(
@@ -18,6 +20,7 @@ public record CustomerReadOnlyDTO(
         String createdBy,
         String lastUpdatedBy,
         boolean isActive,
-        LocalDateTime deletedAt
+        LocalDateTime deletedAt,
+        LocalDate firstSaleDate
 )
 {}

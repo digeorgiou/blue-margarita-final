@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.SupplierFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.SupplierSpecification;
+import gr.aueb.cf.bluemargarita.dto.supplier.SupplierDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierUpdateDTO;
@@ -123,6 +124,15 @@ public class SupplierService implements ISupplierService {
                 .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + id + " was not found"));
 
         return mapper.mapToSupplierReadOnlyDTO(supplier);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SupplierDropdownDTO> getActiveSuppliersForDropdown() {
+        return supplierRepository.findByIsActiveTrue()
+                .stream()
+                .map(supplier -> new SupplierDropdownDTO(supplier.getId(), supplier.getName()))
+                .collect(Collectors.toList());
     }
 
     @Override

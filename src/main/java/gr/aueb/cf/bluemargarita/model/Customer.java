@@ -6,6 +6,7 @@ import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.annotations.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -48,6 +49,9 @@ public class Customer extends AbstractEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Column(name = "first_sale_date")
+    private LocalDate firstSaleDate;
 
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
     @Builder.Default

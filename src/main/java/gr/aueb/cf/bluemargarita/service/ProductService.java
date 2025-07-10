@@ -12,6 +12,8 @@ import gr.aueb.cf.bluemargarita.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -204,6 +206,51 @@ public class ProductService implements IProductService{
                 .build();
         return getFilteredProducts(filters);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductReadOnlyDTO> getLowStockProducts(int limit) {
+        // Create pageable for the limit
+        PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.ASC, "stock"));
+
+        // Use the same specification but with pagination
+        ProductFilters filters = ProductFilters.builder()
+                .lowStock(true)
+                .isActive(true)
+                .build();
+
+        return productRepository.findAll(getSpecsFromFilters(filters), pageable)
+                .stream()
+                .map(mapper::mapToProductReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<ProductReadOnlyDTO> getLowStockProductsPaginated(ProductFilters filters) {
+        // Ensure low stock filter is set
+        ProductFilters lowStockFilters = ProductFilters.builder()
+                .lowStock(true)
+                .isActive(true)
+                .name(filters.getName())
+                .code(filters.getCode())
+                .categoryId(filters.getCategoryId())
+                .categoryName(filters.getCategoryName())
+                .minPrice(filters.getMinPrice())
+                .maxPrice(filters.getMaxPrice())
+                .minStock(filters.getMinStock())
+                .maxStock(filters.getMaxStock())
+                .build();
+
+        return getProductsFilteredPaginated(lowStockFilters);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getActiveProductCount() {
+        return (int) productRepository.countByIsActiveTrue();
+    }
+
 
     @Override
     @Transactional(readOnly = true)

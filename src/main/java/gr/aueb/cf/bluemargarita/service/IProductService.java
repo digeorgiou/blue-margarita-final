@@ -67,6 +67,28 @@ public interface IProductService {
      */
     List<ProductReadOnlyDTO> getLowStockProducts();
 
+
+    /**
+     * Retrieves low stock products with a limit (for dashboard)
+     * @param limit maximum number of products to return
+     * @return list of low stock products up to the limit, ordered by stock ascending
+     */
+    List<ProductReadOnlyDTO> getLowStockProducts(int limit);
+
+    /**
+     * Retrieves low stock products with pagination and filtering
+     * @param filters filter criteria
+     * @return paginated result of low stock products
+     */
+    Paginated<ProductReadOnlyDTO> getLowStockProductsPaginated(ProductFilters filters);
+
+
+    /**
+     * Gets the count of active products
+     * @return number of active products
+     */
+    int getActiveProductCount();
+
     /**
      * Retrieves all active products in a specific category
      * @param categoryId Category ID to filter by

@@ -78,6 +78,11 @@ public class CategoryService implements ICategoryService{
                         "Category with id=" + dto.categoryId() + " was not " +
                                 "found"));
 
+        if (!existingCategory.getName().equals(dto.name()) && categoryRepository.existsByName(dto.name())) {
+            throw new EntityAlreadyExistsException("Category", "Category with" +
+                    " name " + dto.name() + " already exists");
+        }
+
         User updater = userRepository.findById(dto.updaterUserId())
                 .orElseThrow(() -> new EntityNotFoundException("User",
                         "Updater user with id=" + dto.categoryId() + " was " +
@@ -141,6 +146,16 @@ public class CategoryService implements ICategoryService{
                 .map(mapper::mapToCategoryReadOnlyDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryReadOnlyDTO> getAllActiveCategories() {
+
+        return categoryRepository.findByIsActiveTrue().stream()
+                .map(mapper::mapToCategoryReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
 
     @Override
     @Transactional(readOnly = true)

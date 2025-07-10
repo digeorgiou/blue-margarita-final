@@ -122,6 +122,17 @@ public class MaterialService implements IMaterialService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<MaterialReadOnlyDTO> getAllActiveMaterials() {
+
+        List<Material> materials = materialRepository.findByIsActiveTrue();
+
+        return materials.stream()
+                .map(mapper::mapToMaterialReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<MaterialReadOnlyDTO> getFilteredMaterials(MaterialFilters filters) {
         return materialRepository.findAll(getSpecsFromFilters(filters))
                 .stream()
