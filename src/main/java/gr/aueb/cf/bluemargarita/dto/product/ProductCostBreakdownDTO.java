@@ -13,6 +13,7 @@ public record ProductCostBreakdownDTO(
         // Cost components
         BigDecimal materialCost,
         BigDecimal laborCost,
+        BigDecimal procedureCost,
         BigDecimal laborHours,
         BigDecimal hourlyLaborRate,
         BigDecimal totalCost,

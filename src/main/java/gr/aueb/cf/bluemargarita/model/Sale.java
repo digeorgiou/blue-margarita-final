@@ -34,11 +34,17 @@ public class Sale extends AbstractEntity {
     @Column(name = "sale_date", nullable = false)
     private LocalDate saleDate;
 
-    @Column(name = "suggested_price", precision = 10, scale = 2)
-    private BigDecimal suggestedPrice;
+    @Column(name = "suggested_total_price", precision = 10, scale = 2)
+    private BigDecimal suggestedTotalPrice;
 
-    @Column(name = "final_price", precision = 10, scale = 2)
-    private BigDecimal finalPrice;
+    @Column(name = "packaging_price", precision = 10, scale = 2)
+    private BigDecimal packagingPrice;
+
+    @Column(name = "final_total_price", precision = 10, scale = 2, nullable = false)
+    private BigDecimal finalTotalPrice;
+
+    @Column(name = "discount_percentage", precision = 5, scale = 2)
+    private BigDecimal discountPercentage;
 
     @Column(name = "payment_method")
     @Enumerated(EnumType.STRING)
@@ -95,5 +101,8 @@ public class Sale extends AbstractEntity {
     public void removeLocation(Location location){
         location.removeSale(this);
     }
+
+
+
 
 }

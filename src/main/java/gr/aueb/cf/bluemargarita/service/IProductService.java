@@ -8,198 +8,330 @@ import gr.aueb.cf.bluemargarita.dto.product.*;
 import gr.aueb.cf.bluemargarita.model.Product;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * Service interface for managing products in the jewelry business application.
- * Handles product CRUD operations, pricing calculations, and material/procedure relationships.
+ * Handles product CRUD operations, pricing calculations, material/procedure relationships,
+ * and sales analytics for individual products.
  */
 public interface IProductService {
 
-    // Core CRUD Operations
+    // =============================================================================
+    // CORE CRUD OPERATIONS
+    // =============================================================================
 
     /**
-     * Creates a new product with optional materials and procedures
-     * @param dto Product creation data
-     * @return Created product as DTO
+     * Creates a new product with automatic pricing calculation and optional materials/procedures
+     *
+     * Business Logic:
+     * 1. Validates unique name and code constraints
+     * 2. Validates category exists and is active
+     * 3. Creates product with relationships
+     * 4. Calculates suggested prices based on materials, procedures, and markup factors
+     * 5. Sets audit fields
+     *
+     * @param dto Product creation data including optional materials and procedures
+     * @return Created product as enhanced list item DTO
      * @throws EntityAlreadyExistsException if product name or code already exists
      * @throws EntityNotFoundException if referenced entities (category, user, materials, procedures) not found
      */
-    ProductReadOnlyDTO createProduct(ProductInsertDTO dto)
+    ProductListItemDTO createProduct(ProductInsertDTO dto)
             throws EntityAlreadyExistsException, EntityNotFoundException;
 
     /**
-     * Updates an existing product's basic information
+     * Updates an existing product's basic information with pricing recalculation
+     *
      * @param dto Product update data
-     * @return Updated product as DTO
+     * @return Updated product as enhanced list item DTO
      * @throws EntityAlreadyExistsException if new name or code conflicts with existing product
      * @throws EntityNotFoundException if product or referenced entities not found
      */
-    ProductReadOnlyDTO updateProduct(ProductUpdateDTO dto)
+    ProductListItemDTO updateProduct(ProductUpdateDTO dto)
             throws EntityAlreadyExistsException, EntityNotFoundException;
 
     /**
-     * Deletes a product. Performs soft delete if product has sales history, hard delete otherwise
+     * Deletes a product with intelligent delete strategy
+     * Performs soft delete if product has sales history (preserves financial records)
+     * Performs hard delete if product has no sales (completely removes)
+     *
      * @param id Product ID to delete
      * @throws EntityNotFoundException if product not found
      */
     void deleteProduct(Long id) throws EntityNotFoundException;
 
-    // Query Operations
+    // =============================================================================
+    // ENHANCED PRODUCT VIEWS
+    // =============================================================================
 
     /**
-     * Retrieves products based on filter criteria
+     * Retrieves products for the main products page with enhanced business information
+     * Includes calculated costs, pricing differences, stock status
+     *
      * @param filters Filter criteria for products
-     * @return List of products matching filters
+     * @return List of products with enhanced business data
      */
-    List<ProductReadOnlyDTO> getFilteredProducts(ProductFilters filters);
+    List<ProductListItemDTO> getProductListItems(ProductFilters filters);
 
     /**
-     * Retrieves products with pagination based on filter criteria
-     * @param filters Filter criteria including pagination info
-     * @return Paginated result of products matching filters
+     * Retrieves products with pagination for the main products page
+     *
+     * @param filters Filter criteria including pagination parameters
+     * @return Paginated list of products with enhanced business data
      */
-    Paginated<ProductReadOnlyDTO> getProductsFilteredPaginated(ProductFilters filters);
+    Paginated<ProductListItemDTO> getProductListItemsPaginated(ProductFilters filters);
 
     /**
-     * Retrieves products with stock below their low stock alert threshold
-     * @return List of low stock products
+     * Retrieves comprehensive product details including materials, procedures, and cost breakdown
+     * Used for "View Details" modal/page
+     *
+     * @param productId Product ID to get details for
+     * @return Complete product details with relationships and calculations
+     * @throws EntityNotFoundException if product not found
      */
-    List<ProductReadOnlyDTO> getLowStockProducts();
+    ProductDetailsDTO getProductDetails(Long productId) throws EntityNotFoundException;
 
+    // =============================================================================
+    // SALES ANALYTICS
+    // =============================================================================
 
     /**
-     * Retrieves low stock products with a limit (for dashboard)
-     * @param limit maximum number of products to return
-     * @return list of low stock products up to the limit, ordered by stock ascending
+     * Retrieves comprehensive sales analytics for a specific product
+     * Includes trends, comparisons, top customers/locations, and period analysis
+     *
+     * @param productId Product ID to analyze
+     * @param startDate Analysis period start date (inclusive)
+     * @param endDate Analysis period end date (inclusive)
+     * @return Complete sales analytics with trends and comparisons
+     * @throws EntityNotFoundException if product not found
      */
-    List<ProductReadOnlyDTO> getLowStockProducts(int limit);
+    ProductSalesAnalyticsDTO getProductSalesAnalytics(Long productId,
+                                                      LocalDate startDate,
+                                                      LocalDate endDate)
+            throws EntityNotFoundException;
 
     /**
-     * Retrieves low stock products with pagination and filtering
-     * @param filters filter criteria
-     * @return paginated result of low stock products
+     * Retrieves daily sales breakdown for a product
+     * Used for daily sales charts and trend analysis
+     *
+     * @param productId Product ID to analyze
+     * @param startDate Period start date (inclusive)
+     * @param endDate Period end date (inclusive)
+     * @return Daily sales data for the period
+     * @throws EntityNotFoundException if product not found
      */
-    Paginated<ProductReadOnlyDTO> getLowStockProductsPaginated(ProductFilters filters);
-
+    List<DailySalesDataDTO> getProductDailySales(Long productId,
+                                                 LocalDate startDate,
+                                                 LocalDate endDate)
+            throws EntityNotFoundException;
 
     /**
-     * Gets the count of active products
-     * @return number of active products
+     * Retrieves monthly sales breakdown for a product
+     * Used for monthly sales charts and long-term trend analysis
+     *
+     * @param productId Product ID to analyze
+     * @param startDate Period start date (inclusive)
+     * @param endDate Period end date (inclusive)
+     * @return Monthly sales data for the period
+     * @throws EntityNotFoundException if product not found
      */
-    int getActiveProductCount();
+    List<MonthlySalesDataDTO> getProductMonthlySales(Long productId,
+                                                     LocalDate startDate,
+                                                     LocalDate endDate)
+            throws EntityNotFoundException;
 
     /**
-     * Retrieves all active products in a specific category
-     * @param categoryId Category ID to filter by
-     * @return List of products in the category
+     * Retrieves top performing locations for a specific product
+     * Ordered by revenue descending
+     *
+     * @param productId Product ID to analyze
+     * @param startDate Period start date (inclusive)
+     * @param endDate Period end date (inclusive)
+     * @param limit Maximum number of locations to return
+     * @return Top locations by revenue for this product
+     * @throws EntityNotFoundException if product not found
      */
-    List<ProductReadOnlyDTO> getProductsByCategory(Long categoryId);
+    List<LocationSalesDataDTO> getTopLocationsByProductSales(Long productId,
+                                                             LocalDate startDate,
+                                                             LocalDate endDate,
+                                                             int limit)
+            throws EntityNotFoundException;
 
     /**
-     * Retrieves products within a specific price range
-     * @param minPrice Minimum price (inclusive)
-     * @param maxPrice Maximum price (inclusive)
-     * @return List of products in the price range
+     * Retrieves top customers for a specific product by quantity purchased
+     * Ordered by quantity purchased descending
+     *
+     * @param productId Product ID to analyze
+     * @param startDate Period start date (inclusive)
+     * @param endDate Period end date (inclusive)
+     * @param limit Maximum number of customers to return
+     * @return Top customers by quantity for this product
+     * @throws EntityNotFoundException if product not found
      */
-    List<ProductReadOnlyDTO> getProductsInPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
+    List<CustomerSalesDataDTO> getTopCustomersByProductPurchases(Long productId,
+                                                                 LocalDate startDate,
+                                                                 LocalDate endDate,
+                                                                 int limit)
+            throws EntityNotFoundException;
 
-    // Stock Management
+    // =============================================================================
+    // STOCK MANAGEMENT AND LOW STOCK ALERTS
+    // =============================================================================
+
+    /**
+     * Retrieves all products with stock below their low stock alert threshold
+     * Used for inventory management and stock alerts
+     *
+     * @return List of products needing restocking
+     */
+    List<ProductListItemDTO> getLowStockProducts();
+
+    /**
+     * Retrieves low stock products with a limit (for dashboard widgets)
+     * Ordered by stock level ascending (most urgent first)
+     *
+     * @param limit Maximum number of products to return
+     * @return List of low stock products up to the limit
+     */
+    List<ProductListItemDTO> getLowStockProducts(int limit);
+
+    /**
+     * Retrieves low stock products with pagination and additional filtering
+     *
+     * @param filters Filter criteria (low stock filter is automatically applied)
+     * @return Paginated result of low stock products
+     */
+    Paginated<ProductListItemDTO> getLowStockProductsPaginated(ProductFilters filters);
 
     /**
      * Updates the stock quantity for a product
+     *
      * @param productId Product ID to update
      * @param newStock New stock quantity
      * @param updaterUserId User performing the update
-     * @return Updated product as DTO
+     * @return Updated product with new stock level
      * @throws EntityNotFoundException if product or user not found
      */
-    ProductReadOnlyDTO updateProductStock(Long productId, Integer newStock, Long updaterUserId)
+    ProductListItemDTO updateProductStock(Long productId, Integer newStock, Long updaterUserId)
             throws EntityNotFoundException;
 
-    // Pricing Calculations
+    /**
+     * Gets the total count of active products (for dashboard statistics)
+     *
+     * @return Number of active products
+     */
+    int getActiveProductCount();
+
+    // =============================================================================
+    // PRICING CALCULATIONS AND COST ANALYSIS
+    // =============================================================================
 
     /**
-     * Calculates suggested retail selling price based on material costs, labor costs, and retail markup
+     * Calculates suggested retail selling price based on current costs and markup
+     * Formula: (Material Cost + Labor Cost) × Retail Markup Factor
+     *
      * @param product Product entity to calculate price for
      * @return Calculated suggested retail price
      */
     BigDecimal calculateSuggestedRetailPrice(Product product);
 
     /**
-     * Calculates suggested wholesale selling price based on material costs, labor costs, and wholesale markup
+     * Calculates suggested wholesale selling price based on current costs and markup
+     * Formula: (Material Cost + Labor Cost) × Wholesale Markup Factor
+     *
      * @param product Product entity to calculate price for
      * @return Calculated suggested wholesale price
      */
     BigDecimal calculateSuggestedWholesalePrice(Product product);
 
     /**
-     * Provides detailed cost breakdown and pricing analysis for a product
+     * Provides comprehensive cost breakdown and pricing analysis for a product
+     * Includes material costs, labor costs, markup factors, profit margins, and price comparisons
+     * Used for cost analysis modal/page
+     *
      * @param productId Product ID to analyze
-     * @return Comprehensive cost breakdown including material costs, labor costs, profit margins, etc.
+     * @return Detailed cost breakdown with all pricing metrics
      * @throws EntityNotFoundException if product not found
      */
     ProductCostBreakdownDTO getProductCostBreakdown(Long productId) throws EntityNotFoundException;
 
-    // Material Relationship Management
+    // =============================================================================
+    // MATERIAL RELATIONSHIP MANAGEMENT
+    // =============================================================================
 
     /**
      * Adds a material to a product or updates the quantity if already exists
+     * Automatically recalculates suggested prices after the change
+     *
      * @param productId Product ID
      * @param materialId Material ID to add
-     * @param quantity Quantity of material needed
+     * @param quantity Quantity of material needed for this product
      * @param updaterUserId User performing the operation
-     * @return Updated product as DTO
+     * @return Updated product with new material relationship
      * @throws EntityNotFoundException if product, material, or user not found
      */
-    ProductReadOnlyDTO addMaterialToProduct(Long productId, Long materialId,
+    ProductListItemDTO addMaterialToProduct(Long productId, Long materialId,
                                             BigDecimal quantity, Long updaterUserId)
             throws EntityNotFoundException;
 
     /**
      * Removes a material from a product
+     * Automatically recalculates suggested prices after the change
+     *
      * @param productId Product ID
      * @param materialId Material ID to remove
      * @param updaterUserId User performing the operation
-     * @return Updated product as DTO
+     * @return Updated product without the material relationship
      * @throws EntityNotFoundException if product, material, or user not found
      */
-    ProductReadOnlyDTO removeMaterialFromProduct(Long productId, Long materialId, Long updaterUserId)
+    ProductListItemDTO removeMaterialFromProduct(Long productId, Long materialId, Long updaterUserId)
             throws EntityNotFoundException;
 
-    // Procedure Relationship Management
+    // =============================================================================
+    // PROCEDURE RELATIONSHIP MANAGEMENT
+    // =============================================================================
 
     /**
      * Adds a procedure to a product or updates the cost if already exists
+     * Automatically recalculates suggested prices after the change
+     *
      * @param productId Product ID
      * @param procedureId Procedure ID to add
-     * @param cost Cost of the procedure for this product
+     * @param cost Cost of the procedure for this specific product
      * @param updaterUserId User performing the operation
-     * @return Updated product as DTO
+     * @return Updated product with new procedure relationship
      * @throws EntityNotFoundException if product, procedure, or user not found
      */
-    ProductReadOnlyDTO addProcedureToProduct(Long productId, Long procedureId,
+    ProductListItemDTO addProcedureToProduct(Long productId, Long procedureId,
                                              BigDecimal cost, Long updaterUserId)
             throws EntityNotFoundException;
 
     /**
      * Removes a procedure from a product
+     * Automatically recalculates suggested prices after the change
+     *
      * @param productId Product ID
      * @param procedureId Procedure ID to remove
      * @param updaterUserId User performing the operation
-     * @return Updated product as DTO
+     * @return Updated product without the procedure relationship
      * @throws EntityNotFoundException if product, procedure, or user not found
      */
-    ProductReadOnlyDTO removeProcedureFromProduct(Long productId, Long procedureId, Long updaterUserId)
+    ProductListItemDTO removeProcedureFromProduct(Long productId, Long procedureId, Long updaterUserId)
             throws EntityNotFoundException;
 
+    // =============================================================================
+    // BULK OPERATIONS
+    // =============================================================================
 
     /**
      * Recalculates suggested prices for all active products based on current material costs and markup factors
+     * Used when material costs change or markup factors are updated
+     * This is a bulk administrative operation that can affect many products
+     *
      * @param updaterUserId User performing the bulk price update
-     * @return Results of the recalculation operation including counts and success rate
+     * @return Results of the recalculation operation including success/failure counts and failed product codes
      * @throws EntityNotFoundException if updater user not found
      */
     PriceRecalculationResultDTO recalculateAllProductPrices(Long updaterUserId) throws EntityNotFoundException;
-
 }

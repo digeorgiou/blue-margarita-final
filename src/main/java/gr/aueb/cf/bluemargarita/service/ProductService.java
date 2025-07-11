@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,22 +40,25 @@ public class ProductService implements IProductService{
     private final MaterialRepository materialRepository;
     private final ProcedureRepository procedureRepository;
     private final UserRepository userRepository;
+    private final ProductSalesAnalyticsService analyticsService;
     private final Mapper mapper;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, MaterialRepository materialRepository, ProcedureRepository procedureRepository, UserRepository userRepository, Mapper mapper) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, MaterialRepository materialRepository, ProcedureRepository procedureRepository,
+                          UserRepository userRepository, ProductSalesAnalyticsService analyticsService, Mapper mapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.materialRepository = materialRepository;
         this.procedureRepository = procedureRepository;
         this.userRepository = userRepository;
+        this.analyticsService = analyticsService;
         this.mapper = mapper;
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductReadOnlyDTO createProduct(ProductInsertDTO dto)
+    public ProductListItemDTO createProduct(ProductInsertDTO dto)
             throws EntityAlreadyExistsException, EntityNotFoundException {
 
         // Validate unique constraints
@@ -96,13 +100,13 @@ public class ProductService implements IProductService{
         LOGGER.info("Product created with id: {} and code: {}",
                 savedProduct.getId(), savedProduct.getCode());
 
-        return mapper.mapToProductReadOnlyDTO(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductReadOnlyDTO updateProduct(ProductUpdateDTO dto)
+    public ProductListItemDTO updateProduct(ProductUpdateDTO dto)
             throws EntityAlreadyExistsException, EntityNotFoundException {
 
         // Get existing product
@@ -138,7 +142,7 @@ public class ProductService implements IProductService{
 
         LOGGER.info("Product {} updated", savedProduct.getCode());
 
-        return mapper.mapToProductReadOnlyDTO(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct);
     }
 
     @Override
@@ -175,59 +179,190 @@ public class ProductService implements IProductService{
         }
     }
 
-
-
     @Override
     @Transactional(readOnly = true)
-    public List<ProductReadOnlyDTO> getFilteredProducts(ProductFilters filters) {
+    public List<ProductListItemDTO> getProductListItems(ProductFilters filters) {
         return productRepository.findAll(getSpecsFromFilters(filters))
                 .stream()
-                .map(mapper::mapToProductReadOnlyDTO)
+                .map(mapper::mapToProductListItemDTO)
                 .collect(Collectors.toList());
     }
 
-
     @Override
     @Transactional(readOnly = true)
-    public Paginated<ProductReadOnlyDTO> getProductsFilteredPaginated(ProductFilters filters) {
+    public Paginated<ProductListItemDTO> getProductListItemsPaginated(ProductFilters filters) {
         var filtered = productRepository.findAll(
                 getSpecsFromFilters(filters),
                 filters.getPageable()
         );
-        return new Paginated<>(filtered.map(mapper::mapToProductReadOnlyDTO));
+        return new Paginated<>(filtered.map(mapper::mapToProductListItemDTO));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductReadOnlyDTO> getLowStockProducts() {
-        ProductFilters filters = ProductFilters.builder()
-                .lowStock(true)
-                .isActive(true)
-                .build();
-        return getFilteredProducts(filters);
+    public ProductDetailsDTO getProductDetails(Long productId) throws EntityNotFoundException {
+        Product product = getProductEntityById(productId);
+        return mapToProductDetailsDTO(product);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductReadOnlyDTO> getLowStockProducts(int limit) {
-        // Create pageable for the limit
-        PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.ASC, "stock"));
+    public ProductSalesAnalyticsDTO getProductSalesAnalytics(Long productId,
+                                                             LocalDate startDate,
+                                                             LocalDate endDate)
+            throws EntityNotFoundException {
+        return analyticsService.getProductSalesAnalytics(productId, startDate, endDate);
+    }
 
-        // Use the same specification but with pagination
-        ProductFilters filters = ProductFilters.builder()
-                .lowStock(true)
-                .isActive(true)
-                .build();
+    @Override
+    @Transactional(readOnly = true)
+    public List<DailySalesDataDTO> getProductDailySales(Long productId,
+                                                        LocalDate startDate,
+                                                        LocalDate endDate)
+            throws EntityNotFoundException {
+        return analyticsService.getDailySalesData(productId, startDate, endDate);
+    }
 
-        return productRepository.findAll(getSpecsFromFilters(filters), pageable)
-                .stream()
-                .map(mapper::mapToProductReadOnlyDTO)
+    @Override
+    @Transactional(readOnly = true)
+    public List<MonthlySalesDataDTO> getProductMonthlySales(Long productId,
+                                                            LocalDate startDate,
+                                                            LocalDate endDate)
+            throws EntityNotFoundException {
+        return analyticsService.getMonthlySalesData(productId, startDate, endDate);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocationSalesDataDTO> getTopLocationsByProductSales(Long productId,
+                                                                    LocalDate startDate,
+                                                                    LocalDate endDate,
+                                                                    int limit)
+            throws EntityNotFoundException {
+        return analyticsService.getTopLocationsByProductSales(productId, startDate, endDate, limit);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerSalesDataDTO> getTopCustomersByProductPurchases(Long productId,
+                                                                        LocalDate startDate,
+                                                                        LocalDate endDate,
+                                                                        int limit)
+            throws EntityNotFoundException {
+        return analyticsService.getTopCustomersByProductPurchases(productId, startDate, endDate, limit);
+    }
+
+
+    // Helper mapping methods
+
+    private ProductDetailsDTO mapToProductDetailsDTO(Product product) {
+        BigDecimal materialCost = calculateMaterialCost(product);
+        BigDecimal laborCost = calculateLaborCost(product);
+        BigDecimal procedureCost = calculateProcedureCost(product);
+        BigDecimal totalCost = materialCost.add(laborCost).add(procedureCost);
+
+        // Calculate profit margins
+        BigDecimal profitMarginRetail = calculateProfitMargin(product.getFinalSellingPriceRetail(), totalCost);
+        BigDecimal profitMarginWholesale = calculateProfitMargin(product.getFinalSellingPriceWholesale(), totalCost);
+
+        // Map materials
+        List<ProductMaterialDetailDTO> materials = product.getAllProductMaterials().stream()
+                .map(pm -> new ProductMaterialDetailDTO(
+                        pm.getMaterial().getId(),
+                        pm.getMaterial().getName(),
+                        pm.getQuantity(),
+                        pm.getMaterial().getUnitOfMeasure(),
+                        pm.getMaterial().getCurrentUnitCost(),
+                        pm.getMaterial().getCurrentUnitCost() != null ?
+                                pm.getMaterial().getCurrentUnitCost().multiply(pm.getQuantity()) :
+                                BigDecimal.ZERO
+                ))
                 .collect(Collectors.toList());
+
+        // Map procedures
+        List<ProductProcedureDetailDTO> procedures = product.getAllProcedureProducts().stream()
+                .map(pp -> new ProductProcedureDetailDTO(
+                        pp.getProcedure().getId(),
+                        pp.getProcedure().getName(),
+                        pp.getCost()
+                ))
+                .collect(Collectors.toList());
+
+        return new ProductDetailsDTO(
+                product.getId(),
+                product.getName(),
+                product.getCode(),
+                product.getCategory() != null ? product.getCategory().getName() : "No Category",
+                product.getCategory() != null ? product.getCategory().getId() : null,
+                product.getSuggestedRetailSellingPrice(),
+                product.getSuggestedWholeSaleSellingPrice(),
+                product.getFinalSellingPriceRetail(),
+                product.getFinalSellingPriceWholesale(),
+                calculatePercentageDifference(product.getFinalSellingPriceRetail(), product.getSuggestedRetailSellingPrice()),
+                calculatePercentageDifference(product.getFinalSellingPriceWholesale(), product.getSuggestedWholeSaleSellingPrice()),
+                product.getMinutesToMake(),
+                totalCost,
+                materialCost,
+                laborCost,
+                procedureCost,
+                product.getStock(),
+                product.getLowStockAlert(),
+                product.getStock() != null && product.getLowStockAlert() != null &&
+                        product.getStock() <= product.getLowStockAlert(),
+                materials,
+                procedures,
+                profitMarginRetail,
+                profitMarginWholesale,
+                product.getIsActive(),
+                product.getCreatedAt(),
+                product.getUpdatedAt(),
+                product.getCreatedBy() != null ? product.getCreatedBy().getUsername() : "system",
+                product.getLastUpdatedBy() != null ? product.getLastUpdatedBy().getUsername() : "system"
+        );
+    }
+
+    // Helper methods
+
+    private BigDecimal calculateProfitMargin(BigDecimal sellingPrice, BigDecimal cost) {
+        if (sellingPrice == null || sellingPrice.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return sellingPrice.subtract(cost)
+                .divide(sellingPrice, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Paginated<ProductReadOnlyDTO> getLowStockProductsPaginated(ProductFilters filters) {
+    public List<ProductListItemDTO> getLowStockProducts() {
+        ProductFilters filters = ProductFilters.builder()
+                .lowStock(true)
+                .isActive(true)
+                .build();
+        return getProductListItems(filters);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductListItemDTO> getLowStockProducts(int limit) {
+
+        ProductFilters filters = ProductFilters.builder()
+                .lowStock(true)
+                .isActive(true)
+                .build();
+
+        // Set page size to limit
+        filters.setPage(0);
+        filters.setPageSize(limit);
+        filters.setSortBy("stock");
+        filters.setSortDirection(Sort.Direction.ASC);
+
+        return getProductListItemsPaginated(filters).getData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<ProductListItemDTO> getLowStockProductsPaginated(ProductFilters filters) {
         // Ensure low stock filter is set
         ProductFilters lowStockFilters = ProductFilters.builder()
                 .lowStock(true)
@@ -242,35 +377,13 @@ public class ProductService implements IProductService{
                 .maxStock(filters.getMaxStock())
                 .build();
 
-        return getProductsFilteredPaginated(lowStockFilters);
+        return getProductListItemsPaginated(lowStockFilters);
     }
 
     @Override
     @Transactional(readOnly = true)
     public int getActiveProductCount() {
         return (int) productRepository.countByIsActiveTrue();
-    }
-
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ProductReadOnlyDTO> getProductsByCategory(Long categoryId) {
-        ProductFilters filters = ProductFilters.builder()
-                .categoryId(categoryId)
-                .isActive(true)
-                .build();
-        return getFilteredProducts(filters);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ProductReadOnlyDTO> getProductsInPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
-        ProductFilters filters = ProductFilters.builder()
-                .minPrice(minPrice)
-                .maxPrice(maxPrice)
-                .isActive(true)
-                .build();
-        return getFilteredProducts(filters);
     }
 
     private Specification<Product> getSpecsFromFilters(ProductFilters filters) {
@@ -287,7 +400,7 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductReadOnlyDTO updateProductStock(Long productId, Integer newStock, Long updaterUserId)
+    public ProductListItemDTO  updateProductStock(Long productId, Integer newStock, Long updaterUserId)
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(productId);
@@ -303,18 +416,19 @@ public class ProductService implements IProductService{
         LOGGER.info("Product {} stock updated from {} to {}",
                 product.getCode(), oldStock, newStock);
 
-        return mapper.mapToProductReadOnlyDTO(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct);
     }
 
     @Override
     public BigDecimal calculateSuggestedRetailPrice(Product product){
 
         BigDecimal materialCost = calculateMaterialCost(product);
+        BigDecimal procedureCost = calculateProcedureCost(product);
         BigDecimal laborCost = calculateLaborCost(product);
-        BigDecimal totalCost = materialCost.add(laborCost);
+        BigDecimal totalCost = materialCost.add(laborCost).add(procedureCost);
 
-        LOGGER.info("Price calculation for product {}: Material cost: {}, Labor cost: {}, Total cost: {}",
-                product.getCode(), materialCost, laborCost, totalCost);
+        LOGGER.info("Price calculation for product {}: Material cost: {}, Procedure cost: {}, Labor cost: {}, Total cost: {}",
+                product.getCode(), materialCost, procedureCost, laborCost, totalCost);
 
         return totalCost.multiply(RETAIL_MARKUP_FACTOR);
     }
@@ -323,11 +437,12 @@ public class ProductService implements IProductService{
     public BigDecimal calculateSuggestedWholesalePrice(Product product){
 
         BigDecimal materialCost = calculateMaterialCost(product);
+        BigDecimal procedureCost = calculateProcedureCost(product);
         BigDecimal laborCost = calculateLaborCost(product);
-        BigDecimal totalCost = materialCost.add(laborCost);
+        BigDecimal totalCost = materialCost.add(laborCost).add(procedureCost);
 
-        LOGGER.info("Wholesale Price calculation for product {}: Material cost: {}, Labor cost: {}, Total cost: {}",
-                product.getCode(), materialCost, laborCost, totalCost);
+        LOGGER.info("Wholesale Price calculation for product {}: Material cost: {}, Procedure cost: {}, Labor cost: {}, Total cost: {}",
+                product.getCode(), materialCost, procedureCost, laborCost, totalCost);
 
         return totalCost.multiply(WHOLESALE_MARKUP_FACTOR);
     }
@@ -338,6 +453,7 @@ public class ProductService implements IProductService{
         Product product = getProductEntityById(productId);
         BigDecimal materialCost = calculateMaterialCost(product);
         BigDecimal laborCost = calculateLaborCost(product);
+        BigDecimal procedureCost = calculateProcedureCost(product);
         BigDecimal totalCost = materialCost.add(laborCost);
 
         BigDecimal suggestedRetailPrice = calculateSuggestedRetailPrice(product);
@@ -378,6 +494,7 @@ public class ProductService implements IProductService{
                 product.getName(),
                 materialCost,
                 laborCost,
+                procedureCost,
                 laborHours,
                 HOURLY_LABOR_RATE,
                 totalCost,
@@ -407,7 +524,7 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductReadOnlyDTO addMaterialToProduct(Long productId, Long materialId,
+    public ProductListItemDTO addMaterialToProduct(Long productId, Long materialId,
                                                    BigDecimal quantity, Long updaterUserId)
             throws EntityNotFoundException {
 
@@ -428,12 +545,12 @@ public class ProductService implements IProductService{
         LOGGER.info("Added material {} (quantity: {}) to product {}",
                 material.getName(), quantity, product.getCode());
 
-        return mapper.mapToProductReadOnlyDTO(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductReadOnlyDTO removeMaterialFromProduct(Long productId, Long materialId, Long updaterUserId)
+    public ProductListItemDTO  removeMaterialFromProduct(Long productId, Long materialId, Long updaterUserId)
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(productId);
@@ -450,12 +567,12 @@ public class ProductService implements IProductService{
         LOGGER.info("Removed material {} from product {}",
                 material.getName(), product.getCode());
 
-        return mapper.mapToProductReadOnlyDTO(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductReadOnlyDTO addProcedureToProduct(Long productId, Long procedureId,
+    public ProductListItemDTO  addProcedureToProduct(Long productId, Long procedureId,
                                                     BigDecimal cost, Long updaterUserId)
             throws EntityNotFoundException {
 
@@ -476,13 +593,13 @@ public class ProductService implements IProductService{
         LOGGER.info("Added procedure {} (cost: {}) to product {}",
                 procedure.getName(), cost, product.getCode());
 
-        return mapper.mapToProductReadOnlyDTO(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductReadOnlyDTO removeProcedureFromProduct(Long productId, Long procedureId, Long updaterUserId)
+    public ProductListItemDTO  removeProcedureFromProduct(Long productId, Long procedureId, Long updaterUserId)
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(productId);
@@ -500,7 +617,7 @@ public class ProductService implements IProductService{
         LOGGER.info("Removed procedure {} from product {}",
                 procedure.getName(), product.getCode());
 
-        return mapper.mapToProductReadOnlyDTO(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct);
     }
 
     @Override
@@ -631,6 +748,17 @@ public class ProductService implements IProductService{
         return product.getAllProductMaterials().stream()
                 .filter(pm -> pm.getMaterial().getCurrentUnitCost() != null && pm.getQuantity() != null)
                 .map(pm -> pm.getMaterial().getCurrentUnitCost().multiply(pm.getQuantity()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculates total procedure cost for a product
+     */
+
+    private BigDecimal calculateProcedureCost(Product product) {
+        return product.getAllProcedureProducts().stream()
+                .filter(cost -> cost != null)
+                .map(ProcedureProduct::getCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

@@ -36,10 +36,16 @@ public class SaleProduct {
     @Column(name = "product_description_snapshot")
     private String productDescriptionSnapshot;
 
+    // This stores the ACTUAL selling price after discount
     @Column(name = "price_at_the_time", precision = 10, scale = 2)
     private BigDecimal priceAtTheTime;
 
+
     @Column(name = "wholesale_price_at_the_time", precision = 10, scale = 2)
     private BigDecimal wholesalePriceAtTheTime;
+
+    // this stores the suggested price before discount
+    @Column(name = "suggested_price_at_the_time", precision = 10, scale = 2)
+    private BigDecimal suggestedPriceAtTheTime;
 
 }
