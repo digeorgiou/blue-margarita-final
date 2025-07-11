@@ -59,6 +59,22 @@ public class CustomerSpecification {
         };
     }
 
+    public static Specification<Customer> customerSearchByNameEmailOrPhone(String searchTerm) {
+        return (root, query, criteriaBuilder) -> {
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+            String upperSearchTerm = "%" + searchTerm.toUpperCase() + "%";
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("firstname")), upperSearchTerm),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("lastname")), upperSearchTerm),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("email")), upperSearchTerm),
+                    criteriaBuilder.like(root.get("phoneNumber"), upperSearchTerm)
+            );
+        };
+    }
+
+
     /**
      * Specification for multi-field search
      */

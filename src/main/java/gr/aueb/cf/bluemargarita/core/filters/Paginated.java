@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.core.filters;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

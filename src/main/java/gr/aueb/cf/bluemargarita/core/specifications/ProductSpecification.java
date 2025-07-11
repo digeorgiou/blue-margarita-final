@@ -112,6 +112,23 @@ public class ProductSpecification {
         };
     }
 
+    /**
+     * Combined specification for product search (name OR code)
+     */
+    public static Specification<Product> productNameOrCodeLike(String searchTerm) {
+        return (root, query, criteriaBuilder) -> {
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+            String upperSearchTerm = "%" + searchTerm.toUpperCase() + "%";
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("name")), upperSearchTerm),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("code")), upperSearchTerm)
+            );
+        };
+    }
+
+
     public static Specification<Product> productStringFieldLike(String field, String value) {
         return (root, query, criteriaBuilder) -> {
             if (value == null || value.trim().isEmpty()) {

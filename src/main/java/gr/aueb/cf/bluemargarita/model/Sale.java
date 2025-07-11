@@ -46,6 +46,9 @@ public class Sale extends AbstractEntity {
     @Column(name = "discount_percentage", precision = 5, scale = 2)
     private BigDecimal discountPercentage;
 
+    @Column(name = "is_whole_sale")
+    private Boolean isWholesale;
+
     @Column(name = "payment_method")
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;

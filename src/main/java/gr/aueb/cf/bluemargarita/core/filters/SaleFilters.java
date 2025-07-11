@@ -1,12 +1,12 @@
 package gr.aueb.cf.bluemargarita.core.filters;
 
+import gr.aueb.cf.bluemargarita.core.enums.PaymentMethod;
 import lombok.*;
 import org.springframework.lang.Nullable;
 
-import java.math.BigDecimal;
+
 import java.time.LocalDate;
 
-// SaleFilters for when you implement Sale filtering
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,13 +19,13 @@ public class SaleFilters extends GenericFilters {
     private Long customerId;
 
     @Nullable
-    private String customerName;
+    private String productNameOrCode;
 
     @Nullable
     private Long locationId;
 
     @Nullable
-    private String locationName;
+    private Long categoryId;
 
     @Nullable
     private LocalDate saleDateFrom;
@@ -34,11 +34,5 @@ public class SaleFilters extends GenericFilters {
     private LocalDate saleDateTo;
 
     @Nullable
-    private BigDecimal minAmount;
-
-    @Nullable
-    private BigDecimal maxAmount;
-
-    @Nullable
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 }

@@ -18,6 +18,9 @@ import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureUpdateDTO;
 import gr.aueb.cf.bluemargarita.dto.product.*;
+import gr.aueb.cf.bluemargarita.dto.sale.SaleItemDetailsDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.SaleProductDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.SaleReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierUpdateDTO;
@@ -30,6 +33,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -327,6 +331,71 @@ public class Mapper {
                 .divide(suggested, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
     }
+
+    //Sale
+
+    public SaleReadOnlyDTO mapToSaleReadOnlyDTO(Sale sale){
+
+        List<SaleProductDTO> products = new ArrayList<>();
+
+        for(SaleProduct sp : sale.getAllSaleProducts()){
+            SaleProductDTO dto = new SaleProductDTO(
+                    sp.getProduct().getId(),
+                    sp.getProduct().getName(),
+                    sp.getProduct().getCode(),
+                    sp.getQuantity(),
+                    sp.getSuggestedPriceAtTheTime(),
+                    sp.getPriceAtTheTime(),
+                    sp.getQuantity().multiply(sp.getSuggestedPriceAtTheTime()),
+                    sp.getQuantity().multiply(sp.getPriceAtTheTime()),
+                    sp.getSale().getDiscountPercentage()
+            );
+            products.add(dto);
+        }
+
+        return new SaleReadOnlyDTO(
+                sale.getId(),
+                sale.getCustomer().getFullName(),
+                sale.getLocation().getName(),
+                sale.getSaleDate(),
+                sale.getSuggestedTotalPrice(),
+                sale.getFinalTotalPrice(),
+                sale.getDiscountPercentage(),
+                sale.getDiscountPercentage(),
+                sale.getPackagingPrice(),
+                sale.getFinalTotalPrice().add(sale.getPackagingPrice()),
+                sale.getPaymentMethod(),
+                sale.getAllSaleProducts().size(),
+                products,
+                sale.getCreatedAt(),
+                sale.getUpdatedAt(),
+                sale.getCreatedBy().getUsername(),
+                sale.getLastUpdatedBy().getUsername()
+        );
+    }
+
+    public SaleItemDetailsDTO mapToSaleItemDetailsDTO(SaleProduct saleProduct){
+        Product product = saleProduct.getProduct();
+
+        // Calculate original price (retail or wholesale based on sale context)
+        BigDecimal originalPrice = product.getFinalSellingPriceRetail();
+        BigDecimal lineTotal = saleProduct.getPriceAtTheTime().multiply(saleProduct.getQuantity());
+        BigDecimal lineDiscount = originalPrice.subtract(saleProduct.getPriceAtTheTime())
+                .multiply(saleProduct.getQuantity());
+
+        return new SaleItemDetailsDTO(
+                product.getId(),
+                product.getName(),
+                product.getCode(),
+                product.getCategory().getName(),
+                saleProduct.getQuantity(),
+                saleProduct.getPriceAtTheTime(),
+                originalPrice,
+                lineTotal,
+                lineDiscount
+        );
+    }
+
 
     // Supplier
 

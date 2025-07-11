@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.enums.PaymentMethod;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record SaleReadOnlyDTO(
         Long id,
