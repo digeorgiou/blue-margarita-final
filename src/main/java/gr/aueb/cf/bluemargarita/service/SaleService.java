@@ -42,6 +42,7 @@ public class SaleService implements ISaleService {
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
     private final SalePricingService pricingService;
+    private final ProductService productService;
     private final Mapper mapper;
 
     @Autowired
@@ -51,6 +52,7 @@ public class SaleService implements ISaleService {
                        LocationRepository locationRepository,
                        UserRepository userRepository,
                        SalePricingService pricingService,
+                       ProductService productService,
                        Mapper mapper) {
         this.saleRepository = saleRepository;
         this.productRepository = productRepository;
@@ -58,6 +60,7 @@ public class SaleService implements ISaleService {
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
         this.pricingService = pricingService;
+        this.productService = productService;
         this.mapper = mapper;
     }
 
@@ -111,15 +114,24 @@ public class SaleService implements ISaleService {
         sale.setCreatedBy(creator);
         sale.setLastUpdatedBy(creator);
 
-
+        // Add products to sale
         for (Map.Entry<Product, BigDecimal> entry : productEntitiesQuantities.entrySet()) {
             sale.addProduct(entry.getKey(), entry.getValue());
         }
 
-        // Calculate and update pricing using the service
+        // Calculate pricing
         updateSalePricingWithDiscount(sale);
 
         Sale savedSale = saleRepository.save(sale);
+
+        for (Map.Entry<Long, BigDecimal> entry : productQuantities.entrySet()) {
+            try {
+                productService.reduceProductStock(entry.getKey(), entry.getValue());
+            } catch (EntityNotFoundException e) {
+                LOGGER.error("Product {} not found when reducing stock for sale {}",
+                        entry.getKey(), savedSale.getId());
+            }
+        }
 
         // Update customer's first sale date if needed
         updateCustomerFirstSaleDate(customer, request.saleDate());
@@ -167,6 +179,21 @@ public class SaleService implements ISaleService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteSale(Long saleId) throws EntityNotFoundException {
         Sale sale = getSaleEntityById(saleId);
+
+        // Restore stock before deleting sale
+        for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
+            try {
+                productService.increaseProductStock(
+                        saleProduct.getProduct().getId(),
+                        saleProduct.getQuantity()
+                );
+            } catch (EntityNotFoundException e) {
+                LOGGER.error("Product {} not found when restoring stock for deleted sale {}",
+                        saleProduct.getProduct().getCode(), saleId);
+                // Continue with deletion
+            }
+        }
+
         saleRepository.delete(sale);
         LOGGER.info("Sale {} deleted", saleId);
     }

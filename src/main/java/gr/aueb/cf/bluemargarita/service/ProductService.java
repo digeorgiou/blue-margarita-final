@@ -332,6 +332,80 @@ public class ProductService implements IProductService{
                 .multiply(BigDecimal.valueOf(100));
     }
 
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void reduceProductStock(Long productId, BigDecimal quantity) throws EntityNotFoundException {
+
+        Product product = getProductEntityById(productId);
+
+        if(product.getStock() == null) {
+            LOGGER.debug("Product {} has no stock tracking enabled. Can not reduce stock.", product.getCode());
+            return;
+        }
+
+        BigDecimal currentStock = BigDecimal.valueOf(product.getStock());
+        BigDecimal newStock = currentStock.subtract(quantity);
+
+        if(newStock.compareTo(BigDecimal.ZERO) < 0) {
+            LOGGER.warn("Product {} stock will go negative !", product.getCode());
+        }
+
+        product.setStock(newStock.intValue());
+        productRepository.save(product);
+
+        LOGGER.info("Reduced stock for product {} by {}. New stock : {}",
+                product.getCode(), quantity, newStock);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void increaseProductStock(Long productId, BigDecimal quantity) throws EntityNotFoundException {
+
+        Product product = getProductEntityById(productId);
+
+        if(product.getStock() == null) {
+            LOGGER.debug("Product {} has no stock tracking enabled. Can not increase stock", product.getCode());
+            return;
+        }
+
+        BigDecimal currentStock = BigDecimal.valueOf(product.getStock());
+        BigDecimal newStock = currentStock.add(quantity);
+
+        product.setStock(newStock.intValue());
+        productRepository.save(product);
+
+        LOGGER.info("Increased stock for product {} by {}. New stock : {}",
+                product.getCode(), quantity, newStock);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void adjustProductStock(Long productId, BigDecimal oldQuantity, BigDecimal newQuantity) throws EntityNotFoundException {
+
+        Product product = getProductEntityById(productId);
+
+        if(product.getStock() == null) {
+            LOGGER.debug("Product {} has no stock tracking enabled. Can not adjust stock.", product.getCode());
+            return;
+        }
+
+        BigDecimal stockAdjustment = oldQuantity.subtract(newQuantity);
+        BigDecimal currentStock = BigDecimal.valueOf(product.getStock());
+        BigDecimal newStock = currentStock.add(stockAdjustment);
+
+        if (newStock.compareTo(BigDecimal.ZERO) < 0) {
+            LOGGER.warn("Product {} stock adjustment will result in negative stock! Current: {}, Adjustment: {}, New stock: {}",
+                    product.getCode(), currentStock, stockAdjustment, newStock);
+        }
+
+        product.setStock(newStock.intValue());
+        productRepository.save(product);
+
+        LOGGER.info("Adjusted stock for product {} from {} to {}. Stock change: {}",
+                product.getCode(), oldQuantity, newQuantity, stockAdjustment);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<ProductListItemDTO> getLowStockProducts() {
@@ -378,6 +452,16 @@ public class ProductService implements IProductService{
                 .build();
 
         return getProductListItemsPaginated(lowStockFilters);
+    }
+
+    @Override
+    public List<ProductListItemDTO> getNegativeStockProducts(int limit) {
+        return List.of();
+    }
+
+    @Override
+    public Paginated<ProductListItemDTO> getNegativeStockProductsPaginated() {
+        return null;
     }
 
     @Override

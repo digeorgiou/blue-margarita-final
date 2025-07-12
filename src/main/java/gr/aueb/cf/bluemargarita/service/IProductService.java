@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
@@ -180,6 +181,34 @@ public interface IProductService {
     // =============================================================================
 
     /**
+     * Decreases product stock when a sale is recorded
+     * @param productId Product ID
+     * @param quantity Quantity to reduce from stock
+     * @throws EntityNotFoundException if product not found
+     */
+    void reduceProductStock(Long productId, BigDecimal quantity)
+            throws EntityNotFoundException;
+
+    /**
+     * Increases product stock when a sale is cancelled/deleted
+     * @param productId Product ID
+     * @param quantity Quantity to add back to stock
+     * @throws EntityNotFoundException if product not found
+     */
+    void increaseProductStock(Long productId, BigDecimal quantity)
+            throws EntityNotFoundException;
+
+    /**
+     * Adjusts stock when sale quantities are updated
+     * @param productId Product ID
+     * @param oldQuantity Previous quantity sold
+     * @param newQuantity New quantity sold
+     */
+    void adjustProductStock(Long productId, BigDecimal oldQuantity, BigDecimal newQuantity)
+            throws EntityNotFoundException;
+
+
+    /**
      * Retrieves all products with stock below their low stock alert threshold
      * Used for inventory management and stock alerts
      *
@@ -203,6 +232,13 @@ public interface IProductService {
      * @return Paginated result of low stock products
      */
     Paginated<ProductListItemDTO> getLowStockProductsPaginated(ProductFilters filters);
+
+    /**
+     * Gets products with negative stock with limit (for dashboard)
+     */
+    List<ProductListItemDTO> getNegativeStockProducts(int limit);
+
+    Paginated<ProductListItemDTO> getNegativeStockProductsPaginated();
 
     /**
      * Updates the stock quantity for a product
