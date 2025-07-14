@@ -2,6 +2,8 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.dto.sale.PaginatedFilteredSalesWithSummary;
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
@@ -71,7 +73,7 @@ public class SaleService implements ISaleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SaleDetailedViewDTO recordSale(RecordSaleRequestDTO request)
-            throws EntityNotFoundException, EntityInvalidArgumentException {
+            throws EntityNotFoundException {
 
         // Validate location exists
         Location location = getLocationById(request.locationId());
@@ -85,7 +87,7 @@ public class SaleService implements ISaleService {
         // Validate creator user exists
         User creator = getUserById(request.creatorUserId());
 
-        // Validate products and build product map
+        // Build product map
         Map<Long, BigDecimal> productQuantities = request.items().stream()
                 .collect(Collectors.toMap(
                         SaleItemRequestDTO::productId,
@@ -142,14 +144,14 @@ public class SaleService implements ISaleService {
                 savedSale.getFinalTotalPrice(),
                 savedSale.getDiscountPercentage());
 
-        // Convert to RecordSaleResponseDTO
+        // Convert to RecordSaleDetailedView DTO
         return getSaleDetailedView(savedSale.getId());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SaleReadOnlyDTO updateSale(SaleUpdateDTO dto)
-            throws EntityNotFoundException, EntityInvalidArgumentException {
+            throws EntityNotFoundException{
 
         Sale existingSale = getSaleEntityById(dto.saleId());
         Location location = getLocationById(dto.locationId());
@@ -204,7 +206,7 @@ public class SaleService implements ISaleService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductSearchResultDTO> searchProductsForSale(String searchTerm) {
+    public Paginated<ProductSearchResultDTO> searchProductsForSale(ProductFilters filters) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             return Collections.emptyList();
         }
@@ -420,9 +422,6 @@ public class SaleService implements ISaleService {
 
         );
     }
-
-
-
 
     // =============================================================================
     // PRIVATE HELPER METHODS

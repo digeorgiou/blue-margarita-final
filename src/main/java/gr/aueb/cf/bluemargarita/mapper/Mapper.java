@@ -4,10 +4,8 @@ import gr.aueb.cf.bluemargarita.core.enums.Role;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerWithSalesDTO;
+import gr.aueb.cf.bluemargarita.dto.customer.*;
+import gr.aueb.cf.bluemargarita.dto.customer.CustomerSalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
@@ -35,6 +33,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -95,8 +94,39 @@ public class Mapper {
         return existingCustomer;
     }
 
-    public CustomerReadOnlyDTO mapToCustomerReadOnlyDTO(Customer customer){
-        return new CustomerReadOnlyDTO(
+    public CustomerListItemDTO mapToCustomerListItemDTO(Customer customer) {
+        return new CustomerListItemDTO(
+                customer.getId(),
+                customer.getFirstname(),
+                customer.getLastname(),
+                customer.getPhoneNumber(),
+                customer.getAddress(),
+                customer.getEmail(),
+                customer.getTin()
+        );
+    }
+
+    public CustomerDetailedViewDTO mapToCustomerDetailedViewDTO(Customer customer, CustomerSalesDataDTO data, List<ProductStatsSummaryDTO> topProducts){
+
+        // Calculate sales statistics
+        int totalOrders =  customer.getAllSales().size();
+
+        BigDecimal totalOrderValue = customer.getAllSales().stream()
+                .map(Sale::getFinalTotalPrice)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        LocalDate lastOrderDate = customer.getAllSales().stream()
+                .map(Sale::getSaleDate)
+                .filter(Objects::nonNull)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+
+        BigDecimal averageOrderValue = totalOrders > 0 && totalOrderValue.compareTo(BigDecimal.ZERO) > 0
+                ? totalOrderValue.divide(BigDecimal.valueOf(totalOrders), 2, BigDecimal.ROUND_HALF_UP)
+                : BigDecimal.ZERO;
+
+            return new CustomerDetailedViewDTO(
                 customer.getId(),
                 customer.getFirstname(),
                 customer.getLastname(),
@@ -112,7 +142,12 @@ public class Mapper {
                 customer.getLastUpdatedBy() != null ? customer.getLastUpdatedBy().getUsername() : "system",
                 customer.getIsActive(),
                 customer.getDeletedAt(),
-                customer.getFirstSaleDate()
+                customer.getFirstSaleDate(),
+                data.totalRevenue(),
+                data.numberOfSales(),
+                data.lastOrderDate(),
+                data.averageOrderValue(),
+                topProducts
         );
     }
 
@@ -468,5 +503,6 @@ public class Mapper {
                 user.getLastUpdatedBy() == null ? "system" : user.getLastUpdatedBy().getUsername()
         );
     }
+
 
 }

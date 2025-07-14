@@ -25,4 +25,10 @@ public class CustomerFilters extends GenericFilters{
 
     @Nullable
     private Boolean isActive;
+
+    @Nullable
+    private String searchTerm;
+
+    @Nullable
+    private Boolean wholesaleOnly;
 }

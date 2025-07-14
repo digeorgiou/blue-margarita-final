@@ -20,6 +20,9 @@ public class ProductFilters extends GenericFilters {
     private String code;
 
     @Nullable
+    private String nameOrCodeOrCategoryName;
+
+    @Nullable
     private String categoryName;
 
     @Nullable

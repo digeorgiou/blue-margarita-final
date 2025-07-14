@@ -6,13 +6,12 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CustomerFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.CustomerSpecification;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerWithSalesDTO;
+import gr.aueb.cf.bluemargarita.dto.customer.*;
+import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Customer;
 import gr.aueb.cf.bluemargarita.model.Sale;
+import gr.aueb.cf.bluemargarita.model.SaleProduct;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.CustomerRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
@@ -30,8 +29,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,7 +49,7 @@ public class CustomerService implements ICustomerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public CustomerReadOnlyDTO createCustomer(CustomerInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
+    public CustomerListItemDTO createCustomer(CustomerInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
         if (dto.email() != null && customerRepository.existsByEmail(dto.email())) {
             throw new EntityAlreadyExistsException("Customer", "Customer with email " + dto.email() + " already exists");
@@ -73,12 +71,12 @@ public class CustomerService implements ICustomerService {
 
         LOGGER.info("Customer created with id: {}", insertedCustomer.getId());
 
-        return mapper.mapToCustomerReadOnlyDTO(insertedCustomer);
+        return mapper.mapToCustomerListItemDTO(insertedCustomer);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public CustomerReadOnlyDTO updateCustomer(CustomerUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
+    public CustomerListItemDTO updateCustomer(CustomerUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
         Customer existingCustomer = customerRepository.findById(dto.customerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id=" + dto.customerId() + " was not found"));
@@ -101,7 +99,7 @@ public class CustomerService implements ICustomerService {
 
         LOGGER.info("Customer {} updated by user {}", savedCustomer.getFullName(), updater.getUsername());
 
-        return mapper.mapToCustomerReadOnlyDTO(savedCustomer);
+        return mapper.mapToCustomerListItemDTO(savedCustomer);
     }
 
     @Override
@@ -127,223 +125,96 @@ public class CustomerService implements ICustomerService {
 
     @Override
     @Transactional(readOnly = true)
-    public CustomerReadOnlyDTO getCustomerById(Long id) throws EntityNotFoundException {
+    public CustomerListItemDTO getCustomerById(Long id) throws EntityNotFoundException {
 
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id=" + id + " was not found"));
 
-        return mapper.mapToCustomerReadOnlyDTO(customer);
+        return mapper.mapToCustomerListItemDTO(customer);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<CustomerReadOnlyDTO> getPaginatedCustomers(int page, int size){
-
-        String defaultSort = "id";
-
-        Pageable pageable = PageRequest.of(page, size,
-                Sort.by(defaultSort).ascending());
-
-        return customerRepository.findAll(pageable).map(mapper::mapToCustomerReadOnlyDTO);
-
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<CustomerReadOnlyDTO> getPaginatedSortedCustomers(int page,
-                                                                 int size,
-                                                                 String sortBy, String sortDirection){
-
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        return customerRepository.findAll(pageable).map(mapper::mapToCustomerReadOnlyDTO);
-
-    }
-
-    public List<CustomerReadOnlyDTO> getFilteredCustomers(CustomerFilters filters){
-        return customerRepository.findAll(getSpecsFromFilters(filters)).stream()
-                .map(mapper::mapToCustomerReadOnlyDTO).collect(Collectors.toList());
-    }
-
-    public Paginated<CustomerReadOnlyDTO> getCustomersFilteredPaginated(CustomerFilters filters){
+    public Paginated<CustomerListItemDTO> getCustomersFilteredPaginated(CustomerFilters filters){
 
         var filtered =
                 customerRepository.findAll(getSpecsFromFilters(filters),
                         filters.getPageable());
 
-        return new Paginated<>(filtered.map(mapper::mapToCustomerReadOnlyDTO));
+        return new Paginated<>(filtered.map(mapper::mapToCustomerListItemDTO));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Paginated<CustomerReadOnlyDTO> searchCustomersPaginated(String searchTerm, Pageable pageable) {
-        Specification<Customer> spec = Specification
-                .where(CustomerSpecification.customerIsActive(true))
-                .and(CustomerSpecification.searchByTerm(searchTerm));
-
-        var searchResults = customerRepository.findAll(spec, pageable);
-        return new Paginated<>(searchResults.map(mapper::mapToCustomerReadOnlyDTO));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public BigDecimal getCustomerTotalRevenue(Long customerId) throws EntityNotFoundException {
-
+    public CustomerDetailedViewDTO getCustomerDetailedView(Long customerId) throws EntityNotFoundException{
         Customer customer = getCustomerEntityById(customerId);
 
+        List<ProductStatsSummaryDTO> topProducts = calculateTopProductsForCustomer(customer);
+
+        CustomerSalesDataDTO data = new CustomerSalesDataDTO(
+                getCustomerTotalRevenue(customer),
+                getCustomerTotalNumberOfSales(customer),
+                getCustomerLastOrderDate(customer),
+                getAverageOrderValue(customer)
+        );
+
+        return mapper.mapToCustomerDetailedViewDTO(customer, data, topProducts);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerListItemDTO> getAllActiveCustomers() {
+        return customerRepository.findByIsActiveTrue()
+                .stream()
+                .map(mapper::mapToCustomerListItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS
+    // =============================================================================
+
+    private boolean emailExists(String email) {
+        return email != null && !email.trim().isEmpty() && customerRepository.existsByEmail(email.trim());
+    }
+
+    private boolean tinExists(String tin) {
+        return tin != null && !tin.trim().isEmpty() && customerRepository.existsByTin(tin.trim());
+    }
+
+    private int getActiveCustomerCount() {
+        return (int) customerRepository.countByIsActiveTrue();
+    }
+
+
+    private BigDecimal getCustomerTotalRevenue(Customer customer){
+
         return customer.getAllSales().stream()
-                .map(Sale::getFinalPrice)
+                .map(Sale::getFinalTotalPrice)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public int getCustomerTotalNumberOfSales(Long customerId) throws EntityNotFoundException {
-
-        Customer customer = getCustomerEntityById(customerId);
+    private int getCustomerTotalNumberOfSales(Customer customer){
 
         return customer.getAllSales().size();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public BigDecimal getCustomerRevenueByDateRange(Long customerId, LocalDate startDate, LocalDate endDate) throws EntityNotFoundException {
-
-        Customer customer = getCustomerEntityById(customerId);
+    private LocalDate getCustomerLastOrderDate(Customer customer){
 
         return customer.getAllSales().stream()
-                .filter(sale -> sale.getSaleDate() != null)
-                .filter(sale -> !sale.getSaleDate().isBefore(startDate))
-                .filter(sale -> !sale.getSaleDate().isAfter(endDate))
-                .map(Sale::getFinalPrice)
+                .map(Sale::getSaleDate)
                 .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .max(LocalDate::compareTo)
+                .orElse(null);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public int getCustomerNumberOfSalesByDateRange(Long customerId, LocalDate startDate, LocalDate endDate) throws EntityNotFoundException {
+    private BigDecimal getAverageOrderValue(Customer customer) {
 
-        Customer customer = getCustomerEntityById(customerId);
+        int numberOfSales = getCustomerTotalNumberOfSales(customer);
+        BigDecimal totalRevenue = getCustomerTotalRevenue(customer);
+        BigDecimal average = BigDecimal.ZERO;
 
-        return  (int) customer.getAllSales().stream()
-                .filter(sale -> sale.getSaleDate() != null)
-                .filter(sale -> !sale.getSaleDate().isBefore(startDate))
-                .filter(sale -> !sale.getSaleDate().isAfter(endDate))
-                .count();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CustomerWithSalesDTO getCustomerWithSalesAnalytics(Long customerId) throws EntityNotFoundException {
-
-        Customer customer = getCustomerEntityById(customerId);
-
-        return mapper.mapToCustomerWithSalesDTO(customer);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerReadOnlyDTO> getAllActiveCustomers() {
-        return customerRepository.findByIsActiveTrue()
-                .stream()
-                .map(mapper::mapToCustomerReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CustomerReadOnlyDTO getCustomerByEmail(String email) throws EntityNotFoundException {
-        if (email == null || email.trim().isEmpty()) {
-            throw new EntityNotFoundException("Customer", "Email cannot be null or empty");
+        if(numberOfSales > 0 && totalRevenue.compareTo(BigDecimal.ZERO) > 0){
+            average = totalRevenue.divide(BigDecimal.valueOf(numberOfSales), 2, BigDecimal.ROUND_HALF_UP);
         }
-
-        Customer customer = customerRepository.findByEmail(email.trim())
-                .orElseThrow(() -> new EntityNotFoundException("Customer",
-                        "Customer with email=" + email + " was not found"));
-
-        return mapper.mapToCustomerReadOnlyDTO(customer);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CustomerReadOnlyDTO getCustomerByTin(String tin) throws EntityNotFoundException {
-        if (tin == null || tin.trim().isEmpty()) {
-            throw new EntityNotFoundException("Customer", "TIN cannot be null or empty");
-        }
-
-        Customer customer = customerRepository.findByTin(tin.trim())
-                .orElseThrow(() -> new EntityNotFoundException("Customer",
-                        "Customer with TIN=" + tin + " was not found"));
-
-        return mapper.mapToCustomerReadOnlyDTO(customer);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerReadOnlyDTO> getTopCustomersByRevenueByDateRange(int limit, LocalDate startDate, LocalDate endDate) {
-        if (limit <= 0) {
-            return List.of();
-        }
-
-        Specification<Customer> spec = CustomerSpecification.withSalesInDateRangeForRevenue(startDate, endDate);
-        Pageable pageable = PageRequest.of(0, limit);
-
-        return customerRepository.findAll(spec, pageable)
-                .stream()
-                .map(mapper::mapToCustomerReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerReadOnlyDTO> getTopCustomersByOrderCountByDateRange(int limit, LocalDate startDate, LocalDate endDate) {
-        if (limit <= 0) {
-            return List.of();
-        }
-
-        Specification<Customer> spec = CustomerSpecification.withSalesInDateRangeForOrderCount(startDate, endDate);
-        Pageable pageable = PageRequest.of(0, limit);
-
-        return customerRepository.findAll(spec, pageable)
-                .stream()
-                .map(mapper::mapToCustomerReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Paginated<CustomerReadOnlyDTO> getNewCustomersInPeriod(LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        Specification<Customer> spec = Specification
-                .where(CustomerSpecification.customerIsActive(true))
-                .and(CustomerSpecification.firstSaleInDateRange(startDate, endDate));
-
-        var searchResults = customerRepository.findAll(spec, pageable);
-        return new Paginated<>(searchResults.map(mapper::mapToCustomerReadOnlyDTO));
-    }
-
-    @Override
-    public boolean emailExists(String email) {
-        return email != null && !email.trim().isEmpty() && customerRepository.existsByEmail(email.trim());
-    }
-
-    @Override
-    public boolean tinExists(String tin) {
-        return tin != null && !tin.trim().isEmpty() && customerRepository.existsByTin(tin.trim());
-    }
-
-    @Override
-    public int getActiveCustomerCount() {
-        return (int) customerRepository.countByIsActiveTrue();
-    }
-
-    @Override
-    public int getNewCustomerCount(LocalDate startDate, LocalDate endDate) {
-        Specification<Customer> spec = Specification
-                .where(CustomerSpecification.customerIsActive(true))
-                .and(CustomerSpecification.firstSaleInDateRange(startDate, endDate));
-
-        return (int) customerRepository.count(spec);
+        return average;
     }
 
     private Specification<Customer> getSpecsFromFilters(CustomerFilters filters) {
@@ -356,12 +227,80 @@ public class CustomerService implements ICustomerService {
                         filters.getTin()))
                 .and(CustomerSpecification.customerStringFieldLike(
                         "phone_number", filters.getPhoneNumber()))
+                .and(CustomerSpecification.searchMultipleFields(filters.getSearchTerm()))
+                .and(CustomerSpecification.wholeSaleCustomersOnly(filters.getWholesaleOnly()))
                 .and(CustomerSpecification.customerIsActive(filters.getIsActive()));
     }
 
     private Customer getCustomerEntityById(Long id) throws EntityNotFoundException{
         return customerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id=" + id + " was not found"));
+    }
+
+    private List<ProductStatsSummaryDTO> calculateTopProductsForCustomer(Customer customer) {
+        Map<Long, BigDecimal[]> productData = new HashMap<>(); // [quantity, revenue, lastSaleTimestamp]
+        Map<Long, String[]> productInfo = new HashMap<>(); // [name, code]
+
+        // Simple loop through all sales and products
+        for (Sale sale : customer.getAllSales()) {
+            long saleTimestamp = sale.getSaleDate().toEpochDay(); // Convert date to number for comparison
+
+            for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
+                Long productId = saleProduct.getProduct().getId();
+
+                // Store product info (name, code) - only once
+                if (!productInfo.containsKey(productId)) {
+                    productInfo.put(productId, new String[]{
+                            saleProduct.getProduct().getName(),
+                            saleProduct.getProduct().getCode()
+                    });
+                }
+
+                // Get existing data or create new [quantity, revenue, lastSaleTimestamp]
+                BigDecimal[] data = productData.getOrDefault(productId,
+                        new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.valueOf(0)});
+
+                // Add quantity
+                data[0] = data[0].add(saleProduct.getQuantity());
+
+                // Add revenue (quantity * price)
+                BigDecimal revenue = saleProduct.getQuantity().multiply(saleProduct.getPriceAtTheTime());
+                data[1] = data[1].add(revenue);
+
+                // Update last sale date if newer
+                if (saleTimestamp > data[2].longValue()) {
+                    data[2] = BigDecimal.valueOf(saleTimestamp);
+                }
+
+                productData.put(productId, data);
+            }
+        }
+
+        // Convert to DTOs and sort by revenue
+        List<ProductStatsSummaryDTO> result = new ArrayList<>();
+
+        for (Map.Entry<Long, BigDecimal[]> entry : productData.entrySet()) {
+            Long productId = entry.getKey();
+            BigDecimal[] data = entry.getValue();
+            String[] info = productInfo.get(productId);
+
+            // Convert timestamp back to LocalDate
+            LocalDate lastSaleDate = LocalDate.ofEpochDay(data[2].longValue());
+
+            result.add(new ProductStatsSummaryDTO(
+                    productId,
+                    info[0], // name
+                    info[1], // code
+                    data[0], // total quantity
+                    data[1], // total revenue
+                    lastSaleDate
+            ));
+        }
+
+        // Sort by revenue (highest first) and limit to top 5
+        result.sort((a, b) -> b.totalRevenue().compareTo(a.totalRevenue()));
+
+        return result.size() > 5 ? result.subList(0, 5) : result;
     }
 
 

@@ -45,24 +45,21 @@ public interface ISaleService {
      * @param request Sale creation data including products, pricing, and metadata
      * @return Created sale with calculated pricing and complete item details
      * @throws EntityNotFoundException if location, customer, products, or user not found
-     * @throws EntityInvalidArgumentException if business rules violated (validated by @Valid)
      */
     SaleDetailedViewDTO recordSale(RecordSaleRequestDTO request)
-            throws EntityNotFoundException, EntityInvalidArgumentException;
+            throws EntityNotFoundException;
 
     /**
      * Updates an existing sale's basic information with automatic pricing recalculation.
-     *
      * Note: This method recalculates all pricing when final price is changed.
      * For product changes (add/remove/quantity), use dedicated product management methods.
      *
      * @param dto Sale update data including modified fields
      * @return Updated sale with recalculated pricing as DTO
      * @throws EntityNotFoundException if sale, customer, location, or user not found
-     * @throws EntityInvalidArgumentException if business rules violated
      */
     SaleReadOnlyDTO updateSale(SaleUpdateDTO dto)
-            throws EntityNotFoundException, EntityInvalidArgumentException;
+            throws EntityNotFoundException;
 
     /**
      * Deletes a sale by ID.

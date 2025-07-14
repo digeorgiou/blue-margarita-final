@@ -52,6 +52,40 @@ public class CustomerSpecification {
         });
     }
 
+    /**
+     * Specification for multi-field search (lastname, phone, tin, email)
+     */
+
+    public static Specification<Customer> searchMultipleFields(String searchTerm) {
+        return (root, query , criteriaBuilder) -> {
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+            String likePattern = "%" + searchTerm.toUpperCase() + "%";
+
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("lastname")), likePattern),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("phoneNumber")), likePattern),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("tin")), likePattern),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("email")), likePattern)
+            );
+        };
+    }
+
+    /**
+     * Specification for wholesale customers (customers with TIN)
+     */
+
+    public static Specification<Customer> wholeSaleCustomersOnly(Boolean wholesaleOnly){
+        return(root, query, criteriaBuilder) -> {
+            if(wholesaleOnly == null || !wholesaleOnly){
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+
+            return criteriaBuilder.isNotNull(root.get("tin"));
+        };
+    }
+
     public static Specification<Customer> hasSalesInDateRange(LocalDate startDate, LocalDate endDate) {
         return(root, query, criteriaBuilder) -> {
             Join<Customer, Sale> saleJoin = root.join("sales", JoinType.INNER);
