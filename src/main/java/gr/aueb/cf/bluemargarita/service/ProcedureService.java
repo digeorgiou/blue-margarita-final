@@ -5,12 +5,12 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProcedureSpecification;
-import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureForDropdownDTO;
-import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.category.CategoryUsageDTO;
+import gr.aueb.cf.bluemargarita.dto.procedure.*;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
+import gr.aueb.cf.bluemargarita.model.Category;
 import gr.aueb.cf.bluemargarita.model.Procedure;
+import gr.aueb.cf.bluemargarita.model.ProcedureProduct;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.ProcedureRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
@@ -22,8 +22,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +42,10 @@ public class ProcedureService implements IProcedureService {
         this.userRepository = userRepository;
         this.mapper = mapper;
     }
+
+    // =============================================================================
+    // CORE CRUD OPERATIONS
+    // =============================================================================
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -119,6 +125,10 @@ public class ProcedureService implements IProcedureService {
         return mapper.mapToProcedureReadOnlyDTO(procedure);
     }
 
+    // =============================================================================
+    // QUERY OPERATIONS
+    // =============================================================================
+
     @Override
     @Transactional(readOnly = true)
     public List<ProcedureReadOnlyDTO> getAllActiveProcedures() {
@@ -157,6 +167,115 @@ public class ProcedureService implements IProcedureService {
         );
         return new Paginated<>(filtered.map(mapper::mapToProcedureReadOnlyDTO));
     }
+
+    // =============================================================================
+    // ANALYTICS AND DETAILED VIEWS
+    // =============================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProcedureDetailedDTO getProcedureDetailedById(Long id) throws EntityNotFoundException {
+
+        Procedure procedure = procedureRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + id + " was not found"));
+
+        // Calculate basic statistics using existing relationships
+        Set<ProcedureProduct> procedureProducts = procedure.getAllProcedureProducts();
+        Integer totalProductsUsing = procedureProducts.size();
+
+        // Calculate cost statistics
+        List<BigDecimal> costs = procedureProducts.stream()
+                .map(ProcedureProduct::getCost)
+                .filter(Objects::nonNull)
+                .toList();
+
+        BigDecimal averageProcedureCost = costs.isEmpty() ? BigDecimal.ZERO :
+                costs.stream()
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .divide(BigDecimal.valueOf(costs.size()), 2, RoundingMode.HALF_UP);
+
+        BigDecimal minProcedureCost = costs.stream()
+                .min(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal maxProcedureCost = costs.stream()
+                .max(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+
+        // Calculate product selling price statistics
+        List<BigDecimal> sellingPricesRetail = procedureProducts.stream()
+                .map(pp -> pp.getProduct().getFinalSellingPriceRetail())
+                .filter(Objects::nonNull)
+                .toList();
+
+        BigDecimal averageProductSellingPriceRetail = sellingPricesRetail.isEmpty() ? BigDecimal.ZERO :
+                sellingPricesRetail.stream()
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .divide(BigDecimal.valueOf(sellingPricesRetail.size()), 2, RoundingMode.HALF_UP);
+
+
+        // Calculate category distribution
+        List<CategoryUsageDTO> categoryDistribution = calculateCategoryDistribution(procedureProducts);
+
+        return new ProcedureDetailedDTO(
+                procedure.getId(),
+                procedure.getName(),
+                procedure.getCreatedAt(),
+                procedure.getUpdatedAt(),
+                procedure.getCreatedBy().getUsername(),
+                procedure.getLastUpdatedBy().getUsername(),
+                procedure.getIsActive(),
+                procedure.getDeletedAt(),
+                totalProductsUsing,
+                averageProcedureCost,
+                minProcedureCost,
+                maxProcedureCost,
+                averageProductSellingPriceRetail,
+                categoryDistribution
+        );
+    }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS
+    // =============================================================================
+
+    /**
+     * Calculates category distribution for products using this procedure
+     * Groups products by category and calculates percentages
+     *
+     * @param procedureProducts Set of procedure-product relationships
+     * @return List of category usage statistics sorted by product count (descending)
+     */
+
+    private List<CategoryUsageDTO> calculateCategoryDistribution(Set<ProcedureProduct> procedureProducts) {
+        if (procedureProducts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Group by category and count products
+        Map<Category, Long> categoryCount = procedureProducts.stream()
+                .collect(Collectors.groupingBy(
+                        pp -> pp.getProduct().getCategory(),
+                        Collectors.counting()
+                ));
+
+        int totalProducts = procedureProducts.size();
+
+        return categoryCount.entrySet().stream()
+                .map(entry -> new CategoryUsageDTO(
+                        entry.getKey().getId(),
+                        entry.getKey().getName(),
+                        entry.getValue().intValue(),
+                        (entry.getValue() * 100.0) / totalProducts
+                ))
+                .sorted((c1, c2) -> c2.productCount().compareTo(c1.productCount()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Creates JPA Specification from filter criteria
+     * Combines name filtering and active status filtering using AND logic
+     */
 
     private Specification<Procedure> getSpecsFromFilters(ProcedureFilters filters) {
         return Specification
