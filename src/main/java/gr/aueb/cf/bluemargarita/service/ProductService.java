@@ -6,6 +6,9 @@ import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
 import gr.aueb.cf.bluemargarita.dto.product.*;
+import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.WeeklySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.*;
@@ -257,8 +260,8 @@ public class ProductService implements IProductService{
     @Override
     @Transactional(readOnly = true)
     public List<WeeklySalesDataDTO> getProductWeeklySales(Long productId,
-                                                        LocalDate startDate,
-                                                        LocalDate endDate)
+                                                          LocalDate startDate,
+                                                          LocalDate endDate)
             throws EntityNotFoundException {
         return analyticsService.getWeeklySalesData(productId, startDate, endDate);
     }

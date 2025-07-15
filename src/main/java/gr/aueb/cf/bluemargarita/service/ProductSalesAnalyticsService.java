@@ -4,6 +4,9 @@ package gr.aueb.cf.bluemargarita.service;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSalesSpecification;
 import gr.aueb.cf.bluemargarita.dto.product.*;
+import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.WeeklySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
 import gr.aueb.cf.bluemargarita.model.Customer;
 import gr.aueb.cf.bluemargarita.model.Location;
 import gr.aueb.cf.bluemargarita.model.Product;
@@ -15,17 +18,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.WeekFields;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

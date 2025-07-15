@@ -1,4 +1,4 @@
-package gr.aueb.cf.bluemargarita.dto.product;
+package gr.aueb.cf.bluemargarita.dto.sale;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

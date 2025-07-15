@@ -1,5 +1,9 @@
 package gr.aueb.cf.bluemargarita.dto.product;
 
+import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.WeeklySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;

@@ -5,14 +5,14 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.LocationSpecification;
-import gr.aueb.cf.bluemargarita.dto.location.LocationForDropdownDTO;
-import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.location.*;
+import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
-import gr.aueb.cf.bluemargarita.model.Location;
-import gr.aueb.cf.bluemargarita.model.User;
+import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.LocationRepository;
+import gr.aueb.cf.bluemargarita.repository.SaleRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,8 +24,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,12 +37,14 @@ public class LocationService implements ILocationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationService.class);
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
+    private final SaleRepository saleRepository;
     private final Mapper mapper;
 
     @Autowired
-    public LocationService(LocationRepository locationRepository, UserRepository userRepository, Mapper mapper) {
+    public LocationService(LocationRepository locationRepository, UserRepository userRepository, SaleRepository saleRepository, Mapper mapper) {
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
+        this.saleRepository = saleRepository;
         this.mapper = mapper;
     }
 
@@ -116,6 +121,10 @@ public class LocationService implements ILocationService {
         }
     }
 
+    // =============================================================================
+    // QUERY OPERATIONS
+    // =============================================================================
+
     @Override
     @Transactional(readOnly = true)
     public LocationReadOnlyDTO getLocationById(Long id) throws EntityNotFoundException {
@@ -174,12 +183,6 @@ public class LocationService implements ILocationService {
         return new Paginated<>(filtered.map(mapper::mapToLocationReadOnlyDTO));
     }
 
-    private Specification<Location> getSpecsFromFilters(LocationFilters filters) {
-        return Specification
-                .where(LocationSpecification.locationNameLike(filters.getName()))
-                .and(LocationSpecification.locationIsActive(filters.getIsActive()));
-    }
-
     @Override
     @Transactional(readOnly = true)
     public List<LocationForDropdownDTO> getActiveLocationsForDropdown() {
@@ -190,5 +193,100 @@ public class LocationService implements ILocationService {
                 .collect(Collectors.toList());
 
 
+    }
+
+    // =============================================================================
+    // ANALYTICS AND DETAILED VIEWS
+    // =============================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public LocationDetailedDTO getLocationDetailedById(Long id) throws EntityNotFoundException {
+
+        LOGGER.debug("Retrieving optimized simple analytics for location id: {}", id);
+
+        Location location = locationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + id + " was not found"));
+
+        // ✅ OPTIMIZED: Use repository methods instead of loading all sales
+
+        // Basic metrics using single queries
+        Integer totalSalesCount = saleRepository.countByLocationId(id);
+
+        if (totalSalesCount == 0) {
+            // No sales - return empty metrics
+            return new LocationDetailedDTO(
+                    location.getId(),
+                    location.getName(),
+                    location.getCreatedAt(),
+                    location.getUpdatedAt(),
+                    location.getCreatedBy().getUsername(),
+                    location.getLastUpdatedBy().getUsername(),
+                    location.getIsActive(),
+                    location.getDeletedAt(),
+                    0,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    null,
+                    null,
+                    0,
+                    BigDecimal.ZERO,
+                    0,
+                    BigDecimal.ZERO
+            );
+        }
+
+        // Get aggregated data in single queries (no loading all sales into memory)
+        BigDecimal totalRevenue = saleRepository.sumRevenueByLocationId(id);
+        LocalDate firstSaleDate = saleRepository.findFirstSaleDateByLocationId(id);
+        LocalDate lastSaleDate = saleRepository.findLastSaleDateByLocationId(id);
+
+        BigDecimal averageOrderValue = totalRevenue != null && totalSalesCount > 0 ?
+                totalRevenue.divide(BigDecimal.valueOf(totalSalesCount), 2, RoundingMode.HALF_UP) :
+                BigDecimal.ZERO;
+
+        // Recent performance (last 30 days) using date-filtered query
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        Integer recentSalesCount = saleRepository.countByLocationIdAndDateRange(id, thirtyDaysAgo, LocalDate.now());
+        BigDecimal recentRevenue = saleRepository.sumRevenueByLocationIdAndDateRange(id, thirtyDaysAgo, LocalDate.now());
+
+        // Yearly performance (current year) using date-filtered query
+        LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+        LocalDate yearEnd = LocalDate.now();
+        Integer yearlySalesCount = saleRepository.countByLocationIdAndDateRange(id, yearStart, yearEnd);
+        BigDecimal yearlySalesRevenue = saleRepository.sumRevenueByLocationIdAndDateRange(id, yearStart, yearEnd);
+
+        LOGGER.debug("Optimized simple analytics completed for location '{}': totalSales={}, totalRevenue={}, yearlySales={}",
+                location.getName(), totalSalesCount, totalRevenue, yearlySalesCount);
+
+        return new LocationDetailedDTO(
+                location.getId(),
+                location.getName(),
+                location.getCreatedAt(),
+                location.getUpdatedAt(),
+                location.getCreatedBy().getUsername(),
+                location.getLastUpdatedBy().getUsername(),
+                location.getIsActive(),
+                location.getDeletedAt(),
+                totalSalesCount,
+                totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
+                averageOrderValue,
+                firstSaleDate,
+                lastSaleDate,
+                recentSalesCount,
+                recentRevenue != null ? recentRevenue : BigDecimal.ZERO,
+                yearlySalesCount,
+                yearlySalesRevenue != null ? yearlySalesRevenue : BigDecimal.ZERO
+        );
+    }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS
+    // =============================================================================
+
+    private Specification<Location> getSpecsFromFilters(LocationFilters filters) {
+        return Specification
+                .where(LocationSpecification.locationNameLike(filters.getName()))
+                .and(LocationSpecification.locationIsActive(filters.getIsActive()));
     }
 }

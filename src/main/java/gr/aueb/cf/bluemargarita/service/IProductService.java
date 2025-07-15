@@ -5,6 +5,9 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.dto.product.*;
+import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.WeeklySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
