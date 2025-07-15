@@ -32,15 +32,4 @@ public class MaterialSpecification {
         };
     }
 
-    public static Specification<Material> materialStringFieldLike(String field, String value) {
-        return (root, query, criteriaBuilder) -> {
-            if (value == null || value.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-            return criteriaBuilder.like(
-                    criteriaBuilder.upper(root.get(field)),
-                    "%" + value.toUpperCase() + "%"
-            );
-        };
-    }
 }
