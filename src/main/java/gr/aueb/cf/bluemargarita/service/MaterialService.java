@@ -105,7 +105,11 @@ public class MaterialService implements IMaterialService {
         Material material = materialRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + id + " was not found"));
 
-        if (!material.getAllPurchaseMaterials().isEmpty() || !material.getAllProductMaterials().isEmpty()) {
+        // Check both product usage AND purchase history
+        boolean hasProductUsage = !material.getAllProductMaterials().isEmpty();
+        boolean hasPurchaseHistory = !material.getAllPurchaseMaterials().isEmpty();
+
+        if (hasProductUsage || hasPurchaseHistory) {
             // Soft Delete if material is used in any purchases or products
             material.setIsActive(false);
             material.setDeletedAt(LocalDateTime.now());

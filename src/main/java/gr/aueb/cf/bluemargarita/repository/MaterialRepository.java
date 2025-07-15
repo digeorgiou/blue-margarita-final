@@ -17,6 +17,7 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
         JpaSpecificationExecutor<Material> {
     boolean existsByDescription(String description);
     List<Material> findByIsActiveTrue();
+    List<Material> findByNameContainingIgnoreCaseAndIsActiveTrue(String name);
 
     @Query("SELECT COUNT(pm) FROM ProductMaterial pm WHERE pm.material.id = :materialId")
     Integer countProductsUsingMaterial(@Param("materialId") Long materialId);

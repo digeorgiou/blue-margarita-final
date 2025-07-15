@@ -30,13 +30,13 @@ public class PurchaseMaterial {
     @Column(precision = 8, scale = 3, nullable = false)
     private BigDecimal quantity;
 
-    /* Keeping description and price at the time of the purchase,
+    /* Keeping name and price at the time of the purchase,
     for historical data of purchases, in case materials gets deleted or updated.
     */
     @Column(name = "price_at_the_time" , precision = 10, scale = 2 )
     private BigDecimal priceAtTheTime;
 
     @Column(name = "material_description_snapshot")
-    private String materialDescriptionSnapshot;
+    private String materialNameSnapshot;
 
 }

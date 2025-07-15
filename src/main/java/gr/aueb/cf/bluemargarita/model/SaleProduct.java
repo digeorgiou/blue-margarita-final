@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @Entity
 @Getter
@@ -30,11 +29,11 @@ public class SaleProduct {
     @Column(precision = 8, scale = 3, nullable = false)
     private BigDecimal quantity;
 
-    /* Keeping description and price at the time of the sale,
+    /* Keeping name and price at the time of the sale,
     for historical data of sales, in case products gets deleted or updated.
     */
     @Column(name = "product_description_snapshot")
-    private String productDescriptionSnapshot;
+    private String productNameSnapshot;
 
     // This stores the ACTUAL selling price after discount
     @Column(name = "price_at_the_time", precision = 10, scale = 2)

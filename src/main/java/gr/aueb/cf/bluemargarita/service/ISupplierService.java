@@ -4,10 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.SupplierFilters;
-import gr.aueb.cf.bluemargarita.dto.supplier.SupplierDropdownDTO;
-import gr.aueb.cf.bluemargarita.dto.supplier.SupplierInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.supplier.SupplierReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.supplier.SupplierUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.supplier.*;
 
 import java.util.List;
 
@@ -75,5 +72,41 @@ public interface ISupplierService {
      * @return Paginated result of suppliers matching filters
      */
     Paginated<SupplierReadOnlyDTO> getSuppliersFilteredPaginated(SupplierFilters filters);
+
+    /**
+     * Retrieves comprehensive analytics for a specific supplier
+     *
+     * Used for "View Details" functionality in supplier management pages, providing:
+     * - Basic supplier information
+     * - Purchase statistics (total purchases, total cost, average purchase value)
+     * - Purchase history timeline (first and last purchase dates)
+     * - Top materials purchased from this supplier
+     *
+     * Performance Optimization:
+     * - Uses database-level aggregation queries instead of loading all purchases
+     * - Memory usage remains constant regardless of purchase volume
+     * - Scales efficiently to handle suppliers with thousands of purchases
+     *
+     * @param supplierId Supplier ID to analyze
+     * @return Detailed supplier information with comprehensive purchase analytics
+     * @throws EntityNotFoundException if supplier not found
+     */
+    SupplierDetailedViewDTO getSupplierDetailedView(Long supplierId) throws EntityNotFoundException;
+
+    /**
+     * Retrieves all active suppliers for general use
+     * Used when you need a simple list of available suppliers
+     *
+     * @return List of all active suppliers
+     */
+    List<SupplierReadOnlyDTO> getAllActiveSuppliers();
+
+    /**
+     * Retrieves active suppliers matching search term for autocomplete in purchase recording
+     *
+     * @param searchTerm Supplier name, email, or phone search term
+     * @return List of suppliers with basic contact info for selection
+     */
+    List<SupplierSearchResultDTO> searchSuppliersForAutocomplete(String searchTerm);
 }
 

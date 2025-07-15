@@ -11,18 +11,21 @@ import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialReadOnlyDTO;
+import gr.aueb.cf.bluemargarita.dto.material.MaterialStatsSummaryDTO;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialUpdateDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureUpdateDTO;
 import gr.aueb.cf.bluemargarita.dto.product.*;
+import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseDetailedViewDTO;
+import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseMaterialDTO;
+import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseMaterialDetailDTO;
+import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleItemDetailsDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleProductDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.stock.StockManagementDTO;
-import gr.aueb.cf.bluemargarita.dto.supplier.SupplierInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.supplier.SupplierReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.supplier.SupplierUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.supplier.*;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserUpdateDTO;
@@ -349,6 +352,34 @@ public class Mapper {
         );
     }
 
+    //Purchase
+
+    public PurchaseReadOnlyDTO mapToPurchaseReadOnlyDTO(Purchase purchase) {
+
+        List<PurchaseMaterialDTO> materials = purchase.getAllPurchaseMaterials().stream()
+                .map(pm -> new PurchaseMaterialDTO(
+                        pm.getMaterial().getId(),
+                        pm.getMaterial().getName(),
+                        pm.getQuantity(),
+                        pm.getMaterial().getUnitOfMeasure(),
+                        pm.getPriceAtTheTime(),
+                        pm.getQuantity().multiply(pm.getPriceAtTheTime())
+                ))
+                .collect(Collectors.toList());
+
+        return new PurchaseReadOnlyDTO(
+                purchase.getId(),
+                purchase.getSupplier().getName(),
+                purchase.getPurchaseDate(),
+                purchase.getTotalCost(),
+                purchase.getAllPurchaseMaterials().size(),
+                materials,
+                purchase.getCreatedAt(),
+                purchase.getUpdatedAt(),
+                purchase.getCreatedBy().getUsername(),
+                purchase.getLastUpdatedBy().getUsername()
+        );
+    }
 
     //Sale
 
@@ -454,9 +485,37 @@ public class Mapper {
         );
     }
 
+    public SupplierListItemDTO mapToSupplierListItemDTO(Supplier supplier) {
+        // Calculate purchase statistics - this would be more efficient with repository aggregation
+        int totalPurchases = supplier.getAllPurchases().size();
+
+        BigDecimal totalCostPaid = supplier.getAllPurchases().stream()
+                .map(Purchase::getTotalCost)
+                .filter(cost -> cost != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        LocalDate lastPurchaseDate = supplier.getAllPurchases().stream()
+                .map(Purchase::getPurchaseDate)
+                .filter(date -> date != null)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+
+        return new SupplierListItemDTO(
+                supplier.getId(),
+                supplier.getName(),
+                supplier.getAddress(),
+                supplier.getTin(),
+                supplier.getPhoneNumber(),
+                supplier.getEmail(),
+                supplier.getIsActive(),
+                totalPurchases,
+                totalCostPaid,
+                lastPurchaseDate
+        );
+    }
+
     //User
 
-//User
 
     public User mapUserInsertToModel(UserInsertDTO dto){
         return User.builder()

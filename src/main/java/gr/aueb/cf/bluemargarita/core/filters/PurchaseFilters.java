@@ -33,5 +33,5 @@ public class PurchaseFilters extends GenericFilters {
     private BigDecimal maxCost;
 
     @Nullable
-    private String materialDescription;
+    private String materialName;
 }
