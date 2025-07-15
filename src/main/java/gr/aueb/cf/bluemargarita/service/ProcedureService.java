@@ -7,6 +7,7 @@ import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProcedureSpecification;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUsageDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.*;
+import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Category;
 import gr.aueb.cf.bluemargarita.model.Procedure;
@@ -15,6 +16,10 @@ import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.ProcedureRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import gr.aueb.cf.bluemargarita.service.IProcedureService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -189,29 +194,17 @@ public class ProcedureService implements IProcedureService {
 
         if (totalProductsUsing == 0) {
             // No products using this procedure - return empty metrics
-            return new ProcedureDetailedDTO(
-                    procedure.getId(),
-                    procedure.getName(),
-                    procedure.getCreatedAt(),
-                    procedure.getUpdatedAt(),
-                    procedure.getCreatedBy().getUsername(),
-                    procedure.getLastUpdatedBy().getUsername(),
-                    procedure.getIsActive(),
-                    procedure.getDeletedAt(),
-                    0,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    Collections.emptyList()
-            );
+            return createEmptyMetricsDTO(procedure);
         }
 
         // Get cost statistics using repository aggregation
         Object[] costStats = procedureRepository.calculateCostStatsByProcedureId(id);
-        BigDecimal averageProcedureCost = costStats != null && costStats[0] != null ? (BigDecimal) costStats[0] : BigDecimal.ZERO;
-        BigDecimal minProcedureCost = costStats != null && costStats[1] != null ? (BigDecimal) costStats[1] : BigDecimal.ZERO;
-        BigDecimal maxProcedureCost = costStats != null && costStats[2] != null ? (BigDecimal) costStats[2] : BigDecimal.ZERO;
+        BigDecimal averageProcedureCost = costStats != null && costStats[0] != null ?
+                (BigDecimal) costStats[0] : BigDecimal.ZERO;
+        BigDecimal minProcedureCost = costStats != null && costStats[1] != null ?
+                (BigDecimal) costStats[1] : BigDecimal.ZERO;
+        BigDecimal maxProcedureCost = costStats != null && costStats[2] != null ?
+                (BigDecimal) costStats[2] : BigDecimal.ZERO;
 
         // Get average product selling price using repository aggregation
         BigDecimal averageProductSellingPrice = procedureRepository.calculateAverageProductPriceByProcedureId(id);
@@ -230,8 +223,23 @@ public class ProcedureService implements IProcedureService {
                 ))
                 .collect(Collectors.toList());
 
-        LOGGER.debug("Optimized analytics completed for procedure '{}': totalProducts={}, avgCost={}, categories={}",
-                procedure.getName(), totalProductsUsing, averageProcedureCost, categoryDistribution.size());
+        // Get top products using this procedure (limit to 10 for performance)
+        PageRequest topProductsPageable = PageRequest.of(0, 10);
+        List<Object[]> topProductsData = procedureRepository.findTopProductsByProcedureUsage(id, topProductsPageable);
+
+        List<ProductUsageDTO> topProductsUsage = topProductsData.stream()
+                .map(data -> new ProductUsageDTO(
+                        (Long) data[0],           // productId
+                        (String) data[1],         // productName
+                        (String) data[2],         // productCode
+                        BigDecimal.ONE,           // usageQuantity (always 1 for procedures)
+                        (BigDecimal) data[3],     // costImpact (procedure cost for this product)
+                        (String) data[4]          // categoryName
+                ))
+                .collect(Collectors.toList());
+
+        LOGGER.debug("Optimized analytics completed for procedure '{}': totalProducts={}, avgCost={}, categories={}, topProducts={}",
+                procedure.getName(), totalProductsUsing, averageProcedureCost, categoryDistribution.size(), topProductsUsage.size());
 
         return new ProcedureDetailedDTO(
                 procedure.getId(),
@@ -247,13 +255,75 @@ public class ProcedureService implements IProcedureService {
                 minProcedureCost,
                 maxProcedureCost,
                 averageProductSellingPrice,
-                categoryDistribution
+                categoryDistribution,
+                topProductsUsage
         );
+    }
+
+    // =============================================================================
+    // PRODUCT RELATIONSHIP OPERATIONS
+    // =============================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<ProductUsageDTO> getAllProductsUsingProcedure(Long procedureId, Pageable pageable)
+            throws EntityNotFoundException {
+
+        // Verify procedure exists
+        procedureRepository.findById(procedureId)
+                .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + procedureId + " was not found"));
+
+        // Apply default sorting if none specified
+        if (pageable.getSort().isUnsorted()) {
+            // Default: Sort by procedure cost descending
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "costImpact")
+            );
+        }
+
+        Page<Object[]> productData = procedureRepository.findAllProductsByProcedureUsagePaginated(procedureId, pageable);
+
+        Page<ProductUsageDTO> mappedProducts = productData.map(data -> new ProductUsageDTO(
+                (Long) data[0],           // productId
+                (String) data[1],         // productName
+                (String) data[2],         // productCode
+                BigDecimal.ONE,           // usageQuantity (always 1 for procedures)
+                (BigDecimal) data[3],     // costImpact (procedure cost for this product)
+                (String) data[4]          // categoryName
+        ));
+
+        return new Paginated<>(mappedProducts);
     }
 
     // =============================================================================
     // PRIVATE HELPER METHODS
     // =============================================================================
+
+    /**
+     * Creates empty metrics DTO for procedures with no product usage
+     */
+
+    private ProcedureDetailedDTO createEmptyMetricsDTO(Procedure procedure){
+        return new ProcedureDetailedDTO(
+                procedure.getId(),
+                procedure.getName(),
+                procedure.getCreatedAt(),
+                procedure.getUpdatedAt(),
+                procedure.getCreatedBy().getUsername(),
+                procedure.getLastUpdatedBy().getUsername(),
+                procedure.getIsActive(),
+                procedure.getDeletedAt(),
+                0,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                Collections.emptyList(),
+                Collections.emptyList()
+        );
+    }
 
 
     /**

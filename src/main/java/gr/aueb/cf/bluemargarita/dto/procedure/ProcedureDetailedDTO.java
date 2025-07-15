@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.dto.procedure;
 
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUsageDTO;
+import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,5 +24,6 @@ public record ProcedureDetailedDTO(
         BigDecimal minProcedureCost,
         BigDecimal maxProcedureCost,
         BigDecimal averageProductSellingPriceRetail,
-        List<CategoryUsageDTO> categoryDistribution
+        List<CategoryUsageDTO> categoryDistribution,
+        List<ProductUsageDTO> topProductsUsage
 ) {}

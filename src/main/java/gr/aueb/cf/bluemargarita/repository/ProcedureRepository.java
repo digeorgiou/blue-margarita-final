@@ -1,6 +1,8 @@
 package gr.aueb.cf.bluemargarita.repository;
 
 import gr.aueb.cf.bluemargarita.model.Procedure;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -43,4 +45,31 @@ public interface ProcedureRepository extends JpaRepository<Procedure, Long>,
             @Param("procedureId") Long procedureId,
             @Param("totalProducts") Integer totalProducts
     );
+
+    /**
+     * Get paginated products using a specific procedure
+     * Used when user clicks "View All Products" button
+     */
+    /**
+     * Get paginated products using a specific procedure
+     * Used when user clicks "View All Products" button
+     */
+    @Query("SELECT p.id, p.name, p.code, pp.cost, " +
+            "CASE WHEN p.category IS NOT NULL THEN p.category.name ELSE 'No Category' END, " +
+            "p.isActive, p.finalSellingPriceRetail " +
+            "FROM Product p JOIN p.procedureProducts pp JOIN pp.procedure proc " +
+            "WHERE proc.id = :procedureId")
+    Page<Object[]> findAllProductsByProcedureUsagePaginated(@Param("procedureId") Long procedureId, Pageable pageable);
+
+    /**
+     * Top products using this procedure (for usage distribution in detailed view)
+     * Orders by product price cost descending
+     */
+    @Query("SELECT p.id, p.name, p.code, pp.cost, " +
+            "CASE WHEN p.category IS NOT NULL THEN p.category.name ELSE 'No Category' END " +
+            "FROM Product p JOIN p.procedureProducts pp JOIN pp.procedure proc " +
+            "WHERE proc.id = :procedureId " +
+            "ORDER BY p.finalSellingPriceRetail DESC")  // ← Sort by product price
+    List<Object[]> findTopProductsByProcedureUsage(@Param("procedureId") Long procedureId, Pageable pageable);
+
 }

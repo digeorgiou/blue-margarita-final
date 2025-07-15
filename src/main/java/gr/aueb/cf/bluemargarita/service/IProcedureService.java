@@ -9,6 +9,8 @@ import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -144,4 +146,17 @@ public interface IProcedureService {
      * @throws EntityNotFoundException if procedure not found
      */
     ProcedureDetailedDTO getProcedureDetailedById(Long id) throws EntityNotFoundException;
+
+    // PRODUCT RELATIONSHIP OPERATIONS
+    // =============================================================================
+
+    /**
+     * Retrieves paginated list of all products using a specific procedure
+     * @param procedureId Procedure ID to find products for
+     * @param pageable Pagination and sorting parameters
+     * @return Paginated list of products using this material with usage details
+     * @throws EntityNotFoundException if material not found
+     */
+    Paginated<ProductUsageDTO> getAllProductsUsingProcedure(Long procedureId, Pageable pageable)
+            throws EntityNotFoundException;
 }
