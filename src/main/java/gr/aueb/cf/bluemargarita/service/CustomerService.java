@@ -167,10 +167,6 @@ public class CustomerService implements ICustomerService {
         BigDecimal totalRevenue = customerRepository.sumRevenueByCustomerId(customerId);
         LocalDate lastOrderDate = customerRepository.findLastSaleDateByCustomerId(customerId);
 
-        BigDecimal averageOrderValue = totalRevenue != null && totalSales > 0 ?
-                totalRevenue.divide(BigDecimal.valueOf(totalSales), 2, RoundingMode.HALF_UP) :
-                BigDecimal.ZERO;
-
         // Get top products using repository aggregation
         List<Object[]> topProductsData = customerRepository.findTopProductsByCustomerId(customerId);
 
@@ -241,13 +237,6 @@ public class CustomerService implements ICustomerService {
                 .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id=" + id + " was not found"));
     }
 
-    private boolean emailExists(String email) {
-        return email != null && !email.trim().isEmpty() && customerRepository.existsByEmail(email.trim());
-    }
-
-    private boolean tinExists(String tin) {
-        return tin != null && !tin.trim().isEmpty() && customerRepository.existsByTin(tin.trim());
-    }
 
     private int getActiveCustomerCount() {
         return (int) customerRepository.countByIsActiveTrue();

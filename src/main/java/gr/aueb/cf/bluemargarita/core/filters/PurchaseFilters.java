@@ -18,7 +18,7 @@ public class PurchaseFilters extends GenericFilters {
     private Long supplierId;
 
     @Nullable
-    private String supplierName;
+    private String supplierNameOrTinOrEmail;
 
     @Nullable
     private LocalDate purchaseDateFrom;
@@ -27,11 +27,7 @@ public class PurchaseFilters extends GenericFilters {
     private LocalDate purchaseDateTo;
 
     @Nullable
-    private BigDecimal minCost;
-
-    @Nullable
-    private BigDecimal maxCost;
-
-    @Nullable
     private String materialName;
+
+    private Long materialId;
 }

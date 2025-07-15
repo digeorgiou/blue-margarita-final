@@ -25,7 +25,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>,
    Optional<Customer> findByEmail(String email);
    Optional<Customer> findByTin(String tin);
    Integer countByIsActiveTrue();
-   Integer countByFirstSaleDateBetween(LocalDate startDate, LocalDate endDate);
 
     // Basic customer sales metrics
     @Query("SELECT COUNT(s) FROM Sale s WHERE s.customer.id = :customerId")

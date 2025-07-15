@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -26,16 +27,25 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
             "FROM ProductMaterial pm WHERE pm.material.id = :materialId")
     Object[] calculateUsageStatsByMaterialId(@Param("materialId") Long materialId);
 
-    /**
-     * Cost impact analytics
-     */
-    @Query("SELECT COALESCE(SUM(pm.quantity * m.costPerUnit), 0) " +
-            "FROM ProductMaterial pm JOIN pm.material m WHERE m.id = :materialId")
-    BigDecimal calculateTotalCostImpactByMaterialId(@Param("materialId") Long materialId);
 
     @Query("SELECT AVG(pm.quantity * m.costPerUnit) " +
             "FROM ProductMaterial pm JOIN pm.material m WHERE m.id = :materialId")
     BigDecimal calculateAverageCostPerProductByMaterialId(@Param("materialId") Long materialId);
+
+
+    /**
+     * Purchase analytics - count purchases containing this material
+     */
+    @Query("SELECT COUNT(DISTINCT pm.purchase.id) FROM PurchaseMaterial pm WHERE pm.material.id = :materialId")
+    Integer countPurchasesContainingMaterial(@Param("materialId") Long materialId);
+
+    /**
+     * Last purchase date for this material
+     */
+    @Query("SELECT MAX(p.purchaseDate) FROM Purchase p " +
+            "JOIN p.purchaseMaterials pm WHERE pm.material.id = :materialId")
+    LocalDate findLastPurchaseDateByMaterialId(@Param("materialId") Long materialId);
+
 
     /**
      * Top products using this material (for usage distribution in detailed view)

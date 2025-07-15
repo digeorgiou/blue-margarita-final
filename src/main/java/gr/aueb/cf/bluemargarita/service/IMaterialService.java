@@ -4,10 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialDetailedViewDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.material.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import org.springframework.data.domain.Pageable;
 
@@ -116,6 +113,14 @@ public interface IMaterialService {
      * @return Paginated result of materials matching filter criteria
      */
     Paginated<MaterialReadOnlyDTO> getMaterialsFilteredPaginated(MaterialFilters filters);
+
+    /**
+     * Retrieves active materials matching search term for autocomplete in purchase recording
+     *
+     * @param searchTerm Material name search term
+     * @return List of materials with basic info for selection
+     */
+    List<MaterialSearchResultDTO> searchMaterialsForAutocomplete(String searchTerm);
 
     // =============================================================================
     // ANALYTICS AND DETAILED VIEWS

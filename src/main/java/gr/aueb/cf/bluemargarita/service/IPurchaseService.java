@@ -49,52 +49,6 @@ public interface IPurchaseService {
      */
     void deletePurchase(Long purchaseId) throws EntityNotFoundException;
 
-    /**
-     * Retrieves detailed purchase information with all materials
-     *
-     * @param purchaseId Purchase ID
-     * @return Detailed purchase view with materials and costs
-     * @throws EntityNotFoundException if purchase not found
-     */
-    PurchaseDetailedViewDTO getPurchaseDetailedView(Long purchaseId) throws EntityNotFoundException;
-
-    // =============================================================================
-    // QUERY OPERATIONS
-    // =============================================================================
-
-    /**
-     * Retrieves purchases with pagination and filtering for management pages
-     *
-     * Primary method for purchase management list views with:
-     * - Date range filtering
-     * - Supplier filtering (by ID or name)
-     * - Cost range filtering
-     * - Material filtering
-     * - Pagination support
-     * - Sorting capabilities
-     *
-     * @param filters Filter criteria including pagination parameters
-     * @return Paginated result of purchases matching filter criteria
-     */
-    Paginated<PurchaseReadOnlyDTO> getPurchasesFilteredPaginated(PurchaseFilters filters);
-
-    /**
-     * Retrieves purchases based on filter criteria without pagination
-     * Useful for exports or when you need all matching results
-     *
-     * @param filters Filter criteria (date range, supplier, cost, materials)
-     * @return List of purchases matching filter criteria
-     */
-    List<PurchaseReadOnlyDTO> getFilteredPurchases(PurchaseFilters filters);
-
-    /**
-     * Retrieves active materials matching search term for autocomplete in purchase recording
-     *
-     * @param searchTerm Material name search term
-     * @return List of materials with basic info for selection
-     */
-    List<MaterialSearchResultDTO> searchMaterialsForAutocomplete(String searchTerm);
-
     // =============================================================================
     // DASHBOARD METHODS
     // =============================================================================
@@ -108,11 +62,35 @@ public interface IPurchaseService {
      */
     List<PurchaseReadOnlyDTO> getRecentPurchases(int limit);
 
+    // =============================================================================
+    // VIEW PURCHASES PAGE METHODS
+    // =============================================================================
+
     /**
-     * Gets purchase summary for current day (dashboard widget)
-     * Includes count, total cost, average purchase value, and material statistics
+     * Searches purchases with advanced filtering and optional summary calculation
      *
-     * @return Summary of today's purchases
+     * Supports filtering by:
+     * - Date range (saleDateFrom, saleDateTo)
+     * - Material (autocomplete by name OR precise selection by ID)
+     * - Supplier (autocomplete by name/email/tin OR precise selection by ID)
+     *
+     * Summary is only calculated if filtered results ≤ 100 for performance
+     *
+     * @param filters Filter criteria with pagination parameters
+     * @return Paginated sales results with optional summary
      */
-    PurchasesSummaryDTO getDailyPurchasesSummary();
+
+    PaginatedFilteredPurchasesWithSummary searchPurchasesWithSummary(PurchaseFilters filters);
+
+
+    /**
+     * Retrieves detailed purchase information with all materials
+     *
+     * @param purchaseId Purchase ID
+     * @return Detailed purchase view with materials and costs
+     * @throws EntityNotFoundException if purchase not found
+     */
+    PurchaseDetailedViewDTO getPurchaseDetailedView(Long purchaseId) throws EntityNotFoundException;
+
+
 }

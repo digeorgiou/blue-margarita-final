@@ -586,7 +586,7 @@ public class SaleService implements ISaleService {
         LOGGER.debug("Calculating sales summary with optimized repository queries");
 
         // ✅ OPTIMIZED: Use repository aggregation instead of loading all sales
-        Integer totalCount = saleRepository.countSalesByFilters(filters); // You'll need to add this query
+        Integer totalCount = saleRepository.countSalesByFilters(filters);
 
         if (totalCount == 0) {
             return new SalesSummaryDTO(0, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);

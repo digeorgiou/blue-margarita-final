@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.core.specifications;
 
+import gr.aueb.cf.bluemargarita.model.Customer;
 import gr.aueb.cf.bluemargarita.model.Supplier;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -75,6 +76,26 @@ public class SupplierSpecification {
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
             }
             return criteriaBuilder.equal(root.get("isActive"), isActive);
+        };
+    }
+
+    /**
+     * Specification for multi-field search (lastname, phone, tin, email)
+     */
+
+    public static Specification<Supplier> searchMultipleFields(String searchTerm) {
+        return (root, query , criteriaBuilder) -> {
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+            String likePattern = "%" + searchTerm.toUpperCase() + "%";
+
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("name")), likePattern),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("phoneNumber")), likePattern),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("tin")), likePattern),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("email")), likePattern)
+            );
         };
     }
 

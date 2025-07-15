@@ -3,6 +3,7 @@ package gr.aueb.cf.bluemargarita.dto.material;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,6 +37,9 @@ public record MaterialDetailedViewDTO(
 
         // Cost impact analytics
         BigDecimal averageCostPerProduct,   // average cost impact per product
+
+        Integer purchaseCount,
+        LocalDate lastPurchaseDate,
 
         // Product usage distribution (top 10 products using this material)
         List<ProductUsageDTO> topProductsUsage

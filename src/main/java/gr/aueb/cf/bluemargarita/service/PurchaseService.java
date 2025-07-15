@@ -4,6 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.PurchaseFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.PurchaseSpecification;
+import gr.aueb.cf.bluemargarita.core.specifications.SaleSpecification;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.purchase.*;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
@@ -21,9 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -68,8 +67,8 @@ public class PurchaseService implements IPurchaseService {
         User creator = userRepository.findById(request.creatorUserId())
                 .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + request.creatorUserId() + " was not found"));
 
-        // Validate all materials exist and build material-quantity map
-        Map<Material, BigDecimal> materialQuantityMap = validateAndBuildMaterialMap(request.materials());
+        // Validate all materials exist
+        validateMaterialsExist(request.materials());
 
         // Create purchase entity
         Purchase purchase = Purchase.builder()
@@ -84,21 +83,23 @@ public class PurchaseService implements IPurchaseService {
         // Save purchase first to get ID
         purchase = purchaseRepository.save(purchase);
 
-        // Add materials to purchase and calculate total cost
+        // Add materials to purchase and calculate total cost using user-entered prices
         BigDecimal totalCost = BigDecimal.ZERO;
-        for (Map.Entry<Material, BigDecimal> entry : materialQuantityMap.entrySet()) {
-            Material material = entry.getKey();
-            BigDecimal quantity = entry.getValue();
+        for (PurchaseMaterialRequestDTO materialRequest : request.materials()) {
 
-            purchase.addMaterial(material, quantity);
+            // Fetch material entity
+            Material material = materialRepository.findById(materialRequest.materialId())
+                    .orElseThrow(() -> new EntityNotFoundException("Material",
+                            "Material with id=" + materialRequest.materialId() + " was not found"));
 
-            // Calculate line cost
-            BigDecimal lineCost = material.getCurrentUnitCost() != null ?
-                    material.getCurrentUnitCost().multiply(quantity) : BigDecimal.ZERO;
+            purchase.addMaterial(material, materialRequest.quantity(), materialRequest.pricePerUnit());
+
+            // Calculate line cost using user-entered price
+            BigDecimal lineCost = materialRequest.pricePerUnit().multiply(materialRequest.quantity());
             totalCost = totalCost.add(lineCost);
 
-            LOGGER.debug("Added material {} (quantity: {}, unit cost: {}, line total: {}) to purchase",
-                    material.getName(), quantity, material.getCurrentUnitCost(), lineCost);
+            LOGGER.debug("Added material {} (quantity: {}, user price: {}, line total: {}) to purchase",
+                    material.getName(), materialRequest.quantity(), materialRequest.pricePerUnit(), lineCost);
         }
 
         // Update total cost
@@ -154,60 +155,6 @@ public class PurchaseService implements IPurchaseService {
         LOGGER.info("Purchase {} deleted", purchaseId);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public PurchaseDetailedViewDTO getPurchaseDetailedView(Long purchaseId) throws EntityNotFoundException {
-
-        Purchase purchase = purchaseRepository.findById(purchaseId)
-                .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + purchaseId + " was not found"));
-
-        return mapToPurchaseDetailedViewDTO(purchase);
-    }
-
-    // =============================================================================
-    // QUERY OPERATIONS
-    // =============================================================================
-
-    @Override
-    @Transactional(readOnly = true)
-    public Paginated<PurchaseReadOnlyDTO> getPurchasesFilteredPaginated(PurchaseFilters filters) {
-
-        Page<Purchase> filtered = purchaseRepository.findAll(
-                getSpecsFromFilters(filters),
-                filters.getPageable()
-        );
-
-        return new Paginated<>(filtered.map(mapper::mapToPurchaseReadOnlyDTO));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PurchaseReadOnlyDTO> getFilteredPurchases(PurchaseFilters filters) {
-        return purchaseRepository.findAll(getSpecsFromFilters(filters))
-                .stream()
-                .map(mapper::mapToPurchaseReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<MaterialSearchResultDTO> searchMaterialsForAutocomplete(String searchTerm) {
-        if (searchTerm == null || searchTerm.trim().length() < 2) {
-            return Collections.emptyList();
-        }
-
-        return materialRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(searchTerm.trim())
-                .stream()
-                .limit(10)
-                .map(material -> new MaterialSearchResultDTO(
-                        material.getId(),
-                        material.getName(),
-                        material.getUnitOfMeasure(),
-                        material.getCurrentUnitCost(),
-                        "N/A" // Could add primary supplier if needed
-                ))
-                .collect(Collectors.toList());
-    }
 
     // =============================================================================
     // DASHBOARD METHODS
@@ -224,34 +171,42 @@ public class PurchaseService implements IPurchaseService {
                 .collect(Collectors.toList());
     }
 
+    // =============================================================================
+    // VIEW PURCHASES PAGE METHODS
+    // =============================================================================
+
     @Override
     @Transactional(readOnly = true)
-    public PurchasesSummaryDTO getDailyPurchasesSummary() {
-        LOGGER.debug("Retrieving optimized daily purchases summary");
-        LocalDate today = LocalDate.now();
+    public PaginatedFilteredPurchasesWithSummary searchPurchasesWithSummary(PurchaseFilters filters){
 
-        // Use repository aggregation for performance
-        Integer count = purchaseRepository.countPurchasesByDateRange(today, today);
-        BigDecimal totalCost = purchaseRepository.sumCostByDateRange(today, today);
+        Page<PurchaseReadOnlyDTO> filtered = purchaseRepository.findAll(getSpecsFromFilters(filters), filters.getPageable())
+                .map(mapper::mapToPurchaseReadOnlyDTO);
 
-        BigDecimal averagePurchaseValue = count != null && count > 0 && totalCost != null ?
-                totalCost.divide(BigDecimal.valueOf(count), 2, BigDecimal.ROUND_HALF_UP) :
-                BigDecimal.ZERO;
+        long totalFilteredResults = filtered.getTotalElements();
+        PurchaseSummaryDTO summary = null;
 
-        // Get material statistics
-        Integer totalMaterialItems = purchaseRepository.countMaterialItemsByDateRange(today, today);
-        BigDecimal averageItemCost = totalMaterialItems != null && totalMaterialItems > 0 && totalCost != null ?
-                totalCost.divide(BigDecimal.valueOf(totalMaterialItems), 2, BigDecimal.ROUND_HALF_UP) :
-                BigDecimal.ZERO;
+        if(totalFilteredResults <= 100) {
+            List<Purchase> allFilteredPurchases = purchaseRepository.findAll(getSpecsFromFilters(filters));
 
-        return new PurchasesSummaryDTO(
-                count != null ? count : 0,
-                totalCost != null ? totalCost : BigDecimal.ZERO,
-                averagePurchaseValue,
-                totalMaterialItems != null ? totalMaterialItems : 0,
-                averageItemCost
-        );
+            int totalCount = allFilteredPurchases.size();
+
+            summary = calculatePurchaseSummary(filters);
+        }
+
+        return new PaginatedFilteredPurchasesWithSummary(filtered, summary);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PurchaseDetailedViewDTO getPurchaseDetailedView(Long purchaseId) throws EntityNotFoundException {
+
+        Purchase purchase = purchaseRepository.findById(purchaseId)
+                .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + purchaseId + " was not found"));
+
+        return mapToPurchaseDetailedViewDTO(purchase);
+    }
+
+
 
     // =============================================================================
     // PRIVATE HELPER METHODS
@@ -302,36 +257,63 @@ public class PurchaseService implements IPurchaseService {
     }
 
     /**
-     * Validates materials exist and builds material-quantity map
+     * Validates that all materials in the request exist
      */
-    private Map<Material, BigDecimal> validateAndBuildMaterialMap(Map<Long, BigDecimal> materialQuantities)
-            throws EntityNotFoundException {
+    private void validateMaterialsExist(List<PurchaseMaterialRequestDTO> materials) throws EntityNotFoundException {
+        List<Long> materialIds = materials.stream()
+                .map(PurchaseMaterialRequestDTO::materialId)
+                .toList();
 
-        return materialQuantities.entrySet().stream()
-                .collect(Collectors.toMap(
-                        entry -> {
-                            Long materialId = entry.getKey();
-                            try {
-                                return materialRepository.findById(materialId)
-                                        .orElseThrow(() -> new EntityNotFoundException("Material",
-                                                "Material with id=" + materialId + " was not found"));
-                            } catch (EntityNotFoundException e) {
-                                throw new RuntimeException(e);
-                            }
-                        },
-                        Map.Entry::getValue
-                ));
+        List<Material> foundMaterials = materialRepository.findAllById(materialIds);
+
+        if (foundMaterials.size() != materialIds.size()) {
+            Set<Long> foundIds = foundMaterials.stream().map(Material::getId).collect(Collectors.toSet());
+            List<Long> missingIds = materialIds.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .toList();
+            throw new EntityNotFoundException("Material", "Materials with ids=" + missingIds + " were not found");
+        }
+    }
+
+    private PurchaseSummaryDTO calculatePurchaseSummary(PurchaseFilters filters){
+        LOGGER.debug("Calculating purchases summary with optimized repository queries");
+
+        Integer totalCount = purchaseRepository.countPurchasesByFilters(filters);
+
+        if(totalCount == 0){
+            return new PurchaseSummaryDTO(0,BigDecimal.ZERO);
+        }
+
+        BigDecimal totalRevenue =purchaseRepository.sumRevenueByFilters(filters);
+
+        LOGGER.debug("Summary calculated: count={}, revenue={}", totalCount, totalRevenue);
+
+        return new PurchaseSummaryDTO(
+                totalCount,
+                totalRevenue
+        );
     }
 
     /**
      * Creates JPA Specification from filter criteria
      */
     private Specification<Purchase> getSpecsFromFilters(PurchaseFilters filters) {
-        return Specification
-                .where(PurchaseSpecification.purchaseDateBetween(filters.getPurchaseDateFrom(), filters.getPurchaseDateTo()))
-                .and(PurchaseSpecification.purchaseSupplierId(filters.getSupplierId()))
-                .and(PurchaseSpecification.purchaseSupplierNameLike(filters.getSupplierName()))
-                .and(PurchaseSpecification.purchaseTotalCostBetween(filters.getMinCost(), filters.getMaxCost()))
-                .and(PurchaseSpecification.purchaseContainsMaterial(filters.getMaterialName()));
+        Specification<Purchase> spec =  Specification
+                .where(PurchaseSpecification.purchaseDateBetween(filters.getPurchaseDateFrom(), filters.getPurchaseDateTo()));
+
+        if(filters.getMaterialId() != null){
+            spec = spec.and(PurchaseSpecification.purchaseContainsMaterialId(filters.getMaterialId()));
+        }else if (filters.getMaterialName() != null && !filters.getMaterialName().trim().isEmpty()) {
+            spec = spec.and(PurchaseSpecification.purchaseContainsMaterial(filters.getMaterialName()));
+        }
+
+        if(filters.getSupplierId() != null){
+            spec = spec.and(PurchaseSpecification.purchaseSupplierId(filters.getSupplierId()));
+        }else if (filters.getSupplierNameOrTinOrEmail() != null && !filters.getSupplierNameOrTinOrEmail().trim().isEmpty()) {
+            spec = spec.and(PurchaseSpecification.purchaseSupplierNameOrTinOrEmailLike(filters.getSupplierNameOrTinOrEmail()));
+        }
+
+        return spec;
+
     }
 }

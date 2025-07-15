@@ -6,7 +6,6 @@ public record MaterialSearchResultDTO(
         Long materialId,
         String materialName,
         String unitOfMeasure,
-        BigDecimal currentUnitCost,
-        String supplierName
+        BigDecimal currentUnitCost
 ) {
 }

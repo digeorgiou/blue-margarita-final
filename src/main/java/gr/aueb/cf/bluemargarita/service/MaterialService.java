@@ -5,10 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.MaterialSpecification;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialDetailedViewDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.material.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Material;
@@ -27,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -170,6 +168,26 @@ public class MaterialService implements IMaterialService {
         return new Paginated<>(filtered.map(mapper::mapToMaterialReadOnlyDTO));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<MaterialSearchResultDTO> searchMaterialsForAutocomplete(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().length() < 2) {
+            return Collections.emptyList();
+        }
+
+        return materialRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(searchTerm.trim())
+                .stream()
+                .limit(10)
+                .map(material -> new MaterialSearchResultDTO(
+                        material.getId(),
+                        material.getName(),
+                        material.getUnitOfMeasure(),
+                        material.getCurrentUnitCost() //  Shows as reference price
+
+                ))
+                .collect(Collectors.toList());
+    }
+
     // =============================================================================
     // ANALYTICS AND DETAILED VIEWS
     // =============================================================================
@@ -178,50 +196,38 @@ public class MaterialService implements IMaterialService {
     @Transactional(readOnly = true)
     public MaterialDetailedViewDTO getMaterialDetailedById(Long id) throws EntityNotFoundException {
 
-        LOGGER.debug("Retrieving optimized detailed analytics for material id: {}", id);
+        LOGGER.debug("Retrieving optimized analytics for material id: {}", id);
 
         Material material = materialRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + id + " was not found"));
 
+        // Basic metrics using single queries (following LocationService pattern)
         Integer totalProductsUsing = materialRepository.countProductsUsingMaterial(id);
 
         if (totalProductsUsing == 0) {
             // No products using this material - return empty metrics
-            return createEmptyMetricsDTO(material);
+            return createEmptyMaterialMetricsDTO(material);
         }
 
-        // Get usage statistics using repository aggregation
+        // Get aggregated data in single queries (no loading all entities into memory)
         Object[] usageStats = materialRepository.calculateUsageStatsByMaterialId(id);
-        BigDecimal averageUsageQuantity = usageStats != null && usageStats[0] != null ?
-                (BigDecimal) usageStats[0] : BigDecimal.ZERO;
-        BigDecimal minUsageQuantity = usageStats != null && usageStats[1] != null ?
-                (BigDecimal) usageStats[1] : BigDecimal.ZERO;
-        BigDecimal maxUsageQuantity = usageStats != null && usageStats[2] != null ?
-                (BigDecimal) usageStats[2] : BigDecimal.ZERO;
+        BigDecimal avgCostPerProduct = materialRepository.calculateAverageCostPerProductByMaterialId(id);
 
+        // Purchase analytics using simple queries
+        Integer purchaseCount = materialRepository.countPurchasesContainingMaterial(id);
+        LocalDate lastPurchaseDate = materialRepository.findLastPurchaseDateByMaterialId(id);
 
-        BigDecimal averageCostPerProduct = materialRepository.calculateAverageCostPerProductByMaterialId(id);
-        if (averageCostPerProduct == null) {
-            averageCostPerProduct = BigDecimal.ZERO;
-        }
+        // Calculate usage statistics from Object array
+        BigDecimal avgUsage = usageStats[0] != null ? (BigDecimal) usageStats[0] : BigDecimal.ZERO;
+        BigDecimal minUsage = usageStats[1] != null ? (BigDecimal) usageStats[1] : BigDecimal.ZERO;
+        BigDecimal maxUsage = usageStats[2] != null ? (BigDecimal) usageStats[2] : BigDecimal.ZERO;
 
-        // Get top products using this material (limit to 10 for performance)
-        PageRequest topProductsPageable = PageRequest.of(0, 10);
-        List<Object[]> topProductsData = materialRepository.findTopProductsByMaterialUsage(id, topProductsPageable);
+        // Get top products using this material (limited to 5, using aggregated query)
+        List<Object[]> topProductsData = materialRepository.findTopProductsByMaterialUsage(id, PageRequest.of(0, 5));
+        List<ProductUsageDTO> topProducts = mapToProductUsageDTOs(topProductsData);
 
-        List<ProductUsageDTO> topProductsUsage = topProductsData.stream()
-                .map(data -> new ProductUsageDTO(
-                        (Long) data[0],           // productId
-                        (String) data[1],         // productName
-                        (String) data[2],         // productCode
-                        (BigDecimal) data[3],     // usageQuantity (for materials)
-                        (BigDecimal) data[4],     // costImpact (quantity * cost per unit)
-                        (String) data[5]          // categoryName
-                ))
-                .collect(Collectors.toList());
-
-        LOGGER.debug("Optimized analytics completed for material '{}': totalProducts={}, avgUsage={}, , topProducts={}",
-                material.getName(), totalProductsUsing, averageUsageQuantity,  topProductsUsage.size());
+        LOGGER.debug("Optimized analytics completed for material '{}': productsUsing={}, purchaseCount={}",
+                material.getName(), totalProductsUsing, purchaseCount);
 
         return new MaterialDetailedViewDTO(
                 material.getId(),
@@ -230,16 +236,18 @@ public class MaterialService implements IMaterialService {
                 material.getCurrentUnitCost(),
                 material.getCreatedAt(),
                 material.getUpdatedAt(),
-                material.getCreatedBy().getUsername(),
-                material.getLastUpdatedBy().getUsername(),
+                material.getCreatedBy() != null ? material.getCreatedBy().getUsername() : "system",
+                material.getLastUpdatedBy() != null ? material.getLastUpdatedBy().getUsername() : "system",
                 material.getIsActive(),
                 material.getDeletedAt(),
                 totalProductsUsing,
-                averageUsageQuantity,
-                minUsageQuantity,
-                maxUsageQuantity,
-                averageCostPerProduct,
-                topProductsUsage
+                avgUsage,
+                minUsage,
+                maxUsage,
+                avgCostPerProduct != null ? avgCostPerProduct : BigDecimal.ZERO,
+                purchaseCount != null ? purchaseCount : 0,
+                lastPurchaseDate,
+                topProducts
         );
     }
 
@@ -287,7 +295,10 @@ public class MaterialService implements IMaterialService {
      * Creates empty metrics DTO for materials with no product usage
      */
 
-    private MaterialDetailedViewDTO createEmptyMetricsDTO(Material material){
+    /**
+     * Helper method to create empty metrics DTO when no products use the material
+     */
+    private MaterialDetailedViewDTO createEmptyMaterialMetricsDTO(Material material) {
         return new MaterialDetailedViewDTO(
                 material.getId(),
                 material.getName(),
@@ -295,17 +306,35 @@ public class MaterialService implements IMaterialService {
                 material.getCurrentUnitCost(),
                 material.getCreatedAt(),
                 material.getUpdatedAt(),
-                material.getCreatedBy().getUsername(),
-                material.getLastUpdatedBy().getUsername(),
+                material.getCreatedBy() != null ? material.getCreatedBy().getUsername() : "system",
+                material.getLastUpdatedBy() != null ? material.getLastUpdatedBy().getUsername() : "system",
                 material.getIsActive(),
                 material.getDeletedAt(),
-                0,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                Collections.emptyList()
+                0, // totalProductsUsing
+                BigDecimal.ZERO, // avgUsage
+                BigDecimal.ZERO, // minUsage
+                BigDecimal.ZERO, // maxUsage
+                BigDecimal.ZERO, // avgCostPerProduct
+                0, // purchaseCount
+                null, // lastPurchaseDate
+                Collections.emptyList() // topProducts
         );
+    }
+
+    /**
+     * Helper method to map Object[] to ProductUsageDTO list
+     */
+    private List<ProductUsageDTO> mapToProductUsageDTOs(List<Object[]> data) {
+        return data.stream()
+                .map(row -> new ProductUsageDTO(
+                        ((Number) row[0]).longValue(), // productId
+                        (String) row[1], // productName
+                        (String) row[2], // productCode
+                        (BigDecimal) row[3], // quantity
+                        (BigDecimal) row[4], // costImpact
+                        (String) row[5] // categoryName
+                ))
+                .collect(Collectors.toList());
     }
 
     /**

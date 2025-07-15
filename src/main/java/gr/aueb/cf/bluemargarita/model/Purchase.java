@@ -65,15 +65,18 @@ public class Purchase extends AbstractEntity {
         supplier.removePurchase(this);
     }
 
-    public void addMaterial(Material material , BigDecimal quantity){
-
+    public void addMaterial(Material material, BigDecimal quantity, BigDecimal pricePerUnit) {
         PurchaseMaterial purchaseMaterial = new PurchaseMaterial();
         purchaseMaterial.setQuantity(quantity);
-        purchaseMaterial.setMaterialDescriptionSnapshot(material.getName());
-        purchaseMaterial.setPriceAtTheTime(material.getCurrentUnitCost());
+        purchaseMaterial.setMaterialNameSnapshot(material.getName());
+        purchaseMaterial.setPriceAtTheTime(pricePerUnit);  // ⭐ User-entered price, NOT material.currentUnitCost
         purchaseMaterial.setPurchase(this);
-        material.addPurchaseMaterial(purchaseMaterial);
+        purchaseMaterial.setMaterial(material);
+
+        // Add to both sides of the relationship
+        if (purchaseMaterials == null) purchaseMaterials = new HashSet<>();
         purchaseMaterials.add(purchaseMaterial);
+        material.addPurchaseMaterial(purchaseMaterial);
     }
 
     public void removeMaterial(Material material){

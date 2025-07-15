@@ -2,6 +2,7 @@ package gr.aueb.cf.bluemargarita.dto.purchase;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -11,7 +12,6 @@ public record RecordPurchaseRequestDTO(
         Long supplierId,
         LocalDate purchaseDate,
         Long creatorUserId,
-        Map<Long, BigDecimal> materials,  // materialId -> quantity
-        String notes                      // Optional notes about the purchase
+        List<PurchaseMaterialRequestDTO> materials
 ) {
 }

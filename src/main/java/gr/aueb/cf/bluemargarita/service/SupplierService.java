@@ -118,7 +118,9 @@ public class SupplierService implements ISupplierService {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + id + " was not found"));
 
-        if (!supplier.getAllPurchases().isEmpty()) {
+        Integer purchaseCount = supplierRepository.countPurchasesBySupplierId(id);
+
+        if (purchaseCount > 0) {
             // Soft Delete if supplier has purchase history
             supplier.setIsActive(false);
             supplier.setDeletedAt(LocalDateTime.now());
@@ -207,53 +209,54 @@ public class SupplierService implements ISupplierService {
     @Transactional(readOnly = true)
     public SupplierDetailedViewDTO getSupplierDetailedView(Long supplierId) throws EntityNotFoundException {
 
+        LOGGER.debug("Retrieving optimized analytics for supplier id: {}", supplierId);
+
         Supplier supplier = supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + supplierId + " was not found"));
 
-        // Get purchase analytics using repository aggregation
-        Integer totalPurchases = purchaseRepository.countBySupplierId(supplierId);
+        // Basic metrics using single queries (following LocationService pattern)
+        Integer totalPurchases = supplierRepository.countPurchasesBySupplierId(supplierId);
 
         if (totalPurchases == 0) {
-            // No purchases - return empty analytics
-            SupplierPurchaseDataDTO emptyPurchaseData = new SupplierPurchaseDataDTO(
-                    0, BigDecimal.ZERO, null, BigDecimal.ZERO
-            );
-            return mapToSupplierDetailedViewDTO(supplier, emptyPurchaseData, Collections.emptyList());
+            // No purchases - return empty metrics
+            return createEmptySupplierMetricsDTO(supplier);
         }
 
-        // Get aggregated purchase data
-        BigDecimal totalCost = purchaseRepository.sumCostBySupplierId(supplierId);
-        LocalDate lastPurchaseDate = purchaseRepository.findLastPurchaseDateBySupplierId(supplierId);
+        // Get aggregated data in single queries (no loading all purchases into memory)
+        BigDecimal totalCost = supplierRepository.sumTotalCostBySupplierId(supplierId);
+        LocalDate lastPurchaseDate = supplierRepository.findLastPurchaseDateBySupplierId(supplierId);
 
+        // Calculate average purchase value
         BigDecimal averagePurchaseValue = totalCost != null && totalPurchases > 0 ?
                 totalCost.divide(BigDecimal.valueOf(totalPurchases), 2, RoundingMode.HALF_UP) :
                 BigDecimal.ZERO;
 
-        // Get top materials purchased from this supplier
-        List<Object[]> topMaterialsData = purchaseRepository.findTopMaterialsBySupplierId(supplierId);
+        // Get top materials from this supplier (using aggregated query)
+        List<Object[]> topMaterialsData = supplierRepository.findTopMaterialsBySupplierId(supplierId);
+        List<MaterialStatsSummaryDTO> topMaterials = mapToMaterialStatsSummaryDTOs(topMaterialsData);
 
-        List<MaterialStatsSummaryDTO> topMaterials = topMaterialsData.stream()
-                .map(data -> new MaterialStatsSummaryDTO(
-                        (Long) data[0],           // materialId
-                        (String) data[1],         // materialName
-                        (String) data[2],         // materialDescription
-                        (BigDecimal) data[3],     // totalQuantityPurchased
-                        (BigDecimal) data[4],     // totalCostPaid
-                        (LocalDate) data[5]       // lastPurchaseDate
-                ))
-                .collect(Collectors.toList());
+        LOGGER.debug("Optimized analytics completed for supplier '{}': totalPurchases={}, totalCost={}, topMaterials={}",
+                supplier.getName(), totalPurchases, totalCost, topMaterials.size());
 
-        SupplierPurchaseDataDTO purchaseData = new SupplierPurchaseDataDTO(
+        return new SupplierDetailedViewDTO(
+                supplier.getId(),
+                supplier.getName(),
+                supplier.getAddress(),
+                supplier.getTin(),
+                supplier.getPhoneNumber(),
+                supplier.getEmail(),
+                supplier.getCreatedAt(),
+                supplier.getUpdatedAt(),
+                supplier.getCreatedBy() != null ? supplier.getCreatedBy().getUsername() : "system",
+                supplier.getLastUpdatedBy() != null ? supplier.getLastUpdatedBy().getUsername() : "system",
+                supplier.getIsActive(),
+                supplier.getDeletedAt(),
                 totalPurchases,
                 totalCost != null ? totalCost : BigDecimal.ZERO,
                 lastPurchaseDate,
-                averagePurchaseValue
+                averagePurchaseValue,
+                topMaterials
         );
-
-        LOGGER.debug("Analytics completed for supplier '{}': totalPurchases={}, totalCost={}, topMaterials={}",
-                supplier.getName(), totalPurchases, totalCost, topMaterials.size());
-
-        return mapToSupplierDetailedViewDTO(supplier, purchaseData, topMaterials);
     }
 
     @Override
@@ -270,12 +273,9 @@ public class SupplierService implements ISupplierService {
     // =============================================================================
 
     /**
-     * Maps Supplier entity to SupplierDetailedViewDTO with analytics
-     * Following the same pattern as CustomerService detailed mapping
+     * Helper method to create empty metrics DTO when supplier has no purchases
      */
-    private SupplierDetailedViewDTO mapToSupplierDetailedViewDTO(Supplier supplier,
-                                                                 SupplierPurchaseDataDTO purchaseData,
-                                                                 List<MaterialStatsSummaryDTO> topMaterials) {
+    private SupplierDetailedViewDTO createEmptySupplierMetricsDTO(Supplier supplier) {
         return new SupplierDetailedViewDTO(
                 supplier.getId(),
                 supplier.getName(),
@@ -289,12 +289,28 @@ public class SupplierService implements ISupplierService {
                 supplier.getLastUpdatedBy() != null ? supplier.getLastUpdatedBy().getUsername() : "system",
                 supplier.getIsActive(),
                 supplier.getDeletedAt(),
-                purchaseData.numberOfPurchases(),
-                purchaseData.totalCostPaid(),
-                purchaseData.lastPurchaseDate(),
-                purchaseData.averagePurchaseValue(),
-                topMaterials
+                0, // totalPurchases
+                BigDecimal.ZERO, // totalCost
+                null, // lastPurchaseDate
+                BigDecimal.ZERO, // averagePurchaseValue
+                Collections.emptyList() // topMaterials
         );
+    }
+
+    /**
+     * Helper method to map Object[] to MaterialStatsSummaryDTO list
+     */
+    private List<MaterialStatsSummaryDTO> mapToMaterialStatsSummaryDTOs(List<Object[]> data) {
+        return data.stream()
+                .map(row -> new MaterialStatsSummaryDTO(
+                        ((Number) row[0]).longValue(), // materialId
+                        (String) row[1], // materialName
+                        (String) row[2], // description
+                        (BigDecimal) row[3], // totalQuantity
+                        (BigDecimal) row[4], // totalCost
+                        (LocalDate) row[5] // lastPurchaseDate
+                ))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -307,6 +323,7 @@ public class SupplierService implements ISupplierService {
                 .and(SupplierSpecification.supplierTinLike(filters.getTin()))
                 .and(SupplierSpecification.supplierPhoneNumberLike(filters.getPhoneNumber()))
                 .and(SupplierSpecification.supplierAddressLike(filters.getAddress()))
+                .and(SupplierSpecification.searchMultipleFields(filters.getSearchTerm()))
                 .and(SupplierSpecification.supplierIsActive(filters.getIsActive()));
     }
 }

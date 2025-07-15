@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.repository;
 
+import gr.aueb.cf.bluemargarita.core.filters.PurchaseFilters;
 import gr.aueb.cf.bluemargarita.model.Purchase;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -27,6 +28,12 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long>,
     @Query("SELECT COALESCE(SUM(pm.quantity), 0) FROM PurchaseMaterial pm JOIN pm.purchase p WHERE p.purchaseDate BETWEEN :startDate AND :endDate")
     Integer countMaterialItemsByDateRange(@Param("startDate") LocalDate startDate,
                                           @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(p) FROM Purchase p WHERE (:filters conditions)")
+    Integer countPurchasesByFilters(@Param("filters") PurchaseFilters filters);
+
+    @Query("SELECT COALESCE(SUM(p.totalCost), 0) FROM Purchase p WHERE (:filters conditions)")
+    BigDecimal sumRevenueByFilters(@Param("filters") PurchaseFilters filters);
 
     // Supplier analytics methods
     @Query("SELECT COUNT(p) FROM Purchase p WHERE p.supplier.id = :supplierId")

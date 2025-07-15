@@ -27,5 +27,8 @@ public class SupplierFilters extends GenericFilters {
     private String address;
 
     @Nullable
+    private String searchTerm;
+
+    @Nullable
     private Boolean isActive;
 }
