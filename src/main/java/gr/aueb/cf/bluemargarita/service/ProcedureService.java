@@ -101,13 +101,16 @@ public class ProcedureService implements IProcedureService {
         Procedure procedure = procedureRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + id + " was not found"));
 
-        if (!procedure.getAllProcedureProducts().isEmpty()) {
+        Integer productCount = procedureRepository.countProductsByProcedureId(id);
+
+        if (productCount > 0) {
             // Soft Delete if procedure is used in any products
             procedure.setIsActive(false);
             procedure.setDeletedAt(LocalDateTime.now());
             procedureRepository.save(procedure);
 
-            LOGGER.info("Procedure {} soft deleted. Used in {} products", procedure.getName(), procedure.getAllProcedureProducts().size());
+            LOGGER.info("Procedure {} soft deleted. Used in {} products",
+                    procedure.getName(), productCount);
         } else {
             // Hard delete if procedure not used anywhere
             procedureRepository.delete(procedure);
@@ -176,46 +179,59 @@ public class ProcedureService implements IProcedureService {
     @Transactional(readOnly = true)
     public ProcedureDetailedDTO getProcedureDetailedById(Long id) throws EntityNotFoundException {
 
+        LOGGER.debug("Retrieving optimized detailed analytics for procedure id: {}", id);
+
         Procedure procedure = procedureRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + id + " was not found"));
 
-        // Calculate basic statistics using existing relationships
-        Set<ProcedureProduct> procedureProducts = procedure.getAllProcedureProducts();
-        Integer totalProductsUsing = procedureProducts.size();
+        // ✅ OPTIMIZED: Use repository aggregation instead of loading all procedure products
+        Integer totalProductsUsing = procedureRepository.countProductsByProcedureId(id);
 
-        // Calculate cost statistics
-        List<BigDecimal> costs = procedureProducts.stream()
-                .map(ProcedureProduct::getCost)
-                .filter(Objects::nonNull)
-                .toList();
+        if (totalProductsUsing == 0) {
+            // No products using this procedure - return empty metrics
+            return new ProcedureDetailedDTO(
+                    procedure.getId(),
+                    procedure.getName(),
+                    procedure.getCreatedAt(),
+                    procedure.getUpdatedAt(),
+                    procedure.getCreatedBy().getUsername(),
+                    procedure.getLastUpdatedBy().getUsername(),
+                    procedure.getIsActive(),
+                    procedure.getDeletedAt(),
+                    0,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    Collections.emptyList()
+            );
+        }
 
-        BigDecimal averageProcedureCost = costs.isEmpty() ? BigDecimal.ZERO :
-                costs.stream()
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .divide(BigDecimal.valueOf(costs.size()), 2, RoundingMode.HALF_UP);
+        // Get cost statistics using repository aggregation
+        Object[] costStats = procedureRepository.calculateCostStatsByProcedureId(id);
+        BigDecimal averageProcedureCost = costStats != null && costStats[0] != null ? (BigDecimal) costStats[0] : BigDecimal.ZERO;
+        BigDecimal minProcedureCost = costStats != null && costStats[1] != null ? (BigDecimal) costStats[1] : BigDecimal.ZERO;
+        BigDecimal maxProcedureCost = costStats != null && costStats[2] != null ? (BigDecimal) costStats[2] : BigDecimal.ZERO;
 
-        BigDecimal minProcedureCost = costs.stream()
-                .min(BigDecimal::compareTo)
-                .orElse(BigDecimal.ZERO);
+        // Get average product selling price using repository aggregation
+        BigDecimal averageProductSellingPrice = procedureRepository.calculateAverageProductPriceByProcedureId(id);
+        if (averageProductSellingPrice == null) {
+            averageProductSellingPrice = BigDecimal.ZERO;
+        }
 
-        BigDecimal maxProcedureCost = costs.stream()
-                .max(BigDecimal::compareTo)
-                .orElse(BigDecimal.ZERO);
+        // Get category distribution using repository aggregation
+        List<Object[]> categoryData = procedureRepository.calculateCategoryDistributionByProcedureId(id, totalProductsUsing);
+        List<CategoryUsageDTO> categoryDistribution = categoryData.stream()
+                .map(data -> new CategoryUsageDTO(
+                        (Long) data[0],           // categoryId
+                        (String) data[1],         // categoryName
+                        ((Number) data[2]).intValue(), // productCount
+                        ((Number) data[3]).doubleValue() // percentage
+                ))
+                .collect(Collectors.toList());
 
-        // Calculate product selling price statistics
-        List<BigDecimal> sellingPricesRetail = procedureProducts.stream()
-                .map(pp -> pp.getProduct().getFinalSellingPriceRetail())
-                .filter(Objects::nonNull)
-                .toList();
-
-        BigDecimal averageProductSellingPriceRetail = sellingPricesRetail.isEmpty() ? BigDecimal.ZERO :
-                sellingPricesRetail.stream()
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .divide(BigDecimal.valueOf(sellingPricesRetail.size()), 2, RoundingMode.HALF_UP);
-
-
-        // Calculate category distribution
-        List<CategoryUsageDTO> categoryDistribution = calculateCategoryDistribution(procedureProducts);
+        LOGGER.debug("Optimized analytics completed for procedure '{}': totalProducts={}, avgCost={}, categories={}",
+                procedure.getName(), totalProductsUsing, averageProcedureCost, categoryDistribution.size());
 
         return new ProcedureDetailedDTO(
                 procedure.getId(),
@@ -230,7 +246,7 @@ public class ProcedureService implements IProcedureService {
                 averageProcedureCost,
                 minProcedureCost,
                 maxProcedureCost,
-                averageProductSellingPriceRetail,
+                averageProductSellingPrice,
                 categoryDistribution
         );
     }
@@ -239,38 +255,6 @@ public class ProcedureService implements IProcedureService {
     // PRIVATE HELPER METHODS
     // =============================================================================
 
-    /**
-     * Calculates category distribution for products using this procedure
-     * Groups products by category and calculates percentages
-     *
-     * @param procedureProducts Set of procedure-product relationships
-     * @return List of category usage statistics sorted by product count (descending)
-     */
-
-    private List<CategoryUsageDTO> calculateCategoryDistribution(Set<ProcedureProduct> procedureProducts) {
-        if (procedureProducts.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // Group by category and count products
-        Map<Category, Long> categoryCount = procedureProducts.stream()
-                .collect(Collectors.groupingBy(
-                        pp -> pp.getProduct().getCategory(),
-                        Collectors.counting()
-                ));
-
-        int totalProducts = procedureProducts.size();
-
-        return categoryCount.entrySet().stream()
-                .map(entry -> new CategoryUsageDTO(
-                        entry.getKey().getId(),
-                        entry.getKey().getName(),
-                        entry.getValue().intValue(),
-                        (entry.getValue() * 100.0) / totalProducts
-                ))
-                .sorted((c1, c2) -> c2.productCount().compareTo(c1.productCount()))
-                .collect(Collectors.toList());
-    }
 
     /**
      * Creates JPA Specification from filter criteria
