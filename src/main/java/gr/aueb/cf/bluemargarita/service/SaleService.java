@@ -1,19 +1,16 @@
 package gr.aueb.cf.bluemargarita.service;
 
+import gr.aueb.cf.bluemargarita.core.enums.PaymentMethod;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
-import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
-import gr.aueb.cf.bluemargarita.core.filters.Paginated;
-import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
+import gr.aueb.cf.bluemargarita.dto.customer.CustomerInfoDTO;
+import gr.aueb.cf.bluemargarita.dto.customer.CustomerSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.PaginatedFilteredSalesWithSummary;
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
-import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
 import gr.aueb.cf.bluemargarita.core.specifications.CustomerSpecification;
 import gr.aueb.cf.bluemargarita.core.specifications.SaleSpecification;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationResponseDTO;
-import gr.aueb.cf.bluemargarita.dto.product.ProductSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.*;
 import gr.aueb.cf.bluemargarita.dto.shopping_cart.CartItemDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
@@ -23,12 +20,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,8 +43,13 @@ public class SaleService implements ISaleService {
     private final CustomerRepository customerRepository;
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
-    private final SalePricingService pricingService;
+
     private final ProductService productService;
+    private final CustomerService customerService;
+    private final LocationService locationService;
+    private final CategoryService categoryService;
+
+    private final SalePricingService pricingService;
     private final Mapper mapper;
 
     @Autowired
@@ -53,16 +58,22 @@ public class SaleService implements ISaleService {
                        CustomerRepository customerRepository,
                        LocationRepository locationRepository,
                        UserRepository userRepository,
-                       SalePricingService pricingService,
                        ProductService productService,
+                       CustomerService customerService,
+                       LocationService locationService,
+                       CategoryService categoryService,
+                       SalePricingService pricingService,
                        Mapper mapper) {
         this.saleRepository = saleRepository;
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
-        this.pricingService = pricingService;
         this.productService = productService;
+        this.customerService = customerService;
+        this.locationService = locationService;
+        this.categoryService = categoryService;
+        this.pricingService = pricingService;
         this.mapper = mapper;
     }
 
@@ -96,7 +107,7 @@ public class SaleService implements ISaleService {
 
         Map<Product, BigDecimal> productEntitiesQuantities = new HashMap<>();
 
-        for (Map.Entry<Long, BigDecimal> entry : productQuantities.entrySet()){
+        for (Map.Entry<Long, BigDecimal> entry : productQuantities.entrySet()) {
             Product product = getProductById(entry.getKey());
             productEntitiesQuantities.put(product, entry.getValue());
         }
@@ -151,7 +162,7 @@ public class SaleService implements ISaleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SaleReadOnlyDTO updateSale(SaleUpdateDTO dto)
-            throws EntityNotFoundException{
+            throws EntityNotFoundException {
 
         Sale existingSale = getSaleEntityById(dto.saleId());
         Location location = getLocationById(dto.locationId());
@@ -201,77 +212,142 @@ public class SaleService implements ISaleService {
     }
 
     // =============================================================================
-    // RECORD SALE PAGE METHODS
+    // DASHBOARD METHODS
     // =============================================================================
 
     @Override
     @Transactional(readOnly = true)
-    public Paginated<ProductSearchResultDTO> searchProductsForSale(ProductFilters filters) {
-        if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        String cleanTerm = searchTerm.trim();
-
-        Specification<Product> spec = Specification
-                .where(ProductSpecification.productNameLike(cleanTerm))
-                .or(ProductSpecification.productCodeLike(cleanTerm))
-                .and(ProductSpecification.productIsActive(true));
-
-        return productRepository.findAll(spec)
+    public List<SaleReadOnlyDTO> getRecentSales(int limit) {
+        return saleRepository.findAll(
+                        PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "saleDate", "createdAt"))
+                )
                 .stream()
-                .map(product -> new ProductSearchResultDTO(
-                        product.getId(),
-                        product.getName(),
-                        product.getCode(),
-                        product.getCategory().getName(),
-                        product.getFinalSellingPriceRetail(),
-                        product.getFinalSellingPriceWholesale(),
-                        product.getIsActive()
-                ))
-                .limit(20) // Limit results for performance
+                .map(mapper::mapToSaleReadOnlyDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CustomerSearchResultDTO> searchCustomersForSale(String searchTerm) {
-        if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
+    public SalesSummaryDTO getDailySalesSummary() {
+        LocalDate today = LocalDate.now();
+        SaleFilters filters = SaleFilters.builder()
+                .saleDateFrom(today)
+                .saleDateTo(today)
+                .build();
 
-        String cleanTerm = searchTerm.trim();
-
-        Specification<Customer> spec = Specification
-                .where(CustomerSpecification.customerStringFieldLike("firstname", cleanTerm))
-                .or(CustomerSpecification.customerStringFieldLike("lastname", cleanTerm))
-                .or(CustomerSpecification.customerStringFieldLike("email", cleanTerm))
-                .or(CustomerSpecification.customerStringFieldLike("phoneNumber", cleanTerm))
-                .and(CustomerSpecification.customerIsActive(true));
-
-        return customerRepository.findAll(spec)
-                .stream()
-                .map(customer -> new CustomerSearchResultDTO(
-                        customer.getId(),
-                        customer.getFullName(),
-                        customer.getEmail(),
-                        customer.getPhoneNumber(),
-                        customer.getIsActive()
-                ))
-                .limit(20) // Limit results for performance
-                .collect(Collectors.toList());
+        return calculateSalesSummary(filters);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<LocationForDropdownDTO> getActiveLocationsForSale() {
-        return locationRepository.findByIsActiveTrue()
-                .stream()
-                .map(location -> new LocationForDropdownDTO(
-                        location.getId(),
-                        location.getName(),
-                        location.getIsActive()
-                ))
+    public SalesSummaryDTO getWeeklySalesSummary() {
+        LocalDate today = LocalDate.now();
+        LocalDate weekStart = today.with(DayOfWeek.MONDAY);
+        LocalDate weekEnd = today.with(DayOfWeek.SUNDAY);
+
+        SaleFilters filters = SaleFilters.builder()
+                .saleDateFrom(weekStart)
+                .saleDateTo(weekEnd)
+                .build();
+
+        return calculateSalesSummary(filters);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SalesSummaryDTO getMonthlySalesSummary() {
+        LocalDate today = LocalDate.now();
+        LocalDate monthStart = today.withDayOfMonth(1);
+        LocalDate monthEnd = today.withDayOfMonth(today.lengthOfMonth());
+
+        SaleFilters filters = SaleFilters.builder()
+                .saleDateFrom(monthStart)
+                .saleDateTo(monthEnd)
+                .build();
+
+        return calculateSalesSummary(filters);
+    }
+
+    // =============================================================================
+    // VIEW SALES PAGE METHODS
+    // =============================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedFilteredSalesWithSummary searchSalesWithSummary(SaleFilters filters) {
+
+        Page<SaleReadOnlyDTO> filtered = saleRepository.findAll(getSpecsFromFilters(filters), filters.getPageable())
+                .map(mapper::mapToSaleReadOnlyDTO);
+
+        long totalFilteredResults = filtered.getTotalElements();
+        SalesSummaryDTO summary = null;
+
+        // Only calculate summary if total results are 100 or less
+        if (totalFilteredResults <= 100) {
+            // Get all filtered results for summary calculation
+            List<Sale> allFilteredSales = saleRepository.findAll(getSpecsFromFilters(filters));
+
+            int totalCount = allFilteredSales.size();
+
+            summary = calculateSalesSummary(filters);
+        }
+
+        return new PaginatedFilteredSalesWithSummary(filtered, summary);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SaleDetailedViewDTO getSaleDetailedView(Long saleId) throws EntityNotFoundException {
+
+        Sale sale = getSaleEntityById(saleId);
+
+        BigDecimal totalItemCount = sale.getAllSaleProducts().stream()
+                .map(SaleProduct::getQuantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal averageItemPrice = totalItemCount.compareTo(BigDecimal.ZERO) > 0 ?
+                sale.getFinalTotalPrice().divide(totalItemCount, 2, RoundingMode.HALF_UP) :
+                BigDecimal.ZERO;
+
+        return new SaleDetailedViewDTO(
+                saleId,
+                sale.getSaleDate(),
+                sale.getCustomer() != null ?
+                        new CustomerSearchResultDTO(
+                                sale.getCustomer().getId(),
+                                sale.getCustomer().getFullName(),
+                                sale.getCustomer().getEmail()
+                        ) : null,
+                new LocationForDropdownDTO(
+                        sale.getLocation().getId(),
+                        sale.getLocation().getName()
+                ),
+                sale.getPaymentMethod(),
+                sale.getSuggestedTotalPrice().subtract(sale.getPackagingPrice()), //subtotal
+                sale.getPackagingPrice(),
+                sale.getSuggestedTotalPrice(),
+                sale.getFinalTotalPrice(),
+                sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()),
+                sale.getDiscountPercentage(),
+
+                sale.getAllSaleProducts().stream()
+                        .map(mapper::mapToSaleItemDetailsDTO)
+                        .collect(Collectors.toList()),
+                sale.getIsWholesale(),
+                totalItemCount.intValue(),
+                averageItemPrice
+
+        );
+    }
+
+    // =============================================================================
+    // RECORD SALE PAGE METHODS
+    // =============================================================================
+
+    @Transactional(readOnly = true)
+    public List<PaymentMethodDTO> getAvailablePaymentMethods() {
+        return Arrays.stream(PaymentMethod.values())
+                .map(method -> new PaymentMethodDTO(method, method.name()))
                 .collect(Collectors.toList());
     }
 
@@ -351,104 +427,13 @@ public class SaleService implements ISaleService {
         );
     }
 
-    // =============================================================================
-    // SALES VIEW PAGE METHODS
-    // =============================================================================
-
-    @Override
-    @Transactional(readOnly = true)
-    public PaginatedFilteredSalesWithSummary searchSalesWithSummary(SaleFilters filters) {
-
-        Page<SaleReadOnlyDTO> filtered = saleRepository.findAll(getSpecsFromFilters(filters), filters.getPageable())
-                .map(mapper::mapToSaleReadOnlyDTO);
-
-        long totalFilteredResults = filtered.getTotalElements();
-        SalesSummaryDTO summary = null;
-
-        // Only calculate summary if total results are 100 or less
-        if (totalFilteredResults <= 100) {
-            // Get all filtered results for summary calculation
-            List<Sale> allFilteredSales = saleRepository.findAll(getSpecsFromFilters(filters));
-
-            int totalCount = allFilteredSales.size();
-
-            summary = calculateSalesSummary(filters);
-        }
-
-        return new PaginatedFilteredSalesWithSummary(filtered, summary);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SaleDetailedViewDTO getSaleDetailedView(Long saleId) throws EntityNotFoundException {
-
-        Sale sale = getSaleEntityById(saleId);
-
-        BigDecimal totalItemCount = sale.getAllSaleProducts().stream()
-                .map(SaleProduct::getQuantity)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal averageItemPrice = totalItemCount.compareTo(BigDecimal.ZERO) > 0 ?
-                sale.getFinalTotalPrice().divide(totalItemCount, 2, RoundingMode.HALF_UP) :
-                BigDecimal.ZERO;
-
-        return new SaleDetailedViewDTO(
-                saleId,
-                sale.getSaleDate(),
-                sale.getCustomer() != null ?
-                        new CustomerInfoDTO(
-                                sale.getCustomer().getId(),
-                                sale.getCustomer().getFullName(),
-                                sale.getCustomer().getEmail()
-                        ) : null ,
-                new LocationInfoDTO(
-                        sale.getLocation().getId(),
-                        sale.getLocation().getName()
-                ),
-                sale.getPaymentMethod(),
-                sale.getSuggestedTotalPrice().subtract(sale.getPackagingPrice()), //subtotal
-                sale.getPackagingPrice(),
-                sale.getSuggestedTotalPrice(),
-                sale.getFinalTotalPrice(),
-                sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()),
-                sale.getDiscountPercentage(),
-
-                sale.getAllSaleProducts().stream()
-                        .map(mapper::mapToSaleItemDetailsDTO)
-                        .collect(Collectors.toList()),
-                sale.getIsWholesale(),
-                totalItemCount.intValue(),
-                averageItemPrice
-
-        );
-    }
-
-    // =============================================================================
-    // PRIVATE HELPER METHODS
+// =============================================================================
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================
 
-    private void updateSalePricingWithDiscount(Sale sale) {
-        BigDecimal suggestedTotal = pricingService.calculateSuggestedTotalFromSale(sale);
-        sale.setSuggestedTotalPrice(suggestedTotal);
-
-        // Calculate discount percentage based on final vs suggested price
-        BigDecimal  discountPercentage = BigDecimal.ZERO;
-        if (suggestedTotal.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal discountAmount = suggestedTotal.subtract(sale.getFinalTotalPrice());
-            discountPercentage = discountAmount.divide(suggestedTotal, 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-        }
-        sale.setDiscountPercentage(discountPercentage);
-
-        // Apply proportional discount to each sale product
-        for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
-            BigDecimal actualPrice = pricingService.calculateActualSellingPrice(
-                    saleProduct.getProduct(), discountPercentage);
-            saleProduct.setPriceAtTheTime(actualPrice);
-        }
-
-        LOGGER.debug("Updated sale {} pricing - Suggested: {}, Final: {}, Discount: {}%",
-                sale.getId(), suggestedTotal, sale.getFinalTotalPrice(), discountPercentage);
+    private Sale getSaleEntityById(Long id) throws EntityNotFoundException {
+        return saleRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Sale", "Sale with id " + id + " not found"));
     }
 
     private Location getLocationById(Long id) throws EntityNotFoundException {
@@ -471,11 +456,40 @@ public class SaleService implements ISaleService {
                 .orElseThrow(() -> new EntityNotFoundException("Product", "Product with id " + id + " not found"));
     }
 
-    private Sale getSaleEntityById(Long id) throws EntityNotFoundException {
-        return saleRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Sale", "Sale with id " + id + " not found"));
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Business Logic
+    // =============================================================================
+
+    /**
+     * Updates sale pricing and applies discount to all sale products
+     */
+    private void updateSalePricingWithDiscount(Sale sale) {
+        BigDecimal suggestedTotal = pricingService.calculateSuggestedTotalFromSale(sale);
+        sale.setSuggestedTotalPrice(suggestedTotal);
+
+        // Calculate discount percentage based on final vs suggested price
+        BigDecimal discountPercentage = BigDecimal.ZERO;
+        if (suggestedTotal.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal discountAmount = suggestedTotal.subtract(sale.getFinalTotalPrice());
+            discountPercentage = discountAmount.divide(suggestedTotal, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+        sale.setDiscountPercentage(discountPercentage);
+
+        // Apply proportional discount to each sale product
+        for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
+            BigDecimal actualPrice = pricingService.calculateActualSellingPrice(
+                    saleProduct.getProduct(), discountPercentage);
+            saleProduct.setPriceAtTheTime(actualPrice);
+        }
+
+        LOGGER.debug("Updated sale {} pricing - Suggested: {}, Final: {}, Discount: {}%",
+                sale.getId(), suggestedTotal, sale.getFinalTotalPrice(), discountPercentage);
     }
 
+    /**
+     * Updates customer's first sale date if this is their first purchase
+     */
     private void updateCustomerFirstSaleDate(Customer customer, LocalDate saleDate) {
         if (customer != null && customer.getFirstSaleDate() == null) {
             customer.setFirstSaleDate(saleDate);
@@ -483,18 +497,45 @@ public class SaleService implements ISaleService {
         }
     }
 
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Calculations
+    // =============================================================================
+
+    /**
+     * Converts SaleFilters to JPA Specifications for database queries
+     */
     private Specification<Sale> getSpecsFromFilters(SaleFilters filters) {
-        return Specification
-                .where(SaleSpecification.hasProductNameOrCode(filters.getProductNameOrCode()))
-                .and(SaleSpecification.hasCustomer(filters.getCustomerId()))
-                .and(SaleSpecification.hasProductCategory(filters.getCategoryId()))
+        Specification<Sale> spec = Specification
+                .where(SaleSpecification.hasCategoryId(filters.getCategoryId()))
                 .and(SaleSpecification.hasDateBetween(filters.getSaleDateFrom(), filters.getSaleDateTo()))
-                .and(SaleSpecification.hasLocation(filters.getLocationId()))
+                .and(SaleSpecification.hasLocationId(filters.getLocationId()))
                 .and(SaleSpecification.hasPaymentMethod(filters.getPaymentMethod()));
 
+        // Product filtering with priority logic
+        if (filters.getProductId() != null) {
+            // User selected specific product from autocomplete
+            spec = spec.and(SaleSpecification.hasProductId(filters.getProductId()));
+        } else if (filters.getProductNameOrCode() != null && !filters.getProductNameOrCode().trim().isEmpty()) {
+            // User is typing in autocomplete
+            spec = spec.and(SaleSpecification.hasProductNameOrCode(filters.getProductNameOrCode()));
+        }
+
+        // Customer filtering with priority logic
+        if (filters.getCustomerId() != null) {
+            // User selected specific customer from autocomplete
+            spec = spec.and(SaleSpecification.hasCustomerId(filters.getCustomerId()));
+        } else if (filters.getCustomerNameOrEmail() != null && !filters.getCustomerNameOrEmail().trim().isEmpty()) {
+            // User is typing in autocomplete
+            spec = spec.and(SaleSpecification.hasCustomerNameOrEmail(filters.getCustomerNameOrEmail()));
+        }
+
+        return spec;
     }
 
-    private SalesSummaryDTO calculateSalesSummary(SaleFilters filters){
+    /**
+     * Calculates sales summary metrics from filtered results
+     */
+    private SalesSummaryDTO calculateSalesSummary(SaleFilters filters) {
         List<Sale> allFilteredSales = saleRepository.findAll(getSpecsFromFilters(filters));
 
         int totalCount = allFilteredSales.size();
@@ -504,27 +545,27 @@ public class SaleService implements ISaleService {
         }
 
         BigDecimal totalRevenue = allFilteredSales.stream()
-             .map(Sale::getFinalTotalPrice)
-             .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(Sale::getFinalTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal averageOrderValue = totalRevenue.divide(
-            BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
+                BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
 
         BigDecimal totalDiscountAmount = allFilteredSales.stream()
-            .map(sale -> sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()))
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(sale -> sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal averageDiscountPercentage = allFilteredSales.stream()
-            .map(Sale::getDiscountPercentage)
-            .reduce(BigDecimal.ZERO, BigDecimal::add)
-            .divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
+                .map(Sale::getDiscountPercentage)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
 
         return new SalesSummaryDTO(
-                    totalCount,
-                    totalRevenue,
-                    averageOrderValue,
-                    totalDiscountAmount,
-                    averageDiscountPercentage
+                totalCount,
+                totalRevenue,
+                averageOrderValue,
+                totalDiscountAmount,
+                averageDiscountPercentage
         );
     }
 }

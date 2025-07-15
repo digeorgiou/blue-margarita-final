@@ -45,6 +45,10 @@ public interface ICustomerService {
      */
     void deleteCustomer(Long id) throws EntityNotFoundException;
 
+    // =============================================================================
+    // CUSTOMER LISTING AND FILTERING (View Customers Page)
+    // =============================================================================
+
     /**
      * Retrieves a customer by ID
      * @param id Customer ID
@@ -52,10 +56,6 @@ public interface ICustomerService {
      * @throws EntityNotFoundException if customer not found
      */
     CustomerListItemDTO getCustomerById(Long id) throws EntityNotFoundException;
-
-    // =============================================================================
-    // FILTERING AND PAGINATION OPERATIONS
-    // =============================================================================
 
     /**
      * Retrieves customers with pagination based on filter criteria
@@ -75,14 +75,18 @@ public interface ICustomerService {
      */
     CustomerDetailedViewDTO getCustomerDetailedView(Long customerId) throws EntityNotFoundException;
 
-    // =============================================================================
-    // CUSTOMER RETRIEVAL OPERATIONS
-    // =============================================================================
-
     /**
      * Retrieves all active customers
      * Returns customers where isActive = true
      * @return List of all active customers
      */
     List<CustomerListItemDTO> getAllActiveCustomers();
+
+    /**
+     * Retrieves active customers matching the searchTerm
+     * with the info needed for autocomplete in Record sale
+     * @param searchTerm searches by lastname, phone number, tin or email
+     * @return
+     */
+    List<CustomerSearchResultDTO> searchCustomersForAutocomplete(String searchTerm);
 }

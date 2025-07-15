@@ -14,5 +14,6 @@ public record ProductListItemDTO(
         BigDecimal percentageDifference,
         boolean isActive,
         boolean isLowStock,
-        Integer currentStock
+        Integer currentStock,
+        Integer lowStockAlert
 ) {}

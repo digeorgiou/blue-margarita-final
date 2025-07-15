@@ -1,12 +1,10 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
-import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.dto.product.*;
-import gr.aueb.cf.bluemargarita.model.Product;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,7 +13,7 @@ import java.util.List;
 /**
  * Service interface for managing products in the jewelry business application.
  * Handles product CRUD operations, pricing calculations, material/procedure relationships,
- * and sales analytics for individual products.
+ * stock management, and sales analytics for individual products.
  */
 public interface IProductService {
 
@@ -25,7 +23,6 @@ public interface IProductService {
 
     /**
      * Creates a new product with automatic pricing calculation and optional materials/procedures
-     *
      * Business Logic:
      * 1. Validates unique name and code constraints
      * 2. Validates category exists and is active
@@ -63,42 +60,50 @@ public interface IProductService {
     void deleteProduct(Long id) throws EntityNotFoundException;
 
     // =============================================================================
-    // ENHANCED PRODUCT VIEWS
+    // PRODUCT LISTING AND FILTERING (View Products Page)
     // =============================================================================
 
     /**
-     * Retrieves products for the main products page with enhanced business information
-     * Includes calculated costs, pricing differences, stock status
-     *
-     * @param filters Filter criteria for products
-     * @return List of products with enhanced business data
-     */
-    List<ProductListItemDTO> getProductListItems(ProductFilters filters);
-
-    /**
      * Retrieves products with pagination for the main products page
+     * Includes calculated costs, pricing differences, stock status, and filtering capabilities
      *
-     * @param filters Filter criteria including pagination parameters
+     * @param filters Filter criteria including pagination parameters, search terms, categories, materials, procedures
      * @return Paginated list of products with enhanced business data
      */
     Paginated<ProductListItemDTO> getProductListItemsPaginated(ProductFilters filters);
 
     /**
      * Retrieves comprehensive product details including materials, procedures, and cost breakdown
-     * Used for "View Details" modal/page
+     * Used for "View Details" button on products page
      *
      * @param productId Product ID to get details for
      * @return Complete product details with relationships and calculations
      * @throws EntityNotFoundException if product not found
      */
-    ProductDetailsDTO getProductDetails(Long productId) throws EntityNotFoundException;
+    ProductDetailedViewDTO getProductDetails(Long productId) throws EntityNotFoundException;
+
+    /**
+     * Gets the total count of active products (for dashboard statistics)
+     *
+     * @return Number of active products
+     */
+    int getActiveProductCount();
+
+    /**
+     * Retrieves active products matching search term
+     * with limited info needed for autocomplete in record sale page
+     * @param searchTerm matches with name or code
+     * @return
+     */
+    List<ProductSearchResultDTO> searchProductsForAutocomplete(String searchTerm);
 
     // =============================================================================
-    // SALES ANALYTICS
+    // SALES ANALYTICS (Sales Data Buttons)
     // =============================================================================
 
     /**
      * Retrieves comprehensive sales analytics for a specific product
+     * Used for "Sales Analytics" button on products page
      * Includes trends, comparisons, top customers/locations, and period analysis
      *
      * @param productId Product ID to analyze
@@ -113,18 +118,18 @@ public interface IProductService {
             throws EntityNotFoundException;
 
     /**
-     * Retrieves daily sales breakdown for a product
-     * Used for daily sales charts and trend analysis
+     * Retrieves weekly sales breakdown for a product
+     * Used for weekly sales charts and medium-term trend analysis
      *
      * @param productId Product ID to analyze
      * @param startDate Period start date (inclusive)
      * @param endDate Period end date (inclusive)
-     * @return Daily sales data for the period
+     * @return Weekly sales data for the period
      * @throws EntityNotFoundException if product not found
      */
-    List<DailySalesDataDTO> getProductDailySales(Long productId,
-                                                 LocalDate startDate,
-                                                 LocalDate endDate)
+    List<WeeklySalesDataDTO> getProductWeeklySales(Long productId,
+                                                   LocalDate startDate,
+                                                   LocalDate endDate)
             throws EntityNotFoundException;
 
     /**
@@ -140,6 +145,21 @@ public interface IProductService {
     List<MonthlySalesDataDTO> getProductMonthlySales(Long productId,
                                                      LocalDate startDate,
                                                      LocalDate endDate)
+            throws EntityNotFoundException;
+
+    /**
+     * Retrieves yearly sales breakdown for a product
+     * Used for yearly sales charts and very long-term trend analysis
+     *
+     * @param productId Product ID to analyze
+     * @param startDate Period start date (inclusive)
+     * @param endDate Period end date (inclusive)
+     * @return Yearly sales data for the period
+     * @throws EntityNotFoundException if product not found
+     */
+    List<YearlySalesDataDTO> getProductYearlySales(Long productId,
+                                                   LocalDate startDate,
+                                                   LocalDate endDate)
             throws EntityNotFoundException;
 
     /**
@@ -176,45 +196,10 @@ public interface IProductService {
                                                                  int limit)
             throws EntityNotFoundException;
 
+
     // =============================================================================
-    // STOCK MANAGEMENT AND LOW STOCK ALERTS
+    // DASHBOARD PAGE METHODS
     // =============================================================================
-
-    /**
-     * Decreases product stock when a sale is recorded
-     * @param productId Product ID
-     * @param quantity Quantity to reduce from stock
-     * @throws EntityNotFoundException if product not found
-     */
-    void reduceProductStock(Long productId, BigDecimal quantity)
-            throws EntityNotFoundException;
-
-    /**
-     * Increases product stock when a sale is cancelled/deleted
-     * @param productId Product ID
-     * @param quantity Quantity to add back to stock
-     * @throws EntityNotFoundException if product not found
-     */
-    void increaseProductStock(Long productId, BigDecimal quantity)
-            throws EntityNotFoundException;
-
-    /**
-     * Adjusts stock when sale quantities are updated
-     * @param productId Product ID
-     * @param oldQuantity Previous quantity sold
-     * @param newQuantity New quantity sold
-     */
-    void adjustProductStock(Long productId, BigDecimal oldQuantity, BigDecimal newQuantity)
-            throws EntityNotFoundException;
-
-
-    /**
-     * Retrieves all products with stock below their low stock alert threshold
-     * Used for inventory management and stock alerts
-     *
-     * @return List of products needing restocking
-     */
-    List<ProductListItemDTO> getLowStockProducts();
 
     /**
      * Retrieves low stock products with a limit (for dashboard widgets)
@@ -227,6 +212,7 @@ public interface IProductService {
 
     /**
      * Retrieves low stock products with pagination and additional filtering
+     * Used for dedicated low stock management page
      *
      * @param filters Filter criteria (low stock filter is automatically applied)
      * @return Paginated result of low stock products
@@ -234,14 +220,58 @@ public interface IProductService {
     Paginated<ProductListItemDTO> getLowStockProductsPaginated(ProductFilters filters);
 
     /**
-     * Gets products with negative stock with limit (for dashboard)
+     * Retrieves top products by revenue for dashboard
+     * Shows best performing products in terms of sales revenue
+     *
+     * @param startDate Period start date (inclusive)
+     * @param endDate Period end date (inclusive)
+     * @param limit Maximum number of products to return (typically 5 for dashboard)
+     * @return Top products by revenue with sales metrics
      */
-    List<ProductListItemDTO> getNegativeStockProducts(int limit);
+    List<ProductStatsSummaryDTO> getTopProductsByMonthlyRevenue(LocalDate startDate,
+                                                                LocalDate endDate,
+                                                                int limit);
 
-    Paginated<ProductListItemDTO> getNegativeStockProductsPaginated();
+    // =============================================================================
+    // STOCK MANAGEMENT
+    // =============================================================================
 
     /**
-     * Updates the stock quantity for a product
+     * Decreases product stock when a sale is recorded
+     * Used by sales system
+     *
+     * @param productId Product ID
+     * @param quantity Quantity to reduce from stock
+     * @throws EntityNotFoundException if product not found
+     */
+    void reduceProductStock(Long productId, BigDecimal quantity)
+            throws EntityNotFoundException;
+
+    /**
+     * Increases product stock when a sale is cancelled/deleted
+     * Used by sales system
+     *
+     * @param productId Product ID
+     * @param quantity Quantity to add back to stock
+     * @throws EntityNotFoundException if product not found
+     */
+    void increaseProductStock(Long productId, BigDecimal quantity)
+            throws EntityNotFoundException;
+
+    /**
+     * Adjusts stock when sale quantities are updated
+     * Used by sales system
+     *
+     * @param productId Product ID
+     * @param oldQuantity Previous quantity sold
+     * @param newQuantity New quantity sold
+     */
+    void adjustProductStock(Long productId, BigDecimal oldQuantity, BigDecimal newQuantity)
+            throws EntityNotFoundException;
+
+    /**
+     * Updates the stock quantity for a product manually
+     * Used by inventory management
      *
      * @param productId Product ID to update
      * @param newStock New stock quantity
@@ -252,48 +282,10 @@ public interface IProductService {
     ProductListItemDTO updateProductStock(Long productId, Integer newStock, Long updaterUserId)
             throws EntityNotFoundException;
 
-    /**
-     * Gets the total count of active products (for dashboard statistics)
-     *
-     * @return Number of active products
-     */
-    int getActiveProductCount();
+
 
     // =============================================================================
-    // PRICING CALCULATIONS AND COST ANALYSIS
-    // =============================================================================
-
-    /**
-     * Calculates suggested retail selling price based on current costs and markup
-     * Formula: (Material Cost + Labor Cost) × Retail Markup Factor
-     *
-     * @param product Product entity to calculate price for
-     * @return Calculated suggested retail price
-     */
-    BigDecimal calculateSuggestedRetailPrice(Product product);
-
-    /**
-     * Calculates suggested wholesale selling price based on current costs and markup
-     * Formula: (Material Cost + Labor Cost) × Wholesale Markup Factor
-     *
-     * @param product Product entity to calculate price for
-     * @return Calculated suggested wholesale price
-     */
-    BigDecimal calculateSuggestedWholesalePrice(Product product);
-
-    /**
-     * Provides comprehensive cost breakdown and pricing analysis for a product
-     * Includes material costs, labor costs, markup factors, profit margins, and price comparisons
-     * Used for cost analysis modal/page
-     *
-     * @param productId Product ID to analyze
-     * @return Detailed cost breakdown with all pricing metrics
-     * @throws EntityNotFoundException if product not found
-     */
-    ProductCostBreakdownDTO getProductCostBreakdown(Long productId) throws EntityNotFoundException;
-
-    // =============================================================================
-    // MATERIAL RELATIONSHIP MANAGEMENT
+    // MATERIAL/PROCEDURE RELATIONSHIP MANAGEMENT
     // =============================================================================
 
     /**
@@ -324,10 +316,6 @@ public interface IProductService {
     ProductListItemDTO removeMaterialFromProduct(Long productId, Long materialId, Long updaterUserId)
             throws EntityNotFoundException;
 
-    // =============================================================================
-    // PROCEDURE RELATIONSHIP MANAGEMENT
-    // =============================================================================
-
     /**
      * Adds a procedure to a product or updates the cost if already exists
      * Automatically recalculates suggested prices after the change
@@ -357,7 +345,7 @@ public interface IProductService {
             throws EntityNotFoundException;
 
     // =============================================================================
-    // BULK OPERATIONS
+    // BULK OPERATIONS AND PRICING
     // =============================================================================
 
     /**

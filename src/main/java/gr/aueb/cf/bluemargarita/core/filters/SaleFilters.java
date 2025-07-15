@@ -19,7 +19,13 @@ public class SaleFilters extends GenericFilters {
     private Long customerId;
 
     @Nullable
+    private String customerNameOrEmail;
+
+    @Nullable
     private String productNameOrCode;
+
+    @Nullable
+    private Long productId;
 
     @Nullable
     private Long locationId;

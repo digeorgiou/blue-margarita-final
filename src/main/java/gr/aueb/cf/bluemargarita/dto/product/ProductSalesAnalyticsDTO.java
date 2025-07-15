@@ -22,8 +22,9 @@ public record ProductSalesAnalyticsDTO(
         BigDecimal averageSellingPrice,
 
         // Trends
-        List<DailySalesDataDTO> dailySalesData,
+        List<WeeklySalesDataDTO> weeklySalesData,
         List<MonthlySalesDataDTO> monthlySalesData,
+        List<YearlySalesDataDTO> yearlySalesData,
 
         // Top locations and customers for this product
         List<LocationSalesDataDTO> topLocationsByRevenue,

@@ -14,19 +14,19 @@ import java.math.BigDecimal;
 public class ProductFilters extends GenericFilters {
 
     @Nullable
-    private String name;
-
-    @Nullable
-    private String code;
-
-    @Nullable
-    private String nameOrCodeOrCategoryName;
-
-    @Nullable
-    private String categoryName;
+    private String nameOrCode;
 
     @Nullable
     private Long categoryId;
+
+    @Nullable
+    private Long procedureId;
+
+    @Nullable
+    private String materialName;
+
+    @Nullable
+    private Long materialId;
 
     @Nullable
     private BigDecimal minPrice;

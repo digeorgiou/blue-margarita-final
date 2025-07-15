@@ -18,8 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.swing.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.WeekFields;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +59,13 @@ public class ProductSalesAnalyticsService {
         ProductSalesMetrics metrics = calculateMetrics(saleProducts);
 
         // Get daily sales data
-        List<DailySalesDataDTO> dailySales = getDailySalesData(productId, startDate, endDate);
+        List<WeeklySalesDataDTO> weeklySales = getWeeklySalesData(productId, startDate, endDate);
 
         // Get monthly sales data
         List<MonthlySalesDataDTO> monthlySales = getMonthlySalesData(productId, startDate, endDate);
+
+        // Get yearly sales data
+        List<YearlySalesDataDTO> yearlySales = getYearlySalesData(productId, startDate, endDate);
 
         // Top locations and customers
         List<LocationSalesDataDTO> topLocations = getTopLocationsByProductSales(productId, startDate, endDate, 5);
@@ -79,8 +84,9 @@ public class ProductSalesAnalyticsService {
                 metrics.avgQuantityPerSale,
                 metrics.avgRevenuePerSale,
                 metrics.avgSellingPrice,
-                dailySales,
+                weeklySales,
                 monthlySales,
+                yearlySales,
                 topLocations,
                 topCustomers,
                 metrics.lastSaleDate,
@@ -89,29 +95,41 @@ public class ProductSalesAnalyticsService {
         );
     }
 
-    public List<DailySalesDataDTO> getDailySalesData(Long productId, LocalDate startDate, LocalDate endDate) {
+    public List<WeeklySalesDataDTO> getWeeklySalesData(Long productId, LocalDate startDate, LocalDate endDate) {
         Specification<SaleProduct> spec = ProductSalesSpecification.productInDateRange(productId, startDate, endDate);
         List<SaleProduct> saleProducts = saleProductRepository.findAll(spec);
 
-        // Group by date and calculate metrics
-        Map<LocalDate, List<SaleProduct>> salesByDate = saleProducts.stream()
-                .collect(Collectors.groupingBy(sp -> sp.getSale().getSaleDate()));
+        // Group by week (using week start date as key)
+        Map<LocalDate, List<SaleProduct>> salesByWeek = saleProducts.stream()
+                .collect(Collectors.groupingBy(sp -> {
+                    LocalDate saleDate = sp.getSale().getSaleDate();
+                    // Get Monday of the week containing this date
+                    return saleDate.with(DayOfWeek.MONDAY);
+                }));
 
-        return salesByDate.entrySet().stream()
+        return salesByWeek.entrySet().stream()
                 .map(entry -> {
-                    LocalDate date = entry.getKey();
-                    List<SaleProduct> daySales = entry.getValue();
-                    ProductSalesMetrics dayMetrics = calculateMetrics(daySales);
+                    LocalDate weekStart = entry.getKey();
+                    LocalDate weekEnd = weekStart.plusDays(6); // Sunday
+                    List<SaleProduct> weekSales = entry.getValue();
+                    ProductSalesMetrics weekMetrics = calculateMetrics(weekSales);
 
-                    return new DailySalesDataDTO(
-                            date,
-                            dayMetrics.totalQuantity,
-                            dayMetrics.totalRevenue,
-                            dayMetrics.numberOfSales,
-                            dayMetrics.avgSellingPrice
+                    // Calculate year and week number
+                    int year = weekStart.getYear();
+                    int weekOfYear = weekStart.get(WeekFields.ISO.weekOfYear());
+
+                    return new WeeklySalesDataDTO(
+                            year,
+                            weekOfYear,
+                            weekStart,
+                            weekEnd,
+                            weekMetrics.totalRevenue,
+                            weekMetrics.totalQuantity,
+                            weekMetrics.numberOfSales,
+                            weekMetrics.avgSellingPrice
                     );
                 })
-                .sorted(Comparator.comparing(DailySalesDataDTO::date))
+                .sorted(Comparator.comparing(WeeklySalesDataDTO::weekStartDate))
                 .collect(Collectors.toList());
     }
 
@@ -141,6 +159,35 @@ public class ProductSalesAnalyticsService {
                     );
                 })
                 .sorted(Comparator.comparing(MonthlySalesDataDTO::monthYear))
+                .collect(Collectors.toList());
+    }
+
+
+    public List<YearlySalesDataDTO> getYearlySalesData(Long productId, LocalDate startDate, LocalDate endDate) {
+        Specification<SaleProduct> spec = ProductSalesSpecification.productInDateRange(productId, startDate, endDate);
+        List<SaleProduct> saleProducts = saleProductRepository.findAll(spec);
+
+        // Group by year
+        Map<Integer, List<SaleProduct>> salesByYear = saleProducts.stream()
+                .collect(Collectors.groupingBy(sp ->
+                        sp.getSale().getSaleDate().getYear()
+                ));
+
+        return salesByYear.entrySet().stream()
+                .map(entry -> {
+                    Integer year = entry.getKey();
+                    List<SaleProduct> yearSales = entry.getValue();
+                    ProductSalesMetrics yearMetrics = calculateMetrics(yearSales);
+
+                    return new YearlySalesDataDTO(
+                            year,
+                            yearMetrics.totalRevenue,
+                            yearMetrics.totalQuantity,
+                            yearMetrics.numberOfSales,
+                            yearMetrics.avgSellingPrice
+                    );
+                })
+                .sorted(Comparator.comparing(YearlySalesDataDTO::year))
                 .collect(Collectors.toList());
     }
 
@@ -204,6 +251,36 @@ public class ProductSalesAnalyticsService {
                     );
                 })
                 .sorted(Comparator.comparing(LocationSalesDataDTO::revenue, Comparator.reverseOrder()))
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductStatsSummaryDTO> getTopProductsByRevenue(LocalDate startDate,
+                                                                LocalDate endDate,
+                                                                int limit){
+        // Get all sale products in date range
+        Specification<SaleProduct> spec = ProductSalesSpecification.productInDateRange(null, startDate, endDate);
+        List<SaleProduct> saleProducts = saleProductRepository.findAll(spec);
+
+        Map<Product, List<SaleProduct>> salesByProduct = saleProducts.stream()
+                .collect(Collectors.groupingBy(SaleProduct::getProduct));
+
+        return salesByProduct.entrySet().stream()
+                .map(entry -> {
+                    Product product = entry.getKey();
+                    List<SaleProduct> productSales = entry.getValue();
+                    ProductSalesMetrics metrics = calculateMetrics(productSales);
+
+                    return new ProductStatsSummaryDTO(
+                            product.getId(),
+                            product.getName(),
+                            product.getCode(),
+                            metrics.totalQuantity,
+                            metrics.totalRevenue,
+                            metrics.lastSaleDate
+                    );
+                })
+                .sorted(Comparator.comparing(ProductStatsSummaryDTO::totalRevenue, Comparator.reverseOrder()))
                 .limit(limit)
                 .collect(Collectors.toList());
     }

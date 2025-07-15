@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.CategorySpecification;
+import gr.aueb.cf.bluemargarita.dto.category.CategoryForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
@@ -153,6 +154,15 @@ public class CategoryService implements ICategoryService{
 
         return categoryRepository.findByIsActiveTrue().stream()
                 .map(mapper::mapToCategoryReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryForDropdownDTO> getActiveCategoriesForDropdown() {
+        return categoryRepository.findByIsActiveTrue()
+                .stream()
+                .map(category -> new CategoryForDropdownDTO(category.getId(), category.getName()))
+                .sorted((c1, c2) -> c1.name().compareToIgnoreCase(c2.name()))
                 .collect(Collectors.toList());
     }
 

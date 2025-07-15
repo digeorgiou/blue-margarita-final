@@ -1,12 +1,11 @@
 package gr.aueb.cf.bluemargarita.dto.customer;
 
+
 /**
- * DTO for customer search results in sale creation
+ * Simplified customer info for sale response
  */
 public record CustomerSearchResultDTO(
         Long id,
         String fullName,
-        String email,
-        String phoneNumber,
-        boolean isActive
+        String email
 ) {}

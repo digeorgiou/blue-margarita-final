@@ -5,6 +5,5 @@ package gr.aueb.cf.bluemargarita.dto.location;
  */
 public record LocationForDropdownDTO(
         Long id,
-        String name,
-        boolean isActive
+        String name
 ) {}

@@ -1,8 +1,8 @@
 package gr.aueb.cf.bluemargarita.core.specifications;
 
-import gr.aueb.cf.bluemargarita.model.Category;
-import gr.aueb.cf.bluemargarita.model.Product;
+import gr.aueb.cf.bluemargarita.model.*;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
@@ -13,42 +13,9 @@ public class ProductSpecification {
         // Utility class
     }
 
-    public static Specification<Product> productNameLike(String name) {
-        return (root, query, criteriaBuilder) -> {
-            if (name == null || name.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-            return criteriaBuilder.like(
-                    criteriaBuilder.upper(root.get("name")),
-                    "%" + name.toUpperCase() + "%"
-            );
-        };
-    }
-
-    public static Specification<Product> productCodeLike(String code) {
-        return (root, query, criteriaBuilder) -> {
-            if (code == null || code.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-            return criteriaBuilder.like(
-                    criteriaBuilder.upper(root.get("code")),
-                    "%" + code.toUpperCase() + "%"
-            );
-        };
-    }
-
-    public static Specification<Product> productCategoryNameLike(String categoryName) {
-        return (root, query, criteriaBuilder) -> {
-            if (categoryName == null || categoryName.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-            Join<Product, Category> categoryJoin = root.join("category");
-            return criteriaBuilder.like(
-                    criteriaBuilder.upper(categoryJoin.get("name")),
-                    "%" + categoryName.toUpperCase() + "%"
-            );
-        };
-    }
+    /**
+     * Filter products that belongs to a specific category by id (for dropdown selection)
+     */
 
     public static Specification<Product> productCategoryId(Long categoryId) {
         return (root, query, criteriaBuilder) -> {
@@ -60,20 +27,75 @@ public class ProductSpecification {
         };
     }
 
-    public static Specification<Product> productPriceBetween(BigDecimal minPrice, BigDecimal maxPrice) {
+    /**
+     * Filter products that contain a specific material by name (for search bar)
+     */
+
+    public static Specification<Product> productContainsMaterialByName(String materialName) {
+        return (root, query, criteriaBuilder) -> {
+            if (materialName == null || materialName.trim().isEmpty()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+
+            // Join Product -> ProductMaterial -> Material
+            Join<Product, ProductMaterial> productMaterialJoin = root.join("productMaterials", JoinType.INNER);
+            Join<ProductMaterial, Material> materialJoin = productMaterialJoin.join("material", JoinType.INNER);
+
+            return criteriaBuilder.like(
+                    criteriaBuilder.upper(materialJoin.get("name")),
+                    "%" + materialName.toUpperCase() + "%"
+            );
+        };
+    }
+
+    /**
+     * Filter products that contain a specific material by ID (when user selects from dropdown)
+     */
+    public static Specification<Product> productContainsMaterialById(Long materialId) {
+        return (root, query, criteriaBuilder) -> {
+            if (materialId == null) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+
+            Join<Product, ProductMaterial> productMaterialJoin = root.join("productMaterials", JoinType.INNER);
+            Join<ProductMaterial, Material> materialJoin = productMaterialJoin.join("material", JoinType.INNER);
+
+            return criteriaBuilder.equal(materialJoin.get("id"), materialId);
+        };
+    }
+
+    public static Specification<Product> productRetailPriceBetween(BigDecimal minPrice, BigDecimal maxPrice) {
         return (root, query, criteriaBuilder) -> {
             if (minPrice == null && maxPrice == null) {
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
             }
             if (minPrice != null && maxPrice != null) {
-                return criteriaBuilder.between(root.get("finalSellingPrice"), minPrice, maxPrice);
+                return criteriaBuilder.between(root.get("finalSellingPriceRetail"), minPrice, maxPrice);
             }
             if (minPrice != null) {
-                return criteriaBuilder.greaterThanOrEqualTo(root.get("finalSellingPrice"), minPrice);
+                return criteriaBuilder.greaterThanOrEqualTo(root.get("finalSellingPriceRetail"), minPrice);
             }
-            return criteriaBuilder.lessThanOrEqualTo(root.get("finalSellingPrice"), maxPrice);
+            return criteriaBuilder.lessThanOrEqualTo(root.get("finalSellingPriceRetail"), maxPrice);
         };
     }
+
+    /**
+     * Filter products that use a specific procedure by ID (for dropdown selection)
+     */
+    public static Specification<Product> productUsesProcedureById(Long procedureId) {
+        return (root, query, criteriaBuilder) -> {
+            if (procedureId == null) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+
+            // Join Product -> ProcedureProduct -> Procedure
+            Join<Product, ProcedureProduct> procedureProductJoin = root.join("procedureProducts", JoinType.INNER);
+            Join<ProcedureProduct, Procedure> procedureJoin = procedureProductJoin.join("procedure", JoinType.INNER);
+
+            return criteriaBuilder.equal(procedureJoin.get("id"), procedureId);
+        };
+    }
+
 
     public static Specification<Product> productStockBetween(Integer minStock, Integer maxStock) {
         return (root, query, criteriaBuilder) -> {
@@ -129,15 +151,5 @@ public class ProductSpecification {
     }
 
 
-    public static Specification<Product> productStringFieldLike(String field, String value) {
-        return (root, query, criteriaBuilder) -> {
-            if (value == null || value.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-            return criteriaBuilder.like(
-                    criteriaBuilder.upper(root.get(field)),
-                    "%" + value.toUpperCase() + "%"
-            );
-        };
-    }
+
 }

@@ -128,4 +128,4 @@ package gr.aueb.cf.bluemargarita.rest;
 //        if(filters == null) filters = CustomerFilters.builder().build();
 //        return ResponseEntity.ok(customerService.getCustomersFilteredPaginated(filters));
 //    }
-}
+//}

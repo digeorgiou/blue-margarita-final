@@ -305,12 +305,7 @@ public class Mapper {
         return existingProduct;
     }
 
-    public ProductListItemDTO mapToProductListItemDTO(Product product) {
-        BigDecimal totalCost = calculateTotalCost(product);
-        BigDecimal percentageDiff = calculatePercentageDifference(
-                product.getFinalSellingPriceRetail(),
-                product.getSuggestedRetailSellingPrice()
-        );
+    public ProductListItemDTO mapToProductListItemDTO(Product product, ProductCostDataDTO data) {
 
         return new ProductListItemDTO(
                 product.getId(),
@@ -318,54 +313,17 @@ public class Mapper {
                 product.getCode(),
                 product.getCategory() != null ? product.getCategory().getName() : "No Category",
                 product.getMinutesToMake(),
-                totalCost,
+                data.totalCost(),
                 product.getSuggestedRetailSellingPrice(),
                 product.getFinalSellingPriceRetail(),
-                percentageDiff,
+                data.percentageDifference(),
                 product.getIsActive(),
-                product.getStock() != null && product.getLowStockAlert() != null &&
-                        product.getStock() <= product.getLowStockAlert(),
-                product.getStock()
+                data.isLowStock(),
+                product.getStock(),
+                product.getLowStockAlert()
         );
     }
 
-    // Helper methods for product calculations
-    private BigDecimal calculateTotalCost(Product product) {
-        BigDecimal materialCost = calculateMaterialCost(product);
-        BigDecimal laborCost = calculateLaborCost(product);
-        return materialCost.add(laborCost);
-    }
-
-    private BigDecimal calculateMaterialCost(Product product) {
-        return product.getAllProductMaterials().stream()
-                .filter(pm -> pm.getMaterial().getCurrentUnitCost() != null && pm.getQuantity() != null)
-                .map(pm -> pm.getMaterial().getCurrentUnitCost().multiply(pm.getQuantity()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private BigDecimal calculateLaborCost(Product product) {
-        if (product.getMinutesToMake() == null || product.getMinutesToMake() <= 0) {
-            return BigDecimal.ZERO;
-        }
-
-        // Convert minutes to hours and multiply by hourly rate
-        BigDecimal hoursToMake = BigDecimal.valueOf(product.getMinutesToMake())
-                .divide(BigDecimal.valueOf(60.0), 4, RoundingMode.HALF_UP);
-
-        return hoursToMake.multiply(BigDecimal.valueOf(7.0)); // HOURLY_LABOR_RATE
-    }
-
-    private BigDecimal calculatePercentageDifference(BigDecimal current, BigDecimal suggested) {
-        if (current == null || current.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        if (suggested == null || suggested.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        return current.subtract(suggested)
-                .divide(suggested, 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100));
-    }
 
     //Sale
 

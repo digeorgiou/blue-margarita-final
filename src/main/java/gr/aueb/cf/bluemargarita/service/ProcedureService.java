@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProcedureSpecification;
+import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureUpdateDTO;
@@ -124,6 +125,17 @@ public class ProcedureService implements IProcedureService {
         List<Procedure> procedures = procedureRepository.findByIsActiveTrue();
 
         return procedures.stream().map(mapper::mapToProcedureReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProcedureForDropdownDTO> getActiveProceduresForDropdown() {
+        return procedureRepository.findByIsActiveTrue()
+                .stream()
+                .map(procedure -> new ProcedureForDropdownDTO(
+                        procedure.getId(),
+                        procedure.getName()
+                ))
+                .sorted((p1, p2) -> p1.name().compareToIgnoreCase(p2.name()))
                 .collect(Collectors.toList());
     }
 

@@ -1,6 +1,5 @@
 package gr.aueb.cf.bluemargarita.service;
 
-import gr.aueb.cf.bluemargarita.core.enums.GenderType;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CustomerFilters;
@@ -15,10 +14,6 @@ import gr.aueb.cf.bluemargarita.model.SaleProduct;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.CustomerRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -46,6 +41,10 @@ public class CustomerService implements ICustomerService {
         this.userRepository = userRepository;
         this.mapper = mapper;
     }
+
+    // =============================================================================
+    // CORE CRUD OPERATIONS
+    // =============================================================================
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -123,6 +122,10 @@ public class CustomerService implements ICustomerService {
         }
     }
 
+    // =============================================================================
+    // CUSTOMER LISTING AND FILTERING
+    // =============================================================================
+
     @Override
     @Transactional(readOnly = true)
     public CustomerListItemDTO getCustomerById(Long id) throws EntityNotFoundException {
@@ -133,6 +136,8 @@ public class CustomerService implements ICustomerService {
         return mapper.mapToCustomerListItemDTO(customer);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public Paginated<CustomerListItemDTO> getCustomersFilteredPaginated(CustomerFilters filters){
 
         var filtered =
@@ -142,17 +147,14 @@ public class CustomerService implements ICustomerService {
         return new Paginated<>(filtered.map(mapper::mapToCustomerListItemDTO));
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public CustomerDetailedViewDTO getCustomerDetailedView(Long customerId) throws EntityNotFoundException{
         Customer customer = getCustomerEntityById(customerId);
 
         List<ProductStatsSummaryDTO> topProducts = calculateTopProductsForCustomer(customer);
 
-        CustomerSalesDataDTO data = new CustomerSalesDataDTO(
-                getCustomerTotalRevenue(customer),
-                getCustomerTotalNumberOfSales(customer),
-                getCustomerLastOrderDate(customer),
-                getAverageOrderValue(customer)
-        );
+        CustomerSalesDataDTO data = calculateCustomerSalesData(customer);
 
         return mapper.mapToCustomerDetailedViewDTO(customer, data, topProducts);
     }
@@ -166,9 +168,36 @@ public class CustomerService implements ICustomerService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerSearchResultDTO> searchCustomersForAutocomplete(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().length() < 2) {
+            return Collections.emptyList();
+        }
+
+        Specification<Customer> spec = Specification
+                .where(CustomerSpecification.searchMultipleFields(searchTerm.trim()))
+                .and(CustomerSpecification.customerIsActive(true));
+
+        return customerRepository.findAll(spec)
+                .stream()
+                .limit(10)
+                .map(customer -> new CustomerSearchResultDTO(
+                        customer.getId(),
+                        customer.getFullName(),
+                        customer.getEmail()
+                ))
+                .collect(Collectors.toList());
+    }
+
     // =============================================================================
-    // PRIVATE HELPER METHODS
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================
+
+    private Customer getCustomerEntityById(Long id) throws EntityNotFoundException{
+        return customerRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id=" + id + " was not found"));
+    }
 
     private boolean emailExists(String email) {
         return email != null && !email.trim().isEmpty() && customerRepository.existsByEmail(email.trim());
@@ -182,7 +211,25 @@ public class CustomerService implements ICustomerService {
         return (int) customerRepository.countByIsActiveTrue();
     }
 
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Customer Analytics and Calculations
+    // =============================================================================
 
+    /**
+     * Calculates comprehensive sales data for a customer
+     */
+    private CustomerSalesDataDTO calculateCustomerSalesData(Customer customer) {
+        return new CustomerSalesDataDTO(
+                getCustomerTotalRevenue(customer),
+                getCustomerTotalNumberOfSales(customer),
+                getCustomerLastOrderDate(customer),
+                getAverageOrderValue(customer)
+        );
+    }
+
+    /**
+     * Calculates total revenue for a customer across all sales
+     */
     private BigDecimal getCustomerTotalRevenue(Customer customer){
 
         return customer.getAllSales().stream()
@@ -191,11 +238,17 @@ public class CustomerService implements ICustomerService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /**
+     * Gets total number of sales for a customer
+     */
     private int getCustomerTotalNumberOfSales(Customer customer){
 
         return customer.getAllSales().size();
     }
 
+    /**
+     * Gets the most recent order date for a customer
+     */
     private LocalDate getCustomerLastOrderDate(Customer customer){
 
         return customer.getAllSales().stream()
@@ -205,6 +258,9 @@ public class CustomerService implements ICustomerService {
                 .orElse(null);
     }
 
+    /**
+     * Calculates average order value for a customer
+     */
     private BigDecimal getAverageOrderValue(Customer customer) {
 
         int numberOfSales = getCustomerTotalNumberOfSales(customer);
@@ -217,26 +273,9 @@ public class CustomerService implements ICustomerService {
         return average;
     }
 
-    private Specification<Customer> getSpecsFromFilters(CustomerFilters filters) {
-        return Specification
-                .where(CustomerSpecification.customerStringFieldLike("email",
-                        filters.getEmail()))
-                .and(CustomerSpecification.customerStringFieldLike("lastname"
-                        ,filters.getLastname()))
-                .and(CustomerSpecification.customerStringFieldLike("tin",
-                        filters.getTin()))
-                .and(CustomerSpecification.customerStringFieldLike(
-                        "phone_number", filters.getPhoneNumber()))
-                .and(CustomerSpecification.searchMultipleFields(filters.getSearchTerm()))
-                .and(CustomerSpecification.wholeSaleCustomersOnly(filters.getWholesaleOnly()))
-                .and(CustomerSpecification.customerIsActive(filters.getIsActive()));
-    }
-
-    private Customer getCustomerEntityById(Long id) throws EntityNotFoundException{
-        return customerRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id=" + id + " was not found"));
-    }
-
+    /**
+     * Calculates top 5 products purchased by a customer ordered by revenue
+     */
     private List<ProductStatsSummaryDTO> calculateTopProductsForCustomer(Customer customer) {
         Map<Long, BigDecimal[]> productData = new HashMap<>(); // [quantity, revenue, lastSaleTimestamp]
         Map<Long, String[]> productInfo = new HashMap<>(); // [name, code]
@@ -303,5 +342,26 @@ public class CustomerService implements ICustomerService {
         return result.size() > 5 ? result.subList(0, 5) : result;
     }
 
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Specifications
+    // =============================================================================
 
+    /**
+     * Converts CustomerFilters to JPA Specifications for database queries
+     */
+
+    private Specification<Customer> getSpecsFromFilters(CustomerFilters filters) {
+        return Specification
+                .where(CustomerSpecification.customerStringFieldLike("email",
+                        filters.getEmail()))
+                .and(CustomerSpecification.customerStringFieldLike("lastname"
+                        ,filters.getLastname()))
+                .and(CustomerSpecification.customerStringFieldLike("tin",
+                        filters.getTin()))
+                .and(CustomerSpecification.customerStringFieldLike(
+                        "phone_number", filters.getPhoneNumber()))
+                .and(CustomerSpecification.searchMultipleFields(filters.getSearchTerm()))
+                .and(CustomerSpecification.wholeSaleCustomersOnly(filters.getWholesaleOnly()))
+                .and(CustomerSpecification.customerIsActive(filters.getIsActive()));
+    }
 }

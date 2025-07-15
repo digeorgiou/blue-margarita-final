@@ -18,7 +18,6 @@ public class SaleSpecification {
     /**
      * Filter sales by date range
      */
-
     public static Specification<Sale> hasDateBetween(LocalDate startDate, LocalDate endDate) {
         return (root, query, criteriaBuilder) -> {
             if (startDate == null && endDate == null) {
@@ -37,7 +36,7 @@ public class SaleSpecification {
     /**
      * Filter sales by customer ID
      */
-    public static Specification<Sale> hasCustomer(Long customerId) {
+    public static Specification<Sale> hasCustomerId(Long customerId) {
         return (root, query, criteriaBuilder) -> {
             if (customerId == null) {
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
@@ -48,9 +47,29 @@ public class SaleSpecification {
     }
 
     /**
+     * Filter sales by customer name or email (for autocomplete search)
+     */
+    public static Specification<Sale> hasCustomerNameOrEmail(String searchTerm) {
+        return (root, query, criteriaBuilder) -> {
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+
+            Join<Sale, Customer> customerJoin = root.join("customer", JoinType.LEFT);
+            String upperSearchTerm = "%" + searchTerm.toUpperCase() + "%";
+
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.upper(customerJoin.get("firstname")), upperSearchTerm),
+                    criteriaBuilder.like(criteriaBuilder.upper(customerJoin.get("lastname")), upperSearchTerm),
+                    criteriaBuilder.like(criteriaBuilder.upper(customerJoin.get("email")), upperSearchTerm)
+            );
+        };
+    }
+
+    /**
      * Filter sales by location
      */
-    public static Specification<Sale> hasLocation(Long locationId) {
+    public static Specification<Sale> hasLocationId(Long locationId) {
         return (root, query, criteriaBuilder) -> {
             if (locationId == null) {
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
@@ -64,7 +83,7 @@ public class SaleSpecification {
     /**
      * Filter sales by product category
      */
-    public static Specification<Sale> hasProductCategory(Long categoryId) {
+    public static Specification<Sale> hasCategoryId(Long categoryId) {
         return (root, query, criteriaBuilder) -> {
             if (categoryId == null) {
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
@@ -127,6 +146,22 @@ public class SaleSpecification {
                     criteriaBuilder.like(criteriaBuilder.upper(productJoin.get("name")), searchTerm),
                     criteriaBuilder.like(criteriaBuilder.upper(productJoin.get("code")), searchTerm)
             );
+        };
+    }
+
+    /**
+     * Filter sales by specific product ID (when user selects from autocomplete)
+     */
+    public static Specification<Sale> hasProductId(Long productId) {
+        return (root, query, criteriaBuilder) -> {
+            if (productId == null) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+
+            Join<Sale, SaleProduct> saleProductJoin = root.join("saleProducts", JoinType.INNER);
+            Join<SaleProduct, Product> productJoin = saleProductJoin.join("product", JoinType.INNER);
+
+            return criteriaBuilder.equal(productJoin.get("id"), productId);
         };
     }
 

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record ProductDetailsDTO(
+public record ProductDetailedViewDTO(
         // Basic info
         Long id,
         String name,

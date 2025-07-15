@@ -4,6 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.dto.location.LocationForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
@@ -87,4 +88,6 @@ public interface ILocationService {
      * @return Paginated result of locations matching filters
      */
     Paginated<LocationReadOnlyDTO> getLocationsFilteredPaginated(LocationFilters filters);
+
+    List<LocationForDropdownDTO> getActiveLocationsForDropdown();
 }

@@ -9,8 +9,5 @@ public record ProductSearchResultDTO(
         Long id,
         String name,
         String code,
-        String categoryName,
-        BigDecimal retailPrice,
-        BigDecimal wholesalePrice,
-        boolean isActive
+        String categoryName
 ) {}

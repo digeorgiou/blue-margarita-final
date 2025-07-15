@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.LocationSpecification;
+import gr.aueb.cf.bluemargarita.dto.location.LocationForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
@@ -150,7 +151,7 @@ public class LocationService implements ILocationService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean nameExists(String name){
+    public boolean nameExists(String name) {
         return locationRepository.existsByName(name);
     }
 
@@ -179,5 +180,15 @@ public class LocationService implements ILocationService {
                 .and(LocationSpecification.locationIsActive(filters.getIsActive()));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocationForDropdownDTO> getActiveLocationsForDropdown() {
+        return locationRepository.findByIsActiveTrue()
+                .stream()
+                .map(location -> new LocationForDropdownDTO(location.getId(), location.getName()))
+                .sorted((l1, l2) -> l1.name().compareToIgnoreCase(l2.name()))
+                .collect(Collectors.toList());
 
+
+    }
 }

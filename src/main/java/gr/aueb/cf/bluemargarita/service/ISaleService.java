@@ -1,13 +1,9 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
-import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerSearchResultDTO;
-import gr.aueb.cf.bluemargarita.dto.location.LocationForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationResponseDTO;
-import gr.aueb.cf.bluemargarita.dto.product.ProductSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.*;
 import gr.aueb.cf.bluemargarita.dto.shopping_cart.CartItemDTO;
 
@@ -16,15 +12,11 @@ import java.util.List;
 
 /**
  * Service interface for managing sales in the jewelry business application.
- * Handles sales CRUD operations, pricing calculations with discounts, and sales support functionality.
+ * Handles sale CRUD operations, pricing calculations, cart management,
+ * dashboard widgets, and sales analytics.
  *
- * Key Features:
- * - Sale-level discount system where users set final total price or discount percentage
- * - Automatic proportional discount distribution across products
- * - Historical price preservation for audit and analytics
- * - Support for walk-in customers (no customer required)
- * - Search functionality for record-sale page
- * - Real-time pricing calculations for shopping cart
+ * This service focuses on sale-specific operations and delegates to other services
+ * for cross-domain functionality (customer search, product search, etc.).
  */
 public interface ISaleService {
 
@@ -33,39 +25,35 @@ public interface ISaleService {
     // =============================================================================
 
     /**
-     * Creates a new sale with automatic discount calculation and pricing.
+     * Records a new sale with products, pricing, and automatic stock reduction
      *
      * Business Logic:
-     * 1. Validates all referenced entities (location, customer, products, user)
-     * 2. Calculates suggested total from product retail/wholesale prices
-     * 3. Applies proportional discount based on user's final price
-     * 4. Updates customer's first sale date if applicable
-     * 5. Preserves actual selling prices at time of sale for historical accuracy
+     * 1. Validates location, customer (if provided), and creator user exist
+     * 2. Validates all products exist and builds product-quantity map
+     * 3. Creates sale entity with provided details
+     * 4. Calculates suggested pricing and applies discount to individual products
+     * 5. Reduces stock for all products in the sale
+     * 6. Updates customer's first sale date if this is their first purchase
      *
-     * @param request Sale creation data including products, pricing, and metadata
-     * @return Created sale with calculated pricing and complete item details
-     * @throws EntityNotFoundException if location, customer, products, or user not found
+     * @param request Sale recording data including products, pricing, and metadata
+     * @return Detailed view of the created sale
+     * @throws EntityNotFoundException if location, customer, user, or any product not found
      */
-    SaleDetailedViewDTO recordSale(RecordSaleRequestDTO request)
-            throws EntityNotFoundException;
+    SaleDetailedViewDTO recordSale(RecordSaleRequestDTO request) throws EntityNotFoundException;
 
     /**
-     * Updates an existing sale's basic information with automatic pricing recalculation.
-     * Note: This method recalculates all pricing when final price is changed.
-     * For product changes (add/remove/quantity), use dedicated product management methods.
+     * Updates an existing sale's basic information and recalculates pricing
+     * Note: This method updates sale metadata but does not modify products in the sale
      *
-     * @param dto Sale update data including modified fields
-     * @return Updated sale with recalculated pricing as DTO
-     * @throws EntityNotFoundException if sale, customer, location, or user not found
+     * @param dto Sale update data including new values for basic fields
+     * @return Updated sale as read-only DTO
+     * @throws EntityNotFoundException if sale, location, customer, or user not found
      */
-    SaleReadOnlyDTO updateSale(SaleUpdateDTO dto)
-            throws EntityNotFoundException;
+    SaleReadOnlyDTO updateSale(SaleUpdateDTO dto) throws EntityNotFoundException;
 
     /**
-     * Deletes a sale by ID.
-     *
-     * Warning: This is a hard delete that removes all sale data and associated sale products.
-     * Consider implementing soft delete for audit trail preservation.
+     * Deletes a sale and restores stock for all products
+     * This is a hard delete that removes all sale data and sale products
      *
      * @param saleId Sale ID to delete
      * @throws EntityNotFoundException if sale not found
@@ -73,78 +61,117 @@ public interface ISaleService {
     void deleteSale(Long saleId) throws EntityNotFoundException;
 
     // =============================================================================
-    // RECORD SALE PAGE SEARCH OPERATIONS
+    // DASHBOARD METHODS
     // =============================================================================
 
     /**
-     * Searches products by name or code for sale creation interface.
+     * Retrieves the most recent sales for dashboard widget
+     * Ordered by sale date descending, then by creation time descending
      *
-     * Returns products matching the search term in either name or code fields.
-     * Results are limited to active products only and capped at 20 items for performance.
-     *
-     * @param searchTerm Search term to match against product name or code (case-insensitive)
-     * @return List of matching products with pricing information (max 20 results)
+     * @param limit Maximum number of recent sales to return (typically 5)
+     * @return List of recent sales with basic information
      */
-    List<ProductSearchResultDTO> searchProductsForSale(String searchTerm);
+    List<SaleReadOnlyDTO> getRecentSales(int limit);
 
     /**
-     * Searches customers by name, email, or phone for sale creation interface.
+     * Gets sales summary for current day (dashboard widget)
+     * Includes count, total revenue, average order value, and discount metrics
      *
-     * Returns customers matching the search term in firstname, lastname, email, or phone fields.
-     * Results are limited to active customers only and capped at 20 items for performance.
-     *
-     * @param searchTerm Search term to match against customer fields (case-insensitive)
-     * @return List of matching customers with contact information (max 20 results)
+     * @return Summary of today's sales
      */
-    List<CustomerSearchResultDTO> searchCustomersForSale(String searchTerm);
+    SalesSummaryDTO getDailySalesSummary();
 
     /**
-     * Retrieves all active locations for dropdown selection in sale creation.
+     * Gets sales summary for current week (Monday to Sunday, dashboard widget)
+     * Includes count, total revenue, average order value, and discount metrics
      *
-     * Returns only active locations that can be used for new sales.
-     *
-     * @return List of all active locations for dropdown display
+     * @return Summary of this week's sales
      */
-    List<LocationForDropdownDTO> getActiveLocationsForSale();
+    SalesSummaryDTO getWeeklySalesSummary();
+
+    /**
+     * Gets sales summary for current month (dashboard widget)
+     * Includes count, total revenue, average order value, and discount metrics
+     *
+     * @return Summary of this month's sales
+     */
+    SalesSummaryDTO getMonthlySalesSummary();
 
     // =============================================================================
-    // SHOPPING CART AND PRICING OPERATIONS
+    // VIEW SALES PAGE METHODS
     // =============================================================================
 
     /**
-     * Gets product details formatted for shopping cart display.
+     * Searches sales with advanced filtering and optional summary calculation
      *
-     * Calculates total price based on quantity and sale type (retail/wholesale).
-     * Used when adding products to the shopping cart interface.
+     * Supports filtering by:
+     * - Date range (saleDateFrom, saleDateTo)
+     * - Location (dropdown selection by ID)
+     * - Category (dropdown selection by ID)
+     * - Payment method (dropdown selection)
+     * - Product (autocomplete by name/code OR precise selection by ID)
+     * - Customer (autocomplete by name/email OR precise selection by ID)
+     *
+     * Summary is only calculated if filtered results ≤ 100 for performance
+     *
+     * @param filters Filter criteria with pagination parameters
+     * @return Paginated sales results with optional summary
+     */
+    PaginatedFilteredSalesWithSummary searchSalesWithSummary(SaleFilters filters);
+
+    /**
+     * Retrieves comprehensive details for a specific sale
+     * Used for "View Details" button on sales page
+     *
+     * Includes customer info, location, payment method, all products with pricing,
+     * discount calculations, and summary metrics
+     *
+     * @param saleId Sale ID to get details for
+     * @return Complete sale details with all related information
+     * @throws EntityNotFoundException if sale not found
+     */
+    SaleDetailedViewDTO getSaleDetailedView(Long saleId) throws EntityNotFoundException;
+
+    // =============================================================================
+    // RECORD SALE PAGE METHODS (Sale-Specific Operations)
+    // =============================================================================
+
+    /**
+     * Gets all available payment methods for dropdown selection
+     * Converts PaymentMethod enum values to user-friendly DTOs
+     *
+     * @return List of payment methods with display names
+     */
+    List<PaymentMethodDTO> getAvailablePaymentMethods();
+
+    /**
+     * Gets product details formatted for shopping cart with pricing
+     * Applies wholesale vs retail pricing based on sale type
+     *
+     * This method provides detailed product info after user selects from autocomplete
      *
      * @param productId Product ID to add to cart
-     * @param quantity Quantity of product
-     * @param isWholesale true for wholesale pricing, false for retail pricing
-     * @return Cart item with calculated pricing
+     * @param quantity Quantity being purchased
+     * @param isWholesale Whether this is a wholesale sale (affects pricing)
+     * @return Cart item with calculated pricing and totals
      * @throws EntityNotFoundException if product not found
      */
     CartItemDTO getProductForCart(Long productId, BigDecimal quantity, boolean isWholesale)
             throws EntityNotFoundException;
 
     /**
-     * Calculates comprehensive pricing for shopping cart items.
+     * Calculates real-time pricing for shopping cart with discount handling
      *
-     * Supports two input modes:
-     * 1. User enters final price → calculates discount percentage
-     * 2. User enters discount percentage → calculates final price
-     * 3. No user input → uses suggested total (no discount)
+     * Supports two discount input methods:
+     * - User enters final price → calculates discount percentage
+     * - User enters discount percentage → calculates final price
      *
-     * Handles both retail and wholesale pricing based on sale type.
+     * Includes subtotal, packaging cost, suggested total, and item-by-item breakdown
      *
-     * @param request Pricing calculation request with items and user input
-     * @return Complete pricing breakdown including subtotal, packaging, discounts
-     * @throws EntityNotFoundException if any products not found
+     * @param request Pricing calculation request with products and discount input
+     * @return Complete pricing breakdown with all calculations
+     * @throws EntityNotFoundException if any product not found
      */
     PriceCalculationResponseDTO calculateCartPricing(PriceCalculationRequestDTO request)
             throws EntityNotFoundException;
-
-
-    PaginatedFilteredSalesWithSummary searchSalesWithSummary(SaleFilters filters);
-
-    SaleDetailedViewDTO getSaleDetailedView(Long saleId) throws EntityNotFoundException;
 }
