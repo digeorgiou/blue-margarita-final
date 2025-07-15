@@ -8,7 +8,7 @@ public record WeeklySalesDataDTO(
         int weekOfYear,
         LocalDate weekStartDate,
         LocalDate weekEndDate,
-        BigDecimal quantitySold,
+        Integer quantitySold,
         BigDecimal revenue,
         Integer numberOfSales,
         BigDecimal averagePrice

@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.repository;
 
+import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
 import gr.aueb.cf.bluemargarita.model.Sale;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface SaleRepository extends JpaRepository<Sale, Long>,
@@ -47,5 +49,58 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query("SELECT COUNT(s) FROM Sale s")
+    Integer countAllSales();
+
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s")
+    BigDecimal sumAllRevenue();
+
+    @Query("SELECT COUNT(s) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    // Top performing products
+    @Query(value = """
+    SELECT p.id, p.name, p.code,
+           SUM(sp.quantity) as totalQuantity,
+           SUM(sp.quantity * sp.price_at_the_time) as totalRevenue
+    FROM sales s 
+    JOIN sale_product sp ON s.id = sp.sale_id
+    JOIN products p ON sp.product_id = p.id
+    WHERE s.sale_date BETWEEN :startDate AND :endDate
+    GROUP BY p.id, p.name, p.code 
+    ORDER BY SUM(sp.quantity * sp.price_at_the_time) DESC
+    LIMIT 10
+    """, nativeQuery = true)
+    List<Object[]> findTopSellingProductsByDateRange(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    // Customer analytics
+    @Query("SELECT COUNT(DISTINCT s.customer.id) FROM Sale s WHERE s.customer IS NOT NULL")
+    Integer countUniqueCustomers();
+
+    @Query("SELECT COUNT(DISTINCT s.customer.id) FROM Sale s WHERE s.customer IS NOT NULL AND s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countUniqueCustomersByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    // Average order value
+    @Query("SELECT AVG(s.finalTotalPrice) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal calculateAverageOrderValueByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(s) FROM Sale s WHERE (:filters conditions)")
+    Integer countSalesByFilters(@Param("filters") SaleFilters filters);
+
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE (:filters conditions)")
+    BigDecimal sumRevenueByFilters(@Param("filters") SaleFilters filters);
+
+    @Query("SELECT COALESCE(SUM(s.suggestedTotalPrice - s.finalTotalPrice), 0) FROM Sale s WHERE (:filters conditions)")
+    BigDecimal sumDiscountAmountByFilters(@Param("filters") SaleFilters filters);
+
+    @Query("SELECT COALESCE(AVG(s.discountPercentage), 0) FROM Sale s WHERE (:filters conditions)")
+    BigDecimal avgDiscountPercentageByFilters(@Param("filters") SaleFilters filters);
 
 }

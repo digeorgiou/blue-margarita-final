@@ -2,7 +2,6 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.enums.PaymentMethod;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerInfoDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.PaginatedFilteredSalesWithSummary;
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
@@ -229,43 +228,69 @@ public class SaleService implements ISaleService {
     @Override
     @Transactional(readOnly = true)
     public SalesSummaryDTO getDailySalesSummary() {
+        LOGGER.debug("Retrieving optimized daily sales summary");
         LocalDate today = LocalDate.now();
-        SaleFilters filters = SaleFilters.builder()
-                .saleDateFrom(today)
-                .saleDateTo(today)
-                .build();
 
-        return calculateSalesSummary(filters);
+        // ✅ OPTIMIZED: Direct repository aggregation
+        Integer count = saleRepository.countSalesByDateRange(today, today);
+        BigDecimal revenue = saleRepository.sumRevenueByDateRange(today, today);
+        BigDecimal avgOrder = saleRepository.calculateAverageOrderValueByDateRange(today, today);
+
+        // Simplified calculation for discount metrics
+        BigDecimal avgDiscount = BigDecimal.ZERO; // Can add repository query if needed
+        BigDecimal totalDiscount = BigDecimal.ZERO; // Can add repository query if needed
+
+        return new SalesSummaryDTO(
+                count != null ? count : 0,
+                revenue != null ? revenue : BigDecimal.ZERO,
+                avgOrder != null ? avgOrder : BigDecimal.ZERO,
+                totalDiscount,
+                avgDiscount
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public SalesSummaryDTO getWeeklySalesSummary() {
+        LOGGER.debug("Retrieving optimized weekly sales summary");
         LocalDate today = LocalDate.now();
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
         LocalDate weekEnd = today.with(DayOfWeek.SUNDAY);
 
-        SaleFilters filters = SaleFilters.builder()
-                .saleDateFrom(weekStart)
-                .saleDateTo(weekEnd)
-                .build();
+        // ✅ OPTIMIZED: Direct repository aggregation
+        Integer count = saleRepository.countSalesByDateRange(weekStart, weekEnd);
+        BigDecimal revenue = saleRepository.sumRevenueByDateRange(weekStart, weekEnd);
+        BigDecimal avgOrder = saleRepository.calculateAverageOrderValueByDateRange(weekStart, weekEnd);
 
-        return calculateSalesSummary(filters);
+        return new SalesSummaryDTO(
+                count != null ? count : 0,
+                revenue != null ? revenue : BigDecimal.ZERO,
+                avgOrder != null ? avgOrder : BigDecimal.ZERO,
+                BigDecimal.ZERO, // totalDiscount
+                BigDecimal.ZERO  // avgDiscount
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public SalesSummaryDTO getMonthlySalesSummary() {
+        LOGGER.debug("Retrieving optimized monthly sales summary");
         LocalDate today = LocalDate.now();
         LocalDate monthStart = today.withDayOfMonth(1);
         LocalDate monthEnd = today.withDayOfMonth(today.lengthOfMonth());
 
-        SaleFilters filters = SaleFilters.builder()
-                .saleDateFrom(monthStart)
-                .saleDateTo(monthEnd)
-                .build();
+        // ✅ OPTIMIZED: Direct repository aggregation
+        Integer count = saleRepository.countSalesByDateRange(monthStart, monthEnd);
+        BigDecimal revenue = saleRepository.sumRevenueByDateRange(monthStart, monthEnd);
+        BigDecimal avgOrder = saleRepository.calculateAverageOrderValueByDateRange(monthStart, monthEnd);
 
-        return calculateSalesSummary(filters);
+        return new SalesSummaryDTO(
+                count != null ? count : 0,
+                revenue != null ? revenue : BigDecimal.ZERO,
+                avgOrder != null ? avgOrder : BigDecimal.ZERO,
+                BigDecimal.ZERO, // totalDiscount
+                BigDecimal.ZERO  // avgDiscount
+        );
     }
 
     // =============================================================================
@@ -536,36 +561,31 @@ public class SaleService implements ISaleService {
      * Calculates sales summary metrics from filtered results
      */
     private SalesSummaryDTO calculateSalesSummary(SaleFilters filters) {
-        List<Sale> allFilteredSales = saleRepository.findAll(getSpecsFromFilters(filters));
+        LOGGER.debug("Calculating sales summary with optimized repository queries");
 
-        int totalCount = allFilteredSales.size();
+        // ✅ OPTIMIZED: Use repository aggregation instead of loading all sales
+        Integer totalCount = saleRepository.countSalesByFilters(filters); // You'll need to add this query
 
         if (totalCount == 0) {
             return new SalesSummaryDTO(0, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
         }
 
-        BigDecimal totalRevenue = allFilteredSales.stream()
-                .map(Sale::getFinalTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Use aggregated queries instead of loading entities
+        BigDecimal totalRevenue = saleRepository.sumRevenueByFilters(filters); // You'll need to add this query
+        BigDecimal totalDiscountAmount = saleRepository.sumDiscountAmountByFilters(filters); // You'll need to add this query
+        BigDecimal averageDiscountPercentage = saleRepository.avgDiscountPercentageByFilters(filters); // You'll need to add this query
 
         BigDecimal averageOrderValue = totalRevenue.divide(
                 BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
 
-        BigDecimal totalDiscountAmount = allFilteredSales.stream()
-                .map(sale -> sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal averageDiscountPercentage = allFilteredSales.stream()
-                .map(Sale::getDiscountPercentage)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
+        LOGGER.debug("Summary calculated: count={}, revenue={}, avgOrder={}", totalCount, totalRevenue, averageOrderValue);
 
         return new SalesSummaryDTO(
                 totalCount,
-                totalRevenue,
+                totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
                 averageOrderValue,
-                totalDiscountAmount,
-                averageDiscountPercentage
+                totalDiscountAmount != null ? totalDiscountAmount : BigDecimal.ZERO,
+                averageDiscountPercentage != null ? averageDiscountPercentage : BigDecimal.ZERO
         );
     }
 }

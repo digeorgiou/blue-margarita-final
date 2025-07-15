@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.dto.product;
 
+import gr.aueb.cf.bluemargarita.dto.customer.CustomerSalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.WeeklySalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;

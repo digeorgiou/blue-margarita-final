@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public record YearlySalesDataDTO(
         int year,
-        BigDecimal quantitySold,
+        Integer quantitySold,
         BigDecimal revenue,
         Integer numberOfSales,
         BigDecimal averagePrice

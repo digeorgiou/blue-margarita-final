@@ -4,9 +4,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record CustomerSalesDataDTO(
-        int numberOfSales,
+        Long customerId,
+        String customerName,
+        String customerEmail,
+        Integer quantityPurchased,
         BigDecimal totalRevenue,
-        LocalDate lastOrderDate,
-        BigDecimal averageOrderValue
+        Integer numberOfSales,
+        LocalDate lastOrderDate
 )
 {}
