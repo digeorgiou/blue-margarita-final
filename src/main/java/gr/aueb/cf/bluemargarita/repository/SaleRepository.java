@@ -2,6 +2,8 @@ package gr.aueb.cf.bluemargarita.repository;
 
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
 import gr.aueb.cf.bluemargarita.model.Sale;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -102,5 +104,14 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
 
     @Query("SELECT COALESCE(AVG(s.discountPercentage), 0) FROM Sale s WHERE (:filters conditions)")
     BigDecimal avgDiscountPercentageByFilters(@Param("filters") SaleFilters filters);
+
+    /**
+     * Finds sales within a date range with pagination and sorting support
+     * Used for "View All Today's Sales" functionality
+     */
+    @Query("SELECT s FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
+    Page<Sale> findSalesByDateRange(@Param("startDate") LocalDate startDate,
+                                    @Param("endDate") LocalDate endDate,
+                                    Pageable pageable);
 
 }

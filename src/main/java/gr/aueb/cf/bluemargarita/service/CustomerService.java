@@ -159,7 +159,7 @@ public class CustomerService implements ICustomerService {
         Integer totalSales = customerRepository.countSalesByCustomerId(customerId);
         if (totalSales == 0) {
             // No sales - return empty analytics
-            CustomerSalesDataDTO emptySalesData = new CustomerSalesDataDTO(0, BigDecimal.ZERO, null, BigDecimal.ZERO);
+            CustomerSalesDataDTO emptySalesData = new CustomerSalesDataDTO(customerId, customer.getFullName(), customer.getEmail(), 0, BigDecimal.ZERO, 0, null);
             return mapper.mapToCustomerDetailedViewDTO(customer, emptySalesData, Collections.emptyList());
         }
 
@@ -186,10 +186,13 @@ public class CustomerService implements ICustomerService {
                 .collect(Collectors.toList());
 
         CustomerSalesDataDTO salesData = new CustomerSalesDataDTO(
+                customer.getId(),
+                customer.getFullName(),
+                customer.getEmail(),
                 totalSales,
                 totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
-                lastOrderDate,
-                averageOrderValue
+                totalSales,
+                lastOrderDate
         );
 
         LOGGER.debug("Analytics completed for customer '{}': totalSales={}, totalRevenue={}, topProducts={}",

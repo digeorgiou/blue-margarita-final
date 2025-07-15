@@ -4,10 +4,16 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
+import gr.aueb.cf.bluemargarita.dto.customer.CustomerSalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.product.*;
 import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.WeeklySalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.stock.BulkStockUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.stock.StockManagementDTO;
+import gr.aueb.cf.bluemargarita.dto.stock.StockUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.stock.StockUpdateResultDTO;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -217,10 +223,19 @@ public interface IProductService {
      * Retrieves low stock products with pagination and additional filtering
      * Used for dedicated low stock management page
      *
-     * @param filters Filter criteria (low stock filter is automatically applied)
-     * @return Paginated result of low stock products
+     * @param pageable  Pagination and sorting parameters
+     * @return Paginated list of low stock products
      */
-    Paginated<ProductListItemDTO> getLowStockProductsPaginated(ProductFilters filters);
+    Paginated<ProductListItemDTO> getAllLowStockProducts(Pageable pageable);
+
+
+    /**
+     * Retrieves negative stock products with pagination and additional filtering
+     *
+     * @param pageable  Pagination and sorting parameters
+     * @return Paginated list of products with negative stock
+     */
+    Paginated<ProductListItemDTO> getAllNegativeStockProducts(Pageable pageable);
 
     /**
      * Retrieves top products by revenue for dashboard
@@ -235,56 +250,18 @@ public interface IProductService {
                                                                 LocalDate endDate,
                                                                 int limit);
 
-    // =============================================================================
-    // STOCK MANAGEMENT
-    // =============================================================================
-
     /**
-     * Decreases product stock when a sale is recorded
-     * Used by sales system
+     * Retrieves all top products for a specific month with pagination and sorting
+     * Used for "View All Products for Month" functionality from dashboard
      *
-     * @param productId Product ID
-     * @param quantity Quantity to reduce from stock
-     * @throws EntityNotFoundException if product not found
+     * @param startDate Month start date
+     * @param endDate Month end date
+     * @param pageable Pagination and sorting parameters
+     * @return Paginated list of products with sales metrics and sorting support
      */
-    void reduceProductStock(Long productId, BigDecimal quantity)
-            throws EntityNotFoundException;
-
-    /**
-     * Increases product stock when a sale is cancelled/deleted
-     * Used by sales system
-     *
-     * @param productId Product ID
-     * @param quantity Quantity to add back to stock
-     * @throws EntityNotFoundException if product not found
-     */
-    void increaseProductStock(Long productId, BigDecimal quantity)
-            throws EntityNotFoundException;
-
-    /**
-     * Adjusts stock when sale quantities are updated
-     * Used by sales system
-     *
-     * @param productId Product ID
-     * @param oldQuantity Previous quantity sold
-     * @param newQuantity New quantity sold
-     */
-    void adjustProductStock(Long productId, BigDecimal oldQuantity, BigDecimal newQuantity)
-            throws EntityNotFoundException;
-
-    /**
-     * Updates the stock quantity for a product manually
-     * Used by inventory management
-     *
-     * @param productId Product ID to update
-     * @param newStock New stock quantity
-     * @param updaterUserId User performing the update
-     * @return Updated product with new stock level
-     * @throws EntityNotFoundException if product or user not found
-     */
-    ProductListItemDTO updateProductStock(Long productId, Integer newStock, Long updaterUserId)
-            throws EntityNotFoundException;
-
+    Paginated<ProductStatsSummaryDTO> getAllTopProductsForPeriod(LocalDate startDate,
+                                                                 LocalDate endDate,
+                                                                 Pageable pageable);
 
 
     // =============================================================================
@@ -345,6 +322,85 @@ public interface IProductService {
      * @throws EntityNotFoundException if product, procedure, or user not found
      */
     ProductListItemDTO removeProcedureFromProduct(Long productId, Long procedureId, Long updaterUserId)
+            throws EntityNotFoundException;
+
+    // =============================================================================
+    // STOCK MANAGEMENT
+    // =============================================================================
+
+    /**
+     * Retrieves products optimized for stock management operations
+     *
+     * Used by the dedicated stock management page to provide a lightweight,
+     * focused view of products with only stock-relevant information. This method
+     * returns essential data for efficient stock updates without the overhead
+     * of full product details.
+     * @param filters Filter criteria including pagination and stock-specific filters
+     * @return Paginated list of products with stock management data
+     */
+    Paginated<StockManagementDTO> getProductsForStockManagement(ProductFilters filters);
+
+    /**
+     * Updates stock for a single product with comprehensive audit logging
+     *
+     * Supports three types of stock updates:
+     * - ADD: Increase stock by specified quantity (e.g., receiving inventory)
+     * - REMOVE: Decrease stock by specified quantity (e.g., damage, loss)
+     * - SET: Set absolute stock value (e.g., physical inventory count)
+     * @param updateDTO Stock update data including product ID, type, quantity, and reason
+     * @return Result object with success status, before/after values, and any error messages
+     * @throws EntityNotFoundException if product or user not found
+     */
+    StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO) throws EntityNotFoundException;
+
+    /**
+     * Updates stock for multiple products in a single atomic transaction
+     *
+     * Performs bulk stock updates efficiently while maintaining data consistency.
+     * All updates are processed in a single transaction - if any update fails,
+     * the system continues with remaining updates but logs failures appropriately.
+
+     * @param bulkUpdate Bulk update data containing list of individual updates and batch metadata
+     * @return List of results for each update attempt, indicating success/failure status
+     */
+    List<StockUpdateResultDTO> updateMultipleProductsStock(BulkStockUpdateDTO bulkUpdate);
+
+    /**
+     * Reduces product stock when items are sold or consumed
+     *
+     * Used by the sales system to automatically reduce stock when products
+     * are sold. This method handles stock reduction without user intervention
+     * and allows negative stock (which triggers alerts elsewhere).
+
+     * @param productId Product ID to reduce stock for
+     * @param quantity Quantity to remove from stock
+     * @throws EntityNotFoundException if product not found
+     */
+    void reduceProductStock(Long productId, BigDecimal quantity) throws EntityNotFoundException;
+
+    /**
+     * Increases product stock when items are received or returned
+     *
+
+     * @param productId Product ID to increase stock for
+     * @param quantity Quantity to add to stock
+     * @throws EntityNotFoundException if product not found
+     */
+    void increaseProductStock(Long productId, BigDecimal quantity) throws EntityNotFoundException;
+
+    /**
+     * Adjusts product stock based on changes in sale quantities
+     *
+     * Used when sale quantities are modified after the fact. This method
+     * calculates the net stock adjustment needed and applies it to maintain
+     * accurate inventory levels.
+
+     * @param productId Product ID to adjust stock for
+     * @param oldQuantity Previous quantity that was deducted
+     * @param newQuantity New quantity that should be deducted
+     * @throws EntityNotFoundException if product not found
+     */
+    void adjustProductStock(Long productId, BigDecimal oldQuantity, BigDecimal newQuantity)
             throws EntityNotFoundException;
 
     // =============================================================================

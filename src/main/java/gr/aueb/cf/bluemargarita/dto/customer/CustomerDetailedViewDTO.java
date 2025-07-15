@@ -30,7 +30,6 @@ public record CustomerDetailedViewDTO(
         BigDecimal totalRevenue,
         int numberOfSales,
         LocalDate lastOrderDate,
-        BigDecimal averageOrderValue,
 
 
         //Top products by revenue for Customer

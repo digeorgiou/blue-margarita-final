@@ -28,7 +28,6 @@ public record LocationDetailedDTO(
         Integer totalSalesCount,
         BigDecimal totalRevenue,
         BigDecimal averageOrderValue,
-        LocalDate firstSaleDate,
         LocalDate lastSaleDate,
 
         // Simple recent performance (last 30 days)

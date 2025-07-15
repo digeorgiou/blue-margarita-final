@@ -2,6 +2,7 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.enums.PaymentMethod;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.PaginatedFilteredSalesWithSummary;
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -223,6 +225,26 @@ public class SaleService implements ISaleService {
                 .stream()
                 .map(mapper::mapToSaleReadOnlyDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<SaleReadOnlyDTO> getAllTodaysSales(Pageable pageable) {
+        LocalDate today = LocalDate.now();
+
+        // Apply default sorting if none specified (newest first)
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "saleDate", "createdAt")
+            );
+        }
+
+        Page<Sale> todaysSales = saleRepository.findSalesByDateRange(today, today, pageable);
+        Page<SaleReadOnlyDTO> mappedSales = todaysSales.map(mapper::mapToSaleReadOnlyDTO);
+
+        return new Paginated<>(mappedSales);
     }
 
     @Override

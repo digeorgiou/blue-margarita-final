@@ -19,6 +19,7 @@ import gr.aueb.cf.bluemargarita.dto.product.*;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleItemDetailsDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleProductDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleReadOnlyDTO;
+import gr.aueb.cf.bluemargarita.dto.stock.StockManagementDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.SupplierUpdateDTO;
@@ -108,24 +109,6 @@ public class Mapper {
 
     public CustomerDetailedViewDTO mapToCustomerDetailedViewDTO(Customer customer, CustomerSalesDataDTO data, List<ProductStatsSummaryDTO> topProducts){
 
-        // Calculate sales statistics
-        int totalOrders =  customer.getAllSales().size();
-
-        BigDecimal totalOrderValue = customer.getAllSales().stream()
-                .map(Sale::getFinalTotalPrice)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        LocalDate lastOrderDate = customer.getAllSales().stream()
-                .map(Sale::getSaleDate)
-                .filter(Objects::nonNull)
-                .max(LocalDate::compareTo)
-                .orElse(null);
-
-        BigDecimal averageOrderValue = totalOrders > 0 && totalOrderValue.compareTo(BigDecimal.ZERO) > 0
-                ? totalOrderValue.divide(BigDecimal.valueOf(totalOrders), 2, BigDecimal.ROUND_HALF_UP)
-                : BigDecimal.ZERO;
-
             return new CustomerDetailedViewDTO(
                 customer.getId(),
                 customer.getFirstname(),
@@ -146,7 +129,6 @@ public class Mapper {
                 data.totalRevenue(),
                 data.numberOfSales(),
                 data.lastOrderDate(),
-                data.averageOrderValue(),
                 topProducts
         );
     }
@@ -321,6 +303,49 @@ public class Mapper {
                 data.isLowStock(),
                 product.getStock(),
                 product.getLowStockAlert()
+        );
+    }
+
+    public StockManagementDTO mapToStockManagementDTO(Product product) {
+        Integer currentStock = product.getStock() != null ? product.getStock() : 0;
+        Integer lowStockAlert = product.getLowStockAlert();
+
+        // Calculate stock metrics
+        Integer stockDifference = null;
+        Double stockPercentage = null;
+        StockManagementDTO.StockStatus status;
+
+        if (lowStockAlert != null && lowStockAlert > 0) {
+            stockDifference = currentStock - lowStockAlert;
+            stockPercentage = (double) currentStock / lowStockAlert * 100;
+
+            if (currentStock < 0) {
+                status = StockManagementDTO.StockStatus.NEGATIVE;
+            } else if (currentStock <= lowStockAlert) {
+                status = StockManagementDTO.StockStatus.LOW;
+            } else {
+                status = StockManagementDTO.StockStatus.NORMAL;
+            }
+        } else {
+            // No alert threshold set
+            if (currentStock < 0) {
+                status = StockManagementDTO.StockStatus.NEGATIVE;
+            } else {
+                status = StockManagementDTO.StockStatus.NO_ALERT;
+            }
+        }
+
+        return new StockManagementDTO(
+                product.getId(),
+                product.getName(),
+                product.getCode(),
+                product.getCategory() != null ? product.getCategory().getName() : "No Category",
+                currentStock,
+                lowStockAlert,
+                product.getIsActive(),
+                stockDifference,
+                stockPercentage,
+                status
         );
     }
 

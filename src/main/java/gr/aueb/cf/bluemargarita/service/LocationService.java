@@ -208,37 +208,16 @@ public class LocationService implements ILocationService {
         Location location = locationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + id + " was not found"));
 
-        // ✅ OPTIMIZED: Use repository methods instead of loading all sales
-
         // Basic metrics using single queries
         Integer totalSalesCount = saleRepository.countByLocationId(id);
 
         if (totalSalesCount == 0) {
             // No sales - return empty metrics
-            return new LocationDetailedDTO(
-                    location.getId(),
-                    location.getName(),
-                    location.getCreatedAt(),
-                    location.getUpdatedAt(),
-                    location.getCreatedBy().getUsername(),
-                    location.getLastUpdatedBy().getUsername(),
-                    location.getIsActive(),
-                    location.getDeletedAt(),
-                    0,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    null,
-                    null,
-                    0,
-                    BigDecimal.ZERO,
-                    0,
-                    BigDecimal.ZERO
-            );
+            return createEmptyMetricsDTO(location);
         }
 
         // Get aggregated data in single queries (no loading all sales into memory)
         BigDecimal totalRevenue = saleRepository.sumRevenueByLocationId(id);
-        LocalDate firstSaleDate = saleRepository.findFirstSaleDateByLocationId(id);
         LocalDate lastSaleDate = saleRepository.findLastSaleDateByLocationId(id);
 
         BigDecimal averageOrderValue = totalRevenue != null && totalSalesCount > 0 ?
@@ -271,7 +250,6 @@ public class LocationService implements ILocationService {
                 totalSalesCount,
                 totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
                 averageOrderValue,
-                firstSaleDate,
                 lastSaleDate,
                 recentSalesCount,
                 recentRevenue != null ? recentRevenue : BigDecimal.ZERO,
@@ -283,6 +261,28 @@ public class LocationService implements ILocationService {
     // =============================================================================
     // PRIVATE HELPER METHODS
     // =============================================================================
+
+    private LocationDetailedDTO createEmptyMetricsDTO(Location location) {
+        return new LocationDetailedDTO(
+                location.getId(),
+                location.getName(),
+                location.getCreatedAt(),
+                location.getUpdatedAt(),
+                location.getCreatedBy().getUsername(),
+                location.getLastUpdatedBy().getUsername(),
+                location.getIsActive(),
+                location.getDeletedAt(),
+                0,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                null,
+                0,
+                BigDecimal.ZERO,
+                0,
+                BigDecimal.ZERO
+        );
+    }
+
 
     private Specification<Location> getSpecsFromFilters(LocationFilters filters) {
         return Specification

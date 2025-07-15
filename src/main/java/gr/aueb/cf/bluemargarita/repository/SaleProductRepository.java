@@ -1,6 +1,8 @@
 package gr.aueb.cf.bluemargarita.repository;
 
 import gr.aueb.cf.bluemargarita.model.SaleProduct;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -116,5 +118,34 @@ public interface SaleProductRepository extends JpaRepository<SaleProduct, Long>,
             @Param("endDate") LocalDate endDate,
             @Param("limit") int limit
     );
+
+    /**
+     * Finds all products by revenue for a date range with pagination and sorting
+     * Used for "View All Products for Month" functionality
+     */
+    @Query(value = """
+    SELECT p.id, p.name, p.code,
+           SUM(sp.quantity) as totalQuantity,
+           SUM(sp.quantity * sp.price_at_the_time) as totalRevenue,
+           MAX(s.sale_date) as lastSaleDate
+    FROM sale_product sp
+    JOIN sales s ON sp.sale_id = s.id
+    JOIN products p ON sp.product_id = p.id
+    WHERE s.sale_date BETWEEN :startDate AND :endDate
+      AND p.is_active = true
+    GROUP BY p.id, p.name, p.code
+    """,
+            countQuery = """
+    SELECT COUNT(DISTINCT p.id)
+    FROM sale_product sp
+    JOIN sales s ON sp.sale_id = s.id
+    JOIN products p ON sp.product_id = p.id
+    WHERE s.sale_date BETWEEN :startDate AND :endDate
+      AND p.is_active = true
+    """,
+            nativeQuery = true)
+    Page<Object[]> findAllProductsByRevenuePaginated(@Param("startDate") LocalDate startDate,
+                                                     @Param("endDate") LocalDate endDate,
+                                                     Pageable pageable);
 
 }

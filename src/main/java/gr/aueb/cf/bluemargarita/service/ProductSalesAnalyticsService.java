@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerSalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.product.*;
 import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
@@ -13,6 +14,10 @@ import gr.aueb.cf.bluemargarita.repository.SaleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -250,7 +255,6 @@ public class ProductSalesAnalyticsService {
                                                                         int limit) {
         LOGGER.debug("Retrieving optimized top customers for product {}", productId);
 
-        // ✅ OPTIMIZED: Use repository aggregation
         List<Object[]> customerResults = saleProductRepository.findTopCustomersByProductId(productId, startDate, endDate);
 
         return customerResults.stream()
@@ -340,6 +344,33 @@ public class ProductSalesAnalyticsService {
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    public Paginated<ProductStatsSummaryDTO> getAllTopProductsForPeriod(LocalDate startDate,
+                                                                        LocalDate endDate,
+                                                                        Pageable pageable) {
+
+        // Apply default sorting if none specified (highest revenue first)
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "totalRevenue")
+            );
+        }
+
+        Page<Object[]> productData = saleProductRepository.findAllProductsByRevenuePaginated(startDate, endDate, pageable);
+
+        Page<ProductStatsSummaryDTO> mappedProducts = productData.map(data -> new ProductStatsSummaryDTO(
+                (Long) data[0],           // productId
+                (String) data[1],         // productName
+                (String) data[2],         // productCode
+                (BigDecimal) data[3],     // totalQuantity
+                (BigDecimal) data[4],     // totalRevenue
+                (LocalDate) data[5]       // lastSaleDate
+        ));
+
+        return new Paginated<>(mappedProducts);
     }
 
     // Helper method to calculate week start date from year and week number

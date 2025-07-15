@@ -1,11 +1,14 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationResponseDTO;
+import gr.aueb.cf.bluemargarita.dto.product.ProductListItemDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.*;
 import gr.aueb.cf.bluemargarita.dto.shopping_cart.CartItemDTO;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -72,6 +75,15 @@ public interface ISaleService {
      * @return List of recent sales with basic information
      */
     List<SaleReadOnlyDTO> getRecentSales(int limit);
+
+    /**
+     * Retrieves all sales for today with pagination and sorting
+     * Used for "View All Today's Sales" functionality from dashboard
+     *
+     * @param pageable Pagination and sorting parameters
+     * @return Paginated list of today's sales with sorting support
+     */
+    Paginated<SaleReadOnlyDTO> getAllTodaysSales(Pageable pageable);
 
     /**
      * Gets sales summary for current day (dashboard widget)

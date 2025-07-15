@@ -1,6 +1,8 @@
 package gr.aueb.cf.bluemargarita.repository;
 
 import gr.aueb.cf.bluemargarita.model.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -75,5 +77,24 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     ORDER BY COUNT(*) DESC
     """, nativeQuery = true)
     List<Object[]> calculateCategoryDistribution();
+
+    /**
+     * Finds products with negative stock with pagination and sorting support
+     * Used for "View All Negative Stock" functionality
+     */
+    @Query("SELECT p FROM Product p WHERE p.stock < 0 AND p.isActive = true")
+    Page<Product> findProductsWithNegativeStock(Pageable pageable);
+
+    /**
+     * Counts products with negative stock (for dashboard widget)
+     */
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.stock < 0 AND p.isActive = true")
+    Integer countProductsWithNegativeStock();
+
+    /**
+     * Gets top negative stock products for dashboard widget (limit for performance)
+     */
+    @Query("SELECT p FROM Product p WHERE p.stock < 0 AND p.isActive = true ORDER BY p.stock ASC")
+    List<Product> findTopNegativeStockProducts(Pageable pageable);
 
 }
