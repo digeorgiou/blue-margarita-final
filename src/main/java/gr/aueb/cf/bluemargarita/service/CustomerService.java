@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -108,17 +109,20 @@ public class CustomerService implements ICustomerService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id=" + id + " was not found"));
 
-        if (!customer.getAllSales().isEmpty()) {
-            // Soft Delete if customer is used in any sales
+        Integer salesCount = customerRepository.countSalesByCustomerId(id);
+
+        if (salesCount > 0) {
+            // Soft Delete if customer has sales history
             customer.setIsActive(false);
             customer.setDeletedAt(LocalDateTime.now());
             customerRepository.save(customer);
 
-            LOGGER.info("Customer {} soft deleted. Used in {} sales", customer.getFullName(), customer.getAllSales().size());
+            LOGGER.info("Customer {} soft deleted. Has {} sales in history",
+                    customer.getFullName(), salesCount);
         } else {
             // Hard delete if customer not used anywhere
             customerRepository.delete(customer);
-            LOGGER.info("Customer {} hard deleted (not used in any sales)", customer.getFullName());
+            LOGGER.info("Customer {} hard deleted (no sales history)", customer.getFullName());
         }
     }
 
@@ -152,11 +156,46 @@ public class CustomerService implements ICustomerService {
     public CustomerDetailedViewDTO getCustomerDetailedView(Long customerId) throws EntityNotFoundException{
         Customer customer = getCustomerEntityById(customerId);
 
-        List<ProductStatsSummaryDTO> topProducts = calculateTopProductsForCustomer(customer);
+        Integer totalSales = customerRepository.countSalesByCustomerId(customerId);
+        if (totalSales == 0) {
+            // No sales - return empty analytics
+            CustomerSalesDataDTO emptySalesData = new CustomerSalesDataDTO(0, BigDecimal.ZERO, null, BigDecimal.ZERO);
+            return mapper.mapToCustomerDetailedViewDTO(customer, emptySalesData, Collections.emptyList());
+        }
 
-        CustomerSalesDataDTO data = calculateCustomerSalesData(customer);
+        // Get aggregated sales data in single queries
+        BigDecimal totalRevenue = customerRepository.sumRevenueByCustomerId(customerId);
+        LocalDate lastOrderDate = customerRepository.findLastSaleDateByCustomerId(customerId);
 
-        return mapper.mapToCustomerDetailedViewDTO(customer, data, topProducts);
+        BigDecimal averageOrderValue = totalRevenue != null && totalSales > 0 ?
+                totalRevenue.divide(BigDecimal.valueOf(totalSales), 2, RoundingMode.HALF_UP) :
+                BigDecimal.ZERO;
+
+        // Get top products using repository aggregation
+        List<Object[]> topProductsData = customerRepository.findTopProductsByCustomerId(customerId);
+
+        List<ProductStatsSummaryDTO> topProducts = topProductsData.stream()
+                .map(data -> new ProductStatsSummaryDTO(
+                        (Long) data[0],           // productId
+                        (String) data[1],         // productName
+                        (String) data[2],         // productCode
+                        (BigDecimal) data[3],     // totalQuantity
+                        (BigDecimal) data[4],     // totalRevenue
+                        (LocalDate) data[5]       // lastSaleDate
+                ))
+                .collect(Collectors.toList());
+
+        CustomerSalesDataDTO salesData = new CustomerSalesDataDTO(
+                totalSales,
+                totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
+                lastOrderDate,
+                averageOrderValue
+        );
+
+        LOGGER.debug("Analytics completed for customer '{}': totalSales={}, totalRevenue={}, topProducts={}",
+                customer.getFullName(), totalSales, totalRevenue, topProducts.size());
+
+        return mapper.mapToCustomerDetailedViewDTO(customer, salesData, topProducts);
     }
 
     @Override
@@ -209,137 +248,6 @@ public class CustomerService implements ICustomerService {
 
     private int getActiveCustomerCount() {
         return (int) customerRepository.countByIsActiveTrue();
-    }
-
-    // =============================================================================
-    // PRIVATE HELPER METHODS - Customer Analytics and Calculations
-    // =============================================================================
-
-    /**
-     * Calculates comprehensive sales data for a customer
-     */
-    private CustomerSalesDataDTO calculateCustomerSalesData(Customer customer) {
-        return new CustomerSalesDataDTO(
-                getCustomerTotalRevenue(customer),
-                getCustomerTotalNumberOfSales(customer),
-                getCustomerLastOrderDate(customer),
-                getAverageOrderValue(customer)
-        );
-    }
-
-    /**
-     * Calculates total revenue for a customer across all sales
-     */
-    private BigDecimal getCustomerTotalRevenue(Customer customer){
-
-        return customer.getAllSales().stream()
-                .map(Sale::getFinalTotalPrice)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    /**
-     * Gets total number of sales for a customer
-     */
-    private int getCustomerTotalNumberOfSales(Customer customer){
-
-        return customer.getAllSales().size();
-    }
-
-    /**
-     * Gets the most recent order date for a customer
-     */
-    private LocalDate getCustomerLastOrderDate(Customer customer){
-
-        return customer.getAllSales().stream()
-                .map(Sale::getSaleDate)
-                .filter(Objects::nonNull)
-                .max(LocalDate::compareTo)
-                .orElse(null);
-    }
-
-    /**
-     * Calculates average order value for a customer
-     */
-    private BigDecimal getAverageOrderValue(Customer customer) {
-
-        int numberOfSales = getCustomerTotalNumberOfSales(customer);
-        BigDecimal totalRevenue = getCustomerTotalRevenue(customer);
-        BigDecimal average = BigDecimal.ZERO;
-
-        if(numberOfSales > 0 && totalRevenue.compareTo(BigDecimal.ZERO) > 0){
-            average = totalRevenue.divide(BigDecimal.valueOf(numberOfSales), 2, BigDecimal.ROUND_HALF_UP);
-        }
-        return average;
-    }
-
-    /**
-     * Calculates top 5 products purchased by a customer ordered by revenue
-     */
-    private List<ProductStatsSummaryDTO> calculateTopProductsForCustomer(Customer customer) {
-        Map<Long, BigDecimal[]> productData = new HashMap<>(); // [quantity, revenue, lastSaleTimestamp]
-        Map<Long, String[]> productInfo = new HashMap<>(); // [name, code]
-
-        // Simple loop through all sales and products
-        for (Sale sale : customer.getAllSales()) {
-            long saleTimestamp = sale.getSaleDate().toEpochDay(); // Convert date to number for comparison
-
-            for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
-                Long productId = saleProduct.getProduct().getId();
-
-                // Store product info (name, code) - only once
-                if (!productInfo.containsKey(productId)) {
-                    productInfo.put(productId, new String[]{
-                            saleProduct.getProduct().getName(),
-                            saleProduct.getProduct().getCode()
-                    });
-                }
-
-                // Get existing data or create new [quantity, revenue, lastSaleTimestamp]
-                BigDecimal[] data = productData.getOrDefault(productId,
-                        new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.valueOf(0)});
-
-                // Add quantity
-                data[0] = data[0].add(saleProduct.getQuantity());
-
-                // Add revenue (quantity * price)
-                BigDecimal revenue = saleProduct.getQuantity().multiply(saleProduct.getPriceAtTheTime());
-                data[1] = data[1].add(revenue);
-
-                // Update last sale date if newer
-                if (saleTimestamp > data[2].longValue()) {
-                    data[2] = BigDecimal.valueOf(saleTimestamp);
-                }
-
-                productData.put(productId, data);
-            }
-        }
-
-        // Convert to DTOs and sort by revenue
-        List<ProductStatsSummaryDTO> result = new ArrayList<>();
-
-        for (Map.Entry<Long, BigDecimal[]> entry : productData.entrySet()) {
-            Long productId = entry.getKey();
-            BigDecimal[] data = entry.getValue();
-            String[] info = productInfo.get(productId);
-
-            // Convert timestamp back to LocalDate
-            LocalDate lastSaleDate = LocalDate.ofEpochDay(data[2].longValue());
-
-            result.add(new ProductStatsSummaryDTO(
-                    productId,
-                    info[0], // name
-                    info[1], // code
-                    data[0], // total quantity
-                    data[1], // total revenue
-                    lastSaleDate
-            ));
-        }
-
-        // Sort by revenue (highest first) and limit to top 5
-        result.sort((a, b) -> b.totalRevenue().compareTo(a.totalRevenue()));
-
-        return result.size() > 5 ? result.subList(0, 5) : result;
     }
 
     // =============================================================================
