@@ -21,6 +21,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService implements IUserService{
@@ -37,6 +39,10 @@ public class UserService implements IUserService{
         this.passwordEncoder = passwordEncoder;
         this.mapper = mapper;
     }
+
+    // =============================================================================
+    // CORE CRUD OPERATIONS
+    // =============================================================================
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -122,6 +128,34 @@ public class UserService implements IUserService{
                         "with id " + id + " not found"));
 
         return mapper.mapToUserReadOnlyDTO(user);
+    }
+
+    // =============================================================================
+    // QUERY OPERATIONS
+    // =============================================================================
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserReadOnlyDTO> getAllActiveUsers() {
+        return userRepository.findByIsActiveTrue()
+                .stream()
+                .map(mapper::mapToUserReadOnlyDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserReadOnlyDTO getUserByUsername(String username) throws EntityNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User", "User with username " + username + " not found"));
+        return mapper.mapToUserReadOnlyDTO(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
     }
 
     /**
