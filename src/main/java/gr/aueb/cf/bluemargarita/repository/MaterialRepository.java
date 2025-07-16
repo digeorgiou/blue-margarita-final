@@ -16,7 +16,7 @@ import java.util.List;
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long>,
         JpaSpecificationExecutor<Material> {
-    boolean existsByDescription(String description);
+    boolean existsByName(String name);
     List<Material> findByIsActiveTrue();
     List<Material> findByNameContainingIgnoreCaseAndIsActiveTrue(String name);
 
@@ -28,7 +28,7 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
     Object[] calculateUsageStatsByMaterialId(@Param("materialId") Long materialId);
 
 
-    @Query("SELECT AVG(pm.quantity * m.costPerUnit) " +
+    @Query("SELECT AVG(pm.quantity * m.currentUnitCost) " +
             "FROM ProductMaterial pm JOIN pm.material m WHERE m.id = :materialId")
     BigDecimal calculateAverageCostPerProductByMaterialId(@Param("materialId") Long materialId);
 
@@ -51,7 +51,7 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
      * Top products using this material (for usage distribution in detailed view)
      * Orders by product price descending
      */
-    @Query("SELECT p.id, p.name, p.code, pm.quantity, (pm.quantity * m.costPerUnit), " +
+    @Query("SELECT p.id, p.name, p.code, pm.quantity, (pm.quantity * m.currentUnitCost), " +
             "CASE WHEN p.category IS NOT NULL THEN p.category.name ELSE 'No Category' END " +
             "FROM Product p JOIN p.productMaterials pm JOIN pm.material m " +
             "WHERE m.id = :materialId " +
@@ -61,7 +61,7 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
     /**
      * Get paginated products using a specific material (for "View All" functionality)
      */
-    @Query("SELECT p.id, p.name, p.code, pm.quantity, (pm.quantity * m.costPerUnit), " +
+    @Query("SELECT p.id, p.name, p.code, pm.quantity, (pm.quantity * m.currentUnitCost), " +
             "CASE WHEN p.category IS NOT NULL THEN p.category.name ELSE 'No Category' END, " +
             "p.isActive, p.finalSellingPriceRetail " +
             "FROM Product p JOIN p.productMaterials pm JOIN pm.material m " +

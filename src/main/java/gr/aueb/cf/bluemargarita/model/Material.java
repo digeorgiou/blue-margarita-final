@@ -35,6 +35,7 @@ public class Material extends AbstractEntity {
 
     @ColumnDefault("true")
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive= true;
 
     @Column(name = "deleted_at")
@@ -72,8 +73,8 @@ public class Material extends AbstractEntity {
         purchaseMaterial.setMaterial(null);
     }
 
-    public void addPurchase(Purchase purchase, BigDecimal quantity){
-        purchase.addMaterial(this, quantity);
+    public void addPurchase(Purchase purchase, BigDecimal quantity, BigDecimal costPerUnit){
+        purchase.addMaterial(this, quantity, costPerUnit);
     }
 
     public void removePurchase(Purchase purchase){

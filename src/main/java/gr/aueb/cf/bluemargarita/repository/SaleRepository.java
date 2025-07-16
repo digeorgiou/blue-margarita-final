@@ -93,18 +93,6 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     @Query("SELECT AVG(s.finalTotalPrice) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
     BigDecimal calculateAverageOrderValueByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT COUNT(s) FROM Sale s WHERE (:filters conditions)")
-    Integer countSalesByFilters(@Param("filters") SaleFilters filters);
-
-    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE (:filters conditions)")
-    BigDecimal sumRevenueByFilters(@Param("filters") SaleFilters filters);
-
-    @Query("SELECT COALESCE(SUM(s.suggestedTotalPrice - s.finalTotalPrice), 0) FROM Sale s WHERE (:filters conditions)")
-    BigDecimal sumDiscountAmountByFilters(@Param("filters") SaleFilters filters);
-
-    @Query("SELECT COALESCE(AVG(s.discountPercentage), 0) FROM Sale s WHERE (:filters conditions)")
-    BigDecimal avgDiscountPercentageByFilters(@Param("filters") SaleFilters filters);
-
     /**
      * Finds sales within a date range with pagination and sorting support
      * Used for "View All Today's Sales" functionality

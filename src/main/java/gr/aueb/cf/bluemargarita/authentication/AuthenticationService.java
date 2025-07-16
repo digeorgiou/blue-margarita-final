@@ -24,6 +24,7 @@ public class AuthenticationService {
     public AuthenticationResponseDTO authenticate(AuthenticationRequestDTO dto)
             throws EntityNotAuthorizedException {
 
+        // Validates username/password against database
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(dto.username(),
                         dto.password()));

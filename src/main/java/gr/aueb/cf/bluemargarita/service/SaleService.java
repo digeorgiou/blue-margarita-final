@@ -586,16 +586,16 @@ public class SaleService implements ISaleService {
         LOGGER.debug("Calculating sales summary with optimized repository queries");
 
         // ✅ OPTIMIZED: Use repository aggregation instead of loading all sales
-        Integer totalCount = saleRepository.countSalesByFilters(filters);
+        Integer totalCount = (int) countSalesByFilters(filters);
 
         if (totalCount == 0) {
             return new SalesSummaryDTO(0, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
         }
 
         // Use aggregated queries instead of loading entities
-        BigDecimal totalRevenue = saleRepository.sumRevenueByFilters(filters); // You'll need to add this query
-        BigDecimal totalDiscountAmount = saleRepository.sumDiscountAmountByFilters(filters); // You'll need to add this query
-        BigDecimal averageDiscountPercentage = saleRepository.avgDiscountPercentageByFilters(filters); // You'll need to add this query
+        BigDecimal totalRevenue = sumRevenueByFilters(filters);
+        BigDecimal totalDiscountAmount = sumDiscountAmountByFilters(filters);
+        BigDecimal averageDiscountPercentage = avgDiscountPercentageByFilters(filters);
 
         BigDecimal averageOrderValue = totalRevenue.divide(
                 BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
@@ -609,5 +609,42 @@ public class SaleService implements ISaleService {
                 totalDiscountAmount != null ? totalDiscountAmount : BigDecimal.ZERO,
                 averageDiscountPercentage != null ? averageDiscountPercentage : BigDecimal.ZERO
         );
+    }
+
+    private long countSalesByFilters(SaleFilters filters) {
+        Specification<Sale> spec = getSpecsFromFilters(filters);
+        return saleRepository.count(spec);
+    }
+
+    private BigDecimal sumRevenueByFilters(SaleFilters filters) {
+        Specification<Sale> spec = getSpecsFromFilters(filters);
+        List<Sale> sales = saleRepository.findAll(spec);
+
+        return sales.stream()
+                .map(Sale::getFinalTotalPrice)
+                .filter(price -> price != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal sumDiscountAmountByFilters(SaleFilters filters) {
+        Specification<Sale> spec = getSpecsFromFilters(filters);
+        List<Sale> sales = saleRepository.findAll(spec);
+
+        return sales.stream()
+                .filter(sale -> sale.getSuggestedTotalPrice() != null && sale.getFinalTotalPrice() != null)
+                .map(sale -> sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal avgDiscountPercentageByFilters(SaleFilters filters) {
+        Specification<Sale> spec = getSpecsFromFilters(filters);
+        List<Sale> sales = saleRepository.findAll(spec);
+
+        OptionalDouble average = sales.stream()
+                .filter(sale -> sale.getDiscountPercentage() != null)
+                .mapToDouble(sale -> sale.getDiscountPercentage().doubleValue())
+                .average();
+
+        return average.isPresent() ? BigDecimal.valueOf(average.getAsDouble()) : BigDecimal.ZERO;
     }
 }

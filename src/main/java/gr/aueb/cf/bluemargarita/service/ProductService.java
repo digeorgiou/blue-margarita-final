@@ -576,7 +576,7 @@ public class ProductService implements IProductService{
 
             // Log the stock change (you might want to create a StockHistory entity)
             LOGGER.info("Stock updated for product {}: {} -> {} (change: {}, reason: {})",
-                    product.getCode(), previousStock, newStock, changeAmount, updateDTO.reason());
+                    product.getCode(), previousStock, newStock, changeAmount);
 
             return new StockUpdateResultDTO(
                     product.getId(),

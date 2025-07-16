@@ -53,7 +53,7 @@ public class MaterialService implements IMaterialService {
     @Transactional(rollbackFor = Exception.class)
     public MaterialReadOnlyDTO createMaterial(MaterialInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        if (materialRepository.existsByDescription(dto.name())) {
+        if (materialRepository.existsByName(dto.name())) {
             throw new EntityAlreadyExistsException("Material", "Material with description " + dto.name() + " already exists");
         }
 
@@ -79,7 +79,7 @@ public class MaterialService implements IMaterialService {
         Material existingMaterial = materialRepository.findById(dto.materialId())
                 .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + dto.materialId() + " was not found"));
 
-        if (!existingMaterial.getName().equals(dto.name()) && materialRepository.existsByDescription(dto.name())) {
+        if (!existingMaterial.getName().equals(dto.name()) && materialRepository.existsByName(dto.name())) {
             throw new EntityAlreadyExistsException("Material", "Material with description " + dto.name() + " already exists");
         }
 

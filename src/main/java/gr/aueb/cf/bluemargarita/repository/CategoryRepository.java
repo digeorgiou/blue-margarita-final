@@ -20,7 +20,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long>,
     @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
     Integer countActiveProductsByCategoryId(@Param("categoryId") Long categoryId);
 
-    @Query("SELECT AVG(p.sellingPriceRetail) FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
+    @Query("SELECT AVG(p.suggestedRetailSellingPrice) FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
     BigDecimal calculateAverageRetailPriceByCategoryId(@Param("categoryId") Long categoryId);
 
     @Query("SELECT COUNT(sp) FROM SaleProduct sp WHERE sp.product.category.id = :categoryId")

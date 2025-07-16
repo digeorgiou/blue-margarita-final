@@ -145,8 +145,10 @@ public class CustomerService implements ICustomerService {
     public Paginated<CustomerListItemDTO> getCustomersFilteredPaginated(CustomerFilters filters){
 
         var filtered =
-                customerRepository.findAll(getSpecsFromFilters(filters),
-                        filters.getPageable());
+                customerRepository.findAll(
+                        getSpecsFromFilters(filters),
+                        filters.getPageable()
+                );
 
         return new Paginated<>(filtered.map(mapper::mapToCustomerListItemDTO));
     }

@@ -18,15 +18,10 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>,
         JpaSpecificationExecutor<Expense> {
     Boolean existsByPurchaseId(Long id);
 
-    List<Expense> findRecentExpenses(Pageable pageable);
+    // Gets expenses by actual date first, then by creation time
+    List<Expense> findAllByOrderByExpenseDateDescCreatedAtDesc(Pageable pageable);
 
     Expense findByPurchaseId(Long id);
-
-    @Query("SELECT COUNT(e) FROM Expense e WHERE (:filters conditions)")
-    Integer countExpensesByFilters(@Param("filters") ExpenseFilters filters);
-
-    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE (:filters conditions)")
-    BigDecimal sumCostByFilters(@Param("filters") ExpenseFilters filters);
 
     @Query("SELECT e.expenseType, SUM(e.amount), COUNT(e) FROM Expense e " +
             "WHERE (:dateFrom IS NULL OR e.expenseDate >= :dateFrom) AND " +

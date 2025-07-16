@@ -278,13 +278,13 @@ public class PurchaseService implements IPurchaseService {
     private PurchaseSummaryDTO calculatePurchaseSummary(PurchaseFilters filters){
         LOGGER.debug("Calculating purchases summary with optimized repository queries");
 
-        Integer totalCount = purchaseRepository.countPurchasesByFilters(filters);
+        Integer totalCount = (int) countPurchasesByFilters(filters);
 
         if(totalCount == 0){
             return new PurchaseSummaryDTO(0,BigDecimal.ZERO);
         }
 
-        BigDecimal totalRevenue =purchaseRepository.sumRevenueByFilters(filters);
+        BigDecimal totalRevenue = sumTotalCostByFilters(filters);
 
         LOGGER.debug("Summary calculated: count={}, revenue={}", totalCount, totalRevenue);
 
@@ -292,6 +292,21 @@ public class PurchaseService implements IPurchaseService {
                 totalCount,
                 totalRevenue
         );
+    }
+
+    private long countPurchasesByFilters(PurchaseFilters filters) {
+        Specification<Purchase> spec = getSpecsFromFilters(filters);
+        return purchaseRepository.count(spec);
+    }
+
+    private BigDecimal sumTotalCostByFilters(PurchaseFilters filters) {
+        Specification<Purchase> spec = getSpecsFromFilters(filters);
+        List<Purchase> purchases = purchaseRepository.findAll(spec);
+
+        return purchases.stream()
+                .map(Purchase::getTotalCost)
+                .filter(cost -> cost != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     /**

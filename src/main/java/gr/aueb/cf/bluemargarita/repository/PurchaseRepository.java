@@ -29,12 +29,6 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long>,
     Integer countMaterialItemsByDateRange(@Param("startDate") LocalDate startDate,
                                           @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT COUNT(p) FROM Purchase p WHERE (:filters conditions)")
-    Integer countPurchasesByFilters(@Param("filters") PurchaseFilters filters);
-
-    @Query("SELECT COALESCE(SUM(p.totalCost), 0) FROM Purchase p WHERE (:filters conditions)")
-    BigDecimal sumRevenueByFilters(@Param("filters") PurchaseFilters filters);
-
     // Supplier analytics methods
     @Query("SELECT COUNT(p) FROM Purchase p WHERE p.supplier.id = :supplierId")
     Integer countBySupplierId(@Param("supplierId") Long supplierId);

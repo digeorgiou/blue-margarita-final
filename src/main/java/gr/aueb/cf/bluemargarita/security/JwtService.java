@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -16,15 +18,18 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    //    private String secretKey = System.getenv("SECRET_KEY");
-//    private String secretKey = "FvArDZiJ1hvR9k3Ks1J6s8FqbmL6rRnlmTL5J3jNiT8";
+    @Value("${jwt.secret:#{null}}")
+    private String secretKey;
 
-    //    Strong security 384-bits = 48 bytes = 64 Base64URL characters
-    private String secretKey = "5ce98d378ec88ea09ba8bcd511ef23645f04cc8e70b9134b98723a53c275bbc5";
-    private long jwtExpiration = 10800000;  // 3 hours in milliseconds
+    @Value("${jwt.expiration:10800000}")
+    private long jwtExpiration;  // 3 hours in milliseconds
 
-//    if use refresh expiration token
-//    private long refreshExpiration = 604800000;
+    @PostConstruct
+    private void validateSecretKey() {
+        if (secretKey == null || secretKey.isEmpty()) {
+            throw new IllegalStateException("JWT secret key must be provided via jwt.secret property");
+        }
+    }
 
     public String generateToken(String username, String role) {
         var claims = new HashMap<String, Object>();

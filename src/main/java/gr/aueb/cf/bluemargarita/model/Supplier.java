@@ -38,6 +38,7 @@ public class Supplier extends AbstractEntity {
 
     @ColumnDefault("true")
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive= true;
 
     @Column(name = "deleted_at")

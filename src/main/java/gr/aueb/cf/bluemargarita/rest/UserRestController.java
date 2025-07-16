@@ -1,11 +1,15 @@
 package gr.aueb.cf.bluemargarita.rest;
 
+import gr.aueb.cf.bluemargarita.core.enums.Role;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotAuthorizedException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserUpdateDTO;
+import gr.aueb.cf.bluemargarita.model.User;
+import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import gr.aueb.cf.bluemargarita.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +20,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserRestController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @Operation(
             summary = "Register a new user",
@@ -94,8 +100,17 @@ public class UserRestController {
             }
     )
     @GetMapping("/users/{id}")
-    public ResponseEntity<UserReadOnlyDTO> getUserById(@PathVariable Long id)
-            throws EntityNotFoundException {
+    public ResponseEntity<UserReadOnlyDTO> getUserById(@PathVariable Long id,
+                                                       Authentication authentication)
+            throws EntityNotFoundException, EntityNotAuthorizedException {
+
+        String currentUsername = authentication.getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(()-> new EntityNotFoundException("User", "Current user not found"));
+
+        if(!currentUser.getRole().equals(Role.ADMIN) && !currentUser.getId().equals(id)){
+            throw new EntityNotAuthorizedException("User", "You can only access your own user data");
+        }
 
         UserReadOnlyDTO userReadOnlyDTO = userService.getUserById(id);
         return new ResponseEntity<>(userReadOnlyDTO, HttpStatus.OK);

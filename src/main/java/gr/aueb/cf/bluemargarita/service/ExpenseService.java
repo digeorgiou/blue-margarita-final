@@ -177,7 +177,7 @@ public class ExpenseService implements IExpenseService {
     @Override
     @Transactional(readOnly = true)
     public List<ExpenseReadOnlyDTO> getRecentExpenses(int limit) {
-        return expenseRepository.findRecentExpenses(PageRequest.of(0, limit))
+        return expenseRepository.findAllByOrderByExpenseDateDescCreatedAtDesc(PageRequest.of(0, limit))
                 .stream()
                 .map(mapper::mapToExpenseReadOnlyDTO)
                 .collect(Collectors.toList());
@@ -309,13 +309,13 @@ public class ExpenseService implements IExpenseService {
 
     private ExpenseSummaryDTO calculateExpenseSummary(ExpenseFilters filters) {
 
-        Integer totalCount = expenseRepository.countExpensesByFilters(filters);
+        Integer totalCount = (int) countExpensesByFilters(filters);
 
         if(totalCount == 0) {
             return new ExpenseSummaryDTO(0,BigDecimal.ZERO,BigDecimal.ZERO);
         }
 
-        BigDecimal totalAmount = expenseRepository.sumCostByFilters(filters);
+        BigDecimal totalAmount = sumTotalCostByFilters(filters);
 
         BigDecimal averageAmount = totalAmount.divide(
                 BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP
@@ -326,6 +326,21 @@ public class ExpenseService implements IExpenseService {
                 totalAmount,
                 averageAmount
         );
+    }
+
+    private long countExpensesByFilters(ExpenseFilters filters) {
+        Specification<Expense> spec = getSpecsFromFilters(filters);
+        return expenseRepository.count(spec);
+    }
+
+    public BigDecimal sumTotalCostByFilters(ExpenseFilters filters) {
+        Specification<Expense> spec = getSpecsFromFilters(filters);
+        List<Expense> expenses = expenseRepository.findAll(spec);
+
+        return expenses.stream()
+                .map(Expense::getAmount)
+                .filter(cost -> cost != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private Specification<Expense> getSpecsFromFilters(ExpenseFilters filters) {
