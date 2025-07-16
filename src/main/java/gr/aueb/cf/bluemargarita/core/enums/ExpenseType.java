@@ -11,6 +11,7 @@ public enum ExpenseType {
     TAXES,                // Business taxes
     MAINTENANCE,          // Equipment maintenance
     TRANSPORTATION,       // Delivery, travel expenses
+    ACCOUNTANT,
     PROFESSIONAL_SERVICES, // Legal, accounting services
     OTHER                 // Miscellaneous expenses
 }

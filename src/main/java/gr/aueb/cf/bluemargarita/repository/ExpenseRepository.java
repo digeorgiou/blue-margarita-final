@@ -36,4 +36,23 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>,
             @Param("dateFrom") LocalDate dateFrom,
             @Param("dateTo") LocalDate dateTo
     );
+
+    /**
+     * Simple method to sum all expenses between dates
+     */
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE " +
+            "e.expenseDate >= :startDate AND e.expenseDate <= :endDate")
+    BigDecimal sumExpensesBetweenDates(@Param("startDate") LocalDate startDate,
+                                       @Param("endDate") LocalDate endDate);
+
+
+    /**
+     * Simple method to count all expenses between dates
+     */
+    @Query("SELECT COUNT(e) FROM Expense e WHERE " +
+            "e.expenseDate >= :startDate AND e.expenseDate <= :endDate")
+    Long countExpensesBetweenDates(@Param("startDate") LocalDate startDate,
+                                   @Param("endDate") LocalDate endDate);
+
+
 }
