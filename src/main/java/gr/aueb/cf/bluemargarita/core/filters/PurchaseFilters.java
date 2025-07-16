@@ -29,5 +29,6 @@ public class PurchaseFilters extends GenericFilters {
     @Nullable
     private String materialName;
 
+    @Nullable
     private Long materialId;
 }

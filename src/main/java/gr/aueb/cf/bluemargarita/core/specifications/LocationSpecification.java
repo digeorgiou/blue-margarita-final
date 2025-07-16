@@ -29,16 +29,4 @@ public class LocationSpecification {
             return criteriaBuilder.equal(root.get("isActive"), isActive);
         };
     }
-
-    public static Specification<Location> locationStringFieldLike(String field, String value) {
-        return (root, query, criteriaBuilder) -> {
-            if (value == null || value.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-            return criteriaBuilder.like(
-                    criteriaBuilder.upper(root.get(field)),
-                    "%" + value.toUpperCase() + "%"
-            );
-        };
-    }
 }

@@ -111,21 +111,6 @@ public class SaleSpecification {
         };
     }
 
-    public static Specification<Sale> saleIsWalkIn() {
-        return (root, query, criteriaBuilder) ->
-                criteriaBuilder.isNull(root.get("customer"));
-    }
-
-    public static Specification<Sale> saleHasCustomer() {
-        return (root, query, criteriaBuilder) ->
-                criteriaBuilder.isNotNull(root.get("customer"));
-    }
-
-    public static Specification<Sale> saleHasDiscount() {
-        return (root, query, criteriaBuilder) ->
-                criteriaBuilder.greaterThan(root.get("discountPercentage"), BigDecimal.ZERO);
-    }
-
     /**
      * Filter sales by product name or code
      * Joins with SaleProduct and Product entities
