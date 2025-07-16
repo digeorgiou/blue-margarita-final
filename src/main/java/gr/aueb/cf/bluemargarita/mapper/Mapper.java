@@ -1,11 +1,13 @@
 package gr.aueb.cf.bluemargarita.mapper;
 
 import gr.aueb.cf.bluemargarita.core.enums.Role;
+import gr.aueb.cf.bluemargarita.core.enums.TaskStatus;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.*;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerSalesDataDTO;
+import gr.aueb.cf.bluemargarita.dto.expense.ExpenseReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
@@ -26,15 +28,20 @@ import gr.aueb.cf.bluemargarita.dto.sale.SaleProductDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.stock.StockManagementDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.*;
+import gr.aueb.cf.bluemargarita.dto.task.ToDoTaskReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserUpdateDTO;
 import gr.aueb.cf.bluemargarita.model.*;
+import org.springframework.scheduling.config.Task;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -176,6 +183,32 @@ public class Mapper {
                 averageOrderValue
         );
     }
+
+    //Expense
+
+    public ExpenseReadOnlyDTO mapToExpenseReadOnlyDTO(Expense expense) {
+        Purchase purchase = expense.getPurchase();
+
+        return new ExpenseReadOnlyDTO(
+                expense.getId(),
+                expense.getDescription(),
+                expense.getAmount(),
+                expense.getExpenseDate(),
+                expense.getExpenseType(),
+                purchase != null ? purchase.getId() : null,
+                purchase != null ? createPurchaseDescription(purchase) : null,
+                expense.getCreatedAt(),
+                expense.getCreatedBy() != null ? expense.getCreatedBy().getUsername() : "system"
+        );
+    }
+
+    private String createPurchaseDescription(Purchase purchase) {
+        if (purchase.getSupplier() != null) {
+            return purchase.getSupplier().getName() + " - " + purchase.getPurchaseDate();
+        }
+        return "Purchase " + purchase.getId() + " - " + purchase.getPurchaseDate();
+    }
+
 
     // Location
 
@@ -513,6 +546,54 @@ public class Mapper {
                 lastPurchaseDate
         );
     }
+
+    //Task
+
+    public ToDoTaskReadOnlyDTO mapToToDoTaskReadOnlyDTO(ToDoTask task){
+        LocalDate today = LocalDate.now();
+        String statusLabel = determineTaskStatusLabel(task, today);
+        Integer daysFromToday = calculateDaysFromToday(task.getDate(), today);
+
+        return new ToDoTaskReadOnlyDTO(
+                task.getId(),
+                task.getDescription(),
+                task.getDate(),
+                task.getDateCompleted(),
+                task.getStatus().toString(),
+                statusLabel,
+                daysFromToday
+        );
+    }
+
+    private String determineTaskStatusLabel(ToDoTask task, LocalDate today) {
+        if (task.getStatus() == TaskStatus.COMPLETED) {
+            return "COMPLETED";
+        }
+
+        if (task.getStatus() ==TaskStatus.CANCELLED) {
+            return "CANCELLED";
+        }
+        // For PENDING tasks, determine based on date
+        if (task.getDate().isBefore(today)) {
+            return "OVERDUE";
+        } else if (task.getDate().isEqual(today)) {
+            return "TODAY";
+        } else {
+            LocalDate endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+            if (task.getDate().isAfter(today) && task.getDate().isBefore(endOfWeek.plusDays(1))) {
+                return "THIS_WEEK";
+            } else {
+                return "FUTURE";
+            }
+        }
+    }
+
+    private Integer calculateDaysFromToday(LocalDate taskDate, LocalDate today) {
+        return (int) ChronoUnit.DAYS.between(today, taskDate);
+    }
+
+
+
 
     //User
 

@@ -26,12 +26,6 @@ public class ExpenseFilters extends GenericFilters {
     private LocalDate expenseDateTo;
 
     @Nullable
-    private BigDecimal minAmount;
-
-    @Nullable
-    private BigDecimal maxAmount;
-
-    @Nullable
     private String expenseType;
 
     @Nullable

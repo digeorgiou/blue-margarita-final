@@ -7,7 +7,8 @@ public class PaginatedFilteredPurchasesWithSummary extends Paginated<PurchaseRea
 
     PurchaseSummaryDTO summary;
 
-    public PaginatedFilteredPurchasesWithSummary(Page<PurchaseReadOnlyDTO> page, PurchaseSummaryDTO summary){
+    public PaginatedFilteredPurchasesWithSummary(Page<PurchaseReadOnlyDTO> page,
+                                                 PurchaseSummaryDTO summary){
         super(page);
         this.summary = summary;
     }

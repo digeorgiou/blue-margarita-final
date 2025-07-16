@@ -1,8 +1,8 @@
 package gr.aueb.cf.bluemargarita.model;
 
+import gr.aueb.cf.bluemargarita.core.enums.TaskStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
 
 import java.time.LocalDate;
 
@@ -17,16 +17,47 @@ public class ToDoTask {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
-    @Column(nullable = false)
-    String description;
+    @Column(nullable = false, length = 500)
+    private String description;
 
-    LocalDate date;
+    @Column(name = "task_date")
+    private LocalDate date;
 
-    boolean completed;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private TaskStatus status = TaskStatus.PENDING;
 
-    LocalDate dateCompleted;
+    @Column(name = "date_completed")
+    private LocalDate dateCompleted;
 
+    // Helper methods for convenience
+    public boolean isCompleted() {
+        return status == TaskStatus.COMPLETED;
+    }
 
+    public boolean isPending() {
+        return status == TaskStatus.PENDING;
+    }
+
+    public boolean isCancelled() {
+        return status == TaskStatus.CANCELLED;
+    }
+
+    public void markAsCompleted() {
+        this.status = TaskStatus.COMPLETED;
+        this.dateCompleted = LocalDate.now();
+    }
+
+    public void markAsPending() {
+        this.status = TaskStatus.PENDING;
+        this.dateCompleted = null;
+    }
+
+    public void markAsCancelled() {
+        this.status = TaskStatus.CANCELLED;
+        this.dateCompleted = LocalDate.now();
+    }
 }

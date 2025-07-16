@@ -39,7 +39,6 @@ public class Expense extends AbstractEntity {
     @JoinColumn(name = "purchase_id")
     private Purchase purchase;
 
-    private String notes;
 
     // Helper methods
     public void linkToPurchase(Purchase purchase) {
