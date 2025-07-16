@@ -1,23 +1,25 @@
 package gr.aueb.cf.bluemargarita.dto.supplier;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record SupplierInsertDTO(
-        @NotEmpty(message = "Παρακαλώ εισάγετε όνομα προμηθευτή")
-        @Size(min = 2, max = 255, message = "Το όνομα πρέπει να έχει 2 ως 255 χαρακτήρες")
+        @NotBlank(message = "Παρακαλώ εισάγετε όνομα προμηθευτή")
+        @Size(min = 2, max = 155, message = "Το όνομα πρέπει να έχει από 2 έως 155 χαρακτήρες")
         String name,
 
+        @Size(min = 2, max = 155, message = "Η διεύθυνση πρέπει να έχει από 2 έως 155 χαρακτήρες")
         String address,
 
-        @Size(max = 20, message = "Το ΑΦΜ δεν μπορεί να υπερβαίνει τους 20 χαρακτήρες")
+        @Size(min = 5, max = 20, message = "Το ΑΦΜ πρέπει να έχει από 5 έως 20 χαρακτήρες")
+        @Pattern(regexp = "^[0-9]*$", message = "Το ΑΦΜ πρέπει να περιέχει μόνο αριθμούς")
         String tin,
 
-        @Size(max = 20, message = "Το τηλέφωνο δεν μπορεί να υπερβαίνει τους 20 χαρακτήρες")
+        @Size(min = 8, max = 20, message = "Το τηλέφωνο πρέπει να έχει από 8 έως 20 χαρακτήρες")
+        @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Το τηλέφωνο περιέχει μη έγκυρους χαρακτήρες")
         String phoneNumber,
 
         @Email(message = "Παρακαλώ εισάγετε έγκυρο email")
+        @Size(max = 100, message = "Το email δεν μπορεί να υπερβαίνει τους 100 χαρακτήρες")
         String email,
 
         Long creatorUserId

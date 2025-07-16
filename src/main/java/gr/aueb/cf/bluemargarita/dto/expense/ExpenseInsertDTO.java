@@ -7,19 +7,20 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record ExpenseInsertDTO(
-        @NotBlank(message = "Description is required")
-        @Size(max = 255, message = "Description cannot exceed 255 characters")
+        @NotBlank(message = "Παρακαλώ εισάγετε μια περιγραφή")
+        @Size(min = 3, max = 255, message = "Η περιγραφή πρέπει να περιέχει απο 3 εως 155 χαρακτήρες")
         String description,
 
-        @NotNull(message = "Amount is required")
-        @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
-        @Digits(integer = 8, fraction = 2, message = "Amount format is invalid")
+        @NotNull(message = "Παρακαλώ εισάγετε ποσό")
+        @DecimalMin(value = "0.01", message = "Το ποσό πρέπει να είναι μεγαλύτερο από 0")
+        @Digits(integer = 5, fraction = 2, message = "Το ποσό μπορεί να έχει μέχρι 5 ψηφία και 2 δεκαδικά")
         BigDecimal amount,
 
-        @NotNull(message = "Expense date is required")
+        @NotNull(message = "Παρακαλώ εισάγετε ημερομηνία")
+        @PastOrPresent(message = "Η ημερομηνία δεν μπορεί να είναι μελλοντική")
         LocalDate expenseDate,
 
-        @NotNull(message = "Expense type is required")
+        @NotNull(message = "Παρακαλώ επιλέξτε τύπο του εξόδου")
         ExpenseType expenseType,
 
         Long purchaseId, // Optional - only for purchase-related expenses

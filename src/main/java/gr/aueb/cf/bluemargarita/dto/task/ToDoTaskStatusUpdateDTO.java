@@ -7,6 +7,6 @@ public record ToDoTaskStatusUpdateDTO(
         @NotNull(message = "Task ID is required")
         Long taskId,
 
-        @NotNull(message = "Status is required")
+        @NotNull(message = "Παρακαλώ επιλέξτε κατάσταση εργασίας")
         TaskStatus status
 ) {}

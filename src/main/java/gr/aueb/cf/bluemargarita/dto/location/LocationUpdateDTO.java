@@ -7,7 +7,7 @@ public record LocationUpdateDTO(
         Long locationId,
         Long updaterUserId,
         @NotEmpty(message = "Παρακαλώ εισάγετε περιγραφή τοποθεσίας")
-        @Size(min = 2, max = 255, message = "Η περιγραφή πρέπει να έχει 2 ως 255 χαρακτήρες")
+        @Size(min = 2, max = 55, message = "Το όνομα της τοποθεσίας πρεπει να περιέχει απο 2 εως 55 χαρακτήρες")
         String name
 )
 {}

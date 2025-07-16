@@ -2,29 +2,34 @@ package gr.aueb.cf.bluemargarita.dto.customer;
 
 import gr.aueb.cf.bluemargarita.core.enums.GenderType;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record CustomerUpdateDTO(
         Long customerId,
         Long updaterUserId,
 
-        @Size(max = 100, message = "Το όνομα δεν μπορεί να υπερβαίνει τους 100 χαρακτήρες")
+        @Size(min = 2, max = 55, message = "Το όνομα πρεπει να περιέχει απο 2 εως 55 χαρακτήρες")
         String firstname,
 
-        @Size(max = 100, message = "Το επώνυμο δεν μπορεί να υπερβαίνει τους 100 χαρακτήρες")
+        @Size(min = 2, max = 55, message = "Το επώνυμο πρεπει να περιέχει απο 2 εως 55 χαρακτήρες")
         String lastname,
 
         GenderType gender,
 
-        @Size(max = 20, message = "Το τηλέφωνο δεν μπορεί να υπερβαίνει τους 20 χαρακτήρες")
+        @Size(min = 8, max = 20, message = "Το τηλέφωνο πρέπει να περιέχει απο 8 εως 20 χαρακτήρες")
+        @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Το τηλέφωνο περιέχει μη έγκυρους χαρακτήρες")
         String phoneNumber,
 
+        @Size(min = 2, max = 55, message = "Το επώνυμο πρεπει να περιέχει απο 2 εως 55 χαρακτήρες")
         String address,
 
         @Email(message = "Παρακαλώ εισάγετε έγκυρο email")
+        @Size(max = 100, message = "Το email δεν μπορεί να υπερβαίνει τους 100 χαρακτήρες")
         String email,
 
-        @Size(max = 20, message = "Το ΑΦΜ δεν μπορεί να υπερβαίνει τους 20 χαρακτήρες")
+        @Size(min = 5, max = 20, message = "Το ΑΦΜ πρέπει να περιέχει απο 5 εως 20 χαρακτήρες")
+        @Pattern(regexp = "^[0-9]*$", message = "Το ΑΦΜ πρέπει να περιέχει μόνο αριθμούς")
         String tin
 )
 {}

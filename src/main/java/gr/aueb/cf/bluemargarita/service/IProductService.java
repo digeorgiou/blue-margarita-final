@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
@@ -281,7 +282,7 @@ public interface IProductService {
      */
     ProductListItemDTO addMaterialToProduct(Long productId, Long materialId,
                                             BigDecimal quantity, Long updaterUserId)
-            throws EntityNotFoundException;
+            throws EntityNotFoundException , EntityInvalidArgumentException;
 
     /**
      * Removes a material from a product
@@ -309,7 +310,7 @@ public interface IProductService {
      */
     ProductListItemDTO addProcedureToProduct(Long productId, Long procedureId,
                                              BigDecimal cost, Long updaterUserId)
-            throws EntityNotFoundException;
+            throws EntityNotFoundException , EntityInvalidArgumentException;
 
     /**
      * Removes a procedure from a product
@@ -351,7 +352,7 @@ public interface IProductService {
      * @return Result object with success status, before/after values, and any error messages
      * @throws EntityNotFoundException if product or user not found
      */
-    StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO) throws EntityNotFoundException;
+    StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO) throws EntityNotFoundException , EntityInvalidArgumentException;
 
     /**
      * Updates stock for multiple products in a single atomic transaction

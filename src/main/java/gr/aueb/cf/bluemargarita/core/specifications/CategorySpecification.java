@@ -32,16 +32,4 @@ public class CategorySpecification {
         };
     }
 
-
-    public static Specification<Category> categoryStringFieldLike(String field, String value) {
-        return (root, query, criteriaBuilder) -> {
-            if (value == null || value.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-            return criteriaBuilder.like(
-                    criteriaBuilder.upper(root.get(field)),
-                    "%" + value.toUpperCase() + "%"
-            );
-        };
-    }
 }

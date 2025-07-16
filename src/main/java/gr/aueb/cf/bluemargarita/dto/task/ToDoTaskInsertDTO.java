@@ -7,10 +7,10 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 public record ToDoTaskInsertDTO(
-        @NotBlank(message = "Description is required")
-        @Size(max = 500, message = "Description cannot exceed 500 characters")
+        @NotBlank(message = "Παρακαλώ εισάγετε περιγραφή εργασίας")
+        @Size(min = 2, max = 500, message = "Η περιγραφή πρέπει να έχει από 2 έως 500 χαρακτήρες")
         String description,
 
-        @NotNull(message = "Date is required")
+        @NotNull(message = "Παρακαλώ εισάγετε ημερομηνία εργασίας")
         LocalDate date
 ) {}

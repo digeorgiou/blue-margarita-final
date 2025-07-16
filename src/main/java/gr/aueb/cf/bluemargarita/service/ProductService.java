@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
@@ -407,7 +408,9 @@ public class ProductService implements IProductService{
     @Transactional(rollbackFor = Exception.class)
     public ProductListItemDTO addMaterialToProduct(Long productId, Long materialId,
                                                    BigDecimal quantity, Long updaterUserId)
-            throws EntityNotFoundException {
+            throws EntityNotFoundException , EntityInvalidArgumentException {
+
+        validateMaterialQuantity(quantity);
 
         Product product = getProductEntityById(productId);
         Material material = materialRepository.findById(materialId)
@@ -457,7 +460,9 @@ public class ProductService implements IProductService{
     @Transactional(rollbackFor = Exception.class)
     public ProductListItemDTO  addProcedureToProduct(Long productId, Long procedureId,
                                                      BigDecimal cost, Long updaterUserId)
-            throws EntityNotFoundException {
+            throws EntityNotFoundException , EntityInvalidArgumentException {
+
+        validateProcedureCost(cost);
 
         Product product = getProductEntityById(productId);
         Procedure procedure = procedureRepository.findById(procedureId)
@@ -530,7 +535,9 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO) throws EntityNotFoundException {
+    public StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO) throws EntityNotFoundException , EntityInvalidArgumentException{
+
+        validateStockQuantity(updateDTO.quantity());
 
         Product product = productRepository.findById(updateDTO.productId())
                 .orElseThrow(() -> new EntityNotFoundException("Product", "Product with id=" + updateDTO.productId() + " was not found"));
@@ -1048,6 +1055,71 @@ public class ProductService implements IProductService{
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Category",
                         "Category with id " + categoryId + " not found"));
+    }
+
+    /**
+     * Validates material quantity - must be positive with max 6 digits, 2 decimals
+     */
+    private void validateMaterialQuantity(BigDecimal quantity) throws EntityInvalidArgumentException{
+        if (quantity == null) {
+            throw new EntityInvalidArgumentException("Material","Η ποσότητα υλικού είναι απαραίτητη");
+        }
+
+        if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new EntityInvalidArgumentException("Material","Η ποσότητα υλικού πρέπει να είναι μεγαλύτερη από 0");
+        }
+
+        // Check scale (decimal places)
+        if (quantity.scale() > 2) {
+            throw new EntityInvalidArgumentException("Material","Η ποσότητα υλικού μπορεί να έχει μέχρι 2 δεκαδικά ψηφία");
+        }
+
+        // Check precision (total digits)
+        String quantityStr = quantity.stripTrailingZeros().toPlainString().replace(".", "");
+        if (quantityStr.length() > 6) {
+            throw new EntityInvalidArgumentException("Material","Η ποσότητα υλικού μπορεί να έχει μέχρι 6 ψηφία συνολικά");
+        }
+    }
+
+    /**
+     * Validates procedure cost - must be positive with max 6 digits, 2 decimals
+     */
+    private void validateProcedureCost(BigDecimal cost) throws EntityInvalidArgumentException{
+        if (cost == null) {
+            throw new EntityInvalidArgumentException("Procedure","Το κόστος διαδικασίας είναι απαραίτητο");
+        }
+
+        if (cost.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new EntityInvalidArgumentException("Procedure","Το κόστος διαδικασίας πρέπει να είναι μεγαλύτερο από 0");
+        }
+
+        // Check scale (decimal places)
+        if (cost.scale() > 2) {
+            throw new EntityInvalidArgumentException("Procedure","Το κόστος διαδικασίας μπορεί να έχει μέχρι 2 δεκαδικά ψηφία");
+        }
+
+        // Check precision (total digits)
+        String costStr = cost.stripTrailingZeros().toPlainString().replace(".", "");
+        if (costStr.length() > 8) {
+            throw new EntityInvalidArgumentException("Procedure","Το κόστος διαδικασίας μπορεί να έχει μέχρι 6 ψηφία συνολικά");
+        }
+    }
+
+    /**
+     * Validates stock quantity - must be non-negative integer within reasonable range
+     */
+    private void validateStockQuantity(Integer quantity) throws EntityInvalidArgumentException{
+        if (quantity == null) {
+            throw new EntityInvalidArgumentException("Material","Η ποσότητα αποθέματος είναι απαραίτητη");
+        }
+
+        if (quantity < 0) {
+            throw new EntityInvalidArgumentException("Material","Η ποσότητα αποθέματος δεν μπορεί να είναι αρνητική");
+        }
+
+        if (quantity > 9999) {
+            throw new EntityInvalidArgumentException("Material","Η ποσότητα αποθέματος δεν μπορεί να υπερβαίνει τις 9999 μονάδες");
+        }
     }
 
     // =============================================================================
