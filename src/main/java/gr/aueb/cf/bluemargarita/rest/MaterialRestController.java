@@ -280,34 +280,6 @@ public class MaterialRestController {
     }
 
     // =============================================================================
-    // SEARCH AND AUTOCOMPLETE - FOR PURCHASE RECORDING
-    // =============================================================================
-
-    @Operation(
-            summary = "Search materials for autocomplete",
-            description = "Searches materials for autocomplete functionality in purchase recording. Returns limited results for performance. Used in Record Purchase page.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of materials matching search term",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = MaterialSearchResultDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<MaterialSearchResultDTO>> searchMaterialsForAutocomplete(
-            @Parameter(description = "Search term (material name)", required = true)
-            @RequestParam String searchTerm) {
-
-        List<MaterialSearchResultDTO> materials = materialService.searchMaterialsForAutocomplete(searchTerm);
-        return new ResponseEntity<>(materials, HttpStatus.OK);
-    }
-
-    // =============================================================================
     // CONVENIENCE ENDPOINTS
     // =============================================================================
 

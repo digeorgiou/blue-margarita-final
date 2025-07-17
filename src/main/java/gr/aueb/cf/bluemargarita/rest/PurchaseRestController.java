@@ -41,43 +41,6 @@ public class PurchaseRestController {
     // CORE CRUD OPERATIONS - FOR PURCHASE MANAGEMENT PAGE
     // =============================================================================
 
-    @Operation(
-            summary = "Record a new purchase",
-            description = "Records a new material purchase with automatic cost calculation. Validates supplier and materials exist, calculates total cost based on current material prices. Used in Record Purchase page.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "201",
-                            description = "Purchase recorded successfully",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = PurchaseDetailedViewDTO.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Invalid input data",
-                            content = @Content(mediaType = "application/json")
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "Supplier, user, or material not found",
-                            content = @Content(mediaType = "application/json")
-                    )
-            }
-    )
-    @PostMapping
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<PurchaseDetailedViewDTO> recordPurchase(
-            @Valid @RequestBody RecordPurchaseRequestDTO request,
-            BindingResult bindingResult) throws EntityNotFoundException, ValidationException {
-
-        if (bindingResult.hasErrors()) {
-            throw new ValidationException(bindingResult);
-        }
-
-        PurchaseDetailedViewDTO purchase = purchaseService.recordPurchase(request);
-        return new ResponseEntity<>(purchase, HttpStatus.CREATED);
-    }
 
     @Operation(
             summary = "Update an existing purchase",

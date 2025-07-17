@@ -251,55 +251,6 @@ public class SupplierRestController {
     }
 
     // =============================================================================
-    // SUPPLIER SEARCH - FOR RECORD PURCHASE PAGE & VIEW PURCHASES PAGE
-    // =============================================================================
-
-    @Operation(
-            summary = "Search suppliers for autocomplete",
-            description = "Searches suppliers for autocomplete functionality in purchase recording and viewing. Returns limited results for performance. Used in Record Purchase and View Purchases pages.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of suppliers matching search term",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = SupplierSearchResultDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<SupplierSearchResultDTO>> searchSuppliersForAutocomplete(
-            @Parameter(description = "Search term (name, email, or phone)", required = true)
-            @RequestParam String searchTerm) {
-
-        List<SupplierSearchResultDTO> suppliers = supplierService.searchSuppliersForAutocomplete(searchTerm);
-        return new ResponseEntity<>(suppliers, HttpStatus.OK);
-    }
-
-    @Operation(
-            summary = "Get suppliers for dropdown",
-            description = "Retrieves active suppliers formatted for dropdown selection with ID and name only. Used in Record Purchase page.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of suppliers for dropdown",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = SupplierDropdownDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/dropdown")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<SupplierDropdownDTO>> getSuppliersForDropdown() {
-        List<SupplierDropdownDTO> suppliers = supplierService.getActiveSuppliersForDropdown();
-        return new ResponseEntity<>(suppliers, HttpStatus.OK);
-    }
-
-    // =============================================================================
     // CONVENIENCE ENDPOINTS
     // =============================================================================
 
