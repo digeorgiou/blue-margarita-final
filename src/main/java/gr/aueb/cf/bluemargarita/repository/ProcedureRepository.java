@@ -47,21 +47,6 @@ public interface ProcedureRepository extends JpaRepository<Procedure, Long>,
     );
 
     /**
-     * Get paginated products using a specific procedure
-     * Used when user clicks "View All Products" button
-     */
-    /**
-     * Get paginated products using a specific procedure
-     * Used when user clicks "View All Products" button
-     */
-    @Query("SELECT p.id, p.name, p.code, pp.cost, " +
-            "CASE WHEN p.category IS NOT NULL THEN p.category.name ELSE 'No Category' END, " +
-            "p.isActive, p.finalSellingPriceRetail " +
-            "FROM Product p JOIN p.procedureProducts pp JOIN pp.procedure proc " +
-            "WHERE proc.id = :procedureId")
-    Page<Object[]> findAllProductsByProcedureUsagePaginated(@Param("procedureId") Long procedureId, Pageable pageable);
-
-    /**
      * Top products using this procedure (for usage distribution in detailed view)
      * Orders by product price cost descending
      */

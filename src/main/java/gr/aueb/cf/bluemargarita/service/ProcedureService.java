@@ -5,15 +5,14 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProcedureSpecification;
+import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUsageDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
-import gr.aueb.cf.bluemargarita.model.Category;
-import gr.aueb.cf.bluemargarita.model.Procedure;
-import gr.aueb.cf.bluemargarita.model.ProcedureProduct;
-import gr.aueb.cf.bluemargarita.model.User;
+import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.ProcedureRepository;
+import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import gr.aueb.cf.bluemargarita.service.IProcedureService;
 import org.springframework.data.domain.Page;
@@ -39,12 +38,14 @@ public class ProcedureService implements IProcedureService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcedureService.class);
     private final ProcedureRepository procedureRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     private final Mapper mapper;
 
     @Autowired
-    public ProcedureService(ProcedureRepository procedureRepository, UserRepository userRepository, Mapper mapper) {
+    public ProcedureService(ProcedureRepository procedureRepository, UserRepository userRepository, ProductRepository productRepository, Mapper mapper) {
         this.procedureRepository = procedureRepository;
         this.userRepository = userRepository;
+        this.productRepository = productRepository;
         this.mapper = mapper;
     }
 
@@ -279,22 +280,38 @@ public class ProcedureService implements IProcedureService {
             pageable = PageRequest.of(
                     pageable.getPageNumber(),
                     pageable.getPageSize(),
-                    Sort.by(Sort.Direction.DESC, "costImpact")
+                    Sort.by(Sort.Direction.DESC, "finalSellingPriceRetail")
             );
         }
 
-        Page<Object[]> productData = procedureRepository.findAllProductsByProcedureUsagePaginated(procedureId, pageable);
+        Specification<Product> spec = ProductSpecification.hasProcedureProduct(procedureId);
+        Page<Product> products = productRepository.findAll(spec, pageable);
 
-        Page<ProductUsageDTO> mappedProducts = productData.map(data -> new ProductUsageDTO(
-                (Long) data[0],           // productId
-                (String) data[1],         // productName
-                (String) data[2],         // productCode
-                BigDecimal.ONE,           // usageQuantity (always 1 for procedures)
-                (BigDecimal) data[3],     // costImpact (procedure cost for this product)
-                (String) data[4]          // categoryName
-        ));
+        Page<ProductUsageDTO> mappedProducts = products.map(product -> {
+            return  product.getAllProcedureProducts()
+                    .stream()
+                    .filter(pm -> pm.getProcedure().getId().equals(procedureId))
+                    .findFirst()
+                    .map(procedureProduct -> {
+                        BigDecimal quantity = BigDecimal.ONE;
+                        BigDecimal costImpact = procedureProduct.getCost();
+
+                        return new ProductUsageDTO(
+                                product.getId(),
+                                product.getName(),
+                                product.getCode(),
+                                quantity,
+                                costImpact,
+                                product.getCategory() != null ? product.getCategory().getName() : "No Category"
+                        );
+
+                    })
+                    .orElse(null);
+
+        });
 
         return new Paginated<>(mappedProducts);
+
     }
 
     // =============================================================================

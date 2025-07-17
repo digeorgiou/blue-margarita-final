@@ -150,6 +150,31 @@ public class ProductSpecification {
         };
     }
 
+    public static Specification<Product> hasProductMaterial(Long materialId) {
+        return (root, query, criteriaBuilder) -> {
+            if (materialId == null) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+
+            Join<Product, ProductMaterial> productMaterialJoin = root.join("productMaterials");
+            Join<ProductMaterial, Material> materialJoin = productMaterialJoin.join("material");
+
+            return criteriaBuilder.equal(materialJoin.get("id"), materialId);
+        };
+    }
+
+    public static Specification<Product> hasProcedureProduct(Long procedureId){
+        return (root, query, criteriaBuilder) -> {
+            if(procedureId == null){
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+            Join<Product, ProcedureProduct> procedureProductJoin = root.join("procedureProducts");
+            Join<ProcedureProduct, Procedure> procedureJoin = procedureProductJoin.join("procedure");
+
+            return criteriaBuilder.equal(procedureJoin.get("id"), procedureId);
+        };
+    }
+
 
 
 }

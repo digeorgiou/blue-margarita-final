@@ -5,12 +5,16 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.MaterialSpecification;
+import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
 import gr.aueb.cf.bluemargarita.dto.material.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Material;
+import gr.aueb.cf.bluemargarita.model.Product;
+import gr.aueb.cf.bluemargarita.model.ProductMaterial;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.MaterialRepository;
+import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,12 +40,14 @@ public class MaterialService implements IMaterialService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaterialService.class);
     private final MaterialRepository materialRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     private final Mapper mapper;
 
     @Autowired
-    public MaterialService(MaterialRepository materialRepository, UserRepository userRepository, Mapper mapper) {
+    public MaterialService(MaterialRepository materialRepository, UserRepository userRepository, ProductRepository productRepository, Mapper mapper) {
         this.materialRepository = materialRepository;
         this.userRepository = userRepository;
+        this.productRepository = productRepository;
         this.mapper = mapper;
     }
 
@@ -255,9 +261,63 @@ public class MaterialService implements IMaterialService {
     // PRODUCT RELATIONSHIP OPERATIONS
     // =============================================================================
 
+//    @Override
+//    @Transactional(readOnly = true)
+//    public Paginated<ProductUsageDTO> getAllProductsUsingMaterial(Long materialId, Pageable pageable)
+//            throws EntityNotFoundException {
+//
+//        // Verify material exists
+//        materialRepository.findById(materialId)
+//                .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + materialId + " was not found"));
+//
+//        // Apply default sorting if none specified
+//        if (pageable.getSort().isUnsorted()) {
+//            pageable = PageRequest.of(
+//                    pageable.getPageNumber(),
+//                    pageable.getPageSize(),
+//                    Sort.by(Sort.Direction.DESC, "finalSellingPriceRetail")
+//            );
+//        }
+//
+//        // Use specification to find products
+//        Specification<Product> spec = ProductSpecification.hasProductMaterial(materialId);
+//        Page<Product> products = productRepository.findAll(spec, pageable);
+//
+//        // Map to DTOs
+//        Page<ProductUsageDTO> mappedProducts = products.map(product -> {
+//            // Find the specific ProductMaterial for this material
+//            return product.getAllProductMaterials()
+//                    .stream()
+//                    .filter(pm -> pm.getMaterial().getId().equals(materialId))
+//                    .findFirst()
+//                    .map(productMaterial -> {
+//                        BigDecimal quantity = productMaterial.getQuantity();
+//                        BigDecimal costImpact = quantity.multiply(productMaterial.getMaterial().getCurrentUnitCost());
+//
+//                        return new ProductUsageDTO(
+//                                product.getId(),
+//                                product.getName(),
+//                                product.getCode(),
+//                                quantity,
+//                                costImpact,
+//                                product.getCategory() != null ? product.getCategory().getName() : "No Category"
+//                        );
+//                    })
+//                    .orElse(null);
+//
+//        });
+//
+//        return new Paginated<>(mappedProducts);
+//    }
+
+    @Override
     @Transactional(readOnly = true)
     public Paginated<ProductUsageDTO> getAllProductsUsingMaterial(Long materialId, Pageable pageable)
             throws EntityNotFoundException {
+
+        LOGGER.debug("Starting getAllProductsUsingMaterial for materialId: {}", materialId);
+        System.out.printf("Starting getAllProductsUsingMaterial for materialId: {}", materialId);
+        System.out.println();
 
         // Verify material exists
         materialRepository.findById(materialId)
@@ -265,24 +325,62 @@ public class MaterialService implements IMaterialService {
 
         // Apply default sorting if none specified
         if (pageable.getSort().isUnsorted()) {
-            // Default: Sort by cost impact (quantity * cost) descending
             pageable = PageRequest.of(
                     pageable.getPageNumber(),
                     pageable.getPageSize(),
-                    Sort.by(Sort.Direction.DESC, "costImpact")
+                    Sort.by(Sort.Direction.DESC, "finalSellingPriceRetail")
             );
         }
 
-        Page<Object[]> productData = materialRepository.findAllProductsByMaterialUsagePaginated(materialId, pageable);
+        // Use specification to find products
+        Specification<Product> spec = ProductSpecification.hasProductMaterial(materialId);
+        Page<Product> products = productRepository.findAll(spec, pageable);
 
-        Page<ProductUsageDTO> mappedProducts = productData.map(data -> new ProductUsageDTO(
-                (Long) data[0],           // productId
-                (String) data[1],         // productName
-                (String) data[2],         // productCode
-                (BigDecimal) data[3],     // usageQuantity
-                (BigDecimal) data[4],     // costImpact
-                (String) data[5]          // categoryName
-        ));
+        LOGGER.debug("Found {} products using material {}", products.getNumberOfElements(), materialId);
+        System.out.printf("Found {} products using material {}", products.getNumberOfElements(), materialId);
+        System.out.println();
+        // Map to DTOs
+        Page<ProductUsageDTO> mappedProducts = products.map(product -> {
+            try {
+                LOGGER.debug("Processing product: {} (ID: {})", product.getName(), product.getId());
+                System.out.printf("Processing product: {} (ID: {})", product.getName(), product.getId());
+                System.out.println();
+
+                return product.getAllProductMaterials()
+                        .stream()
+                        .filter(pm -> {
+                            LOGGER.debug("Checking ProductMaterial with material ID: {}", pm.getMaterial().getId());
+                            System.out.printf("Checking ProductMaterial with material ID: {}", pm.getMaterial().getId());
+                            System.out.println();
+                            return pm.getMaterial().getId().equals(materialId);
+                        })
+                        .findFirst()
+                        .map(productMaterial -> {
+                            LOGGER.debug("Found matching ProductMaterial, creating DTO");
+                            System.out.printf("Found matching ProductMaterial, creating DTO");
+                            System.out.println();
+                            BigDecimal quantity = productMaterial.getQuantity();
+                            BigDecimal costImpact = quantity.multiply(productMaterial.getMaterial().getCurrentUnitCost());
+
+                            return new ProductUsageDTO(
+                                    product.getId(),
+                                    product.getName(),
+                                    product.getCode(),
+                                    quantity,
+                                    costImpact,
+                                    product.getCategory() != null ? product.getCategory().getName() : "No Category"
+                            );
+                        })
+                        .orElse(null);
+            } catch (Exception e) {
+                LOGGER.error("Error processing product {} for material {}: {}",
+                        product.getId(), materialId, e.getMessage(), e);
+                System.out.printf("Error processing product {} for material {}: {}",
+                        product.getId(), materialId, e.getMessage(), e);
+                System.out.println();
+                return null;
+            }
+        });
 
         return new Paginated<>(mappedProducts);
     }
@@ -290,10 +388,6 @@ public class MaterialService implements IMaterialService {
     // =============================================================================
     // PRIVATE HELPER METHODS
     // =============================================================================
-
-    /**
-     * Creates empty metrics DTO for materials with no product usage
-     */
 
     /**
      * Helper method to create empty metrics DTO when no products use the material
