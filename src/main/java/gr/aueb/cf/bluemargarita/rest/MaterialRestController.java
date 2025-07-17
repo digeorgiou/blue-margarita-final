@@ -269,7 +269,7 @@ public class MaterialRestController {
             @PathVariable Long id,
             @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
-            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "productName") String sortBy,
+            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "name") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "ASC") String sortDirection) throws EntityNotFoundException {
 
         Pageable pageable = PageRequest.of(page, pageSize,
