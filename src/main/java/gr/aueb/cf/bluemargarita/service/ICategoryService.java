@@ -4,6 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.dto.category.CategoryForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
@@ -60,6 +61,12 @@ public interface ICategoryService {
      * @return List of all categories
      */
     List<CategoryReadOnlyDTO> getAllCategories();
+
+    /**
+     * Retrieves all active categories for Dropdown menu
+     * @return a light DTO with minimum info.
+     */
+    List<CategoryForDropdownDTO> getActiveCategoriesForDropdown();
 
     /**
      * Retrieves all active categories only

@@ -157,6 +157,7 @@ public class CategoryService implements ICategoryService{
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<CategoryForDropdownDTO> getActiveCategoriesForDropdown() {
         return categoryRepository.findByIsActiveTrue()
