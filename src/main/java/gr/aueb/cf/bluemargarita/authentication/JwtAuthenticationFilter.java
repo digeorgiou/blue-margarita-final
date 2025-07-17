@@ -39,6 +39,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username;
         String userRole;
 
+        LOGGER.info("Processing request: {} with auth header: {}", request.getRequestURI(), authHeader);
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -46,14 +48,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         //we want what is after "Bearer" + " "
         jwt = authHeader.substring(7);
 
+        LOGGER.info("Extracted JWT: {}", jwt.substring(0, Math.min(20, jwt.length())) + "..."); // ADD THIS
+
         try {
             username = jwtService.extractSubject(jwt);
             userRole = jwtService.getStringClaim(jwt, "role");
 
+            LOGGER.info("Extracted username: {} and role: {}", username, userRole); // ADD THIS
+
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                LOGGER.info("Loaded user details: {}", userDetails.getUsername()); // ADD THIS
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
+                    LOGGER.info("Token is valid, setting authentication"); // ADD THIS
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -62,21 +70,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
-                    LOGGER.warn("Token is not valid" + request.getRequestURI());
+                    LOGGER.warn("Token is not valid for request: {}", request.getRequestURI());
                 }
             }
-        } catch (ExpiredJwtException e) {
-            LOGGER.warn("WARN: Expired token ", e);
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            String jsonBody = "{\"code\": \"expired token\", \"message\"" + e.getMessage() + "\"}";
-            response.getWriter().write(jsonBody);
-            return;
         } catch (Exception e) {
-            LOGGER.warn("WARN: Something went wrong while parsing JWT ", e);
+            LOGGER.error("ERROR: Exception in JWT processing: ", e); // CHANGE TO ERROR
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType("application/json");
-            String jsonBody = "{\"code\": \"invalidToken\", \"description\"" + e.getMessage() + "\"}";
+            String jsonBody = "{\"code\": \"invalidToken\", \"description\":\"" + e.getMessage() + "\"}";
             response.getWriter().write(jsonBody);
             return;
         }

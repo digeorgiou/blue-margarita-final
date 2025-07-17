@@ -31,10 +31,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp WHERE sp.product.id = :productId")
     BigDecimal sumRevenueByProductId(@Param("productId") Long productId);
 
-    @Query("SELECT MIN(s.saleDate) FROM Sale s JOIN s.allSaleProducts sp WHERE sp.product.id = :productId")
+    @Query("SELECT MIN(s.saleDate) FROM Sale s JOIN s.saleProducts sp WHERE sp.product.id = :productId")
     LocalDate findFirstSaleDateByProductId(@Param("productId") Long productId);
 
-    @Query("SELECT MAX(s.saleDate) FROM Sale s JOIN s.allSaleProducts sp WHERE sp.product.id = :productId")
+    @Query("SELECT MAX(s.saleDate) FROM Sale s JOIN s.saleProducts sp WHERE sp.product.id = :productId")
     LocalDate findLastSaleDateByProductId(@Param("productId") Long productId);
 
     // Date range analytics
@@ -60,10 +60,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     );
 
     // Stock and inventory insights
-    @Query("SELECT COUNT(p) FROM Product p WHERE p.stockQuantity <= p.minimumStockLevel AND p.isActive = true")
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.stock <= p.lowStockAlert AND p.isActive = true")
     Integer countLowStockProducts();
 
-    @Query("SELECT COALESCE(SUM(p.stockQuantity * p.finalSellingPriceRetail), 0) FROM Product p WHERE p.isActive = true")
+    @Query("SELECT COALESCE(SUM(p.stock * p.finalSellingPriceRetail), 0) FROM Product p WHERE p.isActive = true")
     BigDecimal calculateTotalInventoryValue();
 
     // Category distribution
