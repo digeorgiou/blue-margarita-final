@@ -113,4 +113,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     Long countSalesBetweenDates(@Param("startDate") LocalDate startDate,
                                 @Param("endDate") LocalDate endDate);
 
+    @Query("SELECT DISTINCT sp.product.id FROM SaleProduct sp JOIN sp.sale s WHERE s.location.id = :locationId")
+    List<Long> findDistinctProductIdsByLocationId(@Param("locationId") Long locationId);
+
 }

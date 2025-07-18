@@ -12,6 +12,7 @@ import gr.aueb.cf.bluemargarita.model.Category;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.CategoryRepository;
 import gr.aueb.cf.bluemargarita.repository.ProductRepository;
+import gr.aueb.cf.bluemargarita.repository.SaleProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,13 +41,15 @@ public class CategoryService implements ICategoryService{
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final SaleProductRepository saleProductRepository;
     private final Mapper mapper;
 
     @Autowired
-    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository, ProductRepository productRepository, Mapper mapper) {
+    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository, ProductRepository productRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.saleProductRepository = saleProductRepository;
         this.mapper = mapper;
     }
 
@@ -267,9 +271,41 @@ public class CategoryService implements ICategoryService{
     }
 
     private List<ProductStatsSummaryDTO> getTopProductsInCategory(Long categoryId) {
-        // Implementation depends on your existing repository method
-        // Similar to getTopProductsForCustomer pattern
-        return Collections.emptyList(); // placeholder
+        List<Long> productIds = productRepository.findProductIdsByCategoryId(categoryId);
+
+        if(productIds.isEmpty()){
+            return Collections.emptyList();
+        }
+
+        return productIds.stream()
+                .limit(10)
+                .map(this::getProductSalesStats)
+                .filter(Objects::nonNull)
+                .sorted((p1,p2)->p2.totalRevenue().compareTo(p1.totalRevenue()))
+                .collect(Collectors.toList());
+    }
+
+    private ProductStatsSummaryDTO getProductSalesStats(Long productId){
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+
+        BigDecimal totalSold = saleProductRepository.sumQuantityByProductId(productId);
+        if(totalSold == null || totalSold.compareTo(BigDecimal.ZERO) == 0){
+            return createEmptyStatsSummary(productId);
+        }
+        BigDecimal totalRevenue = saleProductRepository.sumRevenueByProductId(productId);
+        LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductId(productId);
+        return new ProductStatsSummaryDTO(productId,productName,productCode,totalSold,totalRevenue, lastSaleDate);
+
+    }
+
+    private ProductStatsSummaryDTO createEmptyStatsSummary(Long productId){
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+
+        return new ProductStatsSummaryDTO(
+                productId,productName,productCode,BigDecimal.ZERO, BigDecimal.ZERO, null
+        );
     }
 
 

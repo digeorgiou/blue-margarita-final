@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -147,5 +148,28 @@ public interface SaleProductRepository extends JpaRepository<SaleProduct, Long>,
     Page<Object[]> findAllProductsByRevenuePaginated(@Param("startDate") LocalDate startDate,
                                                      @Param("endDate") LocalDate endDate,
                                                      Pageable pageable);
+
+    // Basic sales queries
+    @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp WHERE sp.product.id = :productId")
+    BigDecimal sumQuantityByProductId(@Param("productId") Long productId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp WHERE sp.product.id = :productId")
+    BigDecimal sumRevenueByProductId(@Param("productId") Long productId);
+
+    @Query("SELECT MAX(s.saleDate) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId")
+    LocalDate findLastSaleDateByProductId(@Param("productId") Long productId);
+
+    // Location-specific sales queries
+    @Query("SELECT DISTINCT sp.product.id FROM SaleProduct sp JOIN sp.sale s WHERE s.location.id = :locationId")
+    List<Long> findDistinctProductIdsByLocationId(@Param("locationId") Long locationId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.location.id = :locationId")
+    BigDecimal sumQuantityByProductIdAndLocationId(@Param("productId") Long productId, @Param("locationId") Long locationId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.location.id = :locationId")
+    BigDecimal sumRevenueByProductIdAndLocationId(@Param("productId") Long productId, @Param("locationId") Long locationId);
+
+    @Query("SELECT MAX(s.saleDate) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.location.id = :locationId")
+    LocalDate findLastSaleDateByProductIdAndLocationId(@Param("productId") Long productId, @Param("locationId") Long locationId);
 
 }

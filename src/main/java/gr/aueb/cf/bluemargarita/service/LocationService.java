@@ -10,10 +10,7 @@ import gr.aueb.cf.bluemargarita.dto.location.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
-import gr.aueb.cf.bluemargarita.repository.LocationRepository;
-import gr.aueb.cf.bluemargarita.repository.ProductRepository;
-import gr.aueb.cf.bluemargarita.repository.SaleRepository;
-import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import gr.aueb.cf.bluemargarita.repository.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -35,14 +32,18 @@ public class LocationService implements ILocationService {
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
     private final SaleRepository saleRepository;
+    private final ProductRepository productRepository;
+    private final SaleProductRepository saleProductRepository;
     private final Mapper mapper;
 
     @Autowired
     public LocationService(LocationRepository locationRepository, UserRepository userRepository,
-                           SaleRepository saleRepository, Mapper mapper) {
+                           SaleRepository saleRepository, ProductRepository productRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
         this.saleRepository = saleRepository;
+        this.productRepository = productRepository;
+        this.saleProductRepository = saleProductRepository;
         this.mapper = mapper;
     }
 
@@ -273,7 +274,45 @@ public class LocationService implements ILocationService {
     }
 
     List<ProductStatsSummaryDTO> getTopProductsInLocation(Long locationId){
-        return Collections.emptyList();
+
+        List<Long> productIds = saleRepository.findDistinctProductIdsByLocationId(locationId);
+
+        if(productIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return productIds.stream()
+                .limit(10)
+                .map(productId -> getProductSalesStatsForLocation(productId,locationId))
+                .filter(Objects::nonNull)
+                .sorted((p1,p2)-> p2.totalRevenue().compareTo(p1.totalRevenue()))
+                .collect(Collectors.toList());
+    }
+
+    private ProductStatsSummaryDTO getProductSalesStatsForLocation(Long productId, Long locationId) {
+
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+        BigDecimal totalSold = saleProductRepository.sumQuantityByProductIdAndLocationId(productId, locationId);
+        if(totalSold == null || totalSold.compareTo(BigDecimal.ZERO) == 0){
+            return createEmptyStatsSummary(productId);
+        }
+
+        BigDecimal totalRevenue = saleProductRepository.sumRevenueByProductIdAndLocationId(productId, locationId);
+        LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductIdAndLocationId(productId, locationId);
+
+        return new ProductStatsSummaryDTO(productId, productName, productCode, totalSold, totalRevenue, lastSaleDate);
+
+
+    }
+
+    private ProductStatsSummaryDTO createEmptyStatsSummary(Long productId){
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+
+        return new ProductStatsSummaryDTO(
+                productId,productName,productCode,BigDecimal.ZERO, BigDecimal.ZERO, null
+        );
     }
 
 

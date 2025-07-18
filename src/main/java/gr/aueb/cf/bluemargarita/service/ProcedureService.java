@@ -11,6 +11,7 @@ import gr.aueb.cf.bluemargarita.dto.procedure.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
+import gr.aueb.cf.bluemargarita.repository.CategoryRepository;
 import gr.aueb.cf.bluemargarita.repository.ProcedureRepository;
 import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
@@ -38,13 +39,15 @@ public class ProcedureService implements IProcedureService {
     private final ProcedureRepository procedureRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final Mapper mapper;
 
     @Autowired
-    public ProcedureService(ProcedureRepository procedureRepository, UserRepository userRepository, ProductRepository productRepository, Mapper mapper) {
+    public ProcedureService(ProcedureRepository procedureRepository, UserRepository userRepository, ProductRepository productRepository, CategoryRepository categoryRepository, Mapper mapper) {
         this.procedureRepository = procedureRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
         this.mapper = mapper;
     }
 
@@ -401,16 +404,77 @@ public class ProcedureService implements IProcedureService {
         );
     }
 
-    private List<CategoryUsageDTO> getCategoryDistributionForProcedure(Long procedureId) {
-        // Your existing implementation
-        return Collections.emptyList(); // placeholder
-    }
-
     private List<ProductUsageDTO> getTopProductsUsingProcedure(Long procedureId) {
-        // Your existing implementation
-        return Collections.emptyList(); // placeholder
+        // Get products that use this procedure
+        List<Long> productIds = productRepository.findProductIdsByProcedureId(procedureId);
+
+        if (productIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return productIds.stream()
+                .limit(10)
+                .map(productId -> getProductProcedureUsage(productId, procedureId))
+                .filter(Objects::nonNull)
+                .sorted((p1, p2) -> p2.costImpact().compareTo(p1.costImpact()))
+                .collect(Collectors.toList());
     }
 
+    private ProductUsageDTO getProductProcedureUsage(Long productId, Long procedureId) {
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+        String categoryName = productRepository.findCategoryNameByProductId(productId);
+        BigDecimal procedureCost = productRepository.findProcedureCostForProduct(productId, procedureId);
+
+        if (procedureCost == null) {
+            return createEmptyProductUsage(productId);
+        }
+
+        return new ProductUsageDTO(productId, productName, productCode, BigDecimal.ONE, procedureCost, categoryName);
+    }
+
+    private List<CategoryUsageDTO> getCategoryDistributionForProcedure(Long procedureId) {
+        // Get all categories that have products using this procedure
+        List<Long> categoryIds = productRepository.findCategoryIdsByProcedureId(procedureId);
+
+        if (categoryIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Integer totalProducts = productRepository.countProductsByProcedureId(procedureId);
+
+        return categoryIds.stream()
+                .map(categoryId -> getCategoryUsageForProcedure(categoryId, procedureId, totalProducts))
+                .filter(Objects::nonNull)
+                .sorted((c1, c2) -> c2.productCount().compareTo(c1.productCount()))
+                .collect(Collectors.toList());
+    }
+
+    private CategoryUsageDTO getCategoryUsageForProcedure(Long categoryId, Long procedureId, Integer totalProducts) {
+        String categoryName = categoryRepository.findCategoryNameById(categoryId);
+        Integer productCount = productRepository.countProductsByCategoryIdAndProcedureId(categoryId, procedureId);
+
+        if (productCount == 0) {
+            return createEmptyCategoryUsage(categoryId);
+        }
+
+        Double percentage = (productCount * 100.0) / totalProducts;
+
+        return new CategoryUsageDTO(categoryId, categoryName, productCount, percentage);
+    }
+
+    private ProductUsageDTO createEmptyProductUsage(Long productId){
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+        String categoryName = productRepository.findCategoryNameByProductId(productId);
+
+        return new ProductUsageDTO(productId, productName, productCode, BigDecimal.ZERO, BigDecimal.ZERO, categoryName);
+    }
+
+    private CategoryUsageDTO createEmptyCategoryUsage(Long categoryId){
+        String categoryName = categoryRepository.findCategoryNameById(categoryId);
+        return new CategoryUsageDTO(categoryId, categoryName, 0, 0.0);
+    }
 
     /**
      * Creates JPA Specification from filter criteria

@@ -18,6 +18,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long>,
     boolean existsByName(String name);
     List<Category> findByIsActiveTrue();
 
+    @Query("SELECT c.name FROM Category c WHERE c.id = :categoryId")
+    String findCategoryNameById(@Param("categoryId") Long categoryId);
+
     @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
     Integer countActiveProductsByCategoryId(@Param("categoryId") Long categoryId);
 

@@ -65,6 +65,9 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
                                                   @Param("startDate") LocalDate startDate,
                                                   @Param("endDate") LocalDate endDate);
 
+    @Query("SELECT m.costPerUnit FROM Material m WHERE m.id = :materialId")
+    BigDecimal findCostPerUnitById(@Param("materialId") Long materialId);
+
 
     /**
      * Top products using this material (for usage distribution in detailed view)

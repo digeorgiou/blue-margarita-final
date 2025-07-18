@@ -12,8 +12,8 @@ import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Material;
 import gr.aueb.cf.bluemargarita.model.Product;
-import gr.aueb.cf.bluemargarita.model.ProductMaterial;
 import gr.aueb.cf.bluemargarita.model.User;
+import gr.aueb.cf.bluemargarita.repository.CategoryRepository;
 import gr.aueb.cf.bluemargarita.repository.MaterialRepository;
 import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.parameters.P;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,13 +44,15 @@ public class MaterialService implements IMaterialService {
     private final MaterialRepository materialRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final Mapper mapper;
 
     @Autowired
-    public MaterialService(MaterialRepository materialRepository, UserRepository userRepository, ProductRepository productRepository, Mapper mapper) {
+    public MaterialService(MaterialRepository materialRepository, UserRepository userRepository, ProductRepository productRepository, CategoryRepository categoryRepository, Mapper mapper) {
         this.materialRepository = materialRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
         this.mapper = mapper;
     }
 
@@ -199,7 +203,7 @@ public class MaterialService implements IMaterialService {
         Material material = getMaterialEntityById(materialId);
 
         MaterialAnalyticsDTO analytics = getMaterialAnalytics(materialId);
-        List<CategoryUsageDTO> categoryDistribution = getCategoryUsage(materialId);
+        List<CategoryUsageDTO> categoryDistribution = getCategoryDistribution(materialId);
         List<ProductUsageDTO> topProductsUsage = getTopProductsUsingMaterial(materialId);
 
         return mapper.mapToMaterialDetailedViewDTO(material, analytics, topProductsUsage, categoryDistribution);
@@ -471,12 +475,79 @@ public class MaterialService implements IMaterialService {
                 .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
     }
 
-    private List<ProductUsageDTO> getTopProductsUsingMaterial(Long materialId){
-        return Collections.emptyList();
+    private List<ProductUsageDTO> getTopProductsUsingMaterial(Long materialId) {
+        // Get products that use this material
+        List<Long> productIds = productRepository.findProductIdsByMaterialId(materialId);
+
+        if (productIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        BigDecimal materialCost = materialRepository.findCostPerUnitById(materialId);
+
+        return productIds.stream()
+                .limit(10)
+                .map(productId -> getProductMaterialUsage(productId, materialId, materialCost))
+                .filter(Objects::nonNull)
+                .sorted((p1, p2) -> p2.costImpact().compareTo(p1.costImpact()))
+                .collect(Collectors.toList());
     }
 
-    private List<CategoryUsageDTO> getCategoryUsage(Long materialId){
-        return Collections.emptyList();
+    private ProductUsageDTO getProductMaterialUsage(Long productId, Long materialId, BigDecimal materialCost) {
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+        String categoryName = productRepository.findCategoryNameByProductId(productId);
+        BigDecimal usageQuantity = productRepository.findMaterialQuantityForProduct(productId, materialId);
+
+        if (usageQuantity == null || usageQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            return createEmptyProductUsage(productId);
+        }
+
+        BigDecimal costImpact = usageQuantity.multiply(materialCost);
+
+        return new ProductUsageDTO(productId, productName, productCode, usageQuantity, costImpact, categoryName);
+    }
+
+    private List<CategoryUsageDTO> getCategoryDistribution(Long materialId){
+        List<Long> categoryIds = productRepository.findCategoryIdsByMaterialId(materialId);
+
+        if (categoryIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Integer totalProducts = productRepository.countProductsByMaterialId(materialId);
+
+        return categoryIds.stream()
+                .map(categoryId -> getCategoryUsageForMaterial(categoryId, materialId, totalProducts))
+                .filter(Objects::nonNull)
+                .sorted((c1, c2) -> c2.productCount().compareTo(c1.productCount()))
+                .collect(Collectors.toList());
+    }
+
+    private CategoryUsageDTO getCategoryUsageForMaterial(Long categoryId, Long materialId, Integer totalProducts) {
+        String categoryName = categoryRepository.findCategoryNameById(categoryId);
+        Integer productCount = productRepository.countProductsByCategoryIdAndMaterialId(categoryId, materialId);
+
+        if (productCount == 0) {
+            return createEmptyCategoryUsage(categoryId);
+        }
+
+        Double percentage = (productCount * 100.0) / totalProducts;
+
+        return new CategoryUsageDTO(categoryId, categoryName, productCount, percentage);
+    }
+
+    private ProductUsageDTO createEmptyProductUsage(Long productId){
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+        String categoryName = productRepository.findCategoryNameByProductId(productId);
+
+        return new ProductUsageDTO(productId, productName, productCode, BigDecimal.ZERO, BigDecimal.ZERO, categoryName);
+    }
+
+    private CategoryUsageDTO createEmptyCategoryUsage(Long categoryId){
+        String categoryName = categoryRepository.findCategoryNameById(categoryId);
+        return new CategoryUsageDTO(categoryId, categoryName, 0, 0.0);
     }
 
     /**

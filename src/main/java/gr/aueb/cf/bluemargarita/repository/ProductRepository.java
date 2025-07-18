@@ -22,6 +22,18 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     List<Product> findByIsActiveTrue();
     Integer countByIsActiveTrue();
 
+    @Query("SELECT p.name FROM Product p WHERE p.id = :productId")
+    String findProductNameById(@Param("productId") Long productId);
+
+    @Query("SELECT p.code FROM Product p WHERE p.id = :productId")
+    String findProductCodeById(@Param("productId") Long productId);
+
+    @Query("SELECT CASE WHEN p.category IS NOT NULL THEN p.category.name ELSE 'No Category' END FROM Product p WHERE p.id = :productId")
+    String findCategoryNameByProductId(@Param("productId") Long productId);
+
+    @Query("SELECT pm.quantity FROM ProductMaterial pm WHERE pm.product.id = :productId AND pm.material.id = :materialId")
+    BigDecimal findMaterialQuantityForProduct(@Param("productId") Long productId, @Param("materialId") Long materialId);
+
     @Query("SELECT COUNT(sp) FROM SaleProduct sp WHERE sp.product.id = :productId")
     Integer countSalesByProductId(@Param("productId") Long productId);
 
@@ -36,6 +48,30 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
 
     @Query("SELECT MAX(s.saleDate) FROM Sale s JOIN s.saleProducts sp WHERE sp.product.id = :productId")
     LocalDate findLastSaleDateByProductId(@Param("productId") Long productId);
+
+    @Query("SELECT p.id FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true ORDER BY p.finalSellingPriceRetail DESC")
+    List<Long> findProductIdsByCategoryId(@Param("categoryId") Long categoryId);
+
+    @Query("SELECT pm.product.id FROM ProductMaterial pm WHERE pm.material.id = :materialId AND pm.product.isActive = true")
+    List<Long> findProductIdsByMaterialId(@Param("materialId") Long materialId);
+
+    @Query("SELECT DISTINCT p.category.id FROM Product p JOIN p.productMaterials pm WHERE pm.material.id = :materialId AND p.category IS NOT NULL AND p.isActive = true")
+    List<Long> findCategoryIdsByMaterialId(@Param("materialId") Long materialId);
+
+    @Query("SELECT DISTINCT p.category.id FROM Product p JOIN p.procedureProducts pp WHERE pp.procedure.id = :procedureId AND p.category IS NOT NULL AND p.isActive = true")
+    List<Long> findCategoryIdsByProcedureId(@Param("procedureId") Long procedureId);
+
+    @Query("SELECT pp.product.id FROM ProductProcedure pp WHERE pp.procedure.id = :procedureId AND pp.product.isActive = true")
+    List<Long> findProductIdsByProcedureId(@Param("procedureId") Long procedureId);
+
+    @Query("SELECT pp.cost FROM ProductProcedure pp WHERE pp.product.id = :productId AND pp.procedure.id = :procedureId")
+    BigDecimal findProcedureCostForProduct(@Param("productId") Long productId, @Param("procedureId") Long procedureId);
+
+    @Query("SELECT COUNT(p) FROM Product p JOIN p.productMaterials pm WHERE pm.material.id = :materialId AND p.isActive = true")
+    Integer countProductsByMaterialId(@Param("materialId") Long materialId);
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId AND p.id IN (SELECT pm.product.id FROM ProductMaterial pm WHERE pm.material.id = :materialId) AND p.isActive = true")
+    Integer countProductsByCategoryIdAndMaterialId(@Param("categoryId") Long categoryId, @Param("materialId") Long materialId);
 
     // Date range analytics
     @Query("SELECT COUNT(sp) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
