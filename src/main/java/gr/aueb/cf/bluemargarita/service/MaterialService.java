@@ -471,6 +471,13 @@ public class MaterialService implements IMaterialService {
                 .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
     }
 
+    private List<ProductUsageDTO> getTopProductsUsingMaterial(Long materialId){
+        return Collections.emptyList();
+    }
+
+    private List<CategoryUsageDTO> getCategoryUsage(Long materialId){
+        return Collections.emptyList();
+    }
 
     /**
      * Helper method to map Object[] to ProductUsageDTO list
