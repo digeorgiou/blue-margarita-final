@@ -1,8 +1,6 @@
 package gr.aueb.cf.bluemargarita.dto.location;
 
 import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
-import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
-import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,7 +11,7 @@ import java.util.List;
  * Detailed DTO for location information including sales analytics and performance metrics
  * Used for location detail views and management pages
  */
-public record LocationDetailedDTO(
+public record LocationDetailedViewDTO(
         // Basic location information
         Long locationId,
         String name,
@@ -25,8 +23,8 @@ public record LocationDetailedDTO(
         LocalDateTime deletedAt,
 
         // Essential sales statistics only
-        Integer totalSalesCount,
         BigDecimal totalRevenue,
+        Integer totalSalesCount,
         BigDecimal averageOrderValue,
         LocalDate lastSaleDate,
 
@@ -35,7 +33,7 @@ public record LocationDetailedDTO(
         BigDecimal recentRevenue,
         // Simple yearly performance (current year)
         Integer yearlySalesCount,
-        BigDecimal yearlySalesRevenue
+        BigDecimal yearlySalesRevenue,
 
-
+        List<ProductStatsSummaryDTO> topProducts
 ) {}

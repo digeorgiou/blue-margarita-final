@@ -4,7 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
-import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureDetailedDTO;
+import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
@@ -145,7 +145,7 @@ public interface IProcedureService {
      * @return Detailed procedure information with comprehensive analytics
      * @throws EntityNotFoundException if procedure not found
      */
-    ProcedureDetailedDTO getProcedureDetailedById(Long id) throws EntityNotFoundException;
+    ProcedureDetailedViewDTO getProcedureDetailedById(Long id) throws EntityNotFoundException;
 
     // PRODUCT RELATIONSHIP OPERATIONS
     // =============================================================================

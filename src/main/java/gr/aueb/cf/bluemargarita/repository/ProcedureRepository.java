@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -45,6 +46,25 @@ public interface ProcedureRepository extends JpaRepository<Procedure, Long>,
             @Param("procedureId") Long procedureId,
             @Param("totalProducts") Integer totalProducts
     );
+
+    @Query("SELECT COUNT(s) FROM Sale s JOIN s.saleProducts sp JOIN sp.product.procedureProducts pp WHERE pp.procedure.id = :procedureId")
+    Integer countSalesByProcedureId(@Param("procedureId") Long procedureId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.product.procedureProducts pp WHERE pp.procedure.id = :procedureId")
+    BigDecimal sumRevenueByProcedureId(@Param("procedureId") Long procedureId);
+
+    @Query("SELECT MAX(s.saleDate) FROM Sale s JOIN s.saleProducts sp JOIN sp.product.procedureProducts pp WHERE pp.procedure.id = :procedureId")
+    LocalDate findLastSaleDateByProcedureId(@Param("procedureId") Long procedureId);
+
+    @Query("SELECT COUNT(s) FROM Sale s JOIN s.saleProducts sp JOIN sp.product.procedureProducts pp WHERE pp.procedure.id = :procedureId AND s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByProcedureIdAndDateRange(@Param("procedureId") Long procedureId,
+                                                @Param("startDate") LocalDate startDate,
+                                                @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s JOIN sp.product.procedureProducts pp WHERE pp.procedure.id = :procedureId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByProcedureIdAndDateRange(@Param("procedureId") Long procedureId,
+                                                   @Param("startDate") LocalDate startDate,
+                                                   @Param("endDate") LocalDate endDate);
 
     /**
      * Top products using this procedure (for usage distribution in detailed view)

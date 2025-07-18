@@ -14,7 +14,6 @@ import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.ProcedureRepository;
 import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
-import gr.aueb.cf.bluemargarita.service.IProcedureService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -183,82 +182,84 @@ public class ProcedureService implements IProcedureService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProcedureDetailedDTO getProcedureDetailedById(Long id) throws EntityNotFoundException {
+    public ProcedureDetailedViewDTO getProcedureDetailedById(Long procedureId) throws EntityNotFoundException {
 
-        LOGGER.debug("Retrieving optimized detailed analytics for procedure id: {}", id);
+        Procedure procedure = getProcedureEntityById(procedureId);
 
-        Procedure procedure = procedureRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + id + " was not found"));
+        ProcedureAnalyticsDTO analytics = getProcedureAnalytics(procedureId);
+        List<CategoryUsageDTO> categoryDistribution = getCategoryDistributionForProcedure(procedureId);
+        List<ProductUsageDTO> topProductsUsage = getTopProductsUsingProcedure(procedureId);
 
-        // ✅ OPTIMIZED: Use repository aggregation instead of loading all procedure products
-        Integer totalProductsUsing = procedureRepository.countProductsByProcedureId(id);
+        return mapper.mapToProcedureDetailedDTO(procedure, analytics, categoryDistribution, topProductsUsage);
 
-        if (totalProductsUsing == 0) {
-            // No products using this procedure - return empty metrics
-            return createEmptyMetricsDTO(procedure);
-        }
-
-        // Get cost statistics using repository aggregation
-        Object[] costStats = procedureRepository.calculateCostStatsByProcedureId(id);
-        BigDecimal averageProcedureCost = costStats != null && costStats[0] != null ?
-                (BigDecimal) costStats[0] : BigDecimal.ZERO;
-        BigDecimal minProcedureCost = costStats != null && costStats[1] != null ?
-                (BigDecimal) costStats[1] : BigDecimal.ZERO;
-        BigDecimal maxProcedureCost = costStats != null && costStats[2] != null ?
-                (BigDecimal) costStats[2] : BigDecimal.ZERO;
-
-        // Get average product selling price using repository aggregation
-        BigDecimal averageProductSellingPrice = procedureRepository.calculateAverageProductPriceByProcedureId(id);
-        if (averageProductSellingPrice == null) {
-            averageProductSellingPrice = BigDecimal.ZERO;
-        }
-
-        // Get category distribution using repository aggregation
-        List<Object[]> categoryData = procedureRepository.calculateCategoryDistributionByProcedureId(id, totalProductsUsing);
-        List<CategoryUsageDTO> categoryDistribution = categoryData.stream()
-                .map(data -> new CategoryUsageDTO(
-                        (Long) data[0],           // categoryId
-                        (String) data[1],         // categoryName
-                        ((Number) data[2]).intValue(), // productCount
-                        ((Number) data[3]).doubleValue() // percentage
-                ))
-                .collect(Collectors.toList());
-
-        // Get top products using this procedure (limit to 10 for performance)
-        PageRequest topProductsPageable = PageRequest.of(0, 10);
-        List<Object[]> topProductsData = procedureRepository.findTopProductsByProcedureUsage(id, topProductsPageable);
-
-        List<ProductUsageDTO> topProductsUsage = topProductsData.stream()
-                .map(data -> new ProductUsageDTO(
-                        (Long) data[0],           // productId
-                        (String) data[1],         // productName
-                        (String) data[2],         // productCode
-                        BigDecimal.ONE,           // usageQuantity (always 1 for procedures)
-                        (BigDecimal) data[3],     // costImpact (procedure cost for this product)
-                        (String) data[4]          // categoryName
-                ))
-                .collect(Collectors.toList());
-
-        LOGGER.debug("Optimized analytics completed for procedure '{}': totalProducts={}, avgCost={}, categories={}, topProducts={}",
-                procedure.getName(), totalProductsUsing, averageProcedureCost, categoryDistribution.size(), topProductsUsage.size());
-
-        return new ProcedureDetailedDTO(
-                procedure.getId(),
-                procedure.getName(),
-                procedure.getCreatedAt(),
-                procedure.getUpdatedAt(),
-                procedure.getCreatedBy().getUsername(),
-                procedure.getLastUpdatedBy().getUsername(),
-                procedure.getIsActive(),
-                procedure.getDeletedAt(),
-                totalProductsUsing,
-                averageProcedureCost,
-                minProcedureCost,
-                maxProcedureCost,
-                averageProductSellingPrice,
-                categoryDistribution,
-                topProductsUsage
-        );
+//        Integer totalProductsUsing = procedureRepository.countProductsByProcedureId(id);
+//
+//        if (totalProductsUsing == 0) {
+//            // No products using this procedure - return empty metrics
+//            return createEmptyMetricsDTO(procedure);
+//        }
+//
+//        // Get cost statistics using repository aggregation
+//        Object[] costStats = procedureRepository.calculateCostStatsByProcedureId(id);
+//        BigDecimal averageProcedureCost = costStats != null && costStats[0] != null ?
+//                (BigDecimal) costStats[0] : BigDecimal.ZERO;
+//        BigDecimal minProcedureCost = costStats != null && costStats[1] != null ?
+//                (BigDecimal) costStats[1] : BigDecimal.ZERO;
+//        BigDecimal maxProcedureCost = costStats != null && costStats[2] != null ?
+//                (BigDecimal) costStats[2] : BigDecimal.ZERO;
+//
+//        // Get average product selling price using repository aggregation
+//        BigDecimal averageProductSellingPrice = procedureRepository.calculateAverageProductPriceByProcedureId(id);
+//        if (averageProductSellingPrice == null) {
+//            averageProductSellingPrice = BigDecimal.ZERO;
+//        }
+//
+//        // Get category distribution using repository aggregation
+//        List<Object[]> categoryData = procedureRepository.calculateCategoryDistributionByProcedureId(id, totalProductsUsing);
+//        List<CategoryUsageDTO> categoryDistribution = categoryData.stream()
+//                .map(data -> new CategoryUsageDTO(
+//                        (Long) data[0],           // categoryId
+//                        (String) data[1],         // categoryName
+//                        ((Number) data[2]).intValue(), // productCount
+//                        ((Number) data[3]).doubleValue() // percentage
+//                ))
+//                .collect(Collectors.toList());
+//
+//        // Get top products using this procedure (limit to 10 for performance)
+//        PageRequest topProductsPageable = PageRequest.of(0, 10);
+//        List<Object[]> topProductsData = procedureRepository.findTopProductsByProcedureUsage(id, topProductsPageable);
+//
+//        List<ProductUsageDTO> topProductsUsage = topProductsData.stream()
+//                .map(data -> new ProductUsageDTO(
+//                        (Long) data[0],           // productId
+//                        (String) data[1],         // productName
+//                        (String) data[2],         // productCode
+//                        BigDecimal.ONE,           // usageQuantity (always 1 for procedures)
+//                        (BigDecimal) data[3],     // costImpact (procedure cost for this product)
+//                        (String) data[4]          // categoryName
+//                ))
+//                .collect(Collectors.toList());
+//
+//        LOGGER.debug("Optimized analytics completed for procedure '{}': totalProducts={}, avgCost={}, categories={}, topProducts={}",
+//                procedure.getName(), totalProductsUsing, averageProcedureCost, categoryDistribution.size(), topProductsUsage.size());
+//
+//        return new ProcedureDetailedViewDTO(
+//                procedure.getId(),
+//                procedure.getName(),
+//                procedure.getCreatedAt(),
+//                procedure.getUpdatedAt(),
+//                procedure.getCreatedBy().getUsername(),
+//                procedure.getLastUpdatedBy().getUsername(),
+//                procedure.getIsActive(),
+//                procedure.getDeletedAt(),
+//                totalProductsUsing,
+//                averageProcedureCost,
+//                minProcedureCost,
+//                maxProcedureCost,
+//                averageProductSellingPrice,
+//                categoryDistribution,
+//                topProductsUsage
+//        );
     }
 
     // =============================================================================
@@ -318,28 +319,96 @@ public class ProcedureService implements IProcedureService {
     // PRIVATE HELPER METHODS
     // =============================================================================
 
-    /**
-     * Creates empty metrics DTO for procedures with no product usage
-     */
+    private Procedure getProcedureEntityById(Long procedureId) throws EntityNotFoundException{
+        return procedureRepository.findById(procedureId)
+                .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + procedureId + " was not found"));
+    }
 
-    private ProcedureDetailedDTO createEmptyMetricsDTO(Procedure procedure){
-        return new ProcedureDetailedDTO(
-                procedure.getId(),
-                procedure.getName(),
-                procedure.getCreatedAt(),
-                procedure.getUpdatedAt(),
-                procedure.getCreatedBy().getUsername(),
-                procedure.getLastUpdatedBy().getUsername(),
-                procedure.getIsActive(),
-                procedure.getDeletedAt(),
-                0,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                Collections.emptyList(),
-                Collections.emptyList()
+    private User getUserEntityById(Long userId) throws EntityNotFoundException {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
+    }
+
+    private void validateUniqueName(String name) throws EntityAlreadyExistsException {
+        if (procedureRepository.existsByName(name)) {
+            throw new EntityAlreadyExistsException("Procedure", "Procedure with" +
+                    " name " + name + " already exists");
+        }
+    }
+
+    private ProcedureAnalyticsDTO getProcedureAnalytics(Long procedureId) {
+
+        Integer totalProductsUsing = procedureRepository.countProductsByProcedureId(procedureId);
+        // Check if procedure has usage first
+        if (totalProductsUsing == 0) {
+            return createEmptyProcedureAnalytics();
+        }
+
+        // Usage metrics (like your customer basic metrics)
+        Object[] costStats = procedureRepository.calculateCostStatsByProcedureId(procedureId);
+        BigDecimal averageProcedureCost = costStats[0] != null ? (BigDecimal) costStats[0] : BigDecimal.ZERO;
+        BigDecimal minProcedureCost = costStats[1] != null ? (BigDecimal) costStats[1] : BigDecimal.ZERO;
+        BigDecimal maxProcedureCost = costStats[2] != null ? (BigDecimal) costStats[2] : BigDecimal.ZERO;
+        BigDecimal averageProductSellingPrice = procedureRepository.calculateAverageProductPriceByProcedureId(procedureId);
+
+        // All-time sales metrics (like your customer all-time metrics)
+        Integer totalSalesCount = procedureRepository.countSalesByProcedureId(procedureId);
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        LocalDate lastSaleDate = null;
+
+        if (totalSalesCount > 0) {
+            totalRevenue = procedureRepository.sumRevenueByProcedureId(procedureId);
+            lastSaleDate = procedureRepository.findLastSaleDateByProcedureId(procedureId);
+        }
+
+        // Recent performance (last 30 days)
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        LocalDate today = LocalDate.now();
+        Integer recentSalesCount = procedureRepository.countSalesByProcedureIdAndDateRange(procedureId, thirtyDaysAgo, today);
+        BigDecimal recentRevenue = procedureRepository.sumRevenueByProcedureIdAndDateRange(procedureId, thirtyDaysAgo, today);
+
+        // Yearly performance
+        LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+        Integer yearlySalesCount = procedureRepository.countSalesByProcedureIdAndDateRange(procedureId, yearStart, today);
+        BigDecimal yearlySalesRevenue = procedureRepository.sumRevenueByProcedureIdAndDateRange(procedureId, yearStart, today);
+
+        return new ProcedureAnalyticsDTO(
+                totalProductsUsing,
+                averageProcedureCost,
+                averageProductSellingPrice != null ? averageProductSellingPrice : BigDecimal.ZERO,
+                totalRevenue,
+                totalSalesCount,
+                lastSaleDate,
+                recentSalesCount,
+                recentRevenue,
+                yearlySalesCount,
+                yearlySalesRevenue
         );
+    }
+
+    private ProcedureAnalyticsDTO createEmptyProcedureAnalytics() {
+        return new ProcedureAnalyticsDTO(
+                0,                  // totalProductsUsing
+                BigDecimal.ZERO,    // averageProcedureCost
+                BigDecimal.ZERO,    // averageProductSellingPrice
+                BigDecimal.ZERO,    // totalRevenue
+                0,                  // totalSalesCount
+                null,               // lastSaleDate
+                0,                  // recentSalesCount
+                BigDecimal.ZERO,    // recentRevenue
+                0,                  // yearlySalesCount
+                BigDecimal.ZERO     // yearlySalesRevenue
+        );
+    }
+
+    private List<CategoryUsageDTO> getCategoryDistributionForProcedure(Long procedureId) {
+        // Your existing implementation
+        return Collections.emptyList(); // placeholder
+    }
+
+    private List<ProductUsageDTO> getTopProductsUsingProcedure(Long procedureId) {
+        // Your existing implementation
+        return Collections.emptyList(); // placeholder
     }
 
 

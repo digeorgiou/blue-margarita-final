@@ -6,6 +6,7 @@ import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.MaterialSpecification;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
+import gr.aueb.cf.bluemargarita.dto.category.CategoryUsageDTO;
 import gr.aueb.cf.bluemargarita.dto.material.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
@@ -59,14 +60,11 @@ public class MaterialService implements IMaterialService {
     @Transactional(rollbackFor = Exception.class)
     public MaterialReadOnlyDTO createMaterial(MaterialInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        if (materialRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Material", "Material with description " + dto.name() + " already exists");
-        }
+        validateUniqueName(dto.name());
 
         Material material = mapper.mapMaterialInsertToModel(dto);
 
-        User creator = userRepository.findById(dto.creatorUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + dto.creatorUserId() + " not found"));
+        User creator = getUserEntityById(dto.creatorUserId());
 
         material.setCreatedBy(creator);
         material.setLastUpdatedBy(creator);
@@ -82,15 +80,13 @@ public class MaterialService implements IMaterialService {
     @Transactional(rollbackFor = Exception.class)
     public MaterialReadOnlyDTO updateMaterial(MaterialUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        Material existingMaterial = materialRepository.findById(dto.materialId())
-                .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + dto.materialId() + " was not found"));
+        Material existingMaterial = getMaterialEntityById(dto.materialId());
 
-        if (!existingMaterial.getName().equals(dto.name()) && materialRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Material", "Material with description " + dto.name() + " already exists");
+        if (!existingMaterial.getName().equals(dto.name())){
+            validateUniqueName(dto.name());
         }
 
-        User updater = userRepository.findById(dto.updaterUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "Updater user with id=" + dto.updaterUserId() + " was not found"));
+        User updater = getUserEntityById(dto.updaterUserId());
 
         Material updatedMaterial = mapper.mapMaterialUpdateToModel(dto, existingMaterial);
         updatedMaterial.setLastUpdatedBy(updater);
@@ -106,8 +102,7 @@ public class MaterialService implements IMaterialService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteMaterial(Long id) throws EntityNotFoundException {
 
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + id + " was not found"));
+        Material material = getMaterialEntityById(id);
 
         // Check both product usage AND purchase history
         boolean hasProductUsage = !material.getAllProductMaterials().isEmpty();
@@ -134,8 +129,7 @@ public class MaterialService implements IMaterialService {
     @Transactional(readOnly = true)
     public MaterialReadOnlyDTO getMaterialById(Long id) throws EntityNotFoundException {
 
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + id + " was not found"));
+        Material material = getMaterialEntityById(id);
 
         return mapper.mapToMaterialReadOnlyDTO(material);
     }
@@ -200,64 +194,68 @@ public class MaterialService implements IMaterialService {
 
     @Override
     @Transactional(readOnly = true)
-    public MaterialDetailedViewDTO getMaterialDetailedById(Long id) throws EntityNotFoundException {
+    public MaterialDetailedViewDTO getMaterialDetailedById(Long materialId) throws EntityNotFoundException {
 
-        LOGGER.debug("Retrieving optimized analytics for material id: {}", id);
+        Material material = getMaterialEntityById(materialId);
 
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Material", "Material with id=" + id + " was not found"));
+        MaterialAnalyticsDTO analytics = getMaterialAnalytics(materialId);
+        List<CategoryUsageDTO> categoryDistribution = getCategoryUsage(materialId);
+        List<ProductUsageDTO> topProductsUsage = getTopProductsUsingMaterial(materialId);
 
-        // Basic metrics using single queries (following LocationService pattern)
-        Integer totalProductsUsing = materialRepository.countProductsUsingMaterial(id);
-
-        if (totalProductsUsing == 0) {
-            // No products using this material - return empty metrics
-            return createEmptyMaterialMetricsDTO(material);
-        }
-
-        // Get aggregated data in single queries (no loading all entities into memory)
-        Object[] usageStats = materialRepository.calculateUsageStatsByMaterialId(id);
-        BigDecimal avgCostPerProduct = materialRepository.calculateAverageCostPerProductByMaterialId(id);
-
-        // Purchase analytics using simple queries
-        Integer purchaseCount = materialRepository.countPurchasesContainingMaterial(id);
-        LocalDate lastPurchaseDate = materialRepository.findLastPurchaseDateByMaterialId(id);
-
-        // Calculate usage statistics from Object array
-        BigDecimal avgUsage = usageStats[0] != null ? (BigDecimal) usageStats[0] : BigDecimal.ZERO;
-        BigDecimal minUsage = usageStats[1] != null ? (BigDecimal) usageStats[1] : BigDecimal.ZERO;
-        BigDecimal maxUsage = usageStats[2] != null ? (BigDecimal) usageStats[2] : BigDecimal.ZERO;
-
-        // Get top products using this material (limited to 5, using aggregated query)
-        List<Object[]> topProductsData = materialRepository.findTopProductsByMaterialUsage(id, PageRequest.of(0, 5));
-        List<ProductUsageDTO> topProducts = mapToProductUsageDTOs(topProductsData);
-
-        LOGGER.debug("Optimized analytics completed for material '{}': productsUsing={}, purchaseCount={}",
-                material.getName(), totalProductsUsing, purchaseCount);
-
-        return new MaterialDetailedViewDTO(
-                material.getId(),
-                material.getName(),
-                material.getUnitOfMeasure(),
-                material.getCurrentUnitCost(),
-                material.getCreatedAt(),
-                material.getUpdatedAt(),
-                material.getCreatedBy() != null ? material.getCreatedBy().getUsername() : "system",
-                material.getLastUpdatedBy() != null ? material.getLastUpdatedBy().getUsername() : "system",
-                material.getIsActive(),
-                material.getDeletedAt(),
-                totalProductsUsing,
-                avgUsage,
-                minUsage,
-                maxUsage,
-                avgCostPerProduct != null ? avgCostPerProduct : BigDecimal.ZERO,
-                purchaseCount != null ? purchaseCount : 0,
-                lastPurchaseDate,
-                topProducts
-        );
+        return mapper.mapToMaterialDetailedViewDTO(material, analytics, topProductsUsage, categoryDistribution);
     }
 
-    // =============================================================================
+//        // Basic metrics using single queries (following LocationService pattern)
+//        Integer totalProductsUsing = materialRepository.countProductsUsingMaterial(id);
+//
+//        if (totalProductsUsing == 0) {
+//            // No products using this material - return empty metrics
+//            return createEmptyMaterialMetricsDTO(material);
+//        }
+//
+//        // Get aggregated data in single queries (no loading all entities into memory)
+//        Object[] usageStats = materialRepository.calculateUsageStatsByMaterialId(id);
+//        BigDecimal avgCostPerProduct = materialRepository.calculateAverageCostPerProductByMaterialId(id);
+//
+//        // Purchase analytics using simple queries
+//        Integer purchaseCount = materialRepository.countPurchasesContainingMaterial(id);
+//        LocalDate lastPurchaseDate = materialRepository.findLastPurchaseDateByMaterialId(id);
+//
+//        // Calculate usage statistics from Object array
+//        BigDecimal avgUsage = usageStats[0] != null ? (BigDecimal) usageStats[0] : BigDecimal.ZERO;
+//        BigDecimal minUsage = usageStats[1] != null ? (BigDecimal) usageStats[1] : BigDecimal.ZERO;
+//        BigDecimal maxUsage = usageStats[2] != null ? (BigDecimal) usageStats[2] : BigDecimal.ZERO;
+//
+//        // Get top products using this material (limited to 5, using aggregated query)
+//        List<Object[]> topProductsData = materialRepository.findTopProductsByMaterialUsage(id, PageRequest.of(0, 5));
+//        List<ProductUsageDTO> topProducts = mapToProductUsageDTOs(topProductsData);
+//
+//        LOGGER.debug("Optimized analytics completed for material '{}': productsUsing={}, purchaseCount={}",
+//                material.getName(), totalProductsUsing, purchaseCount);
+//
+//        return new MaterialDetailedViewDTO(
+//                material.getId(),
+//                material.getName(),
+//                material.getUnitOfMeasure(),
+//                material.getCurrentUnitCost(),
+//                material.getCreatedAt(),
+//                material.getUpdatedAt(),
+//                material.getCreatedBy() != null ? material.getCreatedBy().getUsername() : "system",
+//                material.getLastUpdatedBy() != null ? material.getLastUpdatedBy().getUsername() : "system",
+//                material.getIsActive(),
+//                material.getDeletedAt(),
+//                totalProductsUsing,
+//                avgUsage,
+//                minUsage,
+//                maxUsage,
+//                avgCostPerProduct != null ? avgCostPerProduct : BigDecimal.ZERO,
+//                purchaseCount != null ? purchaseCount : 0,
+//                lastPurchaseDate,
+//                topProducts
+//        );
+//    }
+//
+//    // =============================================================================
     // PRODUCT RELATIONSHIP OPERATIONS
     // =============================================================================
 
@@ -392,28 +390,87 @@ public class MaterialService implements IMaterialService {
     /**
      * Helper method to create empty metrics DTO when no products use the material
      */
-    private MaterialDetailedViewDTO createEmptyMaterialMetricsDTO(Material material) {
-        return new MaterialDetailedViewDTO(
-                material.getId(),
-                material.getName(),
-                material.getUnitOfMeasure(),
-                material.getCurrentUnitCost(),
-                material.getCreatedAt(),
-                material.getUpdatedAt(),
-                material.getCreatedBy() != null ? material.getCreatedBy().getUsername() : "system",
-                material.getLastUpdatedBy() != null ? material.getLastUpdatedBy().getUsername() : "system",
-                material.getIsActive(),
-                material.getDeletedAt(),
-                0, // totalProductsUsing
-                BigDecimal.ZERO, // avgUsage
-                BigDecimal.ZERO, // minUsage
-                BigDecimal.ZERO, // maxUsage
-                BigDecimal.ZERO, // avgCostPerProduct
-                0, // purchaseCount
-                null, // lastPurchaseDate
-                Collections.emptyList() // topProducts
+
+    private MaterialAnalyticsDTO getMaterialAnalytics(Long materialId){
+
+        Integer totalProductsUsing = materialRepository.countProductsUsingMaterial(materialId);
+        if (totalProductsUsing == 0) {
+            return createEmptyMaterialAnalytics();
+        }
+        BigDecimal averageCostPerProduct = materialRepository.calculateAverageCostPerProductByMaterialId(materialId);
+        Integer purchaseCount = materialRepository.countPurchasesContainingMaterial(materialId);
+        LocalDate lastPurchaseDate = materialRepository.findLastPurchaseDateByMaterialId(materialId);
+
+        Integer totalSalesCount = materialRepository.countSalesByMaterialId(materialId);
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        LocalDate lastSaleDate = null;
+
+        if(totalSalesCount > 0){
+            totalRevenue = materialRepository.sumRevenueByMaterialId(materialId);
+            lastSaleDate = materialRepository.findLastSaleDateByMaterialId(materialId);
+        }
+
+        // Recent performance (last 30 days)
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        LocalDate today = LocalDate.now();
+        Integer recentSalesCount = materialRepository.countSalesByMaterialIdAndDateRange(materialId, thirtyDaysAgo, today);
+        BigDecimal recentRevenue = materialRepository.sumRevenueByMaterialIdAndDateRange(materialId, thirtyDaysAgo, today);
+
+        // Yearly performance
+        LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+        Integer yearlySalesCount = materialRepository.countSalesByMaterialIdAndDateRange(materialId, yearStart, today);
+        BigDecimal yearlySalesRevenue = materialRepository.sumRevenueByMaterialIdAndDateRange(materialId, yearStart, today);
+
+        return new MaterialAnalyticsDTO(
+                totalProductsUsing,
+                averageCostPerProduct != null ? averageCostPerProduct : BigDecimal.ZERO,
+                purchaseCount,
+                lastPurchaseDate,
+                totalRevenue,
+                totalSalesCount,
+                lastSaleDate,
+                recentSalesCount,
+                recentRevenue,
+                yearlySalesCount,
+                yearlySalesRevenue
+        );
+
+    }
+
+    private MaterialAnalyticsDTO createEmptyMaterialAnalytics() {
+        return new MaterialAnalyticsDTO(
+                0,
+                BigDecimal.ZERO,
+                0,
+                null,
+                BigDecimal.ZERO,
+                0,
+                null,
+                0,
+                BigDecimal.ZERO,
+                0,
+                BigDecimal.ZERO
         );
     }
+
+    private Material getMaterialEntityById(Long materialId) throws EntityNotFoundException{
+        return materialRepository.findById(materialId).orElseThrow(() ->
+                new EntityNotFoundException("Material", "Material with id=" + materialId +
+                        " was not found"));
+    }
+
+    private void validateUniqueName(String name) throws EntityAlreadyExistsException {
+        if (materialRepository.existsByName(name)) {
+            throw new EntityAlreadyExistsException("Material", "Material with description "
+                    + name + " already exists");
+        }
+    }
+
+    private User getUserEntityById(Long userId) throws EntityNotFoundException {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
+    }
+
 
     /**
      * Helper method to map Object[] to ProductUsageDTO list

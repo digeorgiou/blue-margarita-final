@@ -223,7 +223,7 @@ public class ProcedureRestController {
                             description = "Procedure detailed view with analytics",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = ProcedureDetailedDTO.class)
+                                    schema = @Schema(implementation = ProcedureDetailedViewDTO.class)
                             )
                     ),
                     @ApiResponse(
@@ -235,8 +235,8 @@ public class ProcedureRestController {
     )
     @GetMapping("/{id}/details")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<ProcedureDetailedDTO> getProcedureDetailedView(@PathVariable Long id) throws EntityNotFoundException {
-        ProcedureDetailedDTO procedureDetails = procedureService.getProcedureDetailedById(id);
+    public ResponseEntity<ProcedureDetailedViewDTO> getProcedureDetailedView(@PathVariable Long id) throws EntityNotFoundException {
+        ProcedureDetailedViewDTO procedureDetails = procedureService.getProcedureDetailedById(id);
         return new ResponseEntity<>(procedureDetails, HttpStatus.OK);
     }
 

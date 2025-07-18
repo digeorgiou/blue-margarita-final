@@ -5,18 +5,15 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.LocationSpecification;
+import gr.aueb.cf.bluemargarita.dto.category.CategoryAnalyticsDTO;
 import gr.aueb.cf.bluemargarita.dto.location.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
-import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
-import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.LocationRepository;
+import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.SaleRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -41,7 +38,8 @@ public class LocationService implements ILocationService {
     private final Mapper mapper;
 
     @Autowired
-    public LocationService(LocationRepository locationRepository, UserRepository userRepository, SaleRepository saleRepository, Mapper mapper) {
+    public LocationService(LocationRepository locationRepository, UserRepository userRepository,
+                           SaleRepository saleRepository, Mapper mapper) {
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
         this.saleRepository = saleRepository;
@@ -52,15 +50,11 @@ public class LocationService implements ILocationService {
     @Transactional(rollbackFor = Exception.class)
     public LocationReadOnlyDTO createLocation(LocationInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        if (locationRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Location", "Location with" +
-                    " description " + dto.name() + " already exists");
-        }
+        validateUniqueName(dto.name());
 
         Location location = mapper.mapLocationInsertToModel(dto);
 
-        User creator = userRepository.findById(dto.creatorUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + dto.creatorUserId() + " not found"));
+        User creator = getUserEntityById(dto.creatorUserId());
 
         location.setCreatedBy(creator);
         location.setLastUpdatedBy(creator);
@@ -76,16 +70,14 @@ public class LocationService implements ILocationService {
     @Transactional(rollbackFor = Exception.class)
     public LocationReadOnlyDTO updateLocation(LocationUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        Location existingLocation = locationRepository.findById(dto.locationId())
-                .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + dto.locationId() + " was not found"));
+        Location existingLocation = getLocationEntityById(dto.locationId());
 
         if (!existingLocation.getName().equals(dto.name()) && locationRepository.existsByName(dto.name())) {
             throw new EntityAlreadyExistsException("Location", "Location with" +
                     " description " + dto.name() + " already exists");
         }
 
-        User updater = userRepository.findById(dto.updaterUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "Updater user with id=" + dto.updaterUserId() + " was not found"));
+        User updater = getUserEntityById(dto.updaterUserId());
 
         Location updatedLocation = mapper.mapLocationUpdateToModel(dto, existingLocation);
         updatedLocation.setLastUpdatedBy(updater);
@@ -102,8 +94,7 @@ public class LocationService implements ILocationService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteLocation(Long id) throws EntityNotFoundException {
 
-        Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + id + " was not found"));
+        Location location = getLocationEntityById(id);
 
         if (!location.getAllSales().isEmpty()) {
             // Soft Delete if location is used in any sales
@@ -129,8 +120,7 @@ public class LocationService implements ILocationService {
     @Transactional(readOnly = true)
     public LocationReadOnlyDTO getLocationById(Long id) throws EntityNotFoundException {
 
-        Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + id + " was not found"));
+        Location location = getLocationEntityById(id);
 
         return mapper.mapToLocationReadOnlyDTO(location);
     }
@@ -161,6 +151,7 @@ public class LocationService implements ILocationService {
     @Override
     @Transactional(readOnly = true)
     public boolean nameExists(String name) {
+
         return locationRepository.existsByName(name);
     }
 
@@ -201,86 +192,88 @@ public class LocationService implements ILocationService {
 
     @Override
     @Transactional(readOnly = true)
-    public LocationDetailedDTO getLocationDetailedById(Long id) throws EntityNotFoundException {
+    public LocationDetailedViewDTO getLocationDetailedById(Long locationId) throws EntityNotFoundException {
 
-        LOGGER.debug("Retrieving optimized simple analytics for location id: {}", id);
+        Location location = getLocationEntityById(locationId);
 
-        Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + id + " was not found"));
+        LocationAnalyticsDTO analytics = getLocationAnalytics(locationId);
 
-        // Basic metrics using single queries
-        Integer totalSalesCount = saleRepository.countByLocationId(id);
+        List<ProductStatsSummaryDTO> topProducts = getTopProductsInLocation(locationId);
 
-        if (totalSalesCount == 0) {
-            // No sales - return empty metrics
-            return createEmptyMetricsDTO(location);
-        }
+        return mapper.mapToLocationDetailedDTO(location, analytics, topProducts);
 
-        // Get aggregated data in single queries (no loading all sales into memory)
-        BigDecimal totalRevenue = saleRepository.sumRevenueByLocationId(id);
-        LocalDate lastSaleDate = saleRepository.findLastSaleDateByLocationId(id);
-
-        BigDecimal averageOrderValue = totalRevenue != null && totalSalesCount > 0 ?
-                totalRevenue.divide(BigDecimal.valueOf(totalSalesCount), 2, RoundingMode.HALF_UP) :
-                BigDecimal.ZERO;
-
-        // Recent performance (last 30 days) using date-filtered query
-        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
-        Integer recentSalesCount = saleRepository.countByLocationIdAndDateRange(id, thirtyDaysAgo, LocalDate.now());
-        BigDecimal recentRevenue = saleRepository.sumRevenueByLocationIdAndDateRange(id, thirtyDaysAgo, LocalDate.now());
-
-        // Yearly performance (current year) using date-filtered query
-        LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
-        LocalDate yearEnd = LocalDate.now();
-        Integer yearlySalesCount = saleRepository.countByLocationIdAndDateRange(id, yearStart, yearEnd);
-        BigDecimal yearlySalesRevenue = saleRepository.sumRevenueByLocationIdAndDateRange(id, yearStart, yearEnd);
-
-        LOGGER.debug("Optimized simple analytics completed for location '{}': totalSales={}, totalRevenue={}, yearlySales={}",
-                location.getName(), totalSalesCount, totalRevenue, yearlySalesCount);
-
-        return new LocationDetailedDTO(
-                location.getId(),
-                location.getName(),
-                location.getCreatedAt(),
-                location.getUpdatedAt(),
-                location.getCreatedBy().getUsername(),
-                location.getLastUpdatedBy().getUsername(),
-                location.getIsActive(),
-                location.getDeletedAt(),
-                totalSalesCount,
-                totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
-                averageOrderValue,
-                lastSaleDate,
-                recentSalesCount,
-                recentRevenue != null ? recentRevenue : BigDecimal.ZERO,
-                yearlySalesCount,
-                yearlySalesRevenue != null ? yearlySalesRevenue : BigDecimal.ZERO
-        );
     }
 
     // =============================================================================
     // PRIVATE HELPER METHODS
     // =============================================================================
 
-    private LocationDetailedDTO createEmptyMetricsDTO(Location location) {
-        return new LocationDetailedDTO(
-                location.getId(),
-                location.getName(),
-                location.getCreatedAt(),
-                location.getUpdatedAt(),
-                location.getCreatedBy().getUsername(),
-                location.getLastUpdatedBy().getUsername(),
-                location.getIsActive(),
-                location.getDeletedAt(),
-                0,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                null,
-                0,
-                BigDecimal.ZERO,
-                0,
-                BigDecimal.ZERO
+    private Location getLocationEntityById(Long locationId) throws EntityNotFoundException{
+        return locationRepository.findById(locationId)
+                .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + locationId + " was not found"));
+    }
+
+    private User getUserEntityById(Long userId) throws EntityNotFoundException {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
+    }
+
+    private void validateUniqueName(String name) throws EntityAlreadyExistsException {
+        if (locationRepository.existsByName(name)) {
+            throw new EntityAlreadyExistsException("Location", "Location with" +
+                    " name " + name + " already exists");
+        }
+    }
+
+    private LocationAnalyticsDTO getLocationAnalytics(Long locationId) {
+        // All-time metrics (like your customer metrics)
+        Integer totalSalesCount = saleRepository.countByLocationId(locationId);
+        if (totalSalesCount == 0) {
+            return createEmptyLocationAnalytics();
+        }
+
+        BigDecimal totalRevenue = saleRepository.sumRevenueByLocationId(locationId);
+        BigDecimal averageOrderValue = totalRevenue.divide(BigDecimal.valueOf(totalSalesCount), 2, RoundingMode.HALF_UP);
+        LocalDate lastSaleDate = saleRepository.findLastSaleDateByLocationId(locationId);
+
+        // Recent performance (exact same pattern as customer)
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        LocalDate today = LocalDate.now();
+        Integer recentSalesCount = saleRepository.countByLocationIdAndDateRange(locationId, thirtyDaysAgo, today);
+        BigDecimal recentRevenue = saleRepository.sumRevenueByLocationIdAndDateRange(locationId, thirtyDaysAgo, today);
+
+        // Yearly performance (exact same pattern as customer)
+        LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+        Integer yearlySalesCount = saleRepository.countByLocationIdAndDateRange(locationId, yearStart, today);
+        BigDecimal yearlySalesRevenue = saleRepository.sumRevenueByLocationIdAndDateRange(locationId, yearStart, today);
+
+        return new LocationAnalyticsDTO(
+                totalRevenue,
+                totalSalesCount,
+                averageOrderValue,
+                lastSaleDate,
+                recentSalesCount,
+                recentRevenue,
+                yearlySalesCount,
+                yearlySalesRevenue
         );
+    }
+
+    private LocationAnalyticsDTO createEmptyLocationAnalytics() {
+        return new LocationAnalyticsDTO(
+                BigDecimal.ZERO,    // totalRevenue
+                0,                  // totalSalesCount
+                BigDecimal.ZERO,    // averageOrderValue
+                null,               // lastSaleDate
+                0,                  // recentSalesCount
+                BigDecimal.ZERO,    // recentRevenue
+                0,                  // yearlySalesCount
+                BigDecimal.ZERO     // yearlySalesRevenue
+        );
+    }
+
+    List<ProductStatsSummaryDTO> getTopProductsInLocation(Long locationId){
+        return Collections.emptyList();
     }
 
 

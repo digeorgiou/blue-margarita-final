@@ -3,7 +3,7 @@ package gr.aueb.cf.bluemargarita.service;
 import gr.aueb.cf.bluemargarita.core.filters.ProfitLossFilters;
 import gr.aueb.cf.bluemargarita.dto.analytics.ProfitLossReportDTO;
 
-interface IProfitLossService {
+public interface IProfitLossService {
 
     /**
      * Generates a simple profit/loss report for the specified time period

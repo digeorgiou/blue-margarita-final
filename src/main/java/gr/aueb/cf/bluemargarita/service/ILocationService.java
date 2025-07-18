@@ -4,7 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
-import gr.aueb.cf.bluemargarita.dto.location.LocationDetailedDTO;
+import gr.aueb.cf.bluemargarita.dto.location.LocationDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
@@ -180,5 +180,5 @@ public interface ILocationService {
      * @return Detailed location information with comprehensive but efficiently calculated analytics
      * @throws EntityNotFoundException if location not found
      */
-    LocationDetailedDTO getLocationDetailedById(Long id) throws EntityNotFoundException;
+    LocationDetailedViewDTO getLocationDetailedById(Long id) throws EntityNotFoundException;
 }

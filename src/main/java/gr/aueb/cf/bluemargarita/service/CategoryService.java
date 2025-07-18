@@ -5,14 +5,13 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.CategorySpecification;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryForDropdownDTO;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.category.*;
+import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Category;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.CategoryRepository;
+import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +23,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,12 +38,14 @@ public class CategoryService implements ICategoryService{
             LoggerFactory.getLogger(CategoryService.class);
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     private final Mapper mapper;
 
     @Autowired
-    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository, Mapper mapper) {
+    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository, ProductRepository productRepository, Mapper mapper) {
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
+        this.productRepository = productRepository;
         this.mapper = mapper;
     }
 
@@ -157,6 +162,17 @@ public class CategoryService implements ICategoryService{
                 .collect(Collectors.toList());
     }
 
+    public CategoryDetailedViewDTO getCategoryDetailedView(Long categoryId) throws EntityNotFoundException{
+
+        Category category = getCategoryEntityById(categoryId);
+
+        CategoryAnalyticsDTO analytics = getCategoryAnalytics(categoryId);
+        List<ProductStatsSummaryDTO> topProducts = getTopProductsInCategory(categoryId);
+
+        return mapper.mapToCategoryDetailedDTO(category, analytics, topProducts);
+
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<CategoryForDropdownDTO> getActiveCategoriesForDropdown() {
@@ -183,6 +199,80 @@ public class CategoryService implements ICategoryService{
         );
         return new Paginated<>(filtered.map(mapper::mapToCategoryReadOnlyDTO));
     }
+
+    private Category getCategoryEntityById(Long id) throws EntityNotFoundException {
+        return categoryRepository.findById(id).orElseThrow(()->
+                new EntityNotFoundException("Category", "Category with id " + id + " was not found"));
+    }
+
+    private CategoryAnalyticsDTO getCategoryAnalytics(Long categoryId) {
+
+        Integer totalProducts = categoryRepository.countActiveProductsByCategoryId(categoryId);
+        // Check if category has products first
+        if (totalProducts == 0) {
+            return createEmptyCategoryAnalytics();
+        }
+
+        // Product metrics
+        BigDecimal averageProductPrice = categoryRepository.calculateAverageRetailPriceByCategoryId(categoryId);
+
+        // All-time sales metrics (like your customer all-time metrics)
+        Integer totalSalesCount = categoryRepository.countSalesByCategoryId(categoryId);
+        if (totalSalesCount == 0) {
+            return createEmptyCategoryAnalytics();
+        }
+
+        BigDecimal totalRevenue = categoryRepository.sumRevenueByCategoryId(categoryId);
+        BigDecimal averageOrderValue = totalRevenue.divide(BigDecimal.valueOf(totalSalesCount), 2, RoundingMode.HALF_UP);
+        LocalDate lastSaleDate = categoryRepository.findLastSaleDateByCategoryId(categoryId);
+
+        // Recent performance (exact same pattern as customer)
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        LocalDate today = LocalDate.now();
+        Integer recentSalesCount = categoryRepository.countSalesByCategoryIdAndDateRange(categoryId, thirtyDaysAgo, today);
+        BigDecimal recentRevenue = categoryRepository.sumRevenueByCategoryIdAndDateRange(categoryId, thirtyDaysAgo, today);
+
+        // Yearly performance (exact same pattern as customer)
+        LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+        Integer yearlySalesCount = categoryRepository.countSalesByCategoryIdAndDateRange(categoryId, yearStart, today);
+        BigDecimal yearlySalesRevenue = categoryRepository.sumRevenueByCategoryIdAndDateRange(categoryId, yearStart, today);
+
+        return new CategoryAnalyticsDTO(
+                totalProducts,
+                averageProductPrice != null ? averageProductPrice : BigDecimal.ZERO,
+                totalRevenue,
+                totalSalesCount,
+                averageOrderValue,
+                lastSaleDate,
+                recentSalesCount,
+                recentRevenue,
+                yearlySalesCount,
+                yearlySalesRevenue
+        );
+    }
+
+    private CategoryAnalyticsDTO createEmptyCategoryAnalytics() {
+        return new CategoryAnalyticsDTO(
+                0,                  // totalProductsInCategory
+                BigDecimal.ZERO,    // averageProductPrice
+                BigDecimal.ZERO,    // totalRevenue
+                0,                  // totalSalesCount
+                BigDecimal.ZERO,    // averageOrderValue
+                null,               // lastSaleDate
+                0,                  // recentSalesCount
+                BigDecimal.ZERO,    // recentRevenue
+                0,                  // yearlySalesCount
+                BigDecimal.ZERO     // yearlySalesRevenue
+        );
+    }
+
+    private List<ProductStatsSummaryDTO> getTopProductsInCategory(Long categoryId) {
+        // Implementation depends on your existing repository method
+        // Similar to getTopProductsForCustomer pattern
+        return Collections.emptyList(); // placeholder
+    }
+
+
 
     private Specification<Category> getSpecsFromFilters(CategoryFilters filters) {
         return Specification

@@ -2,26 +2,14 @@ package gr.aueb.cf.bluemargarita.mapper;
 
 import gr.aueb.cf.bluemargarita.core.enums.Role;
 import gr.aueb.cf.bluemargarita.core.enums.TaskStatus;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.category.*;
 import gr.aueb.cf.bluemargarita.dto.customer.*;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerSalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.expense.ExpenseReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.location.LocationInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.location.LocationUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialStatsSummaryDTO;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.location.*;
+import gr.aueb.cf.bluemargarita.dto.material.*;
+import gr.aueb.cf.bluemargarita.dto.procedure.*;
 import gr.aueb.cf.bluemargarita.dto.product.*;
-import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseMaterialDTO;
-import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseMaterialDetailDTO;
 import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleItemDetailsDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleProductDTO;
@@ -33,19 +21,15 @@ import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserUpdateDTO;
 import gr.aueb.cf.bluemargarita.model.*;
-import org.springframework.scheduling.config.Task;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
@@ -76,6 +60,35 @@ public class Mapper {
                 category.getLastUpdatedBy().getUsername(),
                 category.getIsActive(),
                 category.getDeletedAt()
+        );
+    }
+
+    public CategoryDetailedViewDTO mapToCategoryDetailedDTO(Category category,
+                                                                CategoryAnalyticsDTO analytics,
+                                                                List<ProductStatsSummaryDTO> topProducts) {
+        return new CategoryDetailedViewDTO(
+                category.getId(),
+                category.getName(),
+                category.getCreatedAt(),
+                category.getUpdatedAt(),
+                category.getCreatedBy() != null ? category.getCreatedBy().getUsername() : "system",
+                category.getLastUpdatedBy() != null ? category.getLastUpdatedBy().getUsername() : "system",
+                category.getIsActive(),
+                category.getDeletedAt(),
+
+                // Analytics data
+                analytics.totalProductsInCategory(),
+                analytics.averageProductPrice(),
+                analytics.totalRevenue(),
+                analytics.totalSalesCount(),
+                analytics.averageOrderValue(),
+                analytics.lastSaleDate(),
+                analytics.recentSalesCount(),
+                analytics.recentRevenue(),
+                analytics.yearlySalesCount(),
+                analytics.yearlySalesRevenue(),
+
+                topProducts
         );
     }
 
@@ -117,7 +130,7 @@ public class Mapper {
         );
     }
 
-    public CustomerDetailedViewDTO mapToCustomerDetailedViewDTO(Customer customer, CustomerSalesDataDTO data, List<ProductStatsSummaryDTO> topProducts){
+    public CustomerDetailedViewDTO mapToCustomerDetailedViewDTO(Customer customer, CustomerAnalyticsDTO analytics, List<ProductStatsSummaryDTO> topProducts){
 
             return new CustomerDetailedViewDTO(
                 customer.getId(),
@@ -136,9 +149,14 @@ public class Mapper {
                 customer.getIsActive(),
                 customer.getDeletedAt(),
                 customer.getFirstSaleDate(),
-                data.totalRevenue(),
-                data.numberOfSales(),
-                data.lastOrderDate(),
+                analytics.totalRevenue(),
+                analytics.totalSales(),
+                analytics.averageOrderValue(),
+                analytics.lastOrderDate(),
+                analytics.recentSalesCount(),
+                analytics.recentRevenue(),
+                analytics.yearlySalesCount(),
+                analytics.yearlySalesRevenue(),
                 topProducts
         );
     }
@@ -237,6 +255,32 @@ public class Mapper {
         );
     }
 
+    public LocationDetailedViewDTO mapToLocationDetailedDTO(Location location,
+                                                            LocationAnalyticsDTO analytics,
+                                                            List<ProductStatsSummaryDTO> topProducts) {
+        return new LocationDetailedViewDTO(
+                location.getId(),
+                location.getName(),
+                location.getCreatedAt(),
+                location.getUpdatedAt(),
+                location.getCreatedBy() != null ? location.getCreatedBy().getUsername() : "system",
+                location.getLastUpdatedBy() != null ? location.getLastUpdatedBy().getUsername() : "system",
+                location.getIsActive(),
+                location.getDeletedAt(),
+
+                // Analytics data
+                analytics.totalRevenue(),
+                analytics.totalSalesCount(),
+                analytics.averageOrderValue(),
+                analytics.lastSaleDate(),
+                analytics.recentSalesCount(),
+                analytics.recentRevenue(),
+                analytics.yearlySalesCount(),
+                analytics.yearlySalesRevenue(),
+                topProducts
+        );
+    }
+
     // Material
 
     public Material mapMaterialInsertToModel(MaterialInsertDTO dto){
@@ -270,6 +314,41 @@ public class Mapper {
         );
     }
 
+    public MaterialDetailedViewDTO mapToMaterialDetailedViewDTO(Material material,
+                                                                MaterialAnalyticsDTO analytics,
+                                                                List<ProductUsageDTO> topProductsUsage,
+                                                                List<CategoryUsageDTO> categoryDistribution) {
+        return new MaterialDetailedViewDTO(
+                material.getId(),
+                material.getName(),
+                material.getUnitOfMeasure(),
+                material.getCurrentUnitCost(),
+                material.getCreatedAt(),
+                material.getUpdatedAt(),
+                material.getCreatedBy() != null ? material.getCreatedBy().getUsername() : "system",
+                material.getLastUpdatedBy() != null ? material.getLastUpdatedBy().getUsername() : "system",
+                material.getIsActive(),
+                material.getDeletedAt(),
+
+                // Analytics data
+                analytics.totalProductsUsing(),
+                analytics.averageCostPerProduct(),
+                analytics.purchaseCount(),
+                analytics.lastPurchaseDate(),
+                analytics.totalRevenue(),
+                analytics.totalSalesCount(),
+                analytics.lastSaleDate(),
+                analytics.recentSalesCount(),
+                analytics.recentRevenue(),
+                analytics.yearlySalesCount(),
+                analytics.yearlySalesRevenue(),
+
+                categoryDistribution,
+                topProductsUsage
+
+        );
+    }
+
     // Procedure
 
     public Procedure mapProcedureInsertToModel(ProcedureInsertDTO dto){
@@ -294,6 +373,37 @@ public class Mapper {
                 procedure.getLastUpdatedBy().getUsername(),
                 procedure.getIsActive(),
                 procedure.getDeletedAt()
+        );
+    }
+
+    public ProcedureDetailedViewDTO mapToProcedureDetailedDTO(Procedure procedure,
+                                                          ProcedureAnalyticsDTO analytics,
+                                                          List<CategoryUsageDTO> categoryDistribution,
+                                                          List<ProductUsageDTO> topProductsUsage) {
+        return new ProcedureDetailedViewDTO(
+                procedure.getId(),
+                procedure.getName(),
+                procedure.getCreatedAt(),
+                procedure.getUpdatedAt(),
+                procedure.getCreatedBy() != null ? procedure.getCreatedBy().getUsername() : "system",
+                procedure.getLastUpdatedBy() != null ? procedure.getLastUpdatedBy().getUsername() : "system",
+                procedure.getIsActive(),
+                procedure.getDeletedAt(),
+
+                // Analytics data
+                analytics.totalProductsUsing(),
+                analytics.averageProcedureCost(),
+                analytics.averageProductSellingPrice(),
+                analytics.totalSalesCount(),
+                analytics.totalRevenue(),
+                analytics.lastSaleDate(),
+                analytics.recentSalesCount(),
+                analytics.recentRevenue(),
+                analytics.yearlySalesCount(),
+                analytics.yearlySalesRevenue(),
+
+                categoryDistribution,
+                topProductsUsage
         );
     }
 

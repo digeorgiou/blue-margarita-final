@@ -46,6 +46,25 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
             "JOIN p.purchaseMaterials pm WHERE pm.material.id = :materialId")
     LocalDate findLastPurchaseDateByMaterialId(@Param("materialId") Long materialId);
 
+    @Query("SELECT COUNT(s) FROM Sale s JOIN s.saleProducts sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId")
+    Integer countSalesByMaterialId(@Param("materialId") Long materialId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId")
+    BigDecimal sumRevenueByMaterialId(@Param("materialId") Long materialId);
+
+    @Query("SELECT MAX(s.saleDate) FROM Sale s JOIN s.saleProducts sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId")
+    LocalDate findLastSaleDateByMaterialId(@Param("materialId") Long materialId);
+
+    @Query("SELECT COUNT(s) FROM Sale s JOIN s.saleProducts sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId AND s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByMaterialIdAndDateRange(@Param("materialId") Long materialId,
+                                               @Param("startDate") LocalDate startDate,
+                                               @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByMaterialIdAndDateRange(@Param("materialId") Long materialId,
+                                                  @Param("startDate") LocalDate startDate,
+                                                  @Param("endDate") LocalDate endDate);
+
 
     /**
      * Top products using this material (for usage distribution in detailed view)

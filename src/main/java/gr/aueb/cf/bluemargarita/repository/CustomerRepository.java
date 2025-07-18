@@ -21,6 +21,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>,
         JpaSpecificationExecutor<Customer> {
     boolean existsByEmail(String email);
     boolean existsByTin(String tin);
+    boolean existsByPhoneNumber(String phoneNumber);
     List<Customer> findByIsActiveTrue();
    Optional<Customer> findByEmail(String email);
    Optional<Customer> findByTin(String tin);
@@ -35,6 +36,17 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>,
 
     @Query("SELECT MAX(s.saleDate) FROM Sale s WHERE s.customer.id = :customerId")
     LocalDate findLastSaleDateByCustomerId(@Param("customerId") Long customerId);
+
+    @Query("SELECT COUNT(s) FROM Sale s WHERE s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByCustomerIdAndDateRange(@Param("customerId") Long customerId,
+                                               @Param("startDate") LocalDate startDate,
+                                               @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByCustomerIdAndDateRange(@Param("customerId") Long customerId,
+                                                  @Param("startDate") LocalDate startDate,
+                                                  @Param("endDate") LocalDate endDate);
+
 
     // Top products for customer (returns aggregated data, not full entities)
     @Query(value = """
