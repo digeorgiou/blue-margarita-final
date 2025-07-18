@@ -64,6 +64,44 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
     BigDecimal sumRevenueByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
+    // Average order value
+    @Query("SELECT AVG(s.finalTotalPrice) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal calculateAverageOrderValueByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT s FROM Sale s WHERE s.saleDate = :saleDate")
+    Page<Sale> findBySaleDate(@Param("saleDate") LocalDate saleDate, Pageable pageable);
+
+
+
+    /**
+     * Counts sales matching filter criteria
+     * Uses Specification but with simple count aggregation
+     */
+    @Query("SELECT COUNT(s) FROM Sale s WHERE (:filters)")
+    Integer countSalesByFilters(@Param("filters") SaleFilters filters);
+
+    /**
+     * Sums revenue for filtered sales
+     * Simple aggregation with filters
+     */
+    @Query("SELECT SUM(s.finalTotalPrice) FROM Sale s WHERE (:filters)")
+    BigDecimal sumRevenueByFilters(@Param("filters") SaleFilters filters);
+
+    /**
+     * Sums discount amounts for filtered sales
+     * Simple aggregation following your pattern
+     */
+    @Query("SELECT SUM(s.suggestedTotalPrice - s.finalTotalPrice) FROM Sale s WHERE (:filters)")
+    BigDecimal sumDiscountAmountByFilters(@Param("filters") SaleFilters filters);
+
+    /**
+     * Calculates average discount percentage for filtered sales
+     * Simple aggregation following your pattern
+     */
+    @Query("SELECT AVG(s.discountPercentage) FROM Sale s WHERE (:filters)")
+    BigDecimal avgDiscountPercentageByFilters(@Param("filters") SaleFilters filters);
+
+
     // Top performing products
     @Query(value = """
     SELECT p.id, p.name, p.code,
@@ -89,9 +127,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     @Query("SELECT COUNT(DISTINCT s.customer.id) FROM Sale s WHERE s.customer IS NOT NULL AND s.saleDate BETWEEN :startDate AND :endDate")
     Integer countUniqueCustomersByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    // Average order value
-    @Query("SELECT AVG(s.finalTotalPrice) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
-    BigDecimal calculateAverageOrderValueByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
 
     /**
      * Finds sales within a date range with pagination and sorting support
@@ -137,5 +173,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     BigDecimal sumRevenueByCustomerIdAndDateRange(@Param("customerId") Long customerId,
                                                   @Param("startDate") LocalDate startDate,
                                                   @Param("endDate") LocalDate endDate);
+
+
 
 }

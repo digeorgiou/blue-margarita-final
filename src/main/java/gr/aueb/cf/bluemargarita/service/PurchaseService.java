@@ -1,11 +1,8 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
-import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.PurchaseFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.PurchaseSpecification;
-import gr.aueb.cf.bluemargarita.core.specifications.SaleSpecification;
-import gr.aueb.cf.bluemargarita.dto.material.MaterialSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.purchase.*;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
@@ -21,10 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class PurchaseService implements IPurchaseService {
 
@@ -56,51 +53,21 @@ public class PurchaseService implements IPurchaseService {
     @Transactional(rollbackFor = Exception.class)
     public PurchaseDetailedViewDTO recordPurchase(RecordPurchaseRequestDTO request) throws EntityNotFoundException {
 
-        LOGGER.info("Recording new purchase from supplier {} with {} materials",
-                request.supplierId(), request.materials().size());
-
-        // Validate supplier exists
-        Supplier supplier = supplierRepository.findById(request.supplierId())
-                .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + request.supplierId() + " was not found"));
-
-        // Validate creator user exists
-        User creator = userRepository.findById(request.creatorUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + request.creatorUserId() + " was not found"));
+        // Validate supplier and user exists
+        Supplier supplier = getSupplierEntityById(request.supplierId());
+        User creator = getUserEntityById(request.creatorUserId());
 
         // Validate all materials exist
         validateMaterialsExist(request.materials());
 
-        // Create purchase entity
-        Purchase purchase = Purchase.builder()
-                .supplier(supplier)
-                .purchaseDate(request.purchaseDate())
-                .totalCost(BigDecimal.ZERO) // Will be calculated
-                .build();
-
-        purchase.setCreatedBy(creator);
-        purchase.setLastUpdatedBy(creator);
+        // Create base purchase entity
+        Purchase purchase = createBasePurchase(request, supplier, creator);
 
         // Save purchase first to get ID
         purchase = purchaseRepository.save(purchase);
 
-        // Add materials to purchase and calculate total cost using user-entered prices
-        BigDecimal totalCost = BigDecimal.ZERO;
-        for (PurchaseMaterialRequestDTO materialRequest : request.materials()) {
-
-            // Fetch material entity
-            Material material = materialRepository.findById(materialRequest.materialId())
-                    .orElseThrow(() -> new EntityNotFoundException("Material",
-                            "Material with id=" + materialRequest.materialId() + " was not found"));
-
-            purchase.addMaterial(material, materialRequest.quantity(), materialRequest.pricePerUnit());
-
-            // Calculate line cost using user-entered price
-            BigDecimal lineCost = materialRequest.pricePerUnit().multiply(materialRequest.quantity());
-            totalCost = totalCost.add(lineCost);
-
-            LOGGER.debug("Added material {} (quantity: {}, user price: {}, line total: {}) to purchase",
-                    material.getName(), materialRequest.quantity(), materialRequest.pricePerUnit(), lineCost);
-        }
+        // Add materials and calculate total cost (separate method)
+        BigDecimal totalCost = addMaterialsToPurchaseAndCalculateCost(purchase, request.materials());
 
         // Update total cost
         purchase.setTotalCost(totalCost);
@@ -110,30 +77,21 @@ public class PurchaseService implements IPurchaseService {
 
         LOGGER.info("Purchase recorded with id: {}, total cost: {}", savedPurchase.getId(), totalCost);
 
-        return mapToPurchaseDetailedViewDTO(savedPurchase);
+        return mapper.mapToPurchaseDetailedViewDTO(savedPurchase);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PurchaseReadOnlyDTO updatePurchase(PurchaseUpdateDTO dto) throws EntityNotFoundException {
 
-        Purchase existingPurchase = purchaseRepository.findById(dto.purchaseId())
-                .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + dto.purchaseId() + " was not found"));
+        Purchase existingPurchase = getPurchaseEntityById(dto.purchaseId());
 
         // Validate supplier if changed
-        if (!existingPurchase.getSupplier().getId().equals(dto.supplierId())) {
-            Supplier newSupplier = supplierRepository.findById(dto.supplierId())
-                    .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + dto.supplierId() + " was not found"));
-            existingPurchase.setSupplier(newSupplier);
-        }
+        Supplier supplier = validateSupplierIfChanged(existingPurchase, dto.supplierId());
 
-        // Update fields
-        existingPurchase.setPurchaseDate(dto.purchaseDate());
+        User updater = getUserEntityById(dto.updaterUserId());
 
-        // Update audit fields
-        User updater = userRepository.findById(dto.updaterUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + dto.updaterUserId() + " was not found"));
-        existingPurchase.setLastUpdatedBy(updater);
+        updatePurchaseBasicFields(existingPurchase, dto, supplier, updater);
 
         Purchase savedPurchase = purchaseRepository.save(existingPurchase);
 
@@ -146,8 +104,7 @@ public class PurchaseService implements IPurchaseService {
     @Transactional(rollbackFor = Exception.class)
     public void deletePurchase(Long purchaseId) throws EntityNotFoundException {
 
-        Purchase purchase = purchaseRepository.findById(purchaseId)
-                .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + purchaseId + " was not found"));
+        Purchase purchase = getPurchaseEntityById(purchaseId);
 
         // Hard delete - purchases can be deleted completely
         purchaseRepository.delete(purchase);
@@ -185,11 +142,8 @@ public class PurchaseService implements IPurchaseService {
         long totalFilteredResults = filtered.getTotalElements();
         PurchaseSummaryDTO summary = null;
 
+        // Only calculate summary if total results are 100 or less (performance optimization)
         if(totalFilteredResults <= 100) {
-            List<Purchase> allFilteredPurchases = purchaseRepository.findAll(getSpecsFromFilters(filters));
-
-            int totalCount = allFilteredPurchases.size();
-
             summary = calculatePurchaseSummary(filters);
         }
 
@@ -200,65 +154,43 @@ public class PurchaseService implements IPurchaseService {
     @Transactional(readOnly = true)
     public PurchaseDetailedViewDTO getPurchaseDetailedView(Long purchaseId) throws EntityNotFoundException {
 
-        Purchase purchase = purchaseRepository.findById(purchaseId)
-                .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + purchaseId + " was not found"));
+        Purchase purchase = getPurchaseEntityById(purchaseId);
 
-        return mapToPurchaseDetailedViewDTO(purchase);
+        return mapper.mapToPurchaseDetailedViewDTO(purchase);
     }
 
-
-
     // =============================================================================
-    // PRIVATE HELPER METHODS
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================
 
-    /**
-     * Maps Purchase entity to PurchaseDetailedViewDTO with complete cost calculations
-     * Following the same pattern as ProductService.mapToProductDetailsDTO()
-     */
-    private PurchaseDetailedViewDTO mapToPurchaseDetailedViewDTO(Purchase purchase) {
-
-        List<PurchaseMaterialDetailDTO> materials = purchase.getAllPurchaseMaterials().stream()
-                .map(pm -> {
-                    BigDecimal lineTotal = pm.getQuantity().multiply(pm.getPriceAtTheTime());
-                    BigDecimal costDifference = pm.getPriceAtTheTime().subtract(
-                            pm.getMaterial().getCurrentUnitCost() != null ?
-                                    pm.getMaterial().getCurrentUnitCost() : BigDecimal.ZERO);
-
-                    return new PurchaseMaterialDetailDTO(
-                            pm.getMaterial().getId(),
-                            pm.getMaterial().getName(),
-                            pm.getMaterial().getUnitOfMeasure(),
-                            pm.getQuantity(),
-                            pm.getPriceAtTheTime(),
-                            pm.getMaterial().getCurrentUnitCost(),
-                            lineTotal,
-                            costDifference
-                    );
-                })
-                .collect(Collectors.toList());
-
-        BigDecimal totalItemCount = purchase.getAllPurchaseMaterials().stream()
-                .map(PurchaseMaterial::getQuantity)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return new PurchaseDetailedViewDTO(
-                purchase.getId(),
-                purchase.getPurchaseDate(),
-                purchase.getSupplier().getName(),
-                purchase.getSupplier().getEmail() + " / " + purchase.getSupplier().getPhoneNumber(),
-                purchase.getTotalCost(),
-                totalItemCount.intValue(),
-                materials,
-                purchase.getCreatedAt(),
-                purchase.getCreatedBy().getUsername(),
-                "Purchase from " + purchase.getSupplier().getName()
-        );
+    private Purchase getPurchaseEntityById(Long id) throws EntityNotFoundException {
+        return purchaseRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Purchase",
+                        "Purchase with id=" + id + " was not found"));
     }
 
-    /**
-     * Validates that all materials in the request exist
-     */
+    private Supplier getSupplierEntityById(Long id) throws EntityNotFoundException {
+        return supplierRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Supplier",
+                        "Supplier with id=" + id + " was not found"));
+    }
+
+    private User getUserEntityById(Long id) throws EntityNotFoundException {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User",
+                        "User with id=" + id + " was not found"));
+    }
+
+    private Material getMaterialEntityById(Long id) throws EntityNotFoundException {
+        return materialRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Material",
+                        "Material with id=" + id + " was not found"));
+    }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Validation
+    // =============================================================================
+
     private void validateMaterialsExist(List<PurchaseMaterialRequestDTO> materials) throws EntityNotFoundException {
         List<Long> materialIds = materials.stream()
                 .map(PurchaseMaterialRequestDTO::materialId)
@@ -275,10 +207,16 @@ public class PurchaseService implements IPurchaseService {
         }
     }
 
-    private PurchaseSummaryDTO calculatePurchaseSummary(PurchaseFilters filters){
-        LOGGER.debug("Calculating purchases summary with optimized repository queries");
+    private Supplier validateSupplierIfChanged(Purchase existing, Long newSupplierId) throws EntityNotFoundException {
+        if (!existing.getSupplier().getId().equals(newSupplierId)) {
+            return getSupplierEntityById(newSupplierId);
+        }
+        return null;
+    }
 
-        Integer totalCount = (int) countPurchasesByFilters(filters);
+    private PurchaseSummaryDTO calculatePurchaseSummary(PurchaseFilters filters){
+
+        Integer totalCount = countPurchasesByFilters(filters);
 
         if(totalCount == 0){
             return new PurchaseSummaryDTO(0,BigDecimal.ZERO);
@@ -294,9 +232,61 @@ public class PurchaseService implements IPurchaseService {
         );
     }
 
-    private long countPurchasesByFilters(PurchaseFilters filters) {
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Purchase Creation and Management
+    // =============================================================================
+
+    private Purchase createBasePurchase(RecordPurchaseRequestDTO request, Supplier supplier, User creator) {
+        Purchase purchase = Purchase.builder()
+                .supplier(supplier)
+                .purchaseDate(request.purchaseDate())
+                .totalCost(BigDecimal.ZERO) // Will be calculated
+                .build();
+
+        purchase.setCreatedBy(creator);
+        purchase.setLastUpdatedBy(creator);
+
+        return purchase;
+    }
+
+    private BigDecimal addMaterialsToPurchaseAndCalculateCost(Purchase purchase,
+                                                              List<PurchaseMaterialRequestDTO> materials)
+            throws EntityNotFoundException {
+
+        BigDecimal totalCost = BigDecimal.ZERO;
+
+        for (PurchaseMaterialRequestDTO materialRequest : materials) {
+            // Get material entity
+            Material material = getMaterialEntityById(materialRequest.materialId());
+
+            // Add material to purchase
+            purchase.addMaterial(material, materialRequest.quantity(), materialRequest.pricePerUnit());
+
+            // Calculate line cost using user-entered price
+            BigDecimal lineCost = materialRequest.pricePerUnit().multiply(materialRequest.quantity());
+            totalCost = totalCost.add(lineCost);
+
+            LOGGER.debug("Added material {} (quantity: {}, user price: {}, line total: {}) to purchase",
+                    material.getName(), materialRequest.quantity(), materialRequest.pricePerUnit(), lineCost);
+        }
+
+        return totalCost;
+    }
+
+    private void updatePurchaseBasicFields(Purchase purchase, PurchaseUpdateDTO dto,
+                                           Supplier supplier, User updater) {
+        if (supplier != null) {
+            purchase.setSupplier(supplier);
+        }
+        purchase.setPurchaseDate(dto.purchaseDate());
+        purchase.setLastUpdatedBy(updater);
+    }
+
+
+    private Integer countPurchasesByFilters(PurchaseFilters filters) {
         Specification<Purchase> spec = getSpecsFromFilters(filters);
-        return purchaseRepository.count(spec);
+        return (int) purchaseRepository.count(spec);
     }
 
     private BigDecimal sumTotalCostByFilters(PurchaseFilters filters) {
@@ -305,7 +295,7 @@ public class PurchaseService implements IPurchaseService {
 
         return purchases.stream()
                 .map(Purchase::getTotalCost)
-                .filter(cost -> cost != null)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

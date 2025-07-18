@@ -2,13 +2,9 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.enums.PaymentMethod;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
-import gr.aueb.cf.bluemargarita.core.filters.Paginated;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.PaginatedFilteredSalesWithSummary;
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
-import gr.aueb.cf.bluemargarita.core.specifications.CustomerSpecification;
 import gr.aueb.cf.bluemargarita.core.specifications.SaleSpecification;
-import gr.aueb.cf.bluemargarita.dto.location.LocationForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationResponseDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.*;
@@ -21,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -34,6 +29,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class SaleService implements ISaleService {
 
@@ -45,11 +41,6 @@ public class SaleService implements ISaleService {
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
 
-    private final ProductService productService;
-    private final CustomerService customerService;
-    private final LocationService locationService;
-    private final CategoryService categoryService;
-
     private final SalePricingService pricingService;
     private final Mapper mapper;
 
@@ -59,10 +50,6 @@ public class SaleService implements ISaleService {
                        CustomerRepository customerRepository,
                        LocationRepository locationRepository,
                        UserRepository userRepository,
-                       ProductService productService,
-                       CustomerService customerService,
-                       LocationService locationService,
-                       CategoryService categoryService,
                        SalePricingService pricingService,
                        Mapper mapper) {
         this.saleRepository = saleRepository;
@@ -70,10 +57,6 @@ public class SaleService implements ISaleService {
         this.customerRepository = customerRepository;
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
-        this.productService = productService;
-        this.customerService = customerService;
-        this.locationService = locationService;
-        this.categoryService = categoryService;
         this.pricingService = pricingService;
         this.mapper = mapper;
     }
@@ -87,77 +70,35 @@ public class SaleService implements ISaleService {
     public SaleDetailedViewDTO recordSale(RecordSaleRequestDTO request)
             throws EntityNotFoundException {
 
-        // Validate location exists
-        Location location = getLocationById(request.locationId());
+        //Validate location , customer and user exist
+        Location location = getLocationEntityById(request.locationId());
+        Customer customer = getCustomerEntityByIdIfProvided(request.customerId());
+        User creator = getUserEntityById(request.creatorUserId());
 
-        // Validate customer exists (if provided)
-        Customer customer = null;
-        if (request.customerId() != null) {
-            customer = getCustomerById(request.customerId());
-        }
+        //Validate all Products exist and retrieve them
+        Map<Product, BigDecimal> productQuantities = validateAndCollectProducts(request.items());
 
-        // Validate creator user exists
-        User creator = getUserById(request.creatorUserId());
+        //Create base sale entity (without products)
+        Sale sale = createBaseSale(request, location, customer, creator);
 
-        // Build product map
-        Map<Long, BigDecimal> productQuantities = request.items().stream()
-                .collect(Collectors.toMap(
-                        SaleItemRequestDTO::productId,
-                        SaleItemRequestDTO::quantity
-                ));
+        //Add products in the sale
+        addProductsToSale(sale, productQuantities);
 
-        Map<Product, BigDecimal> productEntitiesQuantities = new HashMap<>();
+        //calculate and apply pricing
+        pricingService.applySalePricing(sale, request.finalPrice());
 
-        for (Map.Entry<Long, BigDecimal> entry : productQuantities.entrySet()) {
-            Product product = getProductById(entry.getKey());
-            productEntitiesQuantities.put(product, entry.getValue());
-        }
-
-        // Create sale entity with basic fields
-        Sale sale = Sale.builder()
-                .customer(customer)
-                .location(location)
-                .saleDate(request.saleDate())
-                .finalTotalPrice(request.finalPrice())
-                .packagingPrice(request.packagingCost())
-                .paymentMethod(request.paymentMethod())
-                .isWholesale(request.isWholesale())
-                .build();
-
-        // Set audit fields
-        sale.setCreatedBy(creator);
-        sale.setLastUpdatedBy(creator);
-
-        // Add products to sale
-        for (Map.Entry<Product, BigDecimal> entry : productEntitiesQuantities.entrySet()) {
-            sale.addProduct(entry.getKey(), entry.getValue());
-        }
-
-        // Calculate pricing
-        updateSalePricingWithDiscount(sale);
-
+        //save sale to get the id
         Sale savedSale = saleRepository.save(sale);
 
-        for (Map.Entry<Long, BigDecimal> entry : productQuantities.entrySet()) {
-            try {
-                productService.reduceProductStock(entry.getKey(), entry.getValue());
-            } catch (EntityNotFoundException e) {
-                LOGGER.error("Product {} not found when reducing stock for sale {}",
-                        entry.getKey(), savedSale.getId());
-            }
-        }
+        //update stock for products included in the sale
+        updateProductStockAfterSale(productQuantities);
 
-        // Update customer's first sale date if needed
+        //if first time customer , set first sale date
         updateCustomerFirstSaleDate(customer, request.saleDate());
 
-        LOGGER.info("Sale created with id: {}, Suggested total: {}, Final total: {}, Discount: {}%",
-                savedSale.getId(),
-                savedSale.getSuggestedTotalPrice(),
-                savedSale.getFinalTotalPrice(),
-                savedSale.getDiscountPercentage());
+        LOGGER.info("Sale recorded with id: {}", savedSale.getId());
 
-        // Convert to RecordSaleDetailedView DTO
-        return getSaleDetailedView(savedSale.getId());
+        return mapper.mapToSaleDetailedViewDTO(savedSale);
     }
 
     @Override
@@ -166,21 +107,15 @@ public class SaleService implements ISaleService {
             throws EntityNotFoundException {
 
         Sale existingSale = getSaleEntityById(dto.saleId());
-        Location location = getLocationById(dto.locationId());
-        Customer customer = dto.customerId() != null ? getCustomerById(dto.customerId()) : null;
-        User updater = getUserById(dto.updaterUserId());
+
+        Location location = getLocationEntityById(dto.locationId());
+        Customer customer = getCustomerEntityByIdIfProvided(dto.customerId());
+        User updater = getUserEntityById(dto.updaterUserId());
 
         // Update basic fields
-        existingSale.setCustomer(customer);
-        existingSale.setLocation(location);
-        existingSale.setSaleDate(dto.saleDate());
-        existingSale.setFinalTotalPrice(dto.finalTotalPrice());
-        existingSale.setPackagingPrice(dto.packagingPrice());
-        existingSale.setPaymentMethod(dto.paymentMethod());
-        existingSale.setLastUpdatedBy(updater);
+        updateSaleBasicFields(existingSale, dto, location, customer, updater);
 
-        // Recalculate pricing
-        updateSalePricingWithDiscount(existingSale);
+        pricingService.recalculateSalePricing(existingSale);
 
         Sale savedSale = saleRepository.save(existingSale);
 
@@ -192,21 +127,11 @@ public class SaleService implements ISaleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSale(Long saleId) throws EntityNotFoundException {
+
         Sale sale = getSaleEntityById(saleId);
 
         // Restore stock before deleting sale
-        for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
-            try {
-                productService.increaseProductStock(
-                        saleProduct.getProduct().getId(),
-                        saleProduct.getQuantity()
-                );
-            } catch (EntityNotFoundException e) {
-                LOGGER.error("Product {} not found when restoring stock for deleted sale {}",
-                        saleProduct.getProduct().getCode(), saleId);
-                // Continue with deletion
-            }
-        }
+        restoreProductStockAfterSaleDeletion(sale);
 
         saleRepository.delete(sale);
         LOGGER.info("Sale {} deleted", saleId);
@@ -229,90 +154,26 @@ public class SaleService implements ISaleService {
 
     @Override
     @Transactional(readOnly = true)
-    public Paginated<SaleReadOnlyDTO> getAllTodaysSales(Pageable pageable) {
-        LocalDate today = LocalDate.now();
-
-        // Apply default sorting if none specified (newest first)
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(
-                    pageable.getPageNumber(),
-                    pageable.getPageSize(),
-                    Sort.by(Sort.Direction.DESC, "saleDate", "createdAt")
-            );
-        }
-
-        Page<Sale> todaysSales = saleRepository.findSalesByDateRange(today, today, pageable);
-        Page<SaleReadOnlyDTO> mappedSales = todaysSales.map(mapper::mapToSaleReadOnlyDTO);
-
-        return new Paginated<>(mappedSales);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SalesSummaryDTO getDailySalesSummary() {
-        LOGGER.debug("Retrieving optimized daily sales summary");
-        LocalDate today = LocalDate.now();
-
-        // ✅ OPTIMIZED: Direct repository aggregation
-        Integer count = saleRepository.countSalesByDateRange(today, today);
-        BigDecimal revenue = saleRepository.sumRevenueByDateRange(today, today);
-        BigDecimal avgOrder = saleRepository.calculateAverageOrderValueByDateRange(today, today);
-
-        // Simplified calculation for discount metrics
-        BigDecimal avgDiscount = BigDecimal.ZERO; // Can add repository query if needed
-        BigDecimal totalDiscount = BigDecimal.ZERO; // Can add repository query if needed
-
-        return new SalesSummaryDTO(
-                count != null ? count : 0,
-                revenue != null ? revenue : BigDecimal.ZERO,
-                avgOrder != null ? avgOrder : BigDecimal.ZERO,
-                totalDiscount,
-                avgDiscount
-        );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public SalesSummaryDTO getWeeklySalesSummary() {
-        LOGGER.debug("Retrieving optimized weekly sales summary");
+        LOGGER.debug("Retrieving weekly sales summary");
+
         LocalDate today = LocalDate.now();
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
         LocalDate weekEnd = today.with(DayOfWeek.SUNDAY);
 
-        // ✅ OPTIMIZED: Direct repository aggregation
-        Integer count = saleRepository.countSalesByDateRange(weekStart, weekEnd);
-        BigDecimal revenue = saleRepository.sumRevenueByDateRange(weekStart, weekEnd);
-        BigDecimal avgOrder = saleRepository.calculateAverageOrderValueByDateRange(weekStart, weekEnd);
-
-        return new SalesSummaryDTO(
-                count != null ? count : 0,
-                revenue != null ? revenue : BigDecimal.ZERO,
-                avgOrder != null ? avgOrder : BigDecimal.ZERO,
-                BigDecimal.ZERO, // totalDiscount
-                BigDecimal.ZERO  // avgDiscount
-        );
+        return calculateSalesSummaryForDateRange(weekStart, weekEnd);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SalesSummaryDTO getMonthlySalesSummary() {
-        LOGGER.debug("Retrieving optimized monthly sales summary");
+        LOGGER.debug("Retrieving monthly sales summary");
+
         LocalDate today = LocalDate.now();
         LocalDate monthStart = today.withDayOfMonth(1);
         LocalDate monthEnd = today.withDayOfMonth(today.lengthOfMonth());
 
-        // ✅ OPTIMIZED: Direct repository aggregation
-        Integer count = saleRepository.countSalesByDateRange(monthStart, monthEnd);
-        BigDecimal revenue = saleRepository.sumRevenueByDateRange(monthStart, monthEnd);
-        BigDecimal avgOrder = saleRepository.calculateAverageOrderValueByDateRange(monthStart, monthEnd);
-
-        return new SalesSummaryDTO(
-                count != null ? count : 0,
-                revenue != null ? revenue : BigDecimal.ZERO,
-                avgOrder != null ? avgOrder : BigDecimal.ZERO,
-                BigDecimal.ZERO, // totalDiscount
-                BigDecimal.ZERO  // avgDiscount
-        );
+        return calculateSalesSummaryForDateRange(monthStart, monthEnd);
     }
 
     // =============================================================================
@@ -331,11 +192,6 @@ public class SaleService implements ISaleService {
 
         // Only calculate summary if total results are 100 or less
         if (totalFilteredResults <= 100) {
-            // Get all filtered results for summary calculation
-            List<Sale> allFilteredSales = saleRepository.findAll(getSpecsFromFilters(filters));
-
-            int totalCount = allFilteredSales.size();
-
             summary = calculateSalesSummary(filters);
         }
 
@@ -348,43 +204,7 @@ public class SaleService implements ISaleService {
 
         Sale sale = getSaleEntityById(saleId);
 
-        BigDecimal totalItemCount = sale.getAllSaleProducts().stream()
-                .map(SaleProduct::getQuantity)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal averageItemPrice = totalItemCount.compareTo(BigDecimal.ZERO) > 0 ?
-                sale.getFinalTotalPrice().divide(totalItemCount, 2, RoundingMode.HALF_UP) :
-                BigDecimal.ZERO;
-
-        return new SaleDetailedViewDTO(
-                saleId,
-                sale.getSaleDate(),
-                sale.getCustomer() != null ?
-                        new CustomerSearchResultDTO(
-                                sale.getCustomer().getId(),
-                                sale.getCustomer().getFullName(),
-                                sale.getCustomer().getEmail()
-                        ) : null,
-                new LocationForDropdownDTO(
-                        sale.getLocation().getId(),
-                        sale.getLocation().getName()
-                ),
-                sale.getPaymentMethod(),
-                sale.getSuggestedTotalPrice().subtract(sale.getPackagingPrice()), //subtotal
-                sale.getPackagingPrice(),
-                sale.getSuggestedTotalPrice(),
-                sale.getFinalTotalPrice(),
-                sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()),
-                sale.getDiscountPercentage(),
-
-                sale.getAllSaleProducts().stream()
-                        .map(mapper::mapToSaleItemDetailsDTO)
-                        .collect(Collectors.toList()),
-                sale.getIsWholesale(),
-                totalItemCount.intValue(),
-                averageItemPrice
-
-        );
+        return mapper.mapToSaleDetailedViewDTO(sale);
     }
 
     // =============================================================================
@@ -394,7 +214,7 @@ public class SaleService implements ISaleService {
     @Transactional(readOnly = true)
     public List<PaymentMethodDTO> getAvailablePaymentMethods() {
         return Arrays.stream(PaymentMethod.values())
-                .map(method -> new PaymentMethodDTO(method, method.name()))
+                .map(method -> new PaymentMethodDTO(method, method.getDisplayName()))
                 .collect(Collectors.toList());
     }
 
@@ -403,7 +223,7 @@ public class SaleService implements ISaleService {
     public CartItemDTO getProductForCart(Long productId, BigDecimal quantity, boolean isWholesale)
             throws EntityNotFoundException {
 
-        Product product = getProductById(productId);
+        Product product = getProductEntityById(productId);
 
         BigDecimal suggestedPrice = isWholesale ?
                 product.getFinalSellingPriceWholesale() :
@@ -436,45 +256,10 @@ public class SaleService implements ISaleService {
             subtotal = subtotal.add(cartItem.totalPrice());
         }
 
-        BigDecimal packagingCost = request.packagingCost() != null ? request.packagingCost() : BigDecimal.ZERO;
-        BigDecimal suggestedTotal = subtotal.add(packagingCost);
-
-        BigDecimal finalPrice;
-        BigDecimal discountAmount;
-        BigDecimal discountPercentage;
-
-        // Handle both input scenarios
-        if (request.userFinalPrice() != null) {
-            // User entered final price - calculate discount
-            finalPrice = request.userFinalPrice();
-            discountAmount = suggestedTotal.subtract(finalPrice);
-            discountPercentage = suggestedTotal.compareTo(BigDecimal.ZERO) > 0 ?
-                    discountAmount.divide(suggestedTotal, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)) :
-                    BigDecimal.ZERO;
-        } else if (request.userDiscountPercentage() != null) {
-            // User entered discount percentage - calculate final price
-            discountPercentage = request.userDiscountPercentage();
-            discountAmount = suggestedTotal.multiply(discountPercentage).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            finalPrice = suggestedTotal.subtract(discountAmount);
-        } else {
-            // No user input - use suggested total
-            finalPrice = suggestedTotal;
-            discountAmount = BigDecimal.ZERO;
-            discountPercentage = BigDecimal.ZERO;
-        }
-
-        return new PriceCalculationResponseDTO(
-                subtotal,
-                packagingCost,
-                suggestedTotal,
-                finalPrice,
-                discountAmount,
-                discountPercentage,
-                calculatedItems
-        );
+        return pricingService.calculatePricing(calculatedItems, subtotal, request);
     }
 
-// =============================================================================
+    // =============================================================================
     // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================
 
@@ -483,73 +268,237 @@ public class SaleService implements ISaleService {
                 .orElseThrow(() -> new EntityNotFoundException("Sale", "Sale with id " + id + " not found"));
     }
 
-    private Location getLocationById(Long id) throws EntityNotFoundException {
+    private Location getLocationEntityById(Long id) throws EntityNotFoundException {
         return locationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id " + id + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Location",
+                        "Location with id=" + id + " was not found"));
     }
 
-    private Customer getCustomerById(Long id) throws EntityNotFoundException {
-        return customerRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id " + id + " not found"));
+    private Customer getCustomerEntityByIdIfProvided(Long customerId) throws EntityNotFoundException {
+        if (customerId == null) {
+            return null;
+        }
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer",
+                        "Customer with id=" + customerId + " was not found"));
     }
 
-    private User getUserById(Long id) throws EntityNotFoundException {
+    private User getUserEntityById(Long id) throws EntityNotFoundException {
         return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + id + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User",
+                        "User with id=" + id + " was not found"));
     }
 
-    private Product getProductById(Long id) throws EntityNotFoundException {
+    private Product getProductEntityById(Long id) throws EntityNotFoundException {
         return productRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Product", "Product with id " + id + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Product",
+                        "Product with id=" + id + " was not found"));
     }
 
     // =============================================================================
     // PRIVATE HELPER METHODS - Business Logic
     // =============================================================================
 
-    /**
-     * Updates sale pricing and applies discount to all sale products
-     */
-    private void updateSalePricingWithDiscount(Sale sale) {
-        BigDecimal suggestedTotal = pricingService.calculateSuggestedTotalFromSale(sale);
-        sale.setSuggestedTotalPrice(suggestedTotal);
+    private Map<Product, BigDecimal> validateAndCollectProducts(List<SaleItemRequestDTO> items)
+            throws EntityNotFoundException {
 
-        // Calculate discount percentage based on final vs suggested price
-        BigDecimal discountPercentage = BigDecimal.ZERO;
-        if (suggestedTotal.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal discountAmount = suggestedTotal.subtract(sale.getFinalTotalPrice());
-            discountPercentage = discountAmount.divide(suggestedTotal, 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-        }
-        sale.setDiscountPercentage(discountPercentage);
+        Map<Product, BigDecimal> productQuantities = new HashMap<>();
 
-        // Apply proportional discount to each sale product
-        for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
-            BigDecimal actualPrice = pricingService.calculateActualSellingPrice(
-                    saleProduct.getProduct(), discountPercentage);
-            saleProduct.setPriceAtTheTime(actualPrice);
+        for (SaleItemRequestDTO item : items) {
+            Product product = getProductEntityById(item.productId());
+            productQuantities.put(product, item.quantity());
+
+            LOGGER.debug("Validated product {} with quantity {}",
+                    product.getCode(), item.quantity());
         }
 
-        LOGGER.debug("Updated sale {} pricing - Suggested: {}, Final: {}, Discount: {}%",
-                sale.getId(), suggestedTotal, sale.getFinalTotalPrice(), discountPercentage);
+        return productQuantities;
     }
 
-    /**
-     * Updates customer's first sale date if this is their first purchase
-     */
+    private Sale createBaseSale(RecordSaleRequestDTO request, Location location,
+                                Customer customer, User creator) {
+
+        Sale sale = Sale.builder()
+                .customer(customer)
+                .location(location)
+                .saleDate(request.saleDate())
+                .finalTotalPrice(request.finalPrice())
+                .packagingPrice(request.packagingCost())
+                .paymentMethod(request.paymentMethod())
+                .isWholesale(request.isWholesale())
+                .build();
+
+        // Set audit fields
+        sale.setCreatedBy(creator);
+        sale.setLastUpdatedBy(creator);
+
+        return sale;
+    }
+
+    private void addProductsToSale(Sale sale, Map<Product, BigDecimal> productQuantities) {
+        for (Map.Entry<Product, BigDecimal> entry : productQuantities.entrySet()) {
+            sale.addProduct(entry.getKey(), entry.getValue());
+
+            LOGGER.debug("Added product {} quantity {} to sale",
+                    entry.getKey().getCode(), entry.getValue());
+        }
+    }
+
+
+    private void updateSaleBasicFields(Sale sale, SaleUpdateDTO dto, Location location,
+                                       Customer customer, User updater) {
+        sale.setCustomer(customer);
+        sale.setLocation(location);
+        sale.setSaleDate(dto.saleDate());
+        sale.setFinalTotalPrice(dto.finalTotalPrice());
+        sale.setPackagingPrice(dto.packagingPrice());
+        sale.setPaymentMethod(dto.paymentMethod());
+        sale.setLastUpdatedBy(updater);
+    }
+
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Stock Management (Simple Repository Calls)
+    // =============================================================================
+
+    private void updateProductStockAfterSale(Map<Product, BigDecimal> productQuantities) {
+        for (Map.Entry<Product, BigDecimal> entry : productQuantities.entrySet()) {
+            Product product = entry.getKey();
+            BigDecimal quantity = entry.getValue();
+
+            Integer currentStock = productRepository.getCurrentStockById(product.getId());
+            Integer newStock = currentStock - quantity.intValue();
+
+            productRepository.updateStockById(product.getId(), newStock);
+
+            LOGGER.debug("Updated stock for product {} from {} to {}",
+                    product.getCode(), currentStock, newStock);
+        }
+    }
+
+    private void restoreProductStockAfterSaleDeletion(Sale sale) {
+        for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
+            Product product = saleProduct.getProduct();
+            BigDecimal quantity = saleProduct.getQuantity();
+
+            // Simple repository calls
+            Integer currentStock = productRepository.getCurrentStockById(product.getId());
+            Integer newStock = currentStock + quantity.intValue();
+
+            productRepository.updateStockById(product.getId(), newStock);
+
+            LOGGER.debug("Restored stock for product {} from {} to {}",
+                    product.getCode(), currentStock, newStock);
+        }
+    }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Customer Management
+    // =============================================================================
+
     private void updateCustomerFirstSaleDate(Customer customer, LocalDate saleDate) {
         if (customer != null && customer.getFirstSaleDate() == null) {
             customer.setFirstSaleDate(saleDate);
             customerRepository.save(customer);
+            LOGGER.debug("Updated first sale date for customer {} to {}",
+                    customer.getFullName(), saleDate);
         }
     }
 
     // =============================================================================
-    // PRIVATE HELPER METHODS - Filtering and Calculations
+    // PRIVATE HELPER METHODS - Analytics and Filtering
     // =============================================================================
 
+    private SalesSummaryDTO calculateSalesSummaryForDateRange(LocalDate startDate, LocalDate endDate) {
+        Integer count = saleRepository.countSalesByDateRange(startDate, endDate);
+        BigDecimal revenue = saleRepository.sumRevenueByDateRange(startDate, endDate);
+        BigDecimal avgOrder = saleRepository.calculateAverageOrderValueByDateRange(startDate, endDate);
+
+        return new SalesSummaryDTO(
+                count != null ? count : 0,
+                revenue != null ? revenue : BigDecimal.ZERO,
+                avgOrder != null ? avgOrder : BigDecimal.ZERO,
+                BigDecimal.ZERO, // totalDiscount
+                BigDecimal.ZERO  // avgDiscount
+        );
+    }
+
+
+    private SalesSummaryDTO calculateSalesSummary(SaleFilters filters) {
+
+        Integer totalCount = countSalesByFilters(filters);
+
+        if (totalCount == 0) {
+            return createEmptySalesSummary();
+        }
+
+        BigDecimal totalRevenue = sumRevenueByFilters(filters);
+        BigDecimal totalDiscountAmount = sumDiscountAmountByFilters(filters);
+        BigDecimal avgDiscountPercentage = avgDiscountPercentageByFilters(filters);
+
+        BigDecimal avgOrderValue = totalCount > 0 ?
+                totalRevenue.divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP) :
+                BigDecimal.ZERO;
+
+        LOGGER.debug("Summary calculated: count={}, revenue={}, avgOrder={}",
+                totalCount, totalRevenue, avgOrderValue);
+
+        return new SalesSummaryDTO(
+                totalCount,
+                totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
+                avgOrderValue,
+                totalDiscountAmount != null ? totalDiscountAmount : BigDecimal.ZERO,
+                avgDiscountPercentage != null ? avgDiscountPercentage : BigDecimal.ZERO
+        );
+    }
+
+    private SalesSummaryDTO createEmptySalesSummary() {
+        return new SalesSummaryDTO(0, BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO);
+    }
+
+    private Integer countSalesByFilters(SaleFilters filters) {
+        Specification<Sale> spec = getSpecsFromFilters(filters);
+        return (int) saleRepository.count(spec);
+    }
+
+    private BigDecimal sumRevenueByFilters(SaleFilters filters) {
+        Specification<Sale> spec = getSpecsFromFilters(filters);
+        List<Sale> sales = saleRepository.findAll(spec);
+
+        return sales.stream()
+                .map(Sale::getFinalTotalPrice)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal sumDiscountAmountByFilters(SaleFilters filters) {
+        Specification<Sale> spec = getSpecsFromFilters(filters);
+        List<Sale> sales = saleRepository.findAll(spec);
+
+        return sales.stream()
+                .filter(sale -> sale.getSuggestedTotalPrice() != null && sale.getFinalTotalPrice() != null)
+                .map(sale -> sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal avgDiscountPercentageByFilters(SaleFilters filters) {
+        Specification<Sale> spec = getSpecsFromFilters(filters);
+        List<Sale> sales = saleRepository.findAll(spec);
+        if (sales.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal totalDiscount = sales.stream()
+                .map(Sale::getDiscountPercentage)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return totalDiscount.divide(BigDecimal.valueOf(sales.size()), 2, RoundingMode.HALF_UP);
+    }
+
     /**
-     * Converts SaleFilters to JPA Specifications for database queries
+     * Creates JPA Specification from filter criteria
+     * Combines filtering logic using AND operations
      */
     private Specification<Sale> getSpecsFromFilters(SaleFilters filters) {
         Specification<Sale> spec = Specification
@@ -577,74 +526,5 @@ public class SaleService implements ISaleService {
         }
 
         return spec;
-    }
-
-    /**
-     * Calculates sales summary metrics from filtered results
-     */
-    private SalesSummaryDTO calculateSalesSummary(SaleFilters filters) {
-        LOGGER.debug("Calculating sales summary with optimized repository queries");
-
-        // ✅ OPTIMIZED: Use repository aggregation instead of loading all sales
-        Integer totalCount = (int) countSalesByFilters(filters);
-
-        if (totalCount == 0) {
-            return new SalesSummaryDTO(0, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
-        }
-
-        // Use aggregated queries instead of loading entities
-        BigDecimal totalRevenue = sumRevenueByFilters(filters);
-        BigDecimal totalDiscountAmount = sumDiscountAmountByFilters(filters);
-        BigDecimal averageDiscountPercentage = avgDiscountPercentageByFilters(filters);
-
-        BigDecimal averageOrderValue = totalRevenue.divide(
-                BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
-
-        LOGGER.debug("Summary calculated: count={}, revenue={}, avgOrder={}", totalCount, totalRevenue, averageOrderValue);
-
-        return new SalesSummaryDTO(
-                totalCount,
-                totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
-                averageOrderValue,
-                totalDiscountAmount != null ? totalDiscountAmount : BigDecimal.ZERO,
-                averageDiscountPercentage != null ? averageDiscountPercentage : BigDecimal.ZERO
-        );
-    }
-
-    private long countSalesByFilters(SaleFilters filters) {
-        Specification<Sale> spec = getSpecsFromFilters(filters);
-        return saleRepository.count(spec);
-    }
-
-    private BigDecimal sumRevenueByFilters(SaleFilters filters) {
-        Specification<Sale> spec = getSpecsFromFilters(filters);
-        List<Sale> sales = saleRepository.findAll(spec);
-
-        return sales.stream()
-                .map(Sale::getFinalTotalPrice)
-                .filter(price -> price != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private BigDecimal sumDiscountAmountByFilters(SaleFilters filters) {
-        Specification<Sale> spec = getSpecsFromFilters(filters);
-        List<Sale> sales = saleRepository.findAll(spec);
-
-        return sales.stream()
-                .filter(sale -> sale.getSuggestedTotalPrice() != null && sale.getFinalTotalPrice() != null)
-                .map(sale -> sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private BigDecimal avgDiscountPercentageByFilters(SaleFilters filters) {
-        Specification<Sale> spec = getSpecsFromFilters(filters);
-        List<Sale> sales = saleRepository.findAll(spec);
-
-        OptionalDouble average = sales.stream()
-                .filter(sale -> sale.getDiscountPercentage() != null)
-                .mapToDouble(sale -> sale.getDiscountPercentage().doubleValue())
-                .average();
-
-        return average.isPresent() ? BigDecimal.valueOf(average.getAsDouble()) : BigDecimal.ZERO;
     }
 }

@@ -9,8 +9,11 @@ import gr.aueb.cf.bluemargarita.dto.location.*;
 import gr.aueb.cf.bluemargarita.dto.material.*;
 import gr.aueb.cf.bluemargarita.dto.procedure.*;
 import gr.aueb.cf.bluemargarita.dto.product.*;
+import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseMaterialDTO;
+import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseMaterialDetailDTO;
 import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseReadOnlyDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.SaleDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleItemDetailsDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleProductDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleReadOnlyDTO;
@@ -24,6 +27,7 @@ import gr.aueb.cf.bluemargarita.model.*;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -528,6 +532,46 @@ public class Mapper {
         );
     }
 
+    public PurchaseDetailedViewDTO mapToPurchaseDetailedViewDTO(Purchase purchase){
+
+        List<PurchaseMaterialDetailDTO> materials = purchase.getAllPurchaseMaterials().stream()
+                .map(pm -> {
+                    BigDecimal lineTotal = pm.getQuantity().multiply(pm.getPriceAtTheTime());
+                    BigDecimal costDifference = pm.getPriceAtTheTime().subtract(
+                            pm.getMaterial().getCurrentUnitCost() != null ?
+                                    pm.getMaterial().getCurrentUnitCost() : BigDecimal.ZERO);
+
+                    return new PurchaseMaterialDetailDTO(
+                            pm.getMaterial().getId(),
+                            pm.getMaterial().getName(),
+                            pm.getMaterial().getUnitOfMeasure(),
+                            pm.getQuantity(),
+                            pm.getPriceAtTheTime(),
+                            pm.getMaterial().getCurrentUnitCost(),
+                            lineTotal,
+                            costDifference
+                    );
+                })
+                .collect(Collectors.toList());
+
+        BigDecimal totalItemCount = purchase.getAllPurchaseMaterials().stream()
+                .map(PurchaseMaterial::getQuantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new PurchaseDetailedViewDTO(
+                purchase.getId(),
+                purchase.getPurchaseDate(),
+                purchase.getSupplier().getName(),
+                purchase.getSupplier().getEmail() + " / " + purchase.getSupplier().getPhoneNumber(),
+                purchase.getTotalCost(),
+                totalItemCount.intValue(),
+                materials,
+                purchase.getCreatedAt(),
+                purchase.getCreatedBy().getUsername(),
+                "Purchase from " + purchase.getSupplier().getName()
+        );
+    }
+
     //Sale
 
     public SaleReadOnlyDTO mapToSaleReadOnlyDTO(Sale sale){
@@ -589,6 +633,46 @@ public class Mapper {
                 originalPrice,
                 lineTotal,
                 lineDiscount
+        );
+    }
+
+    public SaleDetailedViewDTO mapToSaleDetailedViewDTO(Sale sale){
+        BigDecimal totalItemCount = sale.getAllSaleProducts().stream()
+                .map(SaleProduct::getQuantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal averageItemPrice = totalItemCount.compareTo(BigDecimal.ZERO) > 0 ?
+                sale.getFinalTotalPrice().divide(totalItemCount, 2, RoundingMode.HALF_UP) :
+                BigDecimal.ZERO;
+
+        return new SaleDetailedViewDTO(
+                sale.getId(),
+                sale.getSaleDate(),
+                sale.getCustomer() != null ?
+                        new CustomerSearchResultDTO(
+                                sale.getCustomer().getId(),
+                                sale.getCustomer().getFullName(),
+                                sale.getCustomer().getEmail()
+                        ) : null,
+                new LocationForDropdownDTO(
+                        sale.getLocation().getId(),
+                        sale.getLocation().getName()
+                ),
+                sale.getPaymentMethod(),
+                sale.getSuggestedTotalPrice().subtract(sale.getPackagingPrice()), //subtotal
+                sale.getPackagingPrice(),
+                sale.getSuggestedTotalPrice(),
+                sale.getFinalTotalPrice(),
+                sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice()),
+                sale.getDiscountPercentage(),
+
+                sale.getAllSaleProducts().stream()
+                        .map(this::mapToSaleItemDetailsDTO)
+                        .collect(Collectors.toList()),
+                sale.getIsWholesale(),
+                totalItemCount.intValue(),
+                averageItemPrice
+
         );
     }
 

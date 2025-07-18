@@ -15,8 +15,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -26,7 +24,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/purchases")
@@ -82,7 +79,6 @@ public class PurchaseRestController {
             throw new ValidationException(bindingResult);
         }
 
-        // Ensure the path ID matches the DTO ID
         // Ensure the path ID matches the DTO ID
         if (!id.equals(dto.purchaseId())) {
             throw new EntityNotAuthorizedException("Purchase", "Path ID does not match request body ID - unauthorized modification attempt");
@@ -182,123 +178,6 @@ public class PurchaseRestController {
                 .build();
 
         // Set pagination properties using request parameters (with defaults)
-        filters.setPage(page);
-        filters.setPageSize(pageSize);
-        filters.setSortBy(sortBy);
-        filters.setSortDirection(Sort.Direction.valueOf(sortDirection.toUpperCase()));
-
-        PaginatedFilteredPurchasesWithSummary purchases = purchaseService.searchPurchasesWithSummary(filters);
-        return new ResponseEntity<>(purchases, HttpStatus.OK);
-    }
-
-    // =============================================================================
-    // CONVENIENCE ENDPOINTS
-    // =============================================================================
-
-    @Operation(
-            summary = "Get purchases by date range",
-            description = "Simple endpoint to retrieve purchases within a specific date range without advanced filtering. Used for reports and simple date-based queries.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Paginated list of purchases in date range",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = PaginatedFilteredPurchasesWithSummary.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/date-range")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<PaginatedFilteredPurchasesWithSummary> getPurchasesByDateRange(
-            @Parameter(description = "Start date (inclusive)", required = true) @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @Parameter(description = "End date (inclusive)", required = true) @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
-            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "purchaseDate") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "DESC") String sortDirection) {
-
-        PurchaseFilters filters = PurchaseFilters.builder()
-                .purchaseDateFrom(startDate)
-                .purchaseDateTo(endDate)
-                .build();
-
-        // Set pagination properties
-        filters.setPage(page);
-        filters.setPageSize(pageSize);
-        filters.setSortBy(sortBy);
-        filters.setSortDirection(Sort.Direction.valueOf(sortDirection.toUpperCase()));
-
-        PaginatedFilteredPurchasesWithSummary purchases = purchaseService.searchPurchasesWithSummary(filters);
-        return new ResponseEntity<>(purchases, HttpStatus.OK);
-    }
-
-    @Operation(
-            summary = "Get purchases by supplier",
-            description = "Retrieves all purchases from a specific supplier with pagination. Used for supplier analysis and relationship management.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Paginated list of purchases from the supplier",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = PaginatedFilteredPurchasesWithSummary.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/supplier/{supplierId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<PaginatedFilteredPurchasesWithSummary> getPurchasesBySupplier(
-            @PathVariable Long supplierId,
-            @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
-            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "purchaseDate") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "DESC") String sortDirection) {
-
-        PurchaseFilters filters = PurchaseFilters.builder()
-                .supplierId(supplierId)
-                .build();
-
-        // Set pagination properties
-        filters.setPage(page);
-        filters.setPageSize(pageSize);
-        filters.setSortBy(sortBy);
-        filters.setSortDirection(Sort.Direction.valueOf(sortDirection.toUpperCase()));
-
-        PaginatedFilteredPurchasesWithSummary purchases = purchaseService.searchPurchasesWithSummary(filters);
-        return new ResponseEntity<>(purchases, HttpStatus.OK);
-    }
-
-    @Operation(
-            summary = "Get purchases containing specific material",
-            description = "Retrieves all purchases that contain a specific material with pagination. Used for material cost analysis and purchase history tracking.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Paginated list of purchases containing the material",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = PaginatedFilteredPurchasesWithSummary.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/material/{materialId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<PaginatedFilteredPurchasesWithSummary> getPurchasesByMaterial(
-            @PathVariable Long materialId,
-            @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
-            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "purchaseDate") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "DESC") String sortDirection) {
-
-        PurchaseFilters filters = PurchaseFilters.builder()
-                .materialId(materialId)
-                .build();
-
-        // Set pagination properties
         filters.setPage(page);
         filters.setPageSize(pageSize);
         filters.setSortBy(sortBy);

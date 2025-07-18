@@ -65,7 +65,7 @@ public class Product extends AbstractEntity {
     private Category category;
 
     /* we don't want SaleProducts to be deleted if a product is deleted,
-    because we would lose the sale info (product name, quantity, price etc)
+    because we would lose the sale info (product name, quantity, price )
      */
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     @Builder.Default

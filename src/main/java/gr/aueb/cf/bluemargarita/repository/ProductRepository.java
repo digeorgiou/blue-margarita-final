@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -67,5 +68,15 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
      */
     @Query("SELECT p FROM Product p WHERE p.stock < 0 AND p.isActive = true")
     Page<Product> findProductsWithNegativeStock(Pageable pageable);
+
+
+    // Gets current stock level for a product
+    @Query("SELECT p.stock FROM Product p WHERE p.id = :productId")
+    Integer getCurrentStockById(@Param("productId") Long productId);
+
+    //Updates stock level for a product
+    @Modifying
+    @Query("UPDATE Product p SET p.stock = :newStock WHERE p.id = :productId")
+    void updateStockById(@Param("productId") Long productId, @Param("newStock") Integer newStock);
 
 }

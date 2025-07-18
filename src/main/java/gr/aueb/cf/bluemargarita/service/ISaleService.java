@@ -76,22 +76,6 @@ public interface ISaleService {
      */
     List<SaleReadOnlyDTO> getRecentSales(int limit);
 
-    /**
-     * Retrieves all sales for today with pagination and sorting
-     * Used for "View All Today's Sales" functionality from dashboard
-     *
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated list of today's sales with sorting support
-     */
-    Paginated<SaleReadOnlyDTO> getAllTodaysSales(Pageable pageable);
-
-    /**
-     * Gets sales summary for current day (dashboard widget)
-     * Includes count, total revenue, average order value, and discount metrics
-     *
-     * @return Summary of today's sales
-     */
-    SalesSummaryDTO getDailySalesSummary();
 
     /**
      * Gets sales summary for current week (Monday to Sunday, dashboard widget)

@@ -36,9 +36,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class ProductService implements IProductService{
-
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductService.class);
     private static final BigDecimal HOURLY_LABOR_RATE = BigDecimal.valueOf(7.0);
@@ -52,6 +52,7 @@ public class ProductService implements IProductService{
     private final ProcedureRepository procedureRepository;
     private final ProductProcedureRepository productProcedureRepository;
     private final UserRepository userRepository;
+
     private final ProductSalesAnalyticsService analyticsService;
     private final Mapper mapper;
 
@@ -81,17 +82,12 @@ public class ProductService implements IProductService{
         validateUniqueName(dto.name());
         validateUniqueCode(dto.code());
 
-        // Validate category exists and is active
-        Category category = getCategoryById(dto.categoryId());
-
-        // Create product
-        Product product = mapper.mapProductInsertToModel(dto);
-        product.setCategory(category);
-
+        // Validate category and user exist and is active
+        Category category = getCategoryEntityById(dto.categoryId());
         User creator = getUserEntityById(dto.creatorUserId());
 
-        product.setCreatedBy(creator);
-        product.setLastUpdatedBy(creator);
+        // Create product
+        Product product = createBaseProduct(dto, category, creator);
 
         // Save product first to get ID
         Product savedProduct = productRepository.save(product);
@@ -106,8 +102,7 @@ public class ProductService implements IProductService{
             addProceduresToProduct(savedProduct, dto.procedures());
         }
 
-        product.setSuggestedRetailSellingPrice(calculateSuggestedRetailPrice(product));
-        product.setSuggestedWholeSaleSellingPrice(calculateSuggestedWholesalePrice(product));
+        updateProductPricing(savedProduct);
 
         // Save again with relationships and pricing
         savedProduct = productRepository.save(savedProduct);
@@ -115,7 +110,7 @@ public class ProductService implements IProductService{
         LOGGER.info("Product created with id: {} and code: {}",
                 savedProduct.getId(), savedProduct.getCode());
 
-        ProductCostDataDTO data = getDataDTOForProduct(savedProduct);
+        ProductCostDataDTO data = calculateProductCostData(savedProduct);
 
         return mapper.mapToProductListItemDTO(savedProduct, data);
     }
@@ -142,7 +137,7 @@ public class ProductService implements IProductService{
         // Validate category if changed
         Category category = null;
         if (!existingProduct.getCategory().getId().equals(dto.categoryId())) {
-            category = getCategoryById(dto.categoryId());
+            category = getCategoryEntityById(dto.categoryId());
         }
 
         // Update product fields
@@ -150,10 +145,9 @@ public class ProductService implements IProductService{
         if (category != null) {
             updatedProduct.setCategory(category);
         }
-
         User updaterUser = getUserEntityById(dto.updaterUserId());
 
-        updatedProduct.setLastUpdatedBy(updaterUser);
+        updateProductFields(existingProduct, dto, category, updaterUser);
 
         Product savedProduct = productRepository.save(updatedProduct);
 
@@ -206,12 +200,12 @@ public class ProductService implements IProductService{
     @Override
     @Transactional(readOnly = true)
     public Paginated<ProductListItemDTO> getProductListItemsPaginated(ProductFilters filters) {
-        var filtered = productRepository.findAll(
+        Page<Product> filtered = productRepository.findAll(
                 getSpecsFromFilters(filters),
                 filters.getPageable()
         );
 
-        var mappedPage = filtered.map(product -> {
+        Page<ProductListItemDTO> mappedPage = filtered.map(product -> {
             ProductCostDataDTO data = getDataDTOForProduct(product);
             return mapper.mapToProductListItemDTO(product, data);
         });
@@ -416,17 +410,16 @@ public class ProductService implements IProductService{
         validateMaterialQuantity(quantity);
 
         Product product = getProductEntityById(productId);
-        Material material = materialRepository.findById(materialId)
-                .orElseThrow(() -> new EntityNotFoundException("Material",
-                        "Material with id " + materialId + " not found"));
+        Material material = getMaterialEntityById(materialId);
+        User updaterUser = getUserEntityById(updaterUserId);
 
         // Remove existing if present, then add new
         product.removeMaterial(material);
         product.addMaterial(material, quantity);
 
-        User updaterUser = userRepository.findById(updaterUserId).orElseThrow(() -> new EntityNotFoundException("User", "User with id " + updaterUserId + " not found"));
         product.setLastUpdatedBy(updaterUser);
-        updatePricing(product);
+        updateProductPricing(product);
+
         Product savedProduct = productRepository.save(product);
         ProductCostDataDTO data = getDataDTOForProduct(product);
 
@@ -442,14 +435,14 @@ public class ProductService implements IProductService{
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(productId);
-        Material material = materialRepository.findById(materialId)
-                .orElseThrow(() -> new EntityNotFoundException("Material",
-                        "Material with id " + materialId + " not found"));
+        Material material = getMaterialEntityById(materialId);
+        User updaterUser = getUserEntityById(updaterUserId);
 
         product.removeMaterial(material);
-        User updaterUser = userRepository.findById(updaterUserId).orElseThrow(() -> new EntityNotFoundException("User", "User with id " + updaterUserId + " not found"));
+
         product.setLastUpdatedBy(updaterUser);
-        updatePricing(product);
+        updateProductPricing(product);
+
         Product savedProduct = productRepository.save(product);
         ProductCostDataDTO data = getDataDTOForProduct(product);
 
@@ -468,19 +461,17 @@ public class ProductService implements IProductService{
         validateProcedureCost(cost);
 
         Product product = getProductEntityById(productId);
-        Procedure procedure = procedureRepository.findById(procedureId)
-                .orElseThrow(() -> new EntityNotFoundException("Procedure",
-                        "Procedure with id " + procedureId + " not found"));
+        Procedure procedure = getProcedureEntityById(procedureId);
+        User updater = getUserEntityById(updaterUserId);
 
         // Remove existing if present, then add new
         product.removeProcedure(procedure);
         product.addProcedure(procedure, cost);
 
-        User updaterUser = userRepository.findById(updaterUserId).orElseThrow(() -> new EntityNotFoundException("User", "User with id " + updaterUserId + " not found"));
-        product.setLastUpdatedBy(updaterUser);
-        updatePricing(product);
-        Product savedProduct = productRepository.save(product);
+        product.setLastUpdatedBy(updater);
+        updateProductPricing(product);
 
+        Product savedProduct = productRepository.save(product);
         ProductCostDataDTO data = getDataDTOForProduct(product);
 
         LOGGER.info("Added procedure {} (cost: {}) to product {}",
@@ -496,15 +487,14 @@ public class ProductService implements IProductService{
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(productId);
-        Procedure procedure = procedureRepository.findById(procedureId)
-                .orElseThrow(() -> new EntityNotFoundException("Procedure",
-                        "Procedure with id " + procedureId + " not found"));
+        Procedure procedure = getProcedureEntityById(procedureId);
+        User updater = getUserEntityById(updaterUserId);
 
         product.removeProcedure(procedure);
 
-        User updaterUser = userRepository.findById(updaterUserId).orElseThrow(() -> new EntityNotFoundException("User", "User with id " + updaterUserId + " not found"));
-        product.setLastUpdatedBy(updaterUser);
-        updatePricing(product);
+        product.setLastUpdatedBy(updater);
+        updateProductPricing(product);
+
         Product savedProduct = productRepository.save(product);
         ProductCostDataDTO data = getDataDTOForProduct(product);
 
@@ -578,7 +568,7 @@ public class ProductService implements IProductService{
             productRepository.save(product);
 
             // Log the stock change (you might want to create a StockHistory entity)
-            LOGGER.info("Stock updated for product {}: {} -> {} (change: {}, reason: {})",
+            LOGGER.info("Stock updated for product {}: {} -> {} (change: {})",
                     product.getCode(), previousStock, newStock, changeAmount);
 
             return new StockUpdateResultDTO(
@@ -936,88 +926,26 @@ public class ProductService implements IProductService{
      * Calculates total material cost for a product
      */
 
-    private BigDecimal calculateMaterialCost(Product product) {
-        return product.getAllProductMaterials().stream()
-                .filter(pm -> pm.getMaterial().getCurrentUnitCost() != null && pm.getQuantity() != null)
-                .map(pm -> pm.getMaterial().getCurrentUnitCost().multiply(pm.getQuantity()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Product Creation and Management
+    // =============================================================================
+
+    private Product createBaseProduct(ProductInsertDTO dto, Category category, User creator) {
+        Product product = mapper.mapProductInsertToModel(dto);
+        product.setCategory(category);
+        product.setCreatedBy(creator);
+        product.setLastUpdatedBy(creator);
+        return product;
     }
 
-    /**
-     * Calculates total procedure cost for a product
-     */
-
-    private BigDecimal calculateProcedureCost(Product product) {
-        return productProcedureRepository.sumCostByProductId(product.getId());
-    }
-
-    /**
-     * Calculates labor cost based on minutes to make and hourly rate
-     */
-    private BigDecimal calculateLaborCost(Product product) {
-        if (product.getMinutesToMake() == null || product.getMinutesToMake() <= 0) {
-            return BigDecimal.ZERO;
+    private void updateProductFields(Product product, ProductUpdateDTO dto, Category category, User updater) {
+        Product updatedProduct = mapper.mapProductUpdateToModel(dto, product);
+        if (category != null) {
+            updatedProduct.setCategory(category);
         }
-
-        // Convert minutes to hours and multiply by hourly rate
-        BigDecimal hoursToMake = BigDecimal.valueOf(product.getMinutesToMake())
-                .divide(MINUTES_PER_HOUR, 4, RoundingMode.HALF_UP);
-
-        return hoursToMake.multiply(HOURLY_LABOR_RATE);
-    }
-
-    /**
-     * Calculates Suggested retail price for product based on
-     * costs and mark up factor.
-     */
-
-    private BigDecimal calculateSuggestedRetailPrice(Product product){
-
-        BigDecimal materialCost = calculateMaterialCost(product);
-        BigDecimal procedureCost = calculateProcedureCost(product);
-        BigDecimal laborCost = calculateLaborCost(product);
-        BigDecimal totalCost = materialCost.add(laborCost).add(procedureCost);
-
-        LOGGER.info("Price calculation for product {}: Material cost: {}, Procedure cost: {}, Labor cost: {}, Total cost: {}",
-                product.getCode(), materialCost, procedureCost, laborCost, totalCost);
-
-        return totalCost.multiply(RETAIL_MARKUP_FACTOR);
-    }
-
-    /**
-     * Calculates Suggested wholesale price for product based on
-     * costs and mark up factor.
-     */
-
-    private BigDecimal calculateSuggestedWholesalePrice(Product product){
-
-        BigDecimal materialCost = calculateMaterialCost(product);
-        BigDecimal procedureCost = calculateProcedureCost(product);
-        BigDecimal laborCost = calculateLaborCost(product);
-        BigDecimal totalCost = materialCost.add(laborCost).add(procedureCost);
-
-        LOGGER.info("Wholesale Price calculation for product {}: Material cost: {}, Procedure cost: {}, Labor cost: {}, Total cost: {}",
-                product.getCode(), materialCost, procedureCost, laborCost, totalCost);
-
-        return totalCost.multiply(WHOLESALE_MARKUP_FACTOR);
-    }
-
-    private BigDecimal calculateProfitMargin(BigDecimal sellingPrice, BigDecimal cost) {
-        if (sellingPrice == null || sellingPrice.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        return sellingPrice.subtract(cost)
-                .divide(sellingPrice, 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100));
-    }
-
-    private BigDecimal calculatePercentageDifference(BigDecimal current, BigDecimal suggested) {
-        if (current.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        return current.subtract(suggested)
-                .divide(current, 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100));
+        updatedProduct.setLastUpdatedBy(updater);
     }
 
 
@@ -1050,11 +978,22 @@ public class ProductService implements IProductService{
         }
     }
 
-    private Category getCategoryById(Long categoryId) throws EntityNotFoundException {
-
-        return categoryRepository.findById(categoryId)
+    private Category getCategoryEntityById(Long id) throws EntityNotFoundException {
+        return categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category",
-                        "Category with id " + categoryId + " not found"));
+                        "Category with id=" + id + " was not found"));
+    }
+
+    private Material getMaterialEntityById(Long id) throws EntityNotFoundException {
+        return materialRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Material",
+                        "Material with id=" + id + " was not found"));
+    }
+
+    private Procedure getProcedureEntityById(Long id) throws EntityNotFoundException {
+        return procedureRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Procedure",
+                        "Procedure with id=" + id + " was not found"));
     }
 
     /**
@@ -1197,34 +1136,82 @@ public class ProductService implements IProductService{
                 procedures.size(), product.getCode());
     }
 
-    /**
-     * Updates suggested pricing after material/procedure changes
-     */
-    private void updatePricing(Product product) throws EntityNotFoundException{
-        BigDecimal newPriceRetail = calculateSuggestedRetailPrice(product);
-        BigDecimal newPriceWholesale = calculateSuggestedWholesalePrice(product);
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Pricing Calculations
+    // =============================================================================
 
-        if(!newPriceRetail.equals(product.getSuggestedRetailSellingPrice())) {
-            product.setSuggestedRetailSellingPrice(newPriceRetail);
-            LOGGER.info("Updated suggested retail price for product {} to {}",
-                    product.getCode(), newPriceRetail);
+    private void updateProductPricing(Product product) {
+        BigDecimal newRetailPrice = calculateSuggestedRetailPrice(product);
+        BigDecimal newWholesalePrice = calculateSuggestedWholesalePrice(product);
+
+        product.setSuggestedRetailSellingPrice(newRetailPrice);
+        product.setSuggestedWholeSaleSellingPrice(newWholesalePrice);
+
+        LOGGER.debug("Updated pricing for product {} - Retail: {}, Wholesale: {}",
+                product.getCode(), newRetailPrice, newWholesalePrice);
+    }
+
+    private BigDecimal calculateSuggestedRetailPrice(Product product) {
+        BigDecimal totalCost = calculateTotalProductCost(product);
+        return totalCost.multiply(RETAIL_MARKUP_FACTOR);
+    }
+
+    private BigDecimal calculateSuggestedWholesalePrice(Product product) {
+        BigDecimal totalCost = calculateTotalProductCost(product);
+        return totalCost.multiply(WHOLESALE_MARKUP_FACTOR);
+    }
+
+    private BigDecimal calculateTotalProductCost(Product product) {
+        BigDecimal materialCost = calculateMaterialCost(product);
+        BigDecimal laborCost = calculateLaborCost(product);
+        BigDecimal procedureCost = calculateProcedureCost(product);
+        return materialCost.add(laborCost).add(procedureCost);
+    }
+
+    private BigDecimal calculateMaterialCost(Product product) {
+        return product.getAllProductMaterials().stream()
+                .filter(pm -> pm.getMaterial().getCurrentUnitCost() != null && pm.getQuantity() != null)
+                .map(pm -> pm.getMaterial().getCurrentUnitCost().multiply(pm.getQuantity()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal calculateLaborCost(Product product) {
+        if (product.getMinutesToMake() == null || product.getMinutesToMake() <= 0) {
+            return BigDecimal.ZERO;
         }
 
-        if(!newPriceWholesale.equals(product.getSuggestedWholeSaleSellingPrice())){
-            product.setSuggestedWholeSaleSellingPrice(newPriceWholesale);
-            LOGGER.info("Updated suggested wholesale price for product {} to {}",
-                    product.getCode(), newPriceWholesale);
+        BigDecimal hoursToMake = BigDecimal.valueOf(product.getMinutesToMake())
+                .divide(MINUTES_PER_HOUR, 4, RoundingMode.HALF_UP);
 
+        return hoursToMake.multiply(HOURLY_LABOR_RATE);
+    }
+
+    private BigDecimal calculateProcedureCost(Product product) {
+        return productProcedureRepository.sumCostByProductId(product.getId());
+    }
+
+    private BigDecimal calculatePercentageDifference(BigDecimal current, BigDecimal suggested) {
+        if (current.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
         }
+        return current.subtract(suggested)
+                .divide(current, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
+    }
+
+
+    private BigDecimal calculateProfitMargin(BigDecimal sellingPrice, BigDecimal cost) {
+        if (sellingPrice == null || sellingPrice.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return sellingPrice.subtract(cost)
+                .divide(sellingPrice, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
     }
 
     // =============================================================================
     // PRIVATE HELPER METHODS - Filtering and Specifications
     // =============================================================================
-
-    /**
-     * Converts ProductFilters to JPA Specifications for database queries
-     */
 
     private Specification<Product> getSpecsFromFilters(ProductFilters filters) {
         Specification<Product> spec = Specification
@@ -1235,9 +1222,6 @@ public class ProductService implements IProductService{
                 .and(ProductSpecification.productIsActive(filters.getIsActive()))
                 .and(ProductSpecification.productLowStock(filters.getLowStock()));
 
-        // Material filtering
-        // Priority: If materialId is provided (user selected), use ID search
-        // Otherwise, use name search for autocomplete
         if (filters.getMaterialId() != null) {
             spec = spec.and(ProductSpecification.productContainsMaterialById(filters.getMaterialId()));
         } else if (filters.getMaterialName() != null && !filters.getMaterialName().trim().isEmpty()) {
@@ -1251,5 +1235,28 @@ public class ProductService implements IProductService{
 
         return spec;
     }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Data Calculations and Mapping
+    // =============================================================================
+
+    private ProductCostDataDTO calculateProductCostData(Product product) {
+        BigDecimal totalCost = calculateMaterialCost(product).add(calculateProcedureCost(product));
+
+        BigDecimal percentageDiff = BigDecimal.ZERO;
+        if (product.getSuggestedRetailSellingPrice() != null &&
+                product.getSuggestedRetailSellingPrice().compareTo(BigDecimal.ZERO) != 0) {
+            percentageDiff = product.getFinalSellingPriceRetail()
+                    .subtract(product.getSuggestedRetailSellingPrice())
+                    .divide(product.getSuggestedRetailSellingPrice(), 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+
+        boolean isLowStock = (product.getStock() != null && product.getLowStockAlert() != null
+                && product.getStock() <= product.getLowStockAlert());
+
+        return new ProductCostDataDTO(totalCost, percentageDiff, isLowStock);
+    }
+
 
 }

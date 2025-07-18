@@ -10,10 +10,10 @@ import java.util.List;
 
 /**
  * Detailed view DTO for Material with comprehensive usage analytics
- *
+
  * Provides material information along with product usage statistics,
  * cost impact analysis, and usage distribution metrics.
- *
+
  * Used for "View Details" functionality in material management pages.
  */
 public record MaterialDetailedViewDTO(
