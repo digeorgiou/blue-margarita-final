@@ -50,17 +50,19 @@ public class ProductService implements IProductService{
     private final CategoryRepository categoryRepository;
     private final MaterialRepository materialRepository;
     private final ProcedureRepository procedureRepository;
+    private final ProductProcedureRepository productProcedureRepository;
     private final UserRepository userRepository;
     private final ProductSalesAnalyticsService analyticsService;
     private final Mapper mapper;
 
     @Autowired
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, MaterialRepository materialRepository, ProcedureRepository procedureRepository,
-                          UserRepository userRepository, ProductSalesAnalyticsService analyticsService, Mapper mapper) {
+                          ProductProcedureRepository productProcedureRepository, UserRepository userRepository, ProductSalesAnalyticsService analyticsService, Mapper mapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.materialRepository = materialRepository;
         this.procedureRepository = procedureRepository;
+        this.productProcedureRepository = productProcedureRepository;
         this.userRepository = userRepository;
         this.analyticsService = analyticsService;
         this.mapper = mapper;
@@ -169,6 +171,7 @@ public class ProductService implements IProductService{
         Product product = getProductEntityById(id);
 
         // Check if product has sales - if yes, only soft delete
+
         if (!product.getAllSaleProducts().isEmpty()) {
             // Soft delete - preserve sales history
             product.setIsActive(false);
@@ -945,10 +948,7 @@ public class ProductService implements IProductService{
      */
 
     private BigDecimal calculateProcedureCost(Product product) {
-        return product.getAllProcedureProducts().stream()
-                .filter(cost -> cost != null)
-                .map(ProductProcedure::getCost)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return productProcedureRepository.sumCostByProductId(product.getId());
     }
 
     /**

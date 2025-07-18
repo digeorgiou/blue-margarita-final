@@ -11,10 +11,7 @@ import gr.aueb.cf.bluemargarita.dto.procedure.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
-import gr.aueb.cf.bluemargarita.repository.CategoryRepository;
-import gr.aueb.cf.bluemargarita.repository.ProcedureRepository;
-import gr.aueb.cf.bluemargarita.repository.ProductRepository;
-import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import gr.aueb.cf.bluemargarita.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,14 +37,19 @@ public class ProcedureService implements IProcedureService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductProcedureRepository productProcedureRepository;
+    private final SaleProductRepository saleProductRepository;
     private final Mapper mapper;
 
     @Autowired
-    public ProcedureService(ProcedureRepository procedureRepository, UserRepository userRepository, ProductRepository productRepository, CategoryRepository categoryRepository, Mapper mapper) {
+    public ProcedureService(ProcedureRepository procedureRepository, UserRepository userRepository, ProductRepository productRepository,
+                            CategoryRepository categoryRepository, ProductProcedureRepository productProcedureRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
         this.procedureRepository = procedureRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.productProcedureRepository = productProcedureRepository;
+        this.saleProductRepository = saleProductRepository;
         this.mapper = mapper;
     }
 
@@ -59,14 +61,11 @@ public class ProcedureService implements IProcedureService {
     @Transactional(rollbackFor = Exception.class)
     public ProcedureReadOnlyDTO createProcedure(ProcedureInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        if (procedureRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Procedure", "Procedure with name " + dto.name() + " already exists");
-        }
+        validateUniqueName(dto.name());
 
         Procedure procedure = mapper.mapProcedureInsertToModel(dto);
 
-        User creator = userRepository.findById(dto.creatorUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + dto.creatorUserId() + " not found"));
+        User creator = getUserEntityById(dto.creatorUserId());
 
         procedure.setCreatedBy(creator);
         procedure.setLastUpdatedBy(creator);
@@ -82,15 +81,13 @@ public class ProcedureService implements IProcedureService {
     @Transactional(rollbackFor = Exception.class)
     public ProcedureReadOnlyDTO updateProcedure(ProcedureUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        Procedure existingProcedure = procedureRepository.findById(dto.procedureId())
-                .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + dto.procedureId() + " was not found"));
+        Procedure existingProcedure = getProcedureEntityById(dto.procedureId());
 
-        if (!existingProcedure.getName().equals(dto.name()) && procedureRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Procedure", "Procedure with name " + dto.name() + " already exists");
+        if (!existingProcedure.getName().equals(dto.name())){
+            validateUniqueName(dto.name());
         }
 
-        User updater = userRepository.findById(dto.updaterUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "Updater user with id=" + dto.updaterUserId() + " was not found"));
+        User updater = getUserEntityById(dto.updaterUserId());
 
         Procedure updatedProcedure = mapper.mapProcedureUpdateToModel(dto, existingProcedure);
         updatedProcedure.setLastUpdatedBy(updater);
@@ -106,8 +103,7 @@ public class ProcedureService implements IProcedureService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteProcedure(Long id) throws EntityNotFoundException {
 
-        Procedure procedure = procedureRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + id + " was not found"));
+        Procedure procedure = getProcedureEntityById(id);
 
         Integer productCount = procedureRepository.countProductsByProcedureId(id);
 
@@ -137,37 +133,8 @@ public class ProcedureService implements IProcedureService {
     }
 
     // =============================================================================
-    // QUERY OPERATIONS
+    // PROCEDURE VIEW PAGE AND ANALYTICS
     // =============================================================================
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ProcedureReadOnlyDTO> getAllActiveProcedures() {
-        List<Procedure> procedures = procedureRepository.findByIsActiveTrue();
-
-        return procedures.stream().map(mapper::mapToProcedureReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<ProcedureForDropdownDTO> getActiveProceduresForDropdown() {
-        return procedureRepository.findByIsActiveTrue()
-                .stream()
-                .map(procedure -> new ProcedureForDropdownDTO(
-                        procedure.getId(),
-                        procedure.getName()
-                ))
-                .sorted((p1, p2) -> p1.name().compareToIgnoreCase(p2.name()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ProcedureReadOnlyDTO> getFilteredProcedures(ProcedureFilters filters) {
-        return procedureRepository.findAll(getSpecsFromFilters(filters))
-                .stream()
-                .map(mapper::mapToProcedureReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -178,10 +145,6 @@ public class ProcedureService implements IProcedureService {
         );
         return new Paginated<>(filtered.map(mapper::mapToProcedureReadOnlyDTO));
     }
-
-    // =============================================================================
-    // ANALYTICS AND DETAILED VIEWS
-    // =============================================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -195,79 +158,7 @@ public class ProcedureService implements IProcedureService {
 
         return mapper.mapToProcedureDetailedDTO(procedure, analytics, categoryDistribution, topProductsUsage);
 
-//        Integer totalProductsUsing = procedureRepository.countProductsByProcedureId(id);
-//
-//        if (totalProductsUsing == 0) {
-//            // No products using this procedure - return empty metrics
-//            return createEmptyMetricsDTO(procedure);
-//        }
-//
-//        // Get cost statistics using repository aggregation
-//        Object[] costStats = procedureRepository.calculateCostStatsByProcedureId(id);
-//        BigDecimal averageProcedureCost = costStats != null && costStats[0] != null ?
-//                (BigDecimal) costStats[0] : BigDecimal.ZERO;
-//        BigDecimal minProcedureCost = costStats != null && costStats[1] != null ?
-//                (BigDecimal) costStats[1] : BigDecimal.ZERO;
-//        BigDecimal maxProcedureCost = costStats != null && costStats[2] != null ?
-//                (BigDecimal) costStats[2] : BigDecimal.ZERO;
-//
-//        // Get average product selling price using repository aggregation
-//        BigDecimal averageProductSellingPrice = procedureRepository.calculateAverageProductPriceByProcedureId(id);
-//        if (averageProductSellingPrice == null) {
-//            averageProductSellingPrice = BigDecimal.ZERO;
-//        }
-//
-//        // Get category distribution using repository aggregation
-//        List<Object[]> categoryData = procedureRepository.calculateCategoryDistributionByProcedureId(id, totalProductsUsing);
-//        List<CategoryUsageDTO> categoryDistribution = categoryData.stream()
-//                .map(data -> new CategoryUsageDTO(
-//                        (Long) data[0],           // categoryId
-//                        (String) data[1],         // categoryName
-//                        ((Number) data[2]).intValue(), // productCount
-//                        ((Number) data[3]).doubleValue() // percentage
-//                ))
-//                .collect(Collectors.toList());
-//
-//        // Get top products using this procedure (limit to 10 for performance)
-//        PageRequest topProductsPageable = PageRequest.of(0, 10);
-//        List<Object[]> topProductsData = procedureRepository.findTopProductsByProcedureUsage(id, topProductsPageable);
-//
-//        List<ProductUsageDTO> topProductsUsage = topProductsData.stream()
-//                .map(data -> new ProductUsageDTO(
-//                        (Long) data[0],           // productId
-//                        (String) data[1],         // productName
-//                        (String) data[2],         // productCode
-//                        BigDecimal.ONE,           // usageQuantity (always 1 for procedures)
-//                        (BigDecimal) data[3],     // costImpact (procedure cost for this product)
-//                        (String) data[4]          // categoryName
-//                ))
-//                .collect(Collectors.toList());
-//
-//        LOGGER.debug("Optimized analytics completed for procedure '{}': totalProducts={}, avgCost={}, categories={}, topProducts={}",
-//                procedure.getName(), totalProductsUsing, averageProcedureCost, categoryDistribution.size(), topProductsUsage.size());
-//
-//        return new ProcedureDetailedViewDTO(
-//                procedure.getId(),
-//                procedure.getName(),
-//                procedure.getCreatedAt(),
-//                procedure.getUpdatedAt(),
-//                procedure.getCreatedBy().getUsername(),
-//                procedure.getLastUpdatedBy().getUsername(),
-//                procedure.getIsActive(),
-//                procedure.getDeletedAt(),
-//                totalProductsUsing,
-//                averageProcedureCost,
-//                minProcedureCost,
-//                maxProcedureCost,
-//                averageProductSellingPrice,
-//                categoryDistribution,
-//                topProductsUsage
-//        );
     }
-
-    // =============================================================================
-    // PRODUCT RELATIONSHIP OPERATIONS
-    // =============================================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -275,8 +166,7 @@ public class ProcedureService implements IProcedureService {
             throws EntityNotFoundException {
 
         // Verify procedure exists
-        procedureRepository.findById(procedureId)
-                .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + procedureId + " was not found"));
+        getProcedureEntityById(procedureId);
 
         // Apply default sorting if none specified
         if (pageable.getSort().isUnsorted()) {
@@ -319,6 +209,23 @@ public class ProcedureService implements IProcedureService {
     }
 
     // =============================================================================
+    // FOR DROPDOWN IN ADD-PRODUCT
+    // =============================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProcedureForDropdownDTO> getActiveProceduresForDropdown() {
+        return procedureRepository.findByIsActiveTrue()
+                .stream()
+                .map(procedure -> new ProcedureForDropdownDTO(
+                        procedure.getId(),
+                        procedure.getName()
+                ))
+                .sorted((p1, p2) -> p1.name().compareToIgnoreCase(p2.name()))
+                .collect(Collectors.toList());
+    }
+
+    // =============================================================================
     // PRIVATE HELPER METHODS
     // =============================================================================
 
@@ -341,7 +248,7 @@ public class ProcedureService implements IProcedureService {
 
     private ProcedureAnalyticsDTO getProcedureAnalytics(Long procedureId) {
 
-        Integer totalProductsUsing = procedureRepository.countProductsByProcedureId(procedureId);
+        Integer totalProductsUsing = productProcedureRepository.countByProcedureId(procedureId);
         // Check if procedure has usage first
         if (totalProductsUsing == 0) {
             return createEmptyProcedureAnalytics();
@@ -349,31 +256,30 @@ public class ProcedureService implements IProcedureService {
 
         // Usage metrics (like your customer basic metrics)
         Object[] costStats = procedureRepository.calculateCostStatsByProcedureId(procedureId);
-        BigDecimal averageProcedureCost = costStats[0] != null ? (BigDecimal) costStats[0] : BigDecimal.ZERO;
-        BigDecimal minProcedureCost = costStats[1] != null ? (BigDecimal) costStats[1] : BigDecimal.ZERO;
-        BigDecimal maxProcedureCost = costStats[2] != null ? (BigDecimal) costStats[2] : BigDecimal.ZERO;
+        BigDecimal averageProcedureCost = productProcedureRepository.calculateAverageCostByProcedureId(procedureId);
+
         BigDecimal averageProductSellingPrice = procedureRepository.calculateAverageProductPriceByProcedureId(procedureId);
 
         // All-time sales metrics (like your customer all-time metrics)
-        Integer totalSalesCount = procedureRepository.countSalesByProcedureId(procedureId);
+        Integer totalSalesCount = saleProductRepository.countSalesByProcedureId(procedureId);
         BigDecimal totalRevenue = BigDecimal.ZERO;
         LocalDate lastSaleDate = null;
 
         if (totalSalesCount > 0) {
-            totalRevenue = procedureRepository.sumRevenueByProcedureId(procedureId);
-            lastSaleDate = procedureRepository.findLastSaleDateByProcedureId(procedureId);
+            totalRevenue = saleProductRepository.sumRevenueByProcedureId(procedureId);
+            lastSaleDate = saleProductRepository.findLastSaleDateByProcedureId(procedureId);
         }
 
         // Recent performance (last 30 days)
         LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
         LocalDate today = LocalDate.now();
-        Integer recentSalesCount = procedureRepository.countSalesByProcedureIdAndDateRange(procedureId, thirtyDaysAgo, today);
-        BigDecimal recentRevenue = procedureRepository.sumRevenueByProcedureIdAndDateRange(procedureId, thirtyDaysAgo, today);
+        Integer recentSalesCount = saleProductRepository.countSalesByProcedureIdAndDateRange(procedureId, thirtyDaysAgo, today);
+        BigDecimal recentRevenue = saleProductRepository.sumRevenueByProcedureIdAndDateRange(procedureId, thirtyDaysAgo, today);
 
         // Yearly performance
         LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
-        Integer yearlySalesCount = procedureRepository.countSalesByProcedureIdAndDateRange(procedureId, yearStart, today);
-        BigDecimal yearlySalesRevenue = procedureRepository.sumRevenueByProcedureIdAndDateRange(procedureId, yearStart, today);
+        Integer yearlySalesCount = saleProductRepository.countSalesByProcedureIdAndDateRange(procedureId, yearStart, today);
+        BigDecimal yearlySalesRevenue = saleProductRepository.sumRevenueByProcedureIdAndDateRange(procedureId, yearStart, today);
 
         return new ProcedureAnalyticsDTO(
                 totalProductsUsing,
@@ -415,22 +321,22 @@ public class ProcedureService implements IProcedureService {
         return productIds.stream()
                 .limit(10)
                 .map(productId -> getProductProcedureUsage(productId, procedureId))
-                .filter(Objects::nonNull)
+                .flatMap(Optional::stream)
                 .sorted((p1, p2) -> p2.costImpact().compareTo(p1.costImpact()))
                 .collect(Collectors.toList());
     }
 
-    private ProductUsageDTO getProductProcedureUsage(Long productId, Long procedureId) {
+    private Optional<ProductUsageDTO> getProductProcedureUsage(Long productId, Long procedureId) {
         String productName = productRepository.findProductNameById(productId);
         String productCode = productRepository.findProductCodeById(productId);
         String categoryName = productRepository.findCategoryNameByProductId(productId);
-        BigDecimal procedureCost = productRepository.findProcedureCostForProduct(productId, procedureId);
+        BigDecimal procedureCost = productProcedureRepository.findCostByProductIdAndProcedureId(productId, procedureId);
 
         if (procedureCost == null) {
-            return createEmptyProductUsage(productId);
+            return Optional.empty();
         }
 
-        return new ProductUsageDTO(productId, productName, productCode, BigDecimal.ONE, procedureCost, categoryName);
+        return Optional.of(new ProductUsageDTO(productId, productName, productCode, BigDecimal.ONE, procedureCost, categoryName));
     }
 
     private List<CategoryUsageDTO> getCategoryDistributionForProcedure(Long procedureId) {
@@ -441,40 +347,28 @@ public class ProcedureService implements IProcedureService {
             return Collections.emptyList();
         }
 
-        Integer totalProducts = productRepository.countProductsByProcedureId(procedureId);
+        Integer totalProducts = productProcedureRepository.countByProcedureId(procedureId);
 
         return categoryIds.stream()
                 .map(categoryId -> getCategoryUsageForProcedure(categoryId, procedureId, totalProducts))
-                .filter(Objects::nonNull)
+                .flatMap(Optional::stream)
                 .sorted((c1, c2) -> c2.productCount().compareTo(c1.productCount()))
                 .collect(Collectors.toList());
     }
 
-    private CategoryUsageDTO getCategoryUsageForProcedure(Long categoryId, Long procedureId, Integer totalProducts) {
+    private Optional<CategoryUsageDTO> getCategoryUsageForProcedure(Long categoryId, Long procedureId, Integer totalProducts) {
         String categoryName = categoryRepository.findCategoryNameById(categoryId);
-        Integer productCount = productRepository.countProductsByCategoryIdAndProcedureId(categoryId, procedureId);
+        Integer productCount = productProcedureRepository.countByCategoryIdAndProcedureId(categoryId,procedureId);
 
         if (productCount == 0) {
-            return createEmptyCategoryUsage(categoryId);
+            Optional.empty();
         }
 
         Double percentage = (productCount * 100.0) / totalProducts;
 
-        return new CategoryUsageDTO(categoryId, categoryName, productCount, percentage);
+        return Optional.of(new CategoryUsageDTO(categoryId, categoryName, productCount, percentage));
     }
 
-    private ProductUsageDTO createEmptyProductUsage(Long productId){
-        String productName = productRepository.findProductNameById(productId);
-        String productCode = productRepository.findProductCodeById(productId);
-        String categoryName = productRepository.findCategoryNameByProductId(productId);
-
-        return new ProductUsageDTO(productId, productName, productCode, BigDecimal.ZERO, BigDecimal.ZERO, categoryName);
-    }
-
-    private CategoryUsageDTO createEmptyCategoryUsage(Long categoryId){
-        String categoryName = categoryRepository.findCategoryNameById(categoryId);
-        return new CategoryUsageDTO(categoryId, categoryName, 0, 0.0);
-    }
 
     /**
      * Creates JPA Specification from filter criteria

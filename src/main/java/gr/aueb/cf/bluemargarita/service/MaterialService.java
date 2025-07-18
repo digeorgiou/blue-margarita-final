@@ -42,17 +42,23 @@ public class MaterialService implements IMaterialService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ProductMaterialRepository productMaterialRepository;
+    private final SaleProductRepository saleProductRepository;
     private final CategoryRepository categoryRepository;
+    private final PurchaseMaterialRepository purchaseMaterialRepository;
     private final Mapper mapper;
 
     @Autowired
     public MaterialService(MaterialRepository materialRepository, UserRepository userRepository,
-                           ProductRepository productRepository, ProductMaterialRepository productMaterialRepository, CategoryRepository categoryRepository, Mapper mapper) {
+                           ProductRepository productRepository, ProductMaterialRepository productMaterialRepository,
+                           SaleProductRepository saleProductRepository, CategoryRepository categoryRepository,
+                           PurchaseMaterialRepository purchaseMaterialRepository, Mapper mapper) {
         this.materialRepository = materialRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productMaterialRepository = productMaterialRepository;
+        this.saleProductRepository = saleProductRepository;
         this.categoryRepository = categoryRepository;
+        this.purchaseMaterialRepository = purchaseMaterialRepository;
         this.mapper = mapper;
     }
 
@@ -255,34 +261,52 @@ public class MaterialService implements IMaterialService {
             return createEmptyMaterialAnalytics();
         }
         BigDecimal averageCostPerProduct = materialRepository.calculateAverageCostPerProductByMaterialId(materialId);
-        Integer purchaseCount = materialRepository.countPurchasesContainingMaterial(materialId);
-        LocalDate lastPurchaseDate = materialRepository.findLastPurchaseDateByMaterialId(materialId);
+        Integer purchaseCount = purchaseMaterialRepository.countPurchasesByMaterialId(materialId);
+        LocalDate lastPurchaseDate = purchaseMaterialRepository.findLastPurchaseDateByMaterialId(materialId);
 
-        Integer totalSalesCount = materialRepository.countSalesByMaterialId(materialId);
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+        LocalDate today = LocalDate.now();
+
+        BigDecimal recentPurchaseQuantity = purchaseMaterialRepository.sumQuantityByMaterialIdAndDateRange(materialId, thirtyDaysAgo, today);
+        BigDecimal yearlyPurchaseQuantity = purchaseMaterialRepository.sumQuantityByMaterialIdAndDateRange(materialId, yearStart, today);
+        BigDecimal thisYearAveragePurchasePrice = purchaseMaterialRepository.calculateAveragePriceByMaterialIdAndDateRange(materialId, yearStart, today);
+
+        // Last year's average purchase price (if there are purchases)
+        LocalDate lastYearStart = LocalDate.of(LocalDate.now().getYear() - 1, 1, 1);
+        LocalDate lastYearEnd = LocalDate.of(LocalDate.now().getYear() - 1, 12, 31);
+        BigDecimal lastYearAveragePurchasePrice = purchaseMaterialRepository.calculateAveragePriceByMaterialIdAndDateRange(materialId, lastYearStart, lastYearEnd);
+        // Set to null if 0 (no purchases last year)
+        if (lastYearAveragePurchasePrice.compareTo(BigDecimal.ZERO) == 0) {
+            lastYearAveragePurchasePrice = null;
+        }
+
+        Integer totalSalesCount = saleProductRepository.countSalesByMaterialId(materialId);
         BigDecimal totalRevenue = BigDecimal.ZERO;
         LocalDate lastSaleDate = null;
 
         if(totalSalesCount > 0){
-            totalRevenue = materialRepository.sumRevenueByMaterialId(materialId);
-            lastSaleDate = materialRepository.findLastSaleDateByMaterialId(materialId);
+            totalRevenue = saleProductRepository.sumRevenueByMaterialId(materialId);
+            lastSaleDate = saleProductRepository.findLastSaleDateByMaterialId(materialId);
         }
 
-        // Recent performance (last 30 days)
-        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
-        LocalDate today = LocalDate.now();
-        Integer recentSalesCount = materialRepository.countSalesByMaterialIdAndDateRange(materialId, thirtyDaysAgo, today);
-        BigDecimal recentRevenue = materialRepository.sumRevenueByMaterialIdAndDateRange(materialId, thirtyDaysAgo, today);
+        // Recent sales  (last 30 days)
+        Integer recentSalesCount = saleProductRepository.countSalesByMaterialIdAndDateRange(materialId, thirtyDaysAgo, today);
+        BigDecimal recentRevenue = saleProductRepository.sumRevenueByMaterialIdAndDateRange(materialId, thirtyDaysAgo, today);
 
         // Yearly performance
-        LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
-        Integer yearlySalesCount = materialRepository.countSalesByMaterialIdAndDateRange(materialId, yearStart, today);
-        BigDecimal yearlySalesRevenue = materialRepository.sumRevenueByMaterialIdAndDateRange(materialId, yearStart, today);
+        Integer yearlySalesCount = saleProductRepository.countSalesByMaterialIdAndDateRange(materialId, yearStart, today);
+        BigDecimal yearlySalesRevenue = saleProductRepository.sumRevenueByMaterialIdAndDateRange(materialId, yearStart, today);
 
         return new MaterialAnalyticsDTO(
                 totalProductsUsing,
                 averageCostPerProduct != null ? averageCostPerProduct : BigDecimal.ZERO,
                 purchaseCount,
                 lastPurchaseDate,
+                recentPurchaseQuantity,
+                yearlyPurchaseQuantity,
+                thisYearAveragePurchasePrice,
+                lastYearAveragePurchasePrice,
                 totalRevenue,
                 totalSalesCount,
                 lastSaleDate,
@@ -300,6 +324,10 @@ public class MaterialService implements IMaterialService {
                 BigDecimal.ZERO,
                 0,
                 null,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 0,
                 null,
@@ -350,7 +378,7 @@ public class MaterialService implements IMaterialService {
         String productName = productRepository.findProductNameById(productId);
         String productCode = productRepository.findProductCodeById(productId);
         String categoryName = productRepository.findCategoryNameByProductId(productId);
-        BigDecimal usageQuantity = productRepository.findMaterialQuantityForProduct(productId, materialId);
+        BigDecimal usageQuantity = productMaterialRepository.findQuantityByProductIdAndMaterialId(productId, materialId);
 
         if (usageQuantity == null || usageQuantity.compareTo(BigDecimal.ZERO) == 0) {
             return Optional.empty();

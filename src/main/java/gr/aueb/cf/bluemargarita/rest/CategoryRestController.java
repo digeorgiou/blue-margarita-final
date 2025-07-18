@@ -6,6 +6,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.dto.category.*;
+import gr.aueb.cf.bluemargarita.dto.customer.CustomerDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.service.ICategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -169,7 +170,7 @@ public class CategoryRestController {
     }
 
     // =============================================================================
-    // CATEGORY VIEWING AND LISTING - FOR CATEGORY MANAGEMENT PAGE
+    // CATEGORY VIEWING AND DETAILS -FOR CATEGORY MANAGEMENT PAGE
     // =============================================================================
 
     @Operation(
@@ -211,13 +212,43 @@ public class CategoryRestController {
         return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 
+
+    @Operation(
+            summary = "Get category detailed view",
+            description = "Retrieves comprehensive category information including sales analytics and top products. " +
+                    "Used for category detail modal/page.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Category detailed view with analytics",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CategoryDetailedViewDTO.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Category not found",
+                            content = @Content(mediaType = "application/json")
+                    )
+            }
+    )
+
+    @GetMapping("/{id}/details")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<CategoryDetailedViewDTO> getCategoryDetailedView(@PathVariable Long id) throws EntityNotFoundException {
+        CategoryDetailedViewDTO categoryDetails = categoryService.getCategoryDetailedView(id);
+        return new ResponseEntity<>(categoryDetails, HttpStatus.OK);
+    }
+
     // =============================================================================
     // DROPDOWN AND SELECTION ENDPOINTS - FOR PRODUCT FORMS
     // =============================================================================
 
     @Operation(
             summary = "Get categories for dropdown",
-            description = "Retrieves active categories formatted for dropdown selection with ID and name only. Used in product creation and management forms.",
+            description = "Retrieves active categories formatted for dropdown selection with ID and name only. " +
+                    "Used in product creation and management forms.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",

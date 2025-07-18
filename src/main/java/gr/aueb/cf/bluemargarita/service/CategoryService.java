@@ -191,26 +191,26 @@ public class CategoryService implements ICategoryService{
         // Product metrics
         BigDecimal averageProductPrice = categoryRepository.calculateAverageRetailPriceByCategoryId(categoryId);
 
-        // All-time sales metrics (like your customer all-time metrics)
-        Integer totalSalesCount = categoryRepository.countSalesByCategoryId(categoryId);
+        // All-time sales metrics
+        Integer totalSalesCount = saleProductRepository.countByCategoryId(categoryId);
         if (totalSalesCount == 0) {
             return createEmptyCategoryAnalytics();
         }
 
-        BigDecimal totalRevenue = categoryRepository.sumRevenueByCategoryId(categoryId);
+        BigDecimal totalRevenue = saleProductRepository.sumRevenueByCategoryId(categoryId);
         BigDecimal averageOrderValue = totalRevenue.divide(BigDecimal.valueOf(totalSalesCount), 2, RoundingMode.HALF_UP);
-        LocalDate lastSaleDate = categoryRepository.findLastSaleDateByCategoryId(categoryId);
+        LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByCategoryId(categoryId);
 
         // Recent performance
         LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
         LocalDate today = LocalDate.now();
-        Integer recentSalesCount = categoryRepository.countSalesByCategoryIdAndDateRange(categoryId, thirtyDaysAgo, today);
-        BigDecimal recentRevenue = categoryRepository.sumRevenueByCategoryIdAndDateRange(categoryId, thirtyDaysAgo, today);
+        Integer recentSalesCount = saleProductRepository.countByCategoryIdAndDateRange(categoryId, thirtyDaysAgo, today);
+        BigDecimal recentRevenue = saleProductRepository.sumRevenueByCategoryIdAndDateRange(categoryId, thirtyDaysAgo, today);
 
         // Yearly performance
         LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
-        Integer yearlySalesCount = categoryRepository.countSalesByCategoryIdAndDateRange(categoryId, yearStart, today);
-        BigDecimal yearlySalesRevenue = categoryRepository.sumRevenueByCategoryIdAndDateRange(categoryId, yearStart, today);
+        Integer yearlySalesCount = saleProductRepository.countByCategoryIdAndDateRange(categoryId, yearStart, today);
+        BigDecimal yearlySalesRevenue = saleProductRepository.sumRevenueByCategoryIdAndDateRange(categoryId, yearStart, today);
 
         return new CategoryAnalyticsDTO(
                 totalProducts,
@@ -262,24 +262,13 @@ public class CategoryService implements ICategoryService{
 
         BigDecimal totalSold = saleProductRepository.sumQuantityByProductId(productId);
         if(totalSold == null || totalSold.compareTo(BigDecimal.ZERO) == 0){
-            return createEmptyStatsSummary(productId);
+            return Optional.empty();
         }
         BigDecimal totalRevenue = saleProductRepository.sumRevenueByProductId(productId);
         LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductId(productId);
         return Optional.of(new ProductStatsSummaryDTO(productId,productName,productCode,totalSold,totalRevenue, lastSaleDate));
 
     }
-
-    private Optional<ProductStatsSummaryDTO> createEmptyStatsSummary(Long productId){
-        String productName = productRepository.findProductNameById(productId);
-        String productCode = productRepository.findProductCodeById(productId);
-
-        return Optional.of(new ProductStatsSummaryDTO(
-                productId,productName,productCode,BigDecimal.ZERO, BigDecimal.ZERO, null
-        ));
-    }
-
-
 
     private Specification<Category> getSpecsFromFilters(CategoryFilters filters) {
         return Specification

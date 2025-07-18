@@ -185,4 +185,63 @@ public interface SaleProductRepository extends JpaRepository<SaleProduct, Long>,
     @Query("SELECT MAX(s.saleDate) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.customer.id = :customerId")
     LocalDate findLastSaleDateByProductIdAndCustomerId(@Param("productId") Long productId, @Param("customerId") Long customerId);
 
+    // Direct queries on SaleProduct table with simple joins
+    @Query("SELECT COUNT(sp) FROM SaleProduct sp WHERE sp.product.category.id = :categoryId")
+    Integer countByCategoryId(@Param("categoryId") Long categoryId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp WHERE sp.product.category.id = :categoryId")
+    BigDecimal sumRevenueByCategoryId(@Param("categoryId") Long categoryId);
+
+    @Query("SELECT MAX(sp.sale.saleDate) FROM SaleProduct sp WHERE sp.product.category.id = :categoryId")
+    LocalDate findLastSaleDateByCategoryId(@Param("categoryId") Long categoryId);
+
+    // Date range queries
+    @Query("SELECT COUNT(sp) FROM SaleProduct sp WHERE sp.product.category.id = :categoryId AND sp.sale.saleDate BETWEEN :startDate AND :endDate")
+    Integer countByCategoryIdAndDateRange(@Param("categoryId") Long categoryId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp WHERE sp.product.category.id = :categoryId AND sp.sale.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByCategoryIdAndDateRange(@Param("categoryId") Long categoryId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+
+    // =============================================================================
+    // MATERIAL QUERIES
+    // =============================================================================
+
+    @Query("SELECT COUNT(DISTINCT sp.sale.id) FROM SaleProduct sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId")
+    Integer countSalesByMaterialId(@Param("materialId") Long materialId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId")
+    BigDecimal sumRevenueByMaterialId(@Param("materialId") Long materialId);
+
+    @Query("SELECT MAX(sp.sale.saleDate) FROM SaleProduct sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId")
+    LocalDate findLastSaleDateByMaterialId(@Param("materialId") Long materialId);
+
+    // Date range queries
+    @Query("SELECT COUNT(DISTINCT sp.sale.id) FROM SaleProduct sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId AND sp.sale.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByMaterialIdAndDateRange(@Param("materialId") Long materialId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.product.productMaterials pm WHERE pm.material.id = :materialId AND sp.sale.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByMaterialIdAndDateRange(@Param("materialId") Long materialId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    // =============================================================================
+    // PROCEDURE QUERIES
+    // =============================================================================
+
+    @Query("SELECT COUNT(DISTINCT sp.sale.id) FROM SaleProduct sp JOIN sp.product.productProcedures pp WHERE pp.procedure.id = :procedureId")
+    Integer countSalesByProcedureId(@Param("procedureId") Long procedureId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.product.productProcedures pp WHERE pp.procedure.id = :procedureId")
+    BigDecimal sumRevenueByProcedureId(@Param("procedureId") Long procedureId);
+
+    @Query("SELECT MAX(sp.sale.saleDate) FROM SaleProduct sp JOIN sp.product.productProcedures pp WHERE pp.procedure.id = :procedureId")
+    LocalDate findLastSaleDateByProcedureId(@Param("procedureId") Long procedureId);
+
+    // Date range queries
+    @Query("SELECT COUNT(DISTINCT sp.sale.id) FROM SaleProduct sp JOIN sp.product.productProcedures pp WHERE pp.procedure.id = :procedureId AND sp.sale.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByProcedureIdAndDateRange(@Param("procedureId") Long procedureId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.product.productProcedures pp WHERE pp.procedure.id = :procedureId AND sp.sale.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByProcedureIdAndDateRange(@Param("procedureId") Long procedureId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+
 }

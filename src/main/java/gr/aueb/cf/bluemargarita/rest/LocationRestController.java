@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.dto.customer.CustomerDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.location.*;
 import gr.aueb.cf.bluemargarita.service.ILocationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -210,6 +211,36 @@ public class LocationRestController {
         Paginated<LocationReadOnlyDTO> locations = locationService.getLocationsFilteredPaginated(filters);
         return new ResponseEntity<>(locations, HttpStatus.OK);
     }
+
+    @Operation(
+            summary = "Get location detailed view",
+            description = "Retrieves comprehensive location information including sales analytics and top products. Used for location detail modal/page.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Location detailed view with analytics",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = LocationDetailedViewDTO.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Location not found",
+                            content = @Content(mediaType = "application/json")
+                    )
+            }
+    )
+
+    @GetMapping("/{id}/details")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<LocationDetailedViewDTO> getLocationDetailedView(@PathVariable Long id) throws EntityNotFoundException {
+
+        LocationDetailedViewDTO locationDetails = locationService.getLocationDetailedById(id);
+        return new ResponseEntity<>(locationDetails, HttpStatus.OK);
+    }
+
+
 
     // =============================================================================
     // DROPDOWN AND SELECTION ENDPOINTS - FOR SALES AND OTHER FORMS

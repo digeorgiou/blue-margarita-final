@@ -10,10 +10,7 @@ import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Customer;
 import gr.aueb.cf.bluemargarita.model.User;
-import gr.aueb.cf.bluemargarita.repository.CustomerRepository;
-import gr.aueb.cf.bluemargarita.repository.ProductRepository;
-import gr.aueb.cf.bluemargarita.repository.SaleProductRepository;
-import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import gr.aueb.cf.bluemargarita.repository.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -35,15 +32,17 @@ public class CustomerService implements ICustomerService {
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final SaleRepository saleRepository;
     private final SaleProductRepository saleProductRepository;
     private final Mapper mapper;
 
     @Autowired
     public CustomerService(CustomerRepository customerRepository, UserRepository userRepository, ProductRepository productRepository,
-                           SaleProductRepository saleProductRepository, Mapper mapper) {
+                           SaleRepository saleRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.saleRepository = saleRepository;
         this.saleProductRepository = saleProductRepository;
         this.mapper = mapper;
     }
@@ -110,7 +109,7 @@ public class CustomerService implements ICustomerService {
 
         Customer customer = getCustomerEntityById(id);
 
-        Integer salesCount = customerRepository.countSalesByCustomerId(id);
+        Integer salesCount = saleRepository.countByCustomerId(id);
 
         if (salesCount > 0) {
             // Soft Delete if customer has sales history
@@ -272,25 +271,25 @@ public class CustomerService implements ICustomerService {
 
     private CustomerAnalyticsDTO getCustomerAnalytics(Long customerId) {
         // All-time metrics
-        Integer totalSales = customerRepository.countSalesByCustomerId(customerId);
+        Integer totalSales = saleRepository.countByCustomerId(customerId);
         if(totalSales == 0) {
             return createEmptyCustomerAnalytics();
         }
 
-        BigDecimal totalRevenue = customerRepository.sumRevenueByCustomerId(customerId);
+        BigDecimal totalRevenue = saleRepository.sumRevenueByCustomerId(customerId);
         BigDecimal averageOrderValue = totalRevenue.divide(BigDecimal.valueOf(totalSales),2, RoundingMode.HALF_UP);
-        LocalDate lastOrderDate = customerRepository.findLastSaleDateByCustomerId(customerId);
+        LocalDate lastOrderDate = saleRepository.findLastSaleDateByCustomerId(customerId);
 
         // Recent performance
         LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
         LocalDate today = LocalDate.now();
-        Integer recentSalesCount = customerRepository.countSalesByCustomerIdAndDateRange(customerId,thirtyDaysAgo,today);
-        BigDecimal recentRevenue = customerRepository.sumRevenueByCustomerIdAndDateRange(customerId,thirtyDaysAgo, today);
+        Integer recentSalesCount = saleRepository.countByCustomerIdAndDateRange(customerId, thirtyDaysAgo, today);
+        BigDecimal recentRevenue = saleRepository.sumRevenueByCustomerIdAndDateRange(customerId, thirtyDaysAgo, today);
 
         // Yearly performance
         LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(),1,1);
-        Integer yearlySalesCount = customerRepository.countSalesByCustomerIdAndDateRange(customerId,yearStart,today);
-        BigDecimal yearlySalesRevenue = customerRepository.sumRevenueByCustomerIdAndDateRange(customerId,yearStart,today);
+        Integer yearlySalesCount = saleRepository.countByCustomerIdAndDateRange(customerId,yearStart,today);
+        BigDecimal yearlySalesRevenue = saleRepository.sumRevenueByCustomerIdAndDateRange(customerId,yearStart,today);
 
         return new CustomerAnalyticsDTO(
                 totalRevenue,

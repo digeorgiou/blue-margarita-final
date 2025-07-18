@@ -38,6 +38,11 @@ public record MaterialDetailedViewDTO(
         Integer purchaseCount,
         LocalDate lastPurchaseDate,
 
+        BigDecimal recentPurchaseQuantity,     // last 30 days
+        BigDecimal yearlyPurchaseQuantity,     // current year
+        BigDecimal thisYearAveragePurchasePrice,
+        BigDecimal lastYearAveragePurchasePrice, // null if no purchases last year
+
         // All-time sales performance (from products using this material)
         BigDecimal totalRevenue,
         Integer totalSalesCount,

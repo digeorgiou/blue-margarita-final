@@ -83,25 +83,8 @@ public interface IProcedureService {
     ProcedureReadOnlyDTO getProcedureById(Long id) throws EntityNotFoundException;
 
     // =============================================================================
-    // QUERY OPERATIONS
+    // PROCEDURE VIEW PAGE AND ANALYTICS
     // =============================================================================
-
-    /**
-     * Retrieves all active procedures for general use
-     * Used when you need a simple list of available procedures
-     *
-     * @return List of all active procedures
-     */
-    List<ProcedureReadOnlyDTO> getAllActiveProcedures();
-
-    /**
-     * Retrieves procedures based on filter criteria without pagination
-     * Useful for exports or when you need all matching results
-     *
-     * @param filters Filter criteria (name search, active status)
-     * @return List of procedures matching filter criteria
-     */
-    List<ProcedureReadOnlyDTO> getFilteredProcedures(ProcedureFilters filters);
 
     /**
      * Retrieves procedures with pagination and filtering for management pages
@@ -116,18 +99,6 @@ public interface IProcedureService {
      * @return Paginated result of procedures matching filter criteria
      */
     Paginated<ProcedureReadOnlyDTO> getProceduresFilteredPaginated(ProcedureFilters filters);
-
-    /**
-     * Retrieves active procedures formatted for dropdown selections
-     * Returns minimal data optimized for form dropdowns and autocomplete
-     *
-     * @return List of active procedures with ID and name only, sorted alphabetically
-     */
-    List<ProcedureForDropdownDTO> getActiveProceduresForDropdown();
-
-    // =============================================================================
-    // ANALYTICS AND DETAILED VIEWS
-    // =============================================================================
 
     /**
      * Retrieves comprehensive analytics and detailed information for a specific procedure
@@ -147,9 +118,6 @@ public interface IProcedureService {
      */
     ProcedureDetailedViewDTO getProcedureDetailedById(Long id) throws EntityNotFoundException;
 
-    // PRODUCT RELATIONSHIP OPERATIONS
-    // =============================================================================
-
     /**
      * Retrieves paginated list of all products using a specific procedure
      * @param procedureId Procedure ID to find products for
@@ -159,4 +127,18 @@ public interface IProcedureService {
      */
     Paginated<ProductUsageDTO> getAllProductsUsingProcedure(Long procedureId, Pageable pageable)
             throws EntityNotFoundException;
+
+
+    // =============================================================================
+    // FOR DROPDOWN IN ADD-PRODUCT
+    // =============================================================================
+
+    /**
+     * Retrieves active procedures formatted for dropdown selections
+     * Returns minimal data optimized for form dropdowns and autocomplete
+     *
+     * @return List of active procedures with ID and name only, sorted alphabetically
+     */
+    List<ProcedureForDropdownDTO> getActiveProceduresForDropdown();
+
 }

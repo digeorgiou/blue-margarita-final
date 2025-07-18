@@ -11,6 +11,10 @@ public record MaterialAnalyticsDTO(
         // Purchase metrics
         Integer purchaseCount,
         LocalDate lastPurchaseDate,
+        BigDecimal recentPurchaseQuantity,
+        BigDecimal yearlyPurchaseQuantity,
+        BigDecimal thisYearAveragePurchasePrice,
+        BigDecimal lastYearAveragePurchasePrice,
 
         // All-time sales metrics
         BigDecimal totalRevenue,

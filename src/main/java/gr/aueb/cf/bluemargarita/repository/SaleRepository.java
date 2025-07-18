@@ -116,4 +116,26 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     @Query("SELECT DISTINCT sp.product.id FROM SaleProduct sp JOIN sp.sale s WHERE s.location.id = :locationId")
     List<Long> findDistinctProductIdsByLocationId(@Param("locationId") Long locationId);
 
+    //Customer
+
+    @Query("SELECT COUNT(s) FROM Sale s WHERE s.customer.id = :customerId")
+    Integer countByCustomerId(@Param("customerId") Long customerId);
+
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.customer.id = :customerId")
+    BigDecimal sumRevenueByCustomerId(@Param("customerId") Long customerId);
+
+    @Query("SELECT MAX(s.saleDate) FROM Sale s WHERE s.customer.id = :customerId")
+    LocalDate findLastSaleDateByCustomerId(@Param("customerId") Long customerId);
+
+    // Date range queries
+    @Query("SELECT COUNT(s) FROM Sale s WHERE s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countByCustomerIdAndDateRange(@Param("customerId") Long customerId,
+                                          @Param("startDate") LocalDate startDate,
+                                          @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByCustomerIdAndDateRange(@Param("customerId") Long customerId,
+                                                  @Param("startDate") LocalDate startDate,
+                                                  @Param("endDate") LocalDate endDate);
+
 }

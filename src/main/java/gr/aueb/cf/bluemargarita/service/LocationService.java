@@ -72,9 +72,8 @@ public class LocationService implements ILocationService {
 
         Location existingLocation = getLocationEntityById(dto.locationId());
 
-        if (!existingLocation.getName().equals(dto.name()) && locationRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Location", "Location with" +
-                    " description " + dto.name() + " already exists");
+        if (!existingLocation.getName().equals(dto.name())){
+            validateUniqueName(dto.name());
         }
 
         User updater = getUserEntityById(dto.updaterUserId());
@@ -96,14 +95,16 @@ public class LocationService implements ILocationService {
 
         Location location = getLocationEntityById(id);
 
-        if (!location.getAllSales().isEmpty()) {
+        Integer totalSales = saleRepository.countByLocationId(id);
+
+        if (totalSales > 0) {
             // Soft Delete if location is used in any sales
             location.setIsActive(false);
             location.setDeletedAt(LocalDateTime.now());
             locationRepository.save(location);
 
             LOGGER.info("Location {} soft deleted. Used in {} sales",
-                    location.getName(), location.getAllSales().size());
+                    location.getName(), totalSales);
         } else {
             // Hard delete if location not used anywhere
             locationRepository.delete(location);

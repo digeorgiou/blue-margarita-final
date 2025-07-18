@@ -33,4 +33,7 @@ public interface ProductProcedureRepository extends JpaRepository<ProductProcedu
     // For category distribution
     @Query("SELECT COUNT(pp) FROM ProductProcedure pp JOIN pp.product p WHERE p.category.id = :categoryId AND pp.procedure.id = :procedureId")
     Integer countByCategoryIdAndProcedureId(@Param("categoryId") Long categoryId, @Param("procedureId") Long procedureId);
+
+    @Query("SELECT COALESCE(SUM(pp.cost), 0) FROM ProductProcedure pp WHERE pp.product.id = :productId")
+    BigDecimal sumCostByProductId(@Param("productId") Long productId);
 }
