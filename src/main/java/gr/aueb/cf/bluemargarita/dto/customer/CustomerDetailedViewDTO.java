@@ -32,11 +32,11 @@ public record CustomerDetailedViewDTO(
         BigDecimal averageOrderValue,
         LocalDate lastOrderDate,
 
-        // Recent performance (last 30 days) - NEW
+        // Recent performance (last 30 days)
         Integer recentSalesCount,
         BigDecimal recentRevenue,
 
-        // Yearly performance (current year) - NEW
+        // Yearly performance (current year)
         Integer yearlySalesCount,
         BigDecimal yearlySalesRevenue,
 

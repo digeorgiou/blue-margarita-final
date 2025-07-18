@@ -34,18 +34,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     @Query("SELECT pm.quantity FROM ProductMaterial pm WHERE pm.product.id = :productId AND pm.material.id = :materialId")
     BigDecimal findMaterialQuantityForProduct(@Param("productId") Long productId, @Param("materialId") Long materialId);
 
-    @Query("SELECT COUNT(sp) FROM SaleProduct sp WHERE sp.product.id = :productId")
-    Integer countSalesByProductId(@Param("productId") Long productId);
-
-    @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp WHERE sp.product.id = :productId")
-    Integer sumQuantitySoldByProductId(@Param("productId") Long productId);
-
-    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp WHERE sp.product.id = :productId")
-    BigDecimal sumRevenueByProductId(@Param("productId") Long productId);
-
-    @Query("SELECT MIN(s.saleDate) FROM Sale s JOIN s.saleProducts sp WHERE sp.product.id = :productId")
-    LocalDate findFirstSaleDateByProductId(@Param("productId") Long productId);
-
     @Query("SELECT MAX(s.saleDate) FROM Sale s JOIN s.saleProducts sp WHERE sp.product.id = :productId")
     LocalDate findLastSaleDateByProductId(@Param("productId") Long productId);
 
@@ -73,64 +61,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId AND p.id IN (SELECT pm.product.id FROM ProductMaterial pm WHERE pm.material.id = :materialId) AND p.isActive = true")
     Integer countProductsByCategoryIdAndMaterialId(@Param("categoryId") Long categoryId, @Param("materialId") Long materialId);
 
-    // Date range analytics
-    @Query("SELECT COUNT(sp) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
-    Integer countSalesByProductIdAndDateRange(
-            @Param("productId") Long productId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
-    );
-
-    @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
-    Integer sumQuantitySoldByProductIdAndDateRange(
-            @Param("productId") Long productId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
-    );
-
-    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
-    BigDecimal sumRevenueByProductIdAndDateRange(
-            @Param("productId") Long productId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
-    );
-
-    // Stock and inventory insights
-    @Query("SELECT COUNT(p) FROM Product p WHERE p.stock <= p.lowStockAlert AND p.isActive = true")
-    Integer countLowStockProducts();
-
-    @Query("SELECT COALESCE(SUM(p.stock * p.finalSellingPriceRetail), 0) FROM Product p WHERE p.isActive = true")
-    BigDecimal calculateTotalInventoryValue();
-
-    // Category distribution
-    @Query(value = """
-    SELECT c.id, c.name, COUNT(*) as productCount,
-           AVG(p.final_selling_price_retail) as avgPrice
-    FROM products p
-    JOIN categories c ON p.category_id = c.id
-    WHERE p.is_active = true
-    GROUP BY c.id, c.name
-    ORDER BY COUNT(*) DESC
-    """, nativeQuery = true)
-    List<Object[]> calculateCategoryDistribution();
-
     /**
      * Finds products with negative stock with pagination and sorting support
      * Used for "View All Negative Stock" functionality
      */
     @Query("SELECT p FROM Product p WHERE p.stock < 0 AND p.isActive = true")
     Page<Product> findProductsWithNegativeStock(Pageable pageable);
-
-    /**
-     * Counts products with negative stock (for dashboard widget)
-     */
-    @Query("SELECT COUNT(p) FROM Product p WHERE p.stock < 0 AND p.isActive = true")
-    Integer countProductsWithNegativeStock();
-
-    /**
-     * Gets top negative stock products for dashboard widget (limit for performance)
-     */
-    @Query("SELECT p FROM Product p WHERE p.stock < 0 AND p.isActive = true ORDER BY p.stock ASC")
-    List<Product> findTopNegativeStockProducts(Pageable pageable);
 
 }

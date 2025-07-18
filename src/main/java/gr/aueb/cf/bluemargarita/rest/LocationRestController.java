@@ -236,49 +236,4 @@ public class LocationRestController {
         return new ResponseEntity<>(locations, HttpStatus.OK);
     }
 
-    // =============================================================================
-    // CONVENIENCE ENDPOINTS
-    // =============================================================================
-
-    @Operation(
-            summary = "Get all active locations",
-            description = "Retrieves all active locations without pagination. Used for simple listings and exports.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of all active locations",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = LocationReadOnlyDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<LocationReadOnlyDTO>> getAllActiveLocations() {
-        List<LocationReadOnlyDTO> locations = locationService.getAllActiveLocations();
-        return new ResponseEntity<>(locations, HttpStatus.OK);
-    }
-
-    @Operation(
-            summary = "Get all locations",
-            description = "Retrieves all locations (active and inactive) for administrative purposes. Used for comprehensive location management views.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of all locations",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = LocationReadOnlyDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<LocationReadOnlyDTO>> getAllLocations() {
-        List<LocationReadOnlyDTO> locations = locationService.getAllLocations();
-        return new ResponseEntity<>(locations, HttpStatus.OK);
-    }
 }

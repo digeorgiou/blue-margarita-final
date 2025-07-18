@@ -163,6 +163,9 @@ public interface SaleProductRepository extends JpaRepository<SaleProduct, Long>,
     @Query("SELECT DISTINCT sp.product.id FROM SaleProduct sp JOIN sp.sale s WHERE s.location.id = :locationId")
     List<Long> findDistinctProductIdsByLocationId(@Param("locationId") Long locationId);
 
+    @Query("SELECT DISTINCT sp.product.id FROM SaleProduct sp JOIN sp.sale s WHERE s.customer.id = :customerId")
+    List<Long> findDistinctProductIdsByCustomerId(@Param("customerId") Long customerId);
+
     @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.location.id = :locationId")
     BigDecimal sumQuantityByProductIdAndLocationId(@Param("productId") Long productId, @Param("locationId") Long locationId);
 
@@ -171,5 +174,15 @@ public interface SaleProductRepository extends JpaRepository<SaleProduct, Long>,
 
     @Query("SELECT MAX(s.saleDate) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.location.id = :locationId")
     LocalDate findLastSaleDateByProductIdAndLocationId(@Param("productId") Long productId, @Param("locationId") Long locationId);
+
+    // Customer-specific product sales queries
+    @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.customer.id = :customerId")
+    BigDecimal sumQuantityByProductIdAndCustomerId(@Param("productId") Long productId, @Param("customerId") Long customerId);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.customer.id = :customerId")
+    BigDecimal sumRevenueByProductIdAndCustomerId(@Param("productId") Long productId, @Param("customerId") Long customerId);
+
+    @Query("SELECT MAX(s.saleDate) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.customer.id = :customerId")
+    LocalDate findLastSaleDateByProductIdAndCustomerId(@Param("productId") Long productId, @Param("customerId") Long customerId);
 
 }

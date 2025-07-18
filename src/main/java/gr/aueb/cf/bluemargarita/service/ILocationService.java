@@ -84,42 +84,8 @@ public interface ILocationService {
     LocationReadOnlyDTO getLocationById(Long id) throws EntityNotFoundException;
 
     // =============================================================================
-    // QUERY OPERATIONS
+    // VIEW LOCATIONS PAGE
     // =============================================================================
-
-    /**
-     * Retrieves all locations (active and inactive) for administrative purposes
-     * Used for comprehensive location management views
-     *
-     * @return List of all locations regardless of status
-     */
-    List<LocationReadOnlyDTO> getAllLocations();
-
-    /**
-     * Retrieves all active locations for general business operations
-     * Used when you need locations available for new sales and business processes
-     *
-     * @return List of active locations only
-     */
-    List<LocationReadOnlyDTO> getAllActiveLocations();
-
-    /**
-     * Checks if a location name already exists in the system
-     * Used for validation before creating/updating locations to ensure uniqueness
-     *
-     * @param name Location name to check for uniqueness
-     * @return true if name exists, false otherwise
-     */
-    boolean nameExists(String name);
-
-    /**
-     * Retrieves locations based on filter criteria without pagination
-     * Useful for exports, reports, or when you need all matching results
-     *
-     * @param filters Filter criteria (name search, active status)
-     * @return List of locations matching filter criteria
-     */
-    List<LocationReadOnlyDTO> getFilteredLocations(LocationFilters filters);
 
     /**
      * Retrieves locations with pagination and filtering for management pages
@@ -136,22 +102,9 @@ public interface ILocationService {
     Paginated<LocationReadOnlyDTO> getLocationsFilteredPaginated(LocationFilters filters);
 
     /**
-     * Retrieves active locations formatted for dropdown selections
-     * Returns minimal data optimized for form dropdowns and autocomplete components
-     * Results are sorted alphabetically by name for better user experience
-     *
-     * @return List of active locations with ID and name only, sorted alphabetically
-     */
-    List<LocationForDropdownDTO> getActiveLocationsForDropdown();
-
-    // =============================================================================
-    // PERFORMANCE-OPTIMIZED ANALYTICS
-    // =============================================================================
-
-    /**
      * Retrieves comprehensive sales analytics for a specific location with optimal performance
      *
-     * Used for "View Details" functionality in management pages, providing essential metrics:
+     * Used for "View Details" functionality in location management page, providing essential metrics:
      *
      * **All-Time Performance:**
      * - Total sales count and revenue since location creation
@@ -165,20 +118,25 @@ public interface ILocationService {
      * **Current Year Performance:**
      * - Year-to-date sales count and revenue
      * - Useful for annual performance tracking and goals
-     *
-     * **Performance Optimization:**
-     * - Uses database-level aggregation queries (SUM, COUNT) instead of loading sales into memory
-     * - Executes 8 simple, indexed queries that complete in ~100-150ms even with 50,000+ sales
-     * - Memory usage remains constant (~1KB) regardless of sales volume
-     * - Scales efficiently to handle locations with millions of transactions
-     *
-     * **Edge Case Handling:**
-     * - Returns zero values and null dates for locations with no sales
-     * - Handles null revenue values gracefully with proper defaults
-     *
      * @param id Location ID to analyze
      * @return Detailed location information with comprehensive but efficiently calculated analytics
      * @throws EntityNotFoundException if location not found
      */
     LocationDetailedViewDTO getLocationDetailedById(Long id) throws EntityNotFoundException;
+
+
+    // =============================================================================
+    // RECORD SALE PAGE - DROPDOWN LIST
+    // =============================================================================
+
+    /**
+     * Retrieves active locations formatted for dropdown selections
+     * Returns minimal data optimized for form dropdowns and autocomplete components
+     * Results are sorted alphabetically by name for better user experience
+     *
+     * @return List of active locations with ID and name only, sorted alphabetically
+     */
+    List<LocationForDropdownDTO> getActiveLocationsForDropdown();
+
+
 }

@@ -75,7 +75,7 @@ public class Product extends AbstractEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL,  orphanRemoval = true)
     @Builder.Default
     @Getter(AccessLevel.PRIVATE)
-    private Set<ProcedureProduct> procedureProducts = new HashSet<>();
+    private Set<ProductProcedure> productProcedures = new HashSet<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -87,9 +87,9 @@ public class Product extends AbstractEntity {
         return Collections.unmodifiableSet(productMaterials);
     }
 
-    public Set<ProcedureProduct> getAllProcedureProducts(){
-        if(procedureProducts == null) procedureProducts = new HashSet<>();
-        return Collections.unmodifiableSet(procedureProducts);
+    public Set<ProductProcedure> getAllProcedureProducts(){
+        if(productProcedures == null) productProcedures = new HashSet<>();
+        return Collections.unmodifiableSet(productProcedures);
     }
 
     public Set<SaleProduct> getAllSaleProducts(){
@@ -123,23 +123,23 @@ public class Product extends AbstractEntity {
     }
 
     public void addProcedure(Procedure procedure, BigDecimal cost) {
-        ProcedureProduct procedureProduct = new ProcedureProduct();
-        procedureProduct.setCost(cost);
-        procedureProduct.setProduct(this);
-        procedure.addProcedureProduct(procedureProduct);
-        procedureProducts.add(procedureProduct);
+        ProductProcedure productProcedure = new ProductProcedure();
+        productProcedure.setCost(cost);
+        productProcedure.setProduct(this);
+        procedure.addProcedureProduct(productProcedure);
+        productProcedures.add(productProcedure);
     }
 
     public void removeProcedure(Procedure procedure){
-        if(procedureProducts == null) return;
+        if(productProcedures == null) return;
 
-        ProcedureProduct toRemove = procedureProducts.stream()
+        ProductProcedure toRemove = productProcedures.stream()
                 .filter(pp -> pp.getProcedure().equals(procedure))
                 .findFirst()
                 .orElse(null);
 
         if(toRemove != null) {
-            procedureProducts.remove(toRemove);
+            productProcedures.remove(toRemove);
             procedure.removeProcedureProduct(toRemove);
         }
     }

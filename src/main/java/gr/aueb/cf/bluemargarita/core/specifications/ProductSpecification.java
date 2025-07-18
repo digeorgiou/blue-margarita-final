@@ -89,8 +89,8 @@ public class ProductSpecification {
             }
 
             // Join Product -> ProcedureProduct -> Procedure
-            Join<Product, ProcedureProduct> procedureProductJoin = root.join("procedureProducts", JoinType.INNER);
-            Join<ProcedureProduct, Procedure> procedureJoin = procedureProductJoin.join("procedure", JoinType.INNER);
+            Join<Product, ProductProcedure> procedureProductJoin = root.join("procedureProducts", JoinType.INNER);
+            Join<ProductProcedure, Procedure> procedureJoin = procedureProductJoin.join("procedure", JoinType.INNER);
 
             return criteriaBuilder.equal(procedureJoin.get("id"), procedureId);
         };
@@ -168,8 +168,8 @@ public class ProductSpecification {
             if(procedureId == null){
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
             }
-            Join<Product, ProcedureProduct> procedureProductJoin = root.join("procedureProducts");
-            Join<ProcedureProduct, Procedure> procedureJoin = procedureProductJoin.join("procedure");
+            Join<Product, ProductProcedure> procedureProductJoin = root.join("procedureProducts");
+            Join<ProductProcedure, Procedure> procedureJoin = procedureProductJoin.join("procedure");
 
             return criteriaBuilder.equal(procedureJoin.get("id"), procedureId);
         };

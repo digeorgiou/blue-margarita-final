@@ -1,7 +1,6 @@
 package gr.aueb.cf.bluemargarita.model;
 
 import jakarta.persistence.*;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.annotations.*;
@@ -39,23 +38,23 @@ public class Procedure extends AbstractEntity {
     @OneToMany(mappedBy = "procedure", fetch = FetchType.LAZY)
     @Builder.Default
     @Getter(AccessLevel.PRIVATE)
-    private Set<ProcedureProduct> procedureProducts = new HashSet<>();
+    private Set<ProductProcedure> productProcedures = new HashSet<>();
 
-    public Set<ProcedureProduct> getAllProcedureProducts() {
-        if (procedureProducts == null) procedureProducts = new HashSet<>();
-        return Collections.unmodifiableSet(procedureProducts);
+    public Set<ProductProcedure> getAllProcedureProducts() {
+        if (productProcedures == null) productProcedures = new HashSet<>();
+        return Collections.unmodifiableSet(productProcedures);
     }
 
-    public void addProcedureProduct(ProcedureProduct procedureProduct){
-        if (procedureProducts == null) procedureProducts = new HashSet<>();
-        procedureProducts.add(procedureProduct);
-        procedureProduct.setProcedure(this);
+    public void addProcedureProduct(ProductProcedure productProcedure){
+        if (productProcedures == null) productProcedures = new HashSet<>();
+        productProcedures.add(productProcedure);
+        productProcedure.setProcedure(this);
     }
 
-    public void removeProcedureProduct(ProcedureProduct procedureProduct){
-        if (procedureProducts == null) return;
-        procedureProducts.remove(procedureProduct);
-        procedureProduct.setProcedure(null);
+    public void removeProcedureProduct(ProductProcedure productProcedure){
+        if (productProcedures == null) return;
+        productProcedures.remove(productProcedure);
+        productProcedure.setProcedure(null);
     }
 
     public void addProduct(Product product, BigDecimal cost){

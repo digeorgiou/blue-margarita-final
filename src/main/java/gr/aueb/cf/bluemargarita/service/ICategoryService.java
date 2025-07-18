@@ -4,10 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryForDropdownDTO;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryInsertDTO;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryUpdateDTO;
+import gr.aueb.cf.bluemargarita.dto.category.*;
 
 import java.util.List;
 
@@ -56,11 +53,6 @@ public interface ICategoryService {
 
     // Query Operations
 
-    /**
-     * Retrieves all categories (active and inactive)
-     * @return List of all categories
-     */
-    List<CategoryReadOnlyDTO> getAllCategories();
 
     /**
      * Retrieves all active categories for Dropdown menu
@@ -68,18 +60,7 @@ public interface ICategoryService {
      */
     List<CategoryForDropdownDTO> getActiveCategoriesForDropdown();
 
-    /**
-     * Retrieves all active categories only
-     * @return List of active categories
-     */
-    List<CategoryReadOnlyDTO> getAllActiveCategories();
-
-    /**
-     * Checks if a category name already exists
-     * @param name Category name to check
-     * @return true if name exists, false otherwise
-     */
-    boolean nameExists(String name);
+    CategoryDetailedViewDTO getCategoryDetailedView(Long categoryId) throws EntityNotFoundException;
 
     /**
      * Retrieves categories with pagination based on filter criteria

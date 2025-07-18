@@ -312,28 +312,4 @@ public class CustomerRestController {
         return new ResponseEntity<>(customers, HttpStatus.OK);
     }
 
-    // =============================================================================
-    // CONVENIENCE ENDPOINTS
-    // =============================================================================
-
-    @Operation(
-            summary = "Get all active customers",
-            description = "Retrieves all active customers without pagination. Used for simple listings and dropdowns.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of all active customers",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = CustomerListItemDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<CustomerListItemDTO>> getAllActiveCustomers() {
-        List<CustomerListItemDTO> customers = customerService.getAllActiveCustomers();
-        return new ResponseEntity<>(customers, HttpStatus.OK);
-    }
 }

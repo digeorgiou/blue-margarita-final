@@ -79,29 +79,11 @@ public interface IMaterialService {
     MaterialReadOnlyDTO getMaterialById(Long id) throws EntityNotFoundException;
 
     // =============================================================================
-    // QUERY OPERATIONS
+    // MATERIALS MANAGEMENT PAGE
     // =============================================================================
 
     /**
-     * Retrieves all active materials for general use
-     * Used when you need a simple list of available materials
-     *
-     * @return List of all active materials
-     */
-    List<MaterialReadOnlyDTO> getAllActiveMaterials();
-
-    /**
-     * Retrieves materials based on filter criteria without pagination
-     * Useful for exports or when you need all matching results
-     *
-     * @param filters Filter criteria (name search, active status, supplier, etc.)
-     * @return List of materials matching filter criteria
-     */
-    List<MaterialReadOnlyDTO> getFilteredMaterials(MaterialFilters filters);
-
-    /**
      * Retrieves materials with pagination and filtering for management pages
-     *
      * Primary method for material management list views with:
      * - Name-based search (case-insensitive partial matching)
      * - Active/inactive status filtering
@@ -113,18 +95,6 @@ public interface IMaterialService {
      * @return Paginated result of materials matching filter criteria
      */
     Paginated<MaterialReadOnlyDTO> getMaterialsFilteredPaginated(MaterialFilters filters);
-
-    /**
-     * Retrieves active materials matching search term for autocomplete in purchase recording
-     *
-     * @param searchTerm Material name search term
-     * @return List of materials with basic info for selection
-     */
-    List<MaterialSearchResultDTO> searchMaterialsForAutocomplete(String searchTerm);
-
-    // =============================================================================
-    // ANALYTICS AND DETAILED VIEWS
-    // =============================================================================
 
     /**
      * Retrieves comprehensive analytics and detailed information for a specific material
@@ -142,9 +112,7 @@ public interface IMaterialService {
      */
     MaterialDetailedViewDTO getMaterialDetailedById(Long id) throws EntityNotFoundException;
 
-    // =============================================================================
-    // PRODUCT RELATIONSHIP OPERATIONS
-    // =============================================================================
+
 
     /**
      * Retrieves paginated list of all products using a specific material
@@ -155,4 +123,17 @@ public interface IMaterialService {
      */
     Paginated<ProductUsageDTO> getAllProductsUsingMaterial(Long materialId, Pageable pageable)
             throws EntityNotFoundException;
+
+    // =============================================================================
+    // MATERIAL SEARCH FOR RECORD PURCHASE PAGE
+    // =============================================================================
+
+    /**
+     * Retrieves active materials matching search term for autocomplete in purchase recording
+     *
+     * @param searchTerm Material name search term
+     * @return List of materials with basic info for selection
+     */
+    List<MaterialSearchResultDTO> searchMaterialsForAutocomplete(String searchTerm);
+
 }

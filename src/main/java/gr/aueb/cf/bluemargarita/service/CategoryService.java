@@ -14,23 +14,19 @@ import gr.aueb.cf.bluemargarita.repository.CategoryRepository;
 import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.SaleProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,16 +53,11 @@ public class CategoryService implements ICategoryService{
     @Transactional(rollbackFor = Exception.class)
     public CategoryReadOnlyDTO createCategory(CategoryInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        if (categoryRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Category", "Category with" +
-                    " name " + dto.name() + " already exists");
-        }
+        validateUniqueName(dto.name());
 
         Category category = mapper.mapCategoryInsertToModel(dto);
 
-        User creator = userRepository.findById(dto.creatorUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User " +
-                        "with id " + dto.creatorUserId() + " not found"));
+        User creator = getUserEntityById(dto.creatorUserId());
 
         category.setCreatedBy(creator);
         category.setLastUpdatedBy(creator);
@@ -83,23 +74,17 @@ public class CategoryService implements ICategoryService{
     @Transactional(rollbackFor = Exception.class)
     public CategoryReadOnlyDTO updateCategory(CategoryUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        Category existingCategory = categoryRepository.findById(dto.categoryId())
-                .orElseThrow(() -> new EntityNotFoundException("Category",
-                        "Category with id=" + dto.categoryId() + " was not " +
-                                "found"));
+        Category existingCategory = getCategoryEntityById(dto.categoryId());
 
-        if (!existingCategory.getName().equals(dto.name()) && categoryRepository.existsByName(dto.name())) {
-            throw new EntityAlreadyExistsException("Category", "Category with" +
-                    " name " + dto.name() + " already exists");
+        if(!existingCategory.getName().equals(dto.name())){
+            validateUniqueName(dto.name());
         }
 
-        User updater = userRepository.findById(dto.updaterUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User",
-                        "Updater user with id=" + dto.categoryId() + " was " +
-                                "not found"));
+        User updater = getUserEntityById(dto.updaterUserId());
 
         Category updatedCategory = mapper.mapCategoryUpdateToModel(dto,
                 existingCategory);
+
         updatedCategory.setLastUpdatedBy(updater);
 
         Category savedCategory = categoryRepository.save(updatedCategory);
@@ -114,18 +99,18 @@ public class CategoryService implements ICategoryService{
     @Transactional(rollbackFor = Exception.class)
     public void deleteCategory(Long id) throws EntityNotFoundException {
 
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category",
-                        "Category with id=" + id + " was not found"));
+        Category category = getCategoryEntityById(id);
 
-        if(!category.getAllProducts().isEmpty()){
+        Integer productsCount = categoryRepository.countActiveProductsByCategoryId(id);
+
+        if(productsCount > 0){
             //Soft Delete if category is used in any products
             category.setIsActive(false);
             category.setDeletedAt(LocalDateTime.now());
             categoryRepository.save(category);
 
             LOGGER.info("Category {} soft deleted. Used in {} products",
-                    category.getName(), category.getAllProducts().size());
+                    category.getName(), productsCount);
         } else {
             //Hard delete if category not used anywhere
             categoryRepository.delete(category);
@@ -139,33 +124,13 @@ public class CategoryService implements ICategoryService{
     @Transactional(readOnly = true)
     public CategoryReadOnlyDTO getCategoryById(Long id) throws EntityNotFoundException{
 
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category",
-                        "Category with id=" + id + " was not found"));
+        Category category = getCategoryEntityById(id);
 
         return mapper.mapToCategoryReadOnlyDTO(category);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CategoryReadOnlyDTO> getAllCategories() {
-
-        List<Category> categories = categoryRepository.findAll();
-
-        return categories.stream()
-                .map(mapper::mapToCategoryReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CategoryReadOnlyDTO> getAllActiveCategories() {
-
-        return categoryRepository.findByIsActiveTrue().stream()
-                .map(mapper::mapToCategoryReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
     public CategoryDetailedViewDTO getCategoryDetailedView(Long categoryId) throws EntityNotFoundException{
 
         Category category = getCategoryEntityById(categoryId);
@@ -187,13 +152,6 @@ public class CategoryService implements ICategoryService{
                 .collect(Collectors.toList());
     }
 
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean nameExists(String name) {
-        return categoryRepository.existsByName(name);
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Paginated<CategoryReadOnlyDTO> getCategoriesFilteredPaginated(CategoryFilters filters) {
@@ -204,9 +162,22 @@ public class CategoryService implements ICategoryService{
         return new Paginated<>(filtered.map(mapper::mapToCategoryReadOnlyDTO));
     }
 
+
     private Category getCategoryEntityById(Long id) throws EntityNotFoundException {
         return categoryRepository.findById(id).orElseThrow(()->
                 new EntityNotFoundException("Category", "Category with id " + id + " was not found"));
+    }
+
+    private User getUserEntityById(Long userId) throws EntityNotFoundException {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
+    }
+
+    private void validateUniqueName(String name) throws EntityAlreadyExistsException {
+        if (categoryRepository.existsByName(name)) {
+            throw new EntityAlreadyExistsException("Category", "Category with" +
+                    " name " + name + " already exists");
+        }
     }
 
     private CategoryAnalyticsDTO getCategoryAnalytics(Long categoryId) {
@@ -230,13 +201,13 @@ public class CategoryService implements ICategoryService{
         BigDecimal averageOrderValue = totalRevenue.divide(BigDecimal.valueOf(totalSalesCount), 2, RoundingMode.HALF_UP);
         LocalDate lastSaleDate = categoryRepository.findLastSaleDateByCategoryId(categoryId);
 
-        // Recent performance (exact same pattern as customer)
+        // Recent performance
         LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
         LocalDate today = LocalDate.now();
         Integer recentSalesCount = categoryRepository.countSalesByCategoryIdAndDateRange(categoryId, thirtyDaysAgo, today);
         BigDecimal recentRevenue = categoryRepository.sumRevenueByCategoryIdAndDateRange(categoryId, thirtyDaysAgo, today);
 
-        // Yearly performance (exact same pattern as customer)
+        // Yearly performance
         LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
         Integer yearlySalesCount = categoryRepository.countSalesByCategoryIdAndDateRange(categoryId, yearStart, today);
         BigDecimal yearlySalesRevenue = categoryRepository.sumRevenueByCategoryIdAndDateRange(categoryId, yearStart, today);
@@ -280,12 +251,12 @@ public class CategoryService implements ICategoryService{
         return productIds.stream()
                 .limit(10)
                 .map(this::getProductSalesStats)
-                .filter(Objects::nonNull)
+                .flatMap(Optional::stream)
                 .sorted((p1,p2)->p2.totalRevenue().compareTo(p1.totalRevenue()))
                 .collect(Collectors.toList());
     }
 
-    private ProductStatsSummaryDTO getProductSalesStats(Long productId){
+    private Optional<ProductStatsSummaryDTO> getProductSalesStats(Long productId){
         String productName = productRepository.findProductNameById(productId);
         String productCode = productRepository.findProductCodeById(productId);
 
@@ -295,17 +266,17 @@ public class CategoryService implements ICategoryService{
         }
         BigDecimal totalRevenue = saleProductRepository.sumRevenueByProductId(productId);
         LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductId(productId);
-        return new ProductStatsSummaryDTO(productId,productName,productCode,totalSold,totalRevenue, lastSaleDate);
+        return Optional.of(new ProductStatsSummaryDTO(productId,productName,productCode,totalSold,totalRevenue, lastSaleDate));
 
     }
 
-    private ProductStatsSummaryDTO createEmptyStatsSummary(Long productId){
+    private Optional<ProductStatsSummaryDTO> createEmptyStatsSummary(Long productId){
         String productName = productRepository.findProductNameById(productId);
         String productCode = productRepository.findProductCodeById(productId);
 
-        return new ProductStatsSummaryDTO(
+        return Optional.of(new ProductStatsSummaryDTO(
                 productId,productName,productCode,BigDecimal.ZERO, BigDecimal.ZERO, null
-        );
+        ));
     }
 
 

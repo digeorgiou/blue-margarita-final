@@ -11,6 +11,8 @@ import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Customer;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.CustomerRepository;
+import gr.aueb.cf.bluemargarita.repository.ProductRepository;
+import gr.aueb.cf.bluemargarita.repository.SaleProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -31,12 +34,17 @@ public class CustomerService implements ICustomerService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomerService.class);
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+    private final SaleProductRepository saleProductRepository;
     private final Mapper mapper;
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, UserRepository userRepository, Mapper mapper) {
+    public CustomerService(CustomerRepository customerRepository, UserRepository userRepository, ProductRepository productRepository,
+                           SaleProductRepository saleProductRepository, Mapper mapper) {
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
+        this.productRepository = productRepository;
+        this.saleProductRepository = saleProductRepository;
         this.mapper = mapper;
     }
 
@@ -119,10 +127,6 @@ public class CustomerService implements ICustomerService {
         }
     }
 
-    // =============================================================================
-    // CUSTOMER LISTING AND FILTERING
-    // =============================================================================
-
     @Override
     @Transactional(readOnly = true)
     public CustomerListItemDTO getCustomerById(Long id) throws EntityNotFoundException {
@@ -131,6 +135,10 @@ public class CustomerService implements ICustomerService {
 
         return mapper.mapToCustomerListItemDTO(customer);
     }
+
+    // =============================================================================
+    // CUSTOMERS VIEW PAGE METHODS
+    // =============================================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -159,14 +167,9 @@ public class CustomerService implements ICustomerService {
         return mapper.mapToCustomerDetailedViewDTO(customer, analytics, topProducts);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerListItemDTO> getAllActiveCustomers() {
-        return customerRepository.findByIsActiveTrue()
-                .stream()
-                .map(mapper::mapToCustomerListItemDTO)
-                .collect(Collectors.toList());
-    }
+    // =============================================================================
+    // RECORD SALE PAGE METHODS
+    // =============================================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -222,31 +225,49 @@ public class CustomerService implements ICustomerService {
         }
     }
 
-
-    private int getActiveCustomerCount() {
-        return (int) customerRepository.countByIsActiveTrue();
-    }
-
     // =============================================================================
     // PRIVATE HELPER METHODS - Calculating Analytics
     // =============================================================================
 
     private List<ProductStatsSummaryDTO> getTopProductsForCustomer(Long customerId) {
-        return customerRepository.findTopProductsByCustomerId(customerId)
-                .stream()
-                .map(this::mapToProductStatsDTO)
+        // Get all products purchased by this customer
+        List<Long> productIds = saleProductRepository.findDistinctProductIdsByCustomerId(customerId);
+
+        if (productIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Get sales stats for each product for this customer
+        return productIds.stream()
+                .limit(10) // Limit to top 10 for performance
+                .map(productId -> getProductSalesStatsForCustomer(productId, customerId))
+                .flatMap(Optional::stream)
+                .sorted((p1, p2) -> p2.totalRevenue().compareTo(p1.totalRevenue()))
                 .collect(Collectors.toList());
     }
 
-    private ProductStatsSummaryDTO mapToProductStatsDTO(Object[] data) {
-        return new ProductStatsSummaryDTO(
-                (Long) data[0],           // productId
-                (String) data[1],         // productName
-                (String) data[2],         // productCode
-                (BigDecimal) data[3],     // totalQuantity
-                (BigDecimal) data[4],     // totalRevenue
-                (LocalDate) data[5]       // lastSaleDate
-        );
+    private Optional<ProductStatsSummaryDTO> getProductSalesStatsForCustomer(Long productId, Long customerId) {
+        // Get basic product info
+        String productName = productRepository.findProductNameById(productId);
+        String productCode = productRepository.findProductCodeById(productId);
+
+        // Get sales statistics for this customer and product
+        BigDecimal totalQuantity = saleProductRepository.sumQuantityByProductIdAndCustomerId(productId, customerId);
+        if (totalQuantity == null || totalQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            return Optional.empty();
+        }
+
+        BigDecimal totalRevenue = saleProductRepository.sumRevenueByProductIdAndCustomerId(productId, customerId);
+        LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductIdAndCustomerId(productId, customerId);
+
+        return Optional.of(new ProductStatsSummaryDTO(
+                productId,
+                productName,
+                productCode,
+                totalQuantity,
+                totalRevenue != null ? totalRevenue : BigDecimal.ZERO,
+                lastSaleDate
+        ));
     }
 
     private CustomerAnalyticsDTO getCustomerAnalytics(Long customerId) {
@@ -257,7 +278,7 @@ public class CustomerService implements ICustomerService {
         }
 
         BigDecimal totalRevenue = customerRepository.sumRevenueByCustomerId(customerId);
-        BigDecimal averageOrderValue = totalRevenue.divide(BigDecimal.valueOf(totalSales));
+        BigDecimal averageOrderValue = totalRevenue.divide(BigDecimal.valueOf(totalSales),2, RoundingMode.HALF_UP);
         LocalDate lastOrderDate = customerRepository.findLastSaleDateByCustomerId(customerId);
 
         // Recent performance
@@ -318,6 +339,5 @@ public class CustomerService implements ICustomerService {
                 .and(CustomerSpecification.wholeSaleCustomersOnly(filters.getWholesaleOnly()))
                 .and(CustomerSpecification.customerIsActive(filters.getIsActive()));
     }
-
 
 }

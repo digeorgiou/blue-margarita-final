@@ -5,7 +5,6 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.specifications.LocationSpecification;
-import gr.aueb.cf.bluemargarita.dto.category.CategoryAnalyticsDTO;
 import gr.aueb.cf.bluemargarita.dto.location.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
@@ -113,10 +112,6 @@ public class LocationService implements ILocationService {
         }
     }
 
-    // =============================================================================
-    // QUERY OPERATIONS
-    // =============================================================================
-
     @Override
     @Transactional(readOnly = true)
     public LocationReadOnlyDTO getLocationById(Long id) throws EntityNotFoundException {
@@ -126,44 +121,9 @@ public class LocationService implements ILocationService {
         return mapper.mapToLocationReadOnlyDTO(location);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<LocationReadOnlyDTO> getAllLocations() {
-
-        List<Location> locations = locationRepository.findAll();
-
-        return locations.stream()
-                .map(mapper::mapToLocationReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<LocationReadOnlyDTO> getAllActiveLocations() {
-
-        List<Location> locations = locationRepository.findByIsActiveTrue();
-
-        return locations.stream()
-                .map(mapper::mapToLocationReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean nameExists(String name) {
-
-        return locationRepository.existsByName(name);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<LocationReadOnlyDTO> getFilteredLocations(LocationFilters filters) {
-        return locationRepository.findAll(getSpecsFromFilters(filters))
-                .stream()
-                .map(mapper::mapToLocationReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
+    // =============================================================================
+    // VIEW LOCATIONS PAGE
+    // =============================================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -174,22 +134,6 @@ public class LocationService implements ILocationService {
         );
         return new Paginated<>(filtered.map(mapper::mapToLocationReadOnlyDTO));
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<LocationForDropdownDTO> getActiveLocationsForDropdown() {
-        return locationRepository.findByIsActiveTrue()
-                .stream()
-                .map(location -> new LocationForDropdownDTO(location.getId(), location.getName()))
-                .sorted((l1, l2) -> l1.name().compareToIgnoreCase(l2.name()))
-                .collect(Collectors.toList());
-
-
-    }
-
-    // =============================================================================
-    // ANALYTICS AND DETAILED VIEWS
-    // =============================================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -204,6 +148,23 @@ public class LocationService implements ILocationService {
         return mapper.mapToLocationDetailedDTO(location, analytics, topProducts);
 
     }
+
+    // =============================================================================
+    // RECORD SALE PAGE
+    // =============================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocationForDropdownDTO> getActiveLocationsForDropdown() {
+        return locationRepository.findByIsActiveTrue()
+                .stream()
+                .map(location -> new LocationForDropdownDTO(location.getId(), location.getName()))
+                .sorted((l1, l2) -> l1.name().compareToIgnoreCase(l2.name()))
+                .collect(Collectors.toList());
+
+
+    }
+
 
     // =============================================================================
     // PRIVATE HELPER METHODS
@@ -227,7 +188,7 @@ public class LocationService implements ILocationService {
     }
 
     private LocationAnalyticsDTO getLocationAnalytics(Long locationId) {
-        // All-time metrics (like your customer metrics)
+        // All-time metrics
         Integer totalSalesCount = saleRepository.countByLocationId(locationId);
         if (totalSalesCount == 0) {
             return createEmptyLocationAnalytics();
@@ -237,13 +198,13 @@ public class LocationService implements ILocationService {
         BigDecimal averageOrderValue = totalRevenue.divide(BigDecimal.valueOf(totalSalesCount), 2, RoundingMode.HALF_UP);
         LocalDate lastSaleDate = saleRepository.findLastSaleDateByLocationId(locationId);
 
-        // Recent performance (exact same pattern as customer)
+        // Recent performance
         LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
         LocalDate today = LocalDate.now();
         Integer recentSalesCount = saleRepository.countByLocationIdAndDateRange(locationId, thirtyDaysAgo, today);
         BigDecimal recentRevenue = saleRepository.sumRevenueByLocationIdAndDateRange(locationId, thirtyDaysAgo, today);
 
-        // Yearly performance (exact same pattern as customer)
+        // Yearly performance
         LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
         Integer yearlySalesCount = saleRepository.countByLocationIdAndDateRange(locationId, yearStart, today);
         BigDecimal yearlySalesRevenue = saleRepository.sumRevenueByLocationIdAndDateRange(locationId, yearStart, today);
@@ -275,7 +236,7 @@ public class LocationService implements ILocationService {
 
     List<ProductStatsSummaryDTO> getTopProductsInLocation(Long locationId){
 
-        List<Long> productIds = saleRepository.findDistinctProductIdsByLocationId(locationId);
+        List<Long> productIds = saleProductRepository.findDistinctProductIdsByLocationId(locationId);
 
         if(productIds.isEmpty()) {
             return Collections.emptyList();
@@ -284,37 +245,27 @@ public class LocationService implements ILocationService {
         return productIds.stream()
                 .limit(10)
                 .map(productId -> getProductSalesStatsForLocation(productId,locationId))
-                .filter(Objects::nonNull)
+                .flatMap(Optional::stream)
                 .sorted((p1,p2)-> p2.totalRevenue().compareTo(p1.totalRevenue()))
                 .collect(Collectors.toList());
     }
 
-    private ProductStatsSummaryDTO getProductSalesStatsForLocation(Long productId, Long locationId) {
+    private Optional<ProductStatsSummaryDTO> getProductSalesStatsForLocation(Long productId, Long locationId) {
 
         String productName = productRepository.findProductNameById(productId);
         String productCode = productRepository.findProductCodeById(productId);
         BigDecimal totalSold = saleProductRepository.sumQuantityByProductIdAndLocationId(productId, locationId);
         if(totalSold == null || totalSold.compareTo(BigDecimal.ZERO) == 0){
-            return createEmptyStatsSummary(productId);
+            return Optional.empty();
         }
 
         BigDecimal totalRevenue = saleProductRepository.sumRevenueByProductIdAndLocationId(productId, locationId);
         LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductIdAndLocationId(productId, locationId);
 
-        return new ProductStatsSummaryDTO(productId, productName, productCode, totalSold, totalRevenue, lastSaleDate);
+        return Optional.of(new ProductStatsSummaryDTO(productId, productName, productCode, totalSold, totalRevenue, lastSaleDate));
 
 
     }
-
-    private ProductStatsSummaryDTO createEmptyStatsSummary(Long productId){
-        String productName = productRepository.findProductNameById(productId);
-        String productCode = productRepository.findProductCodeById(productId);
-
-        return new ProductStatsSummaryDTO(
-                productId,productName,productCode,BigDecimal.ZERO, BigDecimal.ZERO, null
-        );
-    }
-
 
     private Specification<Location> getSpecsFromFilters(LocationFilters filters) {
         return Specification

@@ -240,10 +240,6 @@ public class MaterialRestController {
         return new ResponseEntity<>(materialDetails, HttpStatus.OK);
     }
 
-    // =============================================================================
-    // PRODUCT RELATIONSHIP OPERATIONS
-    // =============================================================================
-
     @Operation(
             summary = "Get all products using this material",
             description = "Retrieves paginated list of all products that use this material. Used for material detail view product listing.",
@@ -277,59 +273,5 @@ public class MaterialRestController {
 
         Paginated<ProductUsageDTO> products = materialService.getAllProductsUsingMaterial(id, pageable);
         return new ResponseEntity<>(products, HttpStatus.OK);
-    }
-
-    // =============================================================================
-    // CONVENIENCE ENDPOINTS
-    // =============================================================================
-
-    @Operation(
-            summary = "Get all active materials",
-            description = "Retrieves all active materials without pagination. Used for simple listings and exports.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of all active materials",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = MaterialReadOnlyDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<MaterialReadOnlyDTO>> getAllActiveMaterials() {
-        List<MaterialReadOnlyDTO> materials = materialService.getAllActiveMaterials();
-        return new ResponseEntity<>(materials, HttpStatus.OK);
-    }
-
-    @Operation(
-            summary = "Get filtered materials without pagination",
-            description = "Retrieves materials based on filter criteria without pagination. Used for exports and reports.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of materials matching filter criteria",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = MaterialReadOnlyDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/filtered")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<MaterialReadOnlyDTO>> getFilteredMaterials(
-            @Parameter(description = "Material name filter") @RequestParam(required = false) String name,
-            @Parameter(description = "Active status filter") @RequestParam(required = false) Boolean isActive) {
-
-        MaterialFilters filters = MaterialFilters.builder()
-                .name(name)
-                .isActive(isActive)
-                .build();
-
-        List<MaterialReadOnlyDTO> materials = materialService.getFilteredMaterials(filters);
-        return new ResponseEntity<>(materials, HttpStatus.OK);
     }
 }

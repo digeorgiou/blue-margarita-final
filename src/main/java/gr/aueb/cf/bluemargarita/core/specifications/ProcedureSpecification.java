@@ -1,12 +1,6 @@
 package gr.aueb.cf.bluemargarita.core.specifications;
 
-import gr.aueb.cf.bluemargarita.model.Category;
 import gr.aueb.cf.bluemargarita.model.Procedure;
-import gr.aueb.cf.bluemargarita.model.ProcedureProduct;
-import gr.aueb.cf.bluemargarita.model.Product;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ProcedureSpecification {

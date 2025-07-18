@@ -236,49 +236,4 @@ public class CategoryRestController {
         return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 
-    // =============================================================================
-    // CONVENIENCE ENDPOINTS
-    // =============================================================================
-
-    @Operation(
-            summary = "Get all active categories",
-            description = "Retrieves all active categories without pagination. Used for simple listings and exports.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of all active categories",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = CategoryReadOnlyDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<CategoryReadOnlyDTO>> getAllActiveCategories() {
-        List<CategoryReadOnlyDTO> categories = categoryService.getAllActiveCategories();
-        return new ResponseEntity<>(categories, HttpStatus.OK);
-    }
-
-    @Operation(
-            summary = "Get all categories",
-            description = "Retrieves all categories (active and inactive) for administrative purposes. Used for comprehensive category management views.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of all categories",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = CategoryReadOnlyDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<CategoryReadOnlyDTO>> getAllCategories() {
-        List<CategoryReadOnlyDTO> categories = categoryService.getAllCategories();
-        return new ResponseEntity<>(categories, HttpStatus.OK);
-    }
 }

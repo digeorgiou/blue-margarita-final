@@ -947,7 +947,7 @@ public class ProductService implements IProductService{
     private BigDecimal calculateProcedureCost(Product product) {
         return product.getAllProcedureProducts().stream()
                 .filter(cost -> cost != null)
-                .map(ProcedureProduct::getCost)
+                .map(ProductProcedure::getCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -1189,9 +1189,9 @@ public class ProductService implements IProductService{
      */
     private void clearProductProcedures(Product product) {
         // Use copy to avoid ConcurrentModificationException
-        Set<ProcedureProduct> procedures = Set.copyOf(product.getAllProcedureProducts());
-        for (ProcedureProduct procedureProduct : procedures) {
-            product.removeProcedure(procedureProduct.getProcedure());
+        Set<ProductProcedure> procedures = Set.copyOf(product.getAllProcedureProducts());
+        for (ProductProcedure productProcedure : procedures) {
+            product.removeProcedure(productProcedure.getProcedure());
         }
         LOGGER.debug("Cleared {} procedures from product {}",
                 procedures.size(), product.getCode());

@@ -76,13 +76,6 @@ public interface ICustomerService {
     CustomerDetailedViewDTO getCustomerDetailedView(Long customerId) throws EntityNotFoundException;
 
     /**
-     * Retrieves all active customers
-     * Returns customers where isActive = true
-     * @return List of all active customers
-     */
-    List<CustomerListItemDTO> getAllActiveCustomers();
-
-    /**
      * Retrieves active customers matching the searchTerm
      * with the info needed for autocomplete in Record sale
      * @param searchTerm searches by lastname, phone number, tin or email
