@@ -11,10 +11,6 @@ import gr.aueb.cf.bluemargarita.dto.product.*;
 import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.WeeklySalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
-import gr.aueb.cf.bluemargarita.dto.stock.BulkStockUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.stock.StockManagementDTO;
-import gr.aueb.cf.bluemargarita.dto.stock.StockUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.stock.StockUpdateResultDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.*;
@@ -22,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,7 +31,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("unused")
+//@SuppressWarnings("unused")
 @Service
 public class ProductService implements IProductService{
 
@@ -313,75 +308,6 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductListItemDTO> getLowStockProducts(int limit) {
-
-        ProductFilters filters = ProductFilters.builder()
-                .lowStock(true)
-                .isActive(true)
-                .build();
-
-        // Set page size to limit
-        filters.setPage(0);
-        filters.setPageSize(limit);
-        filters.setSortBy("stock");
-        filters.setSortDirection(Sort.Direction.ASC);
-
-        return getProductListItemsPaginated(filters).getData();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Paginated<ProductListItemDTO> getAllLowStockProducts(Pageable pageable) {
-
-        // Apply default sorting if none specified (lowest stock first - most urgent)
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(
-                    pageable.getPageNumber(),
-                    pageable.getPageSize(),
-                    Sort.by(Sort.Direction.ASC, "stock")
-            );
-        }
-
-        // Build filter for low stock products
-        ProductFilters filters = ProductFilters.builder()
-                .lowStock(true)
-                .isActive(true)
-                .build();
-
-        // Convert Pageable to filter format
-        filters.setPage(pageable.getPageNumber());
-        filters.setPageSize(pageable.getPageSize());
-        filters.setSortBy(getSortFieldFromPageable(pageable));
-        filters.setSortDirection(getSortDirectionFromPageable(pageable));
-
-        return getProductListItemsPaginated(filters);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Paginated<ProductListItemDTO> getAllNegativeStockProducts(Pageable pageable) {
-
-        // Apply default sorting if none specified (most negative first - most urgent)
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(
-                    pageable.getPageNumber(),
-                    pageable.getPageSize(),
-                    Sort.by(Sort.Direction.ASC, "stock")
-            );
-        }
-
-        Page<Product> negativeStockProducts = productRepository.findProductsWithNegativeStock(pageable);
-
-        Page<ProductListItemDTO> mappedProducts = negativeStockProducts.map(product -> {
-            ProductCostDataDTO costData = getDataDTOForProduct(product);
-            return mapper.mapToProductListItemDTO(product, costData);
-        });
-
-        return new Paginated<>(mappedProducts);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<ProductStatsSummaryDTO> getTopProductsByMonthlyRevenue(LocalDate startDate,
                                                                        LocalDate endDate,
                                                                        int limit){
@@ -503,202 +429,6 @@ public class ProductService implements IProductService{
 
         return mapper.mapToProductListItemDTO(savedProduct, data);
     }
-
-
-    // =============================================================================
-    // STOCK MANAGEMENT
-    // =============================================================================
-
-    @Override
-    @Transactional(readOnly = true)
-    public Paginated<StockManagementDTO> getProductsForStockManagement(ProductFilters filters) {
-
-        // Ensure we only get active products for stock management
-        filters.setIsActive(true);
-
-        Page<Product> products = productRepository.findAll(
-                getSpecsFromFilters(filters),
-                filters.getPageable()
-        );
-
-        Page<StockManagementDTO> stockData = products.map(mapper::mapToStockManagementDTO);
-
-        return new Paginated<>(stockData);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO) throws EntityNotFoundException , EntityInvalidArgumentException{
-
-        validateStockQuantity(updateDTO.quantity());
-
-        Product product = productRepository.findById(updateDTO.productId())
-                .orElseThrow(() -> new EntityNotFoundException("Product", "Product with id=" + updateDTO.productId() + " was not found"));
-
-        Integer previousStock = product.getStock() != null ? product.getStock() : 0;
-        Integer newStock;
-        Integer changeAmount;
-
-        try {
-            switch (updateDTO.updateType()) {
-                case ADD:
-                    newStock = previousStock + updateDTO.quantity();
-                    changeAmount = updateDTO.quantity();
-                    break;
-                case REMOVE:
-                    newStock = previousStock - updateDTO.quantity();
-                    changeAmount = -updateDTO.quantity();
-                    break;
-                case SET:
-                    newStock = updateDTO.quantity();
-                    changeAmount = newStock - previousStock;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid update type: " + updateDTO.updateType());
-            }
-
-            // Update the product
-            product.setStock(newStock);
-
-            // Set last updated user
-            User updater = userRepository.findById(updateDTO.updaterUserId())
-                    .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + updateDTO.updaterUserId() + " was not found"));
-            product.setLastUpdatedBy(updater);
-
-            productRepository.save(product);
-
-            // Log the stock change (you might want to create a StockHistory entity)
-            LOGGER.info("Stock updated for product {}: {} -> {} (change: {})",
-                    product.getCode(), previousStock, newStock, changeAmount);
-
-            return new StockUpdateResultDTO(
-                    product.getId(),
-                    product.getCode(),
-                    previousStock,
-                    newStock,
-                    changeAmount,
-                    true,
-                    null
-            );
-
-        } catch (Exception e) {
-            LOGGER.error("Failed to update stock for product {}: {}", product.getCode(), e.getMessage());
-            return new StockUpdateResultDTO(
-                    product.getId(),
-                    product.getCode(),
-                    previousStock,
-                    previousStock, // No change on error
-                    0,
-                    false,
-                    e.getMessage()
-            );
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public List<StockUpdateResultDTO> updateMultipleProductsStock(BulkStockUpdateDTO bulkUpdate) {
-
-        List<StockUpdateResultDTO> results = new ArrayList<>();
-
-        for (StockUpdateDTO update : bulkUpdate.updates()) {
-            try {
-                StockUpdateResultDTO result = updateProductStock(update);
-                results.add(result);
-            } catch (Exception e) {
-                // Continue with other updates even if one fails
-                results.add(new StockUpdateResultDTO(
-                        update.productId(),
-                        "Unknown",
-                        0,
-                        0,
-                        0,
-                        false,
-                        e.getMessage()
-                ));
-            }
-        }
-
-        LOGGER.info("Bulk stock update completed: {} updates, {} successful",
-                results.size(), results.stream().mapToInt(r -> r.success() ? 1 : 0).sum());
-
-        return results;
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void reduceProductStock(Long productId, BigDecimal quantity) throws EntityNotFoundException {
-
-        Product product = getProductEntityById(productId);
-
-        if(product.getStock() == null) {
-            LOGGER.debug("Product {} has no stock tracking enabled. Can not reduce stock.", product.getCode());
-            return;
-        }
-
-        BigDecimal currentStock = BigDecimal.valueOf(product.getStock());
-        BigDecimal newStock = currentStock.subtract(quantity);
-
-        if(newStock.compareTo(BigDecimal.ZERO) < 0) {
-            LOGGER.warn("Product {} stock will go negative !", product.getCode());
-        }
-
-        product.setStock(newStock.intValue());
-        productRepository.save(product);
-
-        LOGGER.info("Reduced stock for product {} by {}. New stock : {}",
-                product.getCode(), quantity, newStock);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void increaseProductStock(Long productId, BigDecimal quantity) throws EntityNotFoundException {
-
-        Product product = getProductEntityById(productId);
-
-        if(product.getStock() == null) {
-            LOGGER.debug("Product {} has no stock tracking enabled. Can not increase stock", product.getCode());
-            return;
-        }
-
-        BigDecimal currentStock = BigDecimal.valueOf(product.getStock());
-        BigDecimal newStock = currentStock.add(quantity);
-
-        product.setStock(newStock.intValue());
-        productRepository.save(product);
-
-        LOGGER.info("Increased stock for product {} by {}. New stock : {}",
-                product.getCode(), quantity, newStock);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void adjustProductStock(Long productId, BigDecimal oldQuantity, BigDecimal newQuantity) throws EntityNotFoundException {
-
-        Product product = getProductEntityById(productId);
-
-        if(product.getStock() == null) {
-            LOGGER.debug("Product {} has no stock tracking enabled. Can not adjust stock.", product.getCode());
-            return;
-        }
-
-        BigDecimal stockAdjustment = oldQuantity.subtract(newQuantity);
-        BigDecimal currentStock = BigDecimal.valueOf(product.getStock());
-        BigDecimal newStock = currentStock.add(stockAdjustment);
-
-        if (newStock.compareTo(BigDecimal.ZERO) < 0) {
-            LOGGER.warn("Product {} stock adjustment will result in negative stock! Current: {}, Adjustment: {}, New stock: {}",
-                    product.getCode(), currentStock, stockAdjustment, newStock);
-        }
-
-        product.setStock(newStock.intValue());
-        productRepository.save(product);
-
-        LOGGER.info("Adjusted stock for product {} from {} to {}. Stock change: {}",
-                product.getCode(), oldQuantity, newQuantity, stockAdjustment);
-    }
-
-
 
 
     // =============================================================================

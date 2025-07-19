@@ -41,6 +41,8 @@ public class SaleService implements ISaleService {
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
 
+    private final IStockManagementService stockManagementService;
+
     private final SalePricingService pricingService;
     private final Mapper mapper;
 
@@ -50,6 +52,7 @@ public class SaleService implements ISaleService {
                        CustomerRepository customerRepository,
                        LocationRepository locationRepository,
                        UserRepository userRepository,
+                       IStockManagementService stockManagementService,
                        SalePricingService pricingService,
                        Mapper mapper) {
         this.saleRepository = saleRepository;
@@ -57,6 +60,7 @@ public class SaleService implements ISaleService {
         this.customerRepository = customerRepository;
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
+        this.stockManagementService = stockManagementService;
         this.pricingService = pricingService;
         this.mapper = mapper;
     }
@@ -91,7 +95,7 @@ public class SaleService implements ISaleService {
         Sale savedSale = saleRepository.save(sale);
 
         //update stock for products included in the sale
-        updateProductStockAfterSale(productQuantities);
+        updateProductStockAfterSale(productQuantities, sale.getId());
 
         //if first time customer , set first sale date
         updateCustomerFirstSaleDate(customer, request.saleDate());
@@ -361,35 +365,23 @@ public class SaleService implements ISaleService {
     // PRIVATE HELPER METHODS - Stock Management (Simple Repository Calls)
     // =============================================================================
 
-    private void updateProductStockAfterSale(Map<Product, BigDecimal> productQuantities) {
-        for (Map.Entry<Product, BigDecimal> entry : productQuantities.entrySet()) {
-            Product product = entry.getKey();
-            BigDecimal quantity = entry.getValue();
-
-            Integer currentStock = productRepository.getCurrentStockById(product.getId());
-            Integer newStock = currentStock - quantity.intValue();
-
-            productRepository.updateStockById(product.getId(), newStock);
-
-            LOGGER.debug("Updated stock for product {} from {} to {}",
-                    product.getCode(), currentStock, newStock);
-        }
+    private void updateProductStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId) throws EntityNotFoundException{
+        stockManagementService.reduceStockAfterSale(productQuantities, saleId);
+        LOGGER.debug("Stock reduced for sale {} with {} products", saleId, productQuantities.size());
     }
 
-    private void restoreProductStockAfterSaleDeletion(Sale sale) {
-        for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
-            Product product = saleProduct.getProduct();
-            BigDecimal quantity = saleProduct.getQuantity();
+    private void restoreProductStockAfterSaleDeletion(Sale sale) throws EntityNotFoundException{
+        // Convert SaleProducts to Product-quantity map
+        Map<Product, BigDecimal> productQuantities = sale.getAllSaleProducts()
+                .stream()
+                .collect(Collectors.toMap(
+                        SaleProduct::getProduct,
+                        SaleProduct::getQuantity
+                ));
 
-            // Simple repository calls
-            Integer currentStock = productRepository.getCurrentStockById(product.getId());
-            Integer newStock = currentStock + quantity.intValue();
-
-            productRepository.updateStockById(product.getId(), newStock);
-
-            LOGGER.debug("Restored stock for product {} from {} to {}",
-                    product.getCode(), currentStock, newStock);
-        }
+        stockManagementService.restoreStockAfterSaleDeleted(productQuantities, sale.getId());
+        LOGGER.debug("Stock restored for deleted sale {} with {} products",
+                sale.getId(), productQuantities.size());
     }
 
     // =============================================================================

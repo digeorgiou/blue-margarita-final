@@ -103,7 +103,7 @@ public interface IProductService {
      * Retrieves active products matching search term
      * with limited info needed for autocomplete in record sale page
      * @param searchTerm matches with name or code
-     * @return
+     * @return List of products with basic info
      */
     List<ProductSearchResultDTO> searchProductsForAutocomplete(String searchTerm);
 
@@ -211,32 +211,6 @@ public interface IProductService {
     // DASHBOARD PAGE METHODS
     // =============================================================================
 
-    /**
-     * Retrieves low stock products with a limit (for dashboard widgets)
-     * Ordered by stock level ascending (most urgent first)
-     *
-     * @param limit Maximum number of products to return
-     * @return List of low stock products up to the limit
-     */
-    List<ProductListItemDTO> getLowStockProducts(int limit);
-
-    /**
-     * Retrieves low stock products with pagination and additional filtering
-     * Used for dedicated low stock management page
-     *
-     * @param pageable  Pagination and sorting parameters
-     * @return Paginated list of low stock products
-     */
-    Paginated<ProductListItemDTO> getAllLowStockProducts(Pageable pageable);
-
-
-    /**
-     * Retrieves negative stock products with pagination and additional filtering
-     *
-     * @param pageable  Pagination and sorting parameters
-     * @return Paginated list of products with negative stock
-     */
-    Paginated<ProductListItemDTO> getAllNegativeStockProducts(Pageable pageable);
 
     /**
      * Retrieves top products by revenue for dashboard
@@ -323,85 +297,6 @@ public interface IProductService {
      * @throws EntityNotFoundException if product, procedure, or user not found
      */
     ProductListItemDTO removeProcedureFromProduct(Long productId, Long procedureId, Long updaterUserId)
-            throws EntityNotFoundException;
-
-    // =============================================================================
-    // STOCK MANAGEMENT
-    // =============================================================================
-
-    /**
-     * Retrieves products optimized for stock management operations
-     *
-     * Used by the dedicated stock management page to provide a lightweight,
-     * focused view of products with only stock-relevant information. This method
-     * returns essential data for efficient stock updates without the overhead
-     * of full product details.
-     * @param filters Filter criteria including pagination and stock-specific filters
-     * @return Paginated list of products with stock management data
-     */
-    Paginated<StockManagementDTO> getProductsForStockManagement(ProductFilters filters);
-
-    /**
-     * Updates stock for a single product with comprehensive audit logging
-     *
-     * Supports three types of stock updates:
-     * - ADD: Increase stock by specified quantity (e.g., receiving inventory)
-     * - REMOVE: Decrease stock by specified quantity (e.g., damage, loss)
-     * - SET: Set absolute stock value (e.g., physical inventory count)
-     * @param updateDTO Stock update data including product ID, type, quantity, and reason
-     * @return Result object with success status, before/after values, and any error messages
-     * @throws EntityNotFoundException if product or user not found
-     */
-    StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO) throws EntityNotFoundException , EntityInvalidArgumentException;
-
-    /**
-     * Updates stock for multiple products in a single atomic transaction
-     *
-     * Performs bulk stock updates efficiently while maintaining data consistency.
-     * All updates are processed in a single transaction - if any update fails,
-     * the system continues with remaining updates but logs failures appropriately.
-
-     * @param bulkUpdate Bulk update data containing list of individual updates and batch metadata
-     * @return List of results for each update attempt, indicating success/failure status
-     */
-    List<StockUpdateResultDTO> updateMultipleProductsStock(BulkStockUpdateDTO bulkUpdate);
-
-    /**
-     * Reduces product stock when items are sold or consumed
-     *
-     * Used by the sales system to automatically reduce stock when products
-     * are sold. This method handles stock reduction without user intervention
-     * and allows negative stock (which triggers alerts elsewhere).
-
-     * @param productId Product ID to reduce stock for
-     * @param quantity Quantity to remove from stock
-     * @throws EntityNotFoundException if product not found
-     */
-    void reduceProductStock(Long productId, BigDecimal quantity) throws EntityNotFoundException;
-
-    /**
-     * Increases product stock when items are received or returned
-     *
-
-     * @param productId Product ID to increase stock for
-     * @param quantity Quantity to add to stock
-     * @throws EntityNotFoundException if product not found
-     */
-    void increaseProductStock(Long productId, BigDecimal quantity) throws EntityNotFoundException;
-
-    /**
-     * Adjusts product stock based on changes in sale quantities
-     *
-     * Used when sale quantities are modified after the fact. This method
-     * calculates the net stock adjustment needed and applies it to maintain
-     * accurate inventory levels.
-
-     * @param productId Product ID to adjust stock for
-     * @param oldQuantity Previous quantity that was deducted
-     * @param newQuantity New quantity that should be deducted
-     * @throws EntityNotFoundException if product not found
-     */
-    void adjustProductStock(Long productId, BigDecimal oldQuantity, BigDecimal newQuantity)
             throws EntityNotFoundException;
 
     // =============================================================================

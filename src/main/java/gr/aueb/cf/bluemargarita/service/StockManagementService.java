@@ -153,14 +153,13 @@ public class StockManagementService implements IStockManagementService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reduceStockAfterSale(Map<Long, BigDecimal> productQuantities, Long saleId)
+    public void reduceStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId)
             throws EntityNotFoundException {
 
-        for (Map.Entry<Long, BigDecimal> entry : productQuantities.entrySet()) {
-            Long productId = entry.getKey();
-            BigDecimal quantity = entry.getValue();
+        for (Map.Entry<Product, BigDecimal> entry : productQuantities.entrySet()) {
 
-            Product product = getProductEntityById(productId);
+            Product product = entry.getKey();
+            BigDecimal quantity = entry.getValue();
 
             if (product.getStock() == null) {
                 LOGGER.debug("Product {} has no stock tracking enabled. Skipping stock reduction.",
@@ -190,14 +189,13 @@ public class StockManagementService implements IStockManagementService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void restoreStockAfterSaleDeleted(Map<Long, BigDecimal> productQuantities, Long saleId)
+    public void restoreStockAfterSaleDeleted(Map<Product, BigDecimal> productQuantities, Long saleId)
             throws EntityNotFoundException {
 
-        for (Map.Entry<Long, BigDecimal> entry : productQuantities.entrySet()) {
-            Long productId = entry.getKey();
+        for (Map.Entry<Product, BigDecimal> entry : productQuantities.entrySet()) {
+            Product product = entry.getKey();
             BigDecimal quantity = entry.getValue();
 
-            Product product = getProductEntityById(productId);
 
             if (product.getStock() == null) {
                 LOGGER.debug("Product {} has no stock tracking enabled. Skipping stock restoration.",
@@ -222,32 +220,26 @@ public class StockManagementService implements IStockManagementService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void adjustStockAfterSaleUpdated(Map<Long, BigDecimal> oldQuantities,
-                                            Map<Long, BigDecimal> newQuantities, Long saleId)
+    public void adjustStockAfterSaleUpdated(Map<Product, BigDecimal> oldQuantities,
+                                            Map<Product, BigDecimal> newQuantities, Long saleId)
             throws EntityNotFoundException {
 
         // Calculate differences and adjust stock accordingly
-        for (Long productId : oldQuantities.keySet()) {
-            BigDecimal oldQuantity = oldQuantities.get(productId);
-            BigDecimal newQuantity = newQuantities.getOrDefault(productId, BigDecimal.ZERO);
+        for (Product product : oldQuantities.keySet()) {
+            BigDecimal oldQuantity = oldQuantities.get(product);
+            BigDecimal newQuantity = newQuantities.getOrDefault(product, BigDecimal.ZERO);
             BigDecimal difference = oldQuantity.subtract(newQuantity);
 
-            if (difference.compareTo(BigDecimal.ZERO) != 0) {
-                Product product = getProductEntityById(productId);
+            if (difference.compareTo(BigDecimal.ZERO) != 0 && product.getStock()!= null) {
 
-                if (product.getStock() != null) {
-                    Integer currentStock = product.getStock();
-                    Integer adjustedStock = currentStock + difference.intValue(); // Add back the difference
+                Integer currentStock = product.getStock();
+                Integer adjustedStock = currentStock + difference.intValue();
 
-                    updateProductStockValue(product, adjustedStock, null);
+                updateProductStockValue(product, adjustedStock, null);
 
-                    logStockMovement(product,
-                            new StockCalculationResult(currentStock, adjustedStock, difference.intValue()),
-                            "ADJUST", "SALE");
-
-                    LOGGER.debug("Adjusted stock for product {} from {} to {} (sale updated: {})",
-                            product.getCode(), currentStock, adjustedStock, saleId);
-                }
+                logStockMovement(product,
+                        new StockCalculationResult(currentStock, adjustedStock, difference.intValue()),
+                        "ADJUST", "SALE");
             }
         }
     }
@@ -272,6 +264,20 @@ public class StockManagementService implements IStockManagementService{
                 .map(mapper::mapToStockAlertDto)
                 .collect(Collectors.toList());
 
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<StockAlertDTO> getAllLowStockProductsPaginated(ProductFilters filters) {
+        // Ensure we're filtering for low stock and active products
+        filters.setLowStock(true);
+        filters.setIsActive(true);
+
+        Specification<Product> spec = getSpecsFromFilters(filters);
+        Page<Product> products = productRepository.findAll(spec, filters.getPageable());
+
+        Page<StockAlertDTO> stockAlerts = products.map(mapper::mapToStockAlertDto);
+        return new Paginated<>(stockAlerts);
     }
 
     @Override

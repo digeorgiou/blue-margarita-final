@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.dto.stock.*;
+import gr.aueb.cf.bluemargarita.model.Product;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -49,22 +50,22 @@ public interface IStockManagementService {
      * Reduces stock for products after a sale is recorded
      * Called by SaleService.recordSale()
      */
-    void reduceStockAfterSale(Map<Long, BigDecimal> productQuantities, Long saleId)
+    void reduceStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId)
             throws EntityNotFoundException;
 
     /**
      * Restores stock for products after a sale is deleted
      * Called by SaleService.deleteSale()
      */
-    void restoreStockAfterSaleDeleted(Map<Long, BigDecimal> productQuantities, Long saleId)
+    void restoreStockAfterSaleDeleted(Map<Product, BigDecimal> productQuantities, Long saleId)
             throws EntityNotFoundException;
 
     /**
      * Adjusts stock when sale quantities are modified
      * Called by SaleService.updateSale() if product quantities changed
      */
-    void adjustStockAfterSaleUpdated(Map<Long, BigDecimal> oldQuantities,
-                                     Map<Long, BigDecimal> newQuantities, Long saleId)
+    void adjustStockAfterSaleUpdated(Map<Product, BigDecimal> oldQuantities,
+                                     Map<Product, BigDecimal> newQuantities, Long saleId)
             throws EntityNotFoundException;
 
     // =============================================================================
@@ -78,6 +79,12 @@ public interface IStockManagementService {
     List<StockAlertDTO> getLowStockProducts(int limit);
 
     /**
+     * Gets all low stock products with pagination (for "view all" functionality)
+     * Used when user clicks "View All" from dashboard low stock widget
+     */
+    Paginated<StockAlertDTO> getAllLowStockProductsPaginated(ProductFilters filters);
+
+    /**
      * Gets products with negative stock (emergency alerts)
      * Called by dashboard to show urgent stock issues
      */
@@ -89,13 +96,4 @@ public interface IStockManagementService {
      */
     StockOverviewDTO getStockOverview();
 
-    // =============================================================================
-    // STOCK REPORTING
-    // =============================================================================
-
-    /**
-     * Generates stock movement report for a date range
-     * Shows all stock changes (manual, sales, purchases) in period
-     */
-    List<StockMovementDTO> getStockMovementReport(LocalDate startDate, LocalDate endDate);
 }

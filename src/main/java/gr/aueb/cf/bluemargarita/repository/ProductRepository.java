@@ -79,4 +79,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     @Query("UPDATE Product p SET p.stock = :newStock WHERE p.id = :productId")
     void updateStockById(@Param("productId") Long productId, @Param("newStock") Integer newStock);
 
+    @Query("SELECT COALESCE(SUM(p.stock * p.finalSellingPriceRetail), 0) FROM Product p WHERE p.isActive = true AND p.stock IS NOT NULL AND p.stock > 0")
+    BigDecimal calculateTotalInventoryValue();
+
 }
