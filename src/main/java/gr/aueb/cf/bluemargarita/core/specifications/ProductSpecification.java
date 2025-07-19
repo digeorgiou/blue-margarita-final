@@ -134,6 +134,17 @@ public class ProductSpecification {
         };
     }
 
+    public static Specification<Product> productNegativeStock(Boolean lowStock) {
+        return (root, query, criteriaBuilder) -> {
+
+            // Products where stock <= 0
+            return criteriaBuilder.lessThanOrEqualTo(
+                    root.get("stock"),
+                    0
+            );
+        };
+    }
+
     /**
      * Combined specification for product search (name OR code)
      */

@@ -17,6 +17,7 @@ import gr.aueb.cf.bluemargarita.dto.sale.SaleDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleItemDetailsDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleProductDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleReadOnlyDTO;
+import gr.aueb.cf.bluemargarita.dto.stock.StockAlertDTO;
 import gr.aueb.cf.bluemargarita.dto.stock.StockManagementDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.*;
 import gr.aueb.cf.bluemargarita.dto.task.ToDoTaskReadOnlyDTO;
@@ -460,49 +461,6 @@ public class Mapper {
         );
     }
 
-    public StockManagementDTO mapToStockManagementDTO(Product product) {
-        Integer currentStock = product.getStock() != null ? product.getStock() : 0;
-        Integer lowStockAlert = product.getLowStockAlert();
-
-        // Calculate stock metrics
-        Integer stockDifference = null;
-        Double stockPercentage = null;
-        StockManagementDTO.StockStatus status;
-
-        if (lowStockAlert != null && lowStockAlert > 0) {
-            stockDifference = currentStock - lowStockAlert;
-            stockPercentage = (double) currentStock / lowStockAlert * 100;
-
-            if (currentStock < 0) {
-                status = StockManagementDTO.StockStatus.NEGATIVE;
-            } else if (currentStock <= lowStockAlert) {
-                status = StockManagementDTO.StockStatus.LOW;
-            } else {
-                status = StockManagementDTO.StockStatus.NORMAL;
-            }
-        } else {
-            // No alert threshold set
-            if (currentStock < 0) {
-                status = StockManagementDTO.StockStatus.NEGATIVE;
-            } else {
-                status = StockManagementDTO.StockStatus.NO_ALERT;
-            }
-        }
-
-        return new StockManagementDTO(
-                product.getId(),
-                product.getName(),
-                product.getCode(),
-                product.getCategory() != null ? product.getCategory().getName() : "No Category",
-                currentStock,
-                lowStockAlert,
-                product.getIsActive(),
-                stockDifference,
-                stockPercentage,
-                status
-        );
-    }
-
     //Purchase
 
     public PurchaseReadOnlyDTO mapToPurchaseReadOnlyDTO(Purchase purchase) {
@@ -674,6 +632,48 @@ public class Mapper {
                 averageItemPrice
 
         );
+    }
+
+    //Stock
+
+    public StockManagementDTO mapToStockManagementDTO(Product product) {
+        BigDecimal unitPrice = product.getFinalSellingPriceRetail();
+        BigDecimal totalValue = BigDecimal.ZERO;
+
+        if (product.getStock() != null && unitPrice != null) {
+            totalValue = unitPrice.multiply(BigDecimal.valueOf(product.getStock()));
+        }
+
+        return new StockManagementDTO(
+                product.getId(),
+                product.getName(),
+                product.getCode(),
+                product.getCategory() != null ? product.getCategory().getName() : "No Category",
+                product.getStock(),
+                product.getLowStockAlert(),
+                product.getIsActive(),
+                unitPrice,
+                totalValue,
+                calculateStockStatus(product)
+        );
+    }
+
+    public StockAlertDTO mapToStockAlertDto(Product product){
+        return new StockAlertDTO(
+                product.getId(),
+                product.getCode(),
+                product.getName(),
+                product.getStock(),
+                product.getLowStockAlert(),
+                calculateStockStatus(product)
+        );
+    }
+
+    private String calculateStockStatus(Product product) {
+        if (product.getStock() == null) return "NO_TRACKING";
+        if (product.getStock() < 0) return "NEGATIVE";
+        if (product.getLowStockAlert() != null && product.getStock() <= product.getLowStockAlert()) return "LOW";
+        return "NORMAL";
     }
 
 

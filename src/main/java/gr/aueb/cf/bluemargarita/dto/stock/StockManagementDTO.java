@@ -1,5 +1,7 @@
 package gr.aueb.cf.bluemargarita.dto.stock;
 
+import java.math.BigDecimal;
+
 /**
  * Lightweight DTO for stock management operations
  * Contains only essential information needed for stock updates
@@ -13,10 +15,10 @@ public record StockManagementDTO(
         Integer lowStockAlert,
         Boolean isActive,
 
-        // Calculated fields
-        Integer stockDifference,      // currentStock - lowStockAlert
-        Double stockPercentage,       // (currentStock / lowStockAlert) * 100
-        StockStatus status           // NORMAL, LOW, NEGATIVE, NO_ALERT
+        BigDecimal unitSellingPrice,
+        BigDecimal totalStockValue,
+
+        String status           // NORMAL, LOW, NEGATIVE, NO_ALERT
 ) {
 
     /**
