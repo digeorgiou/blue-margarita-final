@@ -115,7 +115,7 @@ public class SupplierService implements ISupplierService {
 
         Supplier supplier = getSupplierEntityById(id);
 
-        Integer purchaseCount = supplierRepository.countPurchasesBySupplierId(id);
+        Integer purchaseCount = purchaseRepository.countBySupplierId(id);
 
         if (purchaseCount > 0) {
             // Soft Delete if supplier has purchase history
@@ -249,13 +249,13 @@ public class SupplierService implements ISupplierService {
 
     private SupplierAnalyticsDTO getSupplierAnalytics(Long supplierId){
 
-        Integer totalPurchases = supplierRepository.countPurchasesBySupplierId(supplierId);
+        Integer totalPurchases = purchaseRepository.countBySupplierId(supplierId);
         if (totalPurchases == 0) {
             return createEmptySupplierAnalytics();
         }
 
-        BigDecimal totalCost = supplierRepository.sumTotalCostBySupplierId(supplierId);
-        LocalDate lastPurchaseDate = supplierRepository.findLastPurchaseDateBySupplierId(supplierId);
+        BigDecimal totalCost = purchaseRepository.sumCostBySupplierId(supplierId);
+        LocalDate lastPurchaseDate = purchaseRepository.findLastPurchaseDateBySupplierId(supplierId);
 
         BigDecimal averagePurchaseValue = totalCost != null && totalPurchases > 0 ?
                 totalCost.divide(BigDecimal.valueOf(totalPurchases), 2, RoundingMode.HALF_UP) :
@@ -271,14 +271,14 @@ public class SupplierService implements ISupplierService {
 
     private List<MaterialStatsSummaryDTO> getTopMaterialsBySupplier(Long supplierId) {
         // Get distinct materials purchased from this supplier
-        List<Long> materialIds = supplierRepository.findDistinctMaterialIdsBySupplierId(supplierId);
+        List<Long> materialIds = purchaseRepository.findDistinctMaterialIdsBySupplierId(supplierId);
 
         return materialIds.stream()
                 .map(materialId -> {
                     String materialName = materialRepository.findMaterialNameById(materialId);
-                    BigDecimal totalQuantity = supplierRepository.sumQuantityBySupplierIdAndMaterialId(supplierId, materialId);
-                    BigDecimal totalCost = supplierRepository.sumCostBySupplierIdAndMaterialId(supplierId, materialId);
-                    LocalDate lastPurchaseDate = supplierRepository.findLastPurchaseDateBySupplierIdAndMaterialId(supplierId, materialId);
+                    BigDecimal totalQuantity = purchaseRepository.sumQuantityBySupplierIdAndMaterialId(supplierId, materialId);
+                    BigDecimal totalCost = purchaseRepository.sumCostBySupplierIdAndMaterialId(supplierId, materialId);
+                    LocalDate lastPurchaseDate = purchaseRepository.findLastPurchaseDateBySupplierIdAndMaterialId(supplierId, materialId);
 
                     return new MaterialStatsSummaryDTO(
                             materialId,
