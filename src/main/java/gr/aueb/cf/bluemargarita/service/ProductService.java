@@ -42,19 +42,21 @@ public class ProductService implements IProductService{
     private final ProcedureRepository procedureRepository;
     private final ProductProcedureRepository productProcedureRepository;
     private final UserRepository userRepository;
+    private final SaleProductRepository saleProductRepository;
 
     private final ProductSalesAnalyticsService analyticsService;
     private final Mapper mapper;
 
     @Autowired
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, MaterialRepository materialRepository, ProcedureRepository procedureRepository,
-                          ProductProcedureRepository productProcedureRepository, UserRepository userRepository, ProductSalesAnalyticsService analyticsService, Mapper mapper) {
+                          ProductProcedureRepository productProcedureRepository, UserRepository userRepository,SaleProductRepository saleProductRepository, ProductSalesAnalyticsService analyticsService, Mapper mapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.materialRepository = materialRepository;
         this.procedureRepository = procedureRepository;
         this.productProcedureRepository = productProcedureRepository;
         this.userRepository = userRepository;
+        this.saleProductRepository = saleProductRepository;
         this.analyticsService = analyticsService;
         this.mapper = mapper;
     }
@@ -154,9 +156,9 @@ public class ProductService implements IProductService{
 
         Product product = getProductEntityById(id);
 
-        // Check if product has sales - if yes, only soft delete
+        Integer saleCount = saleProductRepository.countByProductId(id);
 
-        if (!product.getAllSaleProducts().isEmpty()) {
+        if (saleCount > 0) {
             // Soft delete - preserve sales history
             product.setIsActive(false);
             product.setDeletedAt(LocalDateTime.now());

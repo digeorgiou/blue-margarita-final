@@ -316,5 +316,8 @@ public interface SaleProductRepository extends JpaRepository<SaleProduct, Long>,
     List<Long> findDistinctProductIdsByDateRange(@Param("startDate") LocalDate startDate,
                                                  @Param("endDate") LocalDate endDate);
 
+    @Query("SELECT COUNT(sp) FROM SaleProduct sp WHERE sp.product.id = :productId")
+    Integer countByProductId(@Param("productId") Long productId);
+
 
 }
