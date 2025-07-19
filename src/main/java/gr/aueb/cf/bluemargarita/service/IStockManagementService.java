@@ -28,7 +28,7 @@ public interface IStockManagementService {
      * Used in stock management interface
      */
     StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO)
-            throws EntityNotFoundException, EntityInvalidArgumentException;
+            throws EntityNotFoundException;
 
     /**
      * Updates stock for multiple products in bulk
@@ -50,23 +50,13 @@ public interface IStockManagementService {
      * Reduces stock for products after a sale is recorded
      * Called by SaleService.recordSale()
      */
-    void reduceStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId)
-            throws EntityNotFoundException;
+    void reduceStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId);
 
     /**
      * Restores stock for products after a sale is deleted
      * Called by SaleService.deleteSale()
      */
-    void restoreStockAfterSaleDeleted(Map<Product, BigDecimal> productQuantities, Long saleId)
-            throws EntityNotFoundException;
-
-    /**
-     * Adjusts stock when sale quantities are modified
-     * Called by SaleService.updateSale() if product quantities changed
-     */
-    void adjustStockAfterSaleUpdated(Map<Product, BigDecimal> oldQuantities,
-                                     Map<Product, BigDecimal> newQuantities, Long saleId)
-            throws EntityNotFoundException;
+    void restoreStockAfterSaleDeleted(Map<Product, BigDecimal> productQuantities, Long saleId);
 
     // =============================================================================
     // STOCK MONITORING AND ALERTS

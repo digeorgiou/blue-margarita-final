@@ -1,15 +1,12 @@
 package gr.aueb.cf.bluemargarita.service;
 
-import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
-import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
 import gr.aueb.cf.bluemargarita.dto.stock.*;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Product;
-import gr.aueb.cf.bluemargarita.model.Sale;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
@@ -22,13 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class StockManagementService implements IStockManagementService{
 
@@ -52,7 +49,7 @@ public class StockManagementService implements IStockManagementService{
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO)
-            throws EntityNotFoundException, EntityInvalidArgumentException {
+            throws EntityNotFoundException {
 
         Product product = getProductEntityById(updateDTO.productId());
         User updater = getUserEntityById(updateDTO.updaterUserId());
@@ -124,7 +121,7 @@ public class StockManagementService implements IStockManagementService{
             }
         }
 
-        int successCount = (int) results.stream().mapToInt(r -> r.success() ? 1 : 0).sum();
+        int successCount = results.stream().mapToInt(r -> r.success() ? 1 : 0).sum();
         LOGGER.info("Bulk stock update completed: {} updates, {} successful", results.size(), successCount);
 
         return results;
@@ -153,8 +150,7 @@ public class StockManagementService implements IStockManagementService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reduceStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId)
-            throws EntityNotFoundException {
+    public void reduceStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId){
 
         for (Map.Entry<Product, BigDecimal> entry : productQuantities.entrySet()) {
 
@@ -189,8 +185,7 @@ public class StockManagementService implements IStockManagementService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void restoreStockAfterSaleDeleted(Map<Product, BigDecimal> productQuantities, Long saleId)
-            throws EntityNotFoundException {
+    public void restoreStockAfterSaleDeleted(Map<Product, BigDecimal> productQuantities, Long saleId) {
 
         for (Map.Entry<Product, BigDecimal> entry : productQuantities.entrySet()) {
             Product product = entry.getKey();
@@ -215,32 +210,6 @@ public class StockManagementService implements IStockManagementService{
 
             LOGGER.debug("Restored stock for product {} from {} to {} (sale deleted: {})",
                     product.getCode(), currentStock, newStock, saleId);
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void adjustStockAfterSaleUpdated(Map<Product, BigDecimal> oldQuantities,
-                                            Map<Product, BigDecimal> newQuantities, Long saleId)
-            throws EntityNotFoundException {
-
-        // Calculate differences and adjust stock accordingly
-        for (Product product : oldQuantities.keySet()) {
-            BigDecimal oldQuantity = oldQuantities.get(product);
-            BigDecimal newQuantity = newQuantities.getOrDefault(product, BigDecimal.ZERO);
-            BigDecimal difference = oldQuantity.subtract(newQuantity);
-
-            if (difference.compareTo(BigDecimal.ZERO) != 0 && product.getStock()!= null) {
-
-                Integer currentStock = product.getStock();
-                Integer adjustedStock = currentStock + difference.intValue();
-
-                updateProductStockValue(product, adjustedStock, null);
-
-                logStockMovement(product,
-                        new StockCalculationResult(currentStock, adjustedStock, difference.intValue()),
-                        "ADJUST", "SALE");
-            }
         }
     }
 
@@ -313,7 +282,7 @@ public class StockManagementService implements IStockManagementService{
                 .build();
 
 
-        // Multiple simple repository calls - your preferred pattern
+        // Multiple simple repository calls
         Integer totalProducts = productRepository.countByIsActiveTrue();
         Integer lowStockCount = countProductsByFilters(lowStockFilters);
         Integer negativeStockCount = countProductsByFilters(negativeStockFilters);
@@ -354,22 +323,20 @@ public class StockManagementService implements IStockManagementService{
     private StockCalculationResult calculateStockChange(Product product, StockUpdateDTO updateDTO) {
         Integer previousStock = product.getStock() != null ? product.getStock() : 0;
         Integer newStock;
-        Integer changeAmount;
-
-        switch (updateDTO.updateType()) {
-            case ADD:
+        Integer changeAmount = switch (updateDTO.updateType()) {
+            case ADD -> {
                 newStock = previousStock + updateDTO.quantity();
-                changeAmount = updateDTO.quantity();
-                break;
-            case REMOVE:
+                yield updateDTO.quantity();
+            }
+            case REMOVE -> {
                 newStock = previousStock - updateDTO.quantity();
-                changeAmount = -updateDTO.quantity();
-                break;
-            default:
+                yield -updateDTO.quantity();
+            }
+            default -> {
                 newStock = updateDTO.quantity();
-                changeAmount = newStock - previousStock;
-
-        }
+                yield newStock - previousStock;
+            }
+        };
 
         return new StockCalculationResult(previousStock, newStock, changeAmount);
     }

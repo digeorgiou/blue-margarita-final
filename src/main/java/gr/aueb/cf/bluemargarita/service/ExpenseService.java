@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class ExpenseService implements IExpenseService {
 
@@ -55,22 +54,15 @@ public class ExpenseService implements IExpenseService {
     @Transactional(rollbackFor = Exception.class)
     public ExpenseReadOnlyDTO createExpense(ExpenseInsertDTO dto) throws EntityNotFoundException, EntityAlreadyExistsException {
 
-        LOGGER.info("Creating new expense: {} - {}", dto.description(), dto.amount());
 
-        // Validate creator user exists
-        User creator = userRepository.findById(dto.creatorUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + dto.creatorUserId() + " was not found"));
+        User creator = getUserEntityById(dto.creatorUserId());
 
         // Validate purchase if provided
         Purchase purchase = null;
         if (dto.purchaseId() != null) {
-            purchase = purchaseRepository.findById(dto.purchaseId())
-                    .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + dto.purchaseId() + " was not found"));
+            purchase = getPurchaseEntityById(dto.purchaseId());
+            validateUniquePurchase(dto.purchaseId());
 
-            // Check if purchase already has an expense linked
-            if (expenseRepository.existsByPurchaseId(dto.purchaseId())) {
-                throw new EntityAlreadyExistsException("Purchase", "Purchase already has an expense linked to it");
-            }
         }
 
         // Create expense entity
@@ -102,26 +94,18 @@ public class ExpenseService implements IExpenseService {
     @Transactional(rollbackFor = Exception.class)
     public ExpenseReadOnlyDTO updateExpense(ExpenseUpdateDTO dto) throws EntityNotFoundException, EntityAlreadyExistsException {
 
-        LOGGER.info("Updating expense with id: {}", dto.expenseId());
-
-        Expense existingExpense = expenseRepository.findById(dto.expenseId())
-                .orElseThrow(() -> new EntityNotFoundException("Expense", "Expense with id=" + dto.expenseId() + " was not found"));
+        Expense existingExpense = getExpenseEntityById(dto.expenseId());
 
         // Validate updater user exists
-        User updater = userRepository.findById(dto.updaterUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + dto.updaterUserId() + " was not found"));
+        User updater = getUserEntityById(dto.updaterUserId());
 
         // Handle purchase linking/unlinking
         if (dto.purchaseId() != null) {
             // Check if this is a different purchase
             if (existingExpense.getPurchase() == null || !existingExpense.getPurchase().getId().equals(dto.purchaseId())) {
-                Purchase newPurchase = purchaseRepository.findById(dto.purchaseId())
-                        .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + dto.purchaseId() + " was not found"));
-
+                Purchase newPurchase = getPurchaseEntityById(dto.purchaseId());
                 // Check if new purchase already has an expense
-                if (expenseRepository.existsByPurchaseId(dto.purchaseId())) {
-                    throw new EntityAlreadyExistsException("Purchase","Purchase already has an expense linked to it");
-                }
+                validateUniquePurchase(dto.purchaseId());
 
                 // Unlink from old purchase if exists
                 if (existingExpense.getPurchase() != null) {
@@ -156,8 +140,7 @@ public class ExpenseService implements IExpenseService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteExpense(Long expenseId) throws EntityNotFoundException {
 
-        Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new EntityNotFoundException("Expense", "Expense with id=" + expenseId + " was not found"));
+        Expense expense = getExpenseEntityById(expenseId);
 
         // Unlink from purchase if linked
         if (expense.getPurchase() != null) {
@@ -213,30 +196,36 @@ public class ExpenseService implements IExpenseService {
     @Transactional(readOnly = true)
     public List<ExpenseTypeBreakdownDTO> getExpenseBreakdownByType(LocalDate dateFrom, LocalDate dateTo) {
 
-        List<Object[]> results = expenseRepository.findExpenseSummaryByType(dateFrom, dateTo);
+        List<ExpenseType> expenseTypes = expenseRepository.findDistinctExpenseTypesByDateRange(dateFrom, dateTo);
 
-        // Calculate total for percentage calculation
-        BigDecimal grandTotal = results.stream()
-                .map(row -> (BigDecimal) row[1])
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal grandTotal = expenseRepository.sumExpensesBetweenDates(
+                dateFrom != null ? dateFrom : LocalDate.of(2000, 1, 1),
+                dateTo != null ? dateTo : LocalDate.now()
+        );
 
-        return results.stream()
-                .map(row -> {
-                    ExpenseType type = (ExpenseType) row[0];
-                    BigDecimal amount = (BigDecimal) row[1];
-                    Long count = (Long) row[2];
-                    BigDecimal percentage = grandTotal.compareTo(BigDecimal.ZERO) > 0
-                            ? amount.divide(grandTotal, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
-                            : BigDecimal.ZERO;
+        return expenseTypes.stream()
+                .map(expenseType -> {
+                    BigDecimal amount = expenseRepository.sumAmountByTypeAndDateRange(expenseType, dateFrom, dateTo);
+                    Long count = expenseRepository.countByTypeAndDateRange(expenseType, dateFrom, dateTo);
 
-                    return new ExpenseTypeBreakdownDTO(type, amount, count, percentage);
+                    BigDecimal percentage = grandTotal.compareTo(BigDecimal.ZERO) > 0 ?
+                            amount.divide(grandTotal, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)) :
+                            BigDecimal.ZERO;
+                    return new ExpenseTypeBreakdownDTO(
+                            expenseType,
+                            expenseType.getDisplayName(),
+                            amount,
+                            count.intValue(),
+                            percentage
+
+                    );
                 })
+                .sorted((e1, e2) -> e2.totalAmount().compareTo(e1.totalAmount())) // Sort by amount descending
                 .collect(Collectors.toList());
     }
 
-
     // =============================================================================
-    // PURCHASE INTEGRATION METHODS
+    // AUTOMATIC METHODS FOR PURCHASE CREATE/UPDATE
     // =============================================================================
 
     @Override
@@ -245,16 +234,11 @@ public class ExpenseService implements IExpenseService {
                                                         BigDecimal amount, LocalDate expenseDate,
                                                         Long creatorUserId) throws EntityNotFoundException, EntityAlreadyExistsException {
 
-        LOGGER.info("Creating expense for purchase: {}", purchaseId);
-
         // Validate purchase exists
-        Purchase purchase = purchaseRepository.findById(purchaseId)
-                .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + purchaseId + " was not found"));
+        getPurchaseEntityById(purchaseId);
 
         // Check if purchase already has an expense
-        if (expenseRepository.existsByPurchaseId(purchaseId)) {
-            throw new EntityAlreadyExistsException("Purcahse", "Purchase already has an expense linked to it");
-        }
+        validateUniquePurchase(purchaseId);
 
         // Create expense insert DTO
         ExpenseInsertDTO dto = new ExpenseInsertDTO(
@@ -273,8 +257,6 @@ public class ExpenseService implements IExpenseService {
     @Transactional(rollbackFor = Exception.class)
     public void updatePurchaseExpense(Long purchaseId, BigDecimal newAmount,
                                       LocalDate newDate, Long updaterUserId) throws EntityNotFoundException, EntityAlreadyExistsException {
-
-        LOGGER.info("Updating expense for purchase: {}", purchaseId);
 
         Expense expense = expenseRepository.findByPurchaseId(purchaseId);
         if (expense == null) {
@@ -300,16 +282,30 @@ public class ExpenseService implements IExpenseService {
     // PRIVATE HELPER METHODS
     // =============================================================================
 
-    private String createPurchaseDescription(Purchase purchase) {
-        if (purchase.getSupplier() != null) {
-            return purchase.getSupplier().getName() + " - " + purchase.getPurchaseDate();
+    Expense getExpenseEntityById(Long expenseId) throws EntityNotFoundException {
+        return expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new EntityNotFoundException("Expense", "Expense with id=" + expenseId + " was not found"));
+    }
+
+    User getUserEntityById(Long userId) throws EntityNotFoundException{
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
+    }
+
+    Purchase getPurchaseEntityById(Long purchaseId) throws EntityNotFoundException{
+        return purchaseRepository.findById(purchaseId)
+                .orElseThrow(() -> new EntityNotFoundException("Purchase", "Purchase with id=" + purchaseId + " was not found"));
+    }
+
+    void validateUniquePurchase(Long purchaseId) throws EntityAlreadyExistsException{
+        if (expenseRepository.existsByPurchaseId(purchaseId)) {
+            throw new EntityAlreadyExistsException("Purchase", "Purchase already has an expense linked to it");
         }
-        return "Purchase " + purchase.getId() + " - " + purchase.getPurchaseDate();
     }
 
     private ExpenseSummaryDTO calculateExpenseSummary(ExpenseFilters filters) {
 
-        Integer totalCount = (int) countExpensesByFilters(filters);
+        Integer totalCount = countExpensesByFilters(filters);
 
         if(totalCount == 0) {
             return new ExpenseSummaryDTO(0,BigDecimal.ZERO,BigDecimal.ZERO);
@@ -328,9 +324,9 @@ public class ExpenseService implements IExpenseService {
         );
     }
 
-    private long countExpensesByFilters(ExpenseFilters filters) {
+    private Integer countExpensesByFilters(ExpenseFilters filters) {
         Specification<Expense> spec = getSpecsFromFilters(filters);
-        return expenseRepository.count(spec);
+        return (int) expenseRepository.count(spec);
     }
 
     public BigDecimal sumTotalCostByFilters(ExpenseFilters filters) {
@@ -339,7 +335,7 @@ public class ExpenseService implements IExpenseService {
 
         return expenses.stream()
                 .map(Expense::getAmount)
-                .filter(cost -> cost != null)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

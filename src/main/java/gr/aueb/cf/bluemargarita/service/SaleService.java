@@ -365,12 +365,12 @@ public class SaleService implements ISaleService {
     // PRIVATE HELPER METHODS - Stock Management (Simple Repository Calls)
     // =============================================================================
 
-    private void updateProductStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId) throws EntityNotFoundException{
+    private void updateProductStockAfterSale(Map<Product, BigDecimal> productQuantities, Long saleId){
         stockManagementService.reduceStockAfterSale(productQuantities, saleId);
         LOGGER.debug("Stock reduced for sale {} with {} products", saleId, productQuantities.size());
     }
 
-    private void restoreProductStockAfterSaleDeletion(Sale sale) throws EntityNotFoundException{
+    private void restoreProductStockAfterSaleDeletion(Sale sale){
         // Convert SaleProducts to Product-quantity map
         Map<Product, BigDecimal> productQuantities = sale.getAllSaleProducts()
                 .stream()
@@ -488,10 +488,9 @@ public class SaleService implements ISaleService {
         return totalDiscount.divide(BigDecimal.valueOf(sales.size()), 2, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Creates JPA Specification from filter criteria
-     * Combines filtering logic using AND operations
-     */
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Specifications
+    // =============================================================================
     private Specification<Sale> getSpecsFromFilters(SaleFilters filters) {
         Specification<Sale> spec = Specification
                 .where(SaleSpecification.hasCategoryId(filters.getCategoryId()))

@@ -182,28 +182,25 @@ public class ProcedureService implements IProcedureService {
         Specification<Product> spec = ProductSpecification.hasProcedureProduct(procedureId);
         Page<Product> products = productRepository.findAll(spec, pageable);
 
-        Page<ProductUsageDTO> mappedProducts = products.map(product -> {
-            return  product.getAllProcedureProducts()
-                    .stream()
-                    .filter(pm -> pm.getProcedure().getId().equals(procedureId))
-                    .findFirst()
-                    .map(procedureProduct -> {
-                        BigDecimal quantity = BigDecimal.ONE;
-                        BigDecimal costImpact = procedureProduct.getCost();
+        Page<ProductUsageDTO> mappedProducts = products.map(product -> product.getAllProcedureProducts()
+                .stream()
+                .filter(pm -> pm.getProcedure().getId().equals(procedureId))
+                .findFirst()
+                .map(procedureProduct -> {
+                    BigDecimal quantity = BigDecimal.ONE;
+                    BigDecimal costImpact = procedureProduct.getCost();
 
-                        return new ProductUsageDTO(
-                                product.getId(),
-                                product.getName(),
-                                product.getCode(),
-                                quantity,
-                                costImpact,
-                                product.getCategory() != null ? product.getCategory().getName() : "No Category"
-                        );
+                    return new ProductUsageDTO(
+                            product.getId(),
+                            product.getName(),
+                            product.getCode(),
+                            quantity,
+                            costImpact,
+                            product.getCategory() != null ? product.getCategory().getName() : "No Category"
+                    );
 
-                    })
-                    .orElse(null);
-
-        });
+                })
+                .orElse(null));
 
         return new Paginated<>(mappedProducts);
 
@@ -227,7 +224,7 @@ public class ProcedureService implements IProcedureService {
     }
 
     // =============================================================================
-    // PRIVATE HELPER METHODS
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================
 
     private Procedure getProcedureEntityById(Long procedureId) throws EntityNotFoundException{
@@ -246,6 +243,10 @@ public class ProcedureService implements IProcedureService {
                     " name " + name + " already exists");
         }
     }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Analytics Calculations
+    // =============================================================================
 
     private ProcedureAnalyticsDTO getProcedureAnalytics(Long procedureId) {
 
@@ -362,7 +363,7 @@ public class ProcedureService implements IProcedureService {
         Integer productCount = productProcedureRepository.countByCategoryIdAndProcedureId(categoryId,procedureId);
 
         if (productCount == 0) {
-            Optional.empty();
+            return Optional.empty();
         }
 
         Double percentage = (productCount * 100.0) / totalProducts;
@@ -370,11 +371,9 @@ public class ProcedureService implements IProcedureService {
         return Optional.of(new CategoryUsageDTO(categoryId, categoryName, productCount, percentage));
     }
 
-
-    /**
-     * Creates JPA Specification from filter criteria
-     * Combines name filtering and active status filtering using AND logic
-     */
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Specifications
+    // =============================================================================
 
     private Specification<Procedure> getSpecsFromFilters(ProcedureFilters filters) {
         return Specification

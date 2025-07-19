@@ -452,25 +452,5 @@ public class ProductRestController {
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
-    // =============================================================================
-    // CONVENIENCE ENDPOINTS
-    // =============================================================================
 
-    @Operation(
-            summary = "Get active product count",
-            description = "Retrieves the total count of active products. Used for dashboard statistics.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Count of active products",
-                            content = @Content(mediaType = "application/json")
-                    )
-            }
-    )
-    @GetMapping("/count/active")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Integer> getActiveProductCount() {
-        int count = productService.getActiveProductCount();
-        return new ResponseEntity<>(count, HttpStatus.OK);
-    }
 }

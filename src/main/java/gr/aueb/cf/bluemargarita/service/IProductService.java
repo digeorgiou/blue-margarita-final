@@ -93,13 +93,6 @@ public interface IProductService {
     ProductDetailedViewDTO getProductDetails(Long productId) throws EntityNotFoundException;
 
     /**
-     * Gets the total count of active products (for dashboard statistics)
-     *
-     * @return Number of active products
-     */
-    int getActiveProductCount();
-
-    /**
      * Retrieves active products matching search term
      * with limited info needed for autocomplete in record sale page
      * @param searchTerm matches with name or code
@@ -126,86 +119,6 @@ public interface IProductService {
                                                       LocalDate startDate,
                                                       LocalDate endDate)
             throws EntityNotFoundException;
-
-    /**
-     * Retrieves weekly sales breakdown for a product
-     * Used for weekly sales charts and medium-term trend analysis
-     *
-     * @param productId Product ID to analyze
-     * @param startDate Period start date (inclusive)
-     * @param endDate Period end date (inclusive)
-     * @return Weekly sales data for the period
-     * @throws EntityNotFoundException if product not found
-     */
-    List<WeeklySalesDataDTO> getProductWeeklySales(Long productId,
-                                                   LocalDate startDate,
-                                                   LocalDate endDate)
-            throws EntityNotFoundException;
-
-    /**
-     * Retrieves monthly sales breakdown for a product
-     * Used for monthly sales charts and long-term trend analysis
-     *
-     * @param productId Product ID to analyze
-     * @param startDate Period start date (inclusive)
-     * @param endDate Period end date (inclusive)
-     * @return Monthly sales data for the period
-     * @throws EntityNotFoundException if product not found
-     */
-    List<MonthlySalesDataDTO> getProductMonthlySales(Long productId,
-                                                     LocalDate startDate,
-                                                     LocalDate endDate)
-            throws EntityNotFoundException;
-
-    /**
-     * Retrieves yearly sales breakdown for a product
-     * Used for yearly sales charts and very long-term trend analysis
-     *
-     * @param productId Product ID to analyze
-     * @param startDate Period start date (inclusive)
-     * @param endDate Period end date (inclusive)
-     * @return Yearly sales data for the period
-     * @throws EntityNotFoundException if product not found
-     */
-    List<YearlySalesDataDTO> getProductYearlySales(Long productId,
-                                                   LocalDate startDate,
-                                                   LocalDate endDate)
-            throws EntityNotFoundException;
-
-    /**
-     * Retrieves top performing locations for a specific product
-     * Ordered by revenue descending
-     *
-     * @param productId Product ID to analyze
-     * @param startDate Period start date (inclusive)
-     * @param endDate Period end date (inclusive)
-     * @param limit Maximum number of locations to return
-     * @return Top locations by revenue for this product
-     * @throws EntityNotFoundException if product not found
-     */
-    List<LocationSalesDataDTO> getTopLocationsByProductSales(Long productId,
-                                                             LocalDate startDate,
-                                                             LocalDate endDate,
-                                                             int limit)
-            throws EntityNotFoundException;
-
-    /**
-     * Retrieves top customers for a specific product by quantity purchased
-     * Ordered by quantity purchased descending
-     *
-     * @param productId Product ID to analyze
-     * @param startDate Period start date (inclusive)
-     * @param endDate Period end date (inclusive)
-     * @param limit Maximum number of customers to return
-     * @return Top customers by quantity for this product
-     * @throws EntityNotFoundException if product not found
-     */
-    List<CustomerSalesDataDTO> getTopCustomersByProductPurchases(Long productId,
-                                                                 LocalDate startDate,
-                                                                 LocalDate endDate,
-                                                                 int limit)
-            throws EntityNotFoundException;
-
 
     // =============================================================================
     // DASHBOARD PAGE METHODS

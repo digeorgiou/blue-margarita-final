@@ -244,4 +244,77 @@ public interface SaleProductRepository extends JpaRepository<SaleProduct, Long>,
     BigDecimal sumRevenueByProcedureIdAndDateRange(@Param("procedureId") Long procedureId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
 
+    @Query("SELECT COUNT(DISTINCT sp.sale.id) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByProductIdAndDateRange(@Param("productId") Long productId,
+                                              @Param("startDate") LocalDate startDate,
+                                              @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumQuantityByProductIdAndDateRange(@Param("productId") Long productId,
+                                                  @Param("startDate") LocalDate startDate,
+                                                  @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByProductIdAndDateRange(@Param("productId") Long productId,
+                                                 @Param("startDate") LocalDate startDate,
+                                                 @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(AVG(sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal calculateAverageSellingPriceByProductIdAndDateRange(@Param("productId") Long productId,
+                                                                   @Param("startDate") LocalDate startDate,
+                                                                   @Param("endDate") LocalDate endDate);
+
+    // Location-specific queries
+    @Query("SELECT DISTINCT s.location.id FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.saleDate BETWEEN :startDate AND :endDate")
+    List<Long> findDistinctLocationIdsByProductIdAndDateRange(@Param("productId") Long productId,
+                                                              @Param("startDate") LocalDate startDate,
+                                                              @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.location.id = :locationId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumQuantityByProductIdLocationIdAndDateRange(@Param("productId") Long productId,
+                                                            @Param("locationId") Long locationId,
+                                                            @Param("startDate") LocalDate startDate,
+                                                            @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.location.id = :locationId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByProductIdLocationIdAndDateRange(@Param("productId") Long productId,
+                                                           @Param("locationId") Long locationId,
+                                                           @Param("startDate") LocalDate startDate,
+                                                           @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(DISTINCT sp.sale.id) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.location.id = :locationId AND s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByProductIdLocationIdAndDateRange(@Param("productId") Long productId,
+                                                        @Param("locationId") Long locationId,
+                                                        @Param("startDate") LocalDate startDate,
+                                                        @Param("endDate") LocalDate endDate);
+
+    // Customer-specific queries
+    @Query("SELECT DISTINCT s.customer.id FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.customer IS NOT NULL AND s.saleDate BETWEEN :startDate AND :endDate")
+    List<Long> findDistinctCustomerIdsByProductIdAndDateRange(@Param("productId") Long productId,
+                                                              @Param("startDate") LocalDate startDate,
+                                                              @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumQuantityByProductIdCustomerIdAndDateRange(@Param("productId") Long productId,
+                                                            @Param("customerId") Long customerId,
+                                                            @Param("startDate") LocalDate startDate,
+                                                            @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(sp.quantity * sp.priceAtTheTime), 0) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumRevenueByProductIdCustomerIdAndDateRange(@Param("productId") Long productId,
+                                                           @Param("customerId") Long customerId,
+                                                           @Param("startDate") LocalDate startDate,
+                                                           @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(DISTINCT sp.sale.id) FROM SaleProduct sp JOIN sp.sale s WHERE sp.product.id = :productId AND s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
+    Integer countSalesByProductIdCustomerIdAndDateRange(@Param("productId") Long productId,
+                                                        @Param("customerId") Long customerId,
+                                                        @Param("startDate") LocalDate startDate,
+                                                        @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT DISTINCT sp.product.id FROM SaleProduct sp JOIN sp.sale s WHERE s.saleDate BETWEEN :startDate AND :endDate AND sp.product.isActive = true")
+    List<Long> findDistinctProductIdsByDateRange(@Param("startDate") LocalDate startDate,
+                                                 @Param("endDate") LocalDate endDate);
+
+
 }

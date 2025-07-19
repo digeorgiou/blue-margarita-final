@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 
 public record ExpenseTypeBreakdownDTO(
         ExpenseType expenseType,
+        String expenseTypeDisplayName,
         BigDecimal totalAmount,
-        Long count,
+        Integer count,
         BigDecimal percentage
 ) {}

@@ -320,10 +320,6 @@ public class CustomerService implements ICustomerService {
     // PRIVATE HELPER METHODS - Filtering and Specifications
     // =============================================================================
 
-    /**
-     * Converts CustomerFilters to JPA Specifications for database queries
-     */
-
     private Specification<Customer> getSpecsFromFilters(CustomerFilters filters) {
         return Specification
                 .where(CustomerSpecification.customerStringFieldLike("email",

@@ -27,6 +27,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>,
    Optional<Customer> findByTin(String tin);
    Integer countByIsActiveTrue();
 
+    @Query("SELECT CONCAT(c.firstName, ' ', c.lastName) FROM Customer c WHERE c.id = :customerId")
+    String findCustomerNameById(@Param("customerId") Long customerId);
+
+    @Query("SELECT c.email FROM Customer c WHERE c.id = :customerId")
+    String findCustomerEmailById(@Param("customerId") Long customerId);
+
     // Basic customer sales metrics
     @Query("SELECT COUNT(s) FROM Sale s WHERE s.customer.id = :customerId")
     Integer countSalesByCustomerId(@Param("customerId") Long customerId);

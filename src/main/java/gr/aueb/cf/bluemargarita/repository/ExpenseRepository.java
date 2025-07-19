@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.repository;
 
+import gr.aueb.cf.bluemargarita.core.enums.ExpenseType;
 import gr.aueb.cf.bluemargarita.core.filters.ExpenseFilters;
 import gr.aueb.cf.bluemargarita.model.Expense;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +49,30 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>,
             "e.expenseDate >= :startDate AND e.expenseDate <= :endDate")
     Long countExpensesBetweenDates(@Param("startDate") LocalDate startDate,
                                    @Param("endDate") LocalDate endDate);
+
+
+    @Query("SELECT DISTINCT e.expenseType FROM Expense e WHERE " +
+            "(:dateFrom IS NULL OR e.expenseDate >= :dateFrom) AND " +
+            "(:dateTo IS NULL OR e.expenseDate <= :dateTo) " +
+            "ORDER BY e.expenseType")
+    List<ExpenseType> findDistinctExpenseTypesByDateRange(@Param("dateFrom") LocalDate dateFrom,
+                                                          @Param("dateTo") LocalDate dateTo);
+
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE " +
+            "e.expenseType = :expenseType AND " +
+            "(:dateFrom IS NULL OR e.expenseDate >= :dateFrom) AND " +
+            "(:dateTo IS NULL OR e.expenseDate <= :dateTo)")
+    BigDecimal sumAmountByTypeAndDateRange(@Param("expenseType") ExpenseType expenseType,
+                                           @Param("dateFrom") LocalDate dateFrom,
+                                           @Param("dateTo") LocalDate dateTo);
+
+    @Query("SELECT COUNT(e) FROM Expense e WHERE " +
+            "e.expenseType = :expenseType AND " +
+            "(:dateFrom IS NULL OR e.expenseDate >= :dateFrom) AND " +
+            "(:dateTo IS NULL OR e.expenseDate <= :dateTo)")
+    Long countByTypeAndDateRange(@Param("expenseType") ExpenseType expenseType,
+                                 @Param("dateFrom") LocalDate dateFrom,
+                                 @Param("dateTo") LocalDate dateTo);
 
 
 }

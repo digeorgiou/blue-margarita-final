@@ -59,12 +59,6 @@ public interface ISupplierService {
      */
     List<SupplierDropdownDTO> getActiveSuppliersForDropdown();
 
-    /**
-     * Retrieves suppliers based on filter criteria
-     * @param filters Filter criteria for suppliers
-     * @return List of suppliers matching filters
-     */
-    List<SupplierReadOnlyDTO> getFilteredSuppliers(SupplierFilters filters);
 
     /**
      * Retrieves suppliers with pagination based on filter criteria
@@ -92,14 +86,6 @@ public interface ISupplierService {
      * @throws EntityNotFoundException if supplier not found
      */
     SupplierDetailedViewDTO getSupplierDetailedView(Long supplierId) throws EntityNotFoundException;
-
-    /**
-     * Retrieves all active suppliers for general use
-     * Used when you need a simple list of available suppliers
-     *
-     * @return List of all active suppliers
-     */
-    List<SupplierReadOnlyDTO> getAllActiveSuppliers();
 
     /**
      * Retrieves active suppliers matching search term for autocomplete in purchase recording

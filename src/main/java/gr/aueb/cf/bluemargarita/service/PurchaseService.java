@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.service;
 
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.PurchaseFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.PurchaseSpecification;
@@ -30,6 +31,8 @@ public class PurchaseService implements IPurchaseService {
     private final SupplierRepository supplierRepository;
     private final MaterialRepository materialRepository;
     private final UserRepository userRepository;
+    private final ExpenseRepository expenseRepository;
+    private final IExpenseService expenseService;
     private final Mapper mapper;
 
     @Autowired
@@ -37,11 +40,15 @@ public class PurchaseService implements IPurchaseService {
                            SupplierRepository supplierRepository,
                            MaterialRepository materialRepository,
                            UserRepository userRepository,
+                           ExpenseRepository expenseRepository,
+                           IExpenseService expenseService,
                            Mapper mapper) {
         this.purchaseRepository = purchaseRepository;
         this.supplierRepository = supplierRepository;
         this.materialRepository = materialRepository;
         this.userRepository = userRepository;
+        this.expenseRepository = expenseRepository;
+        this.expenseService = expenseService;
         this.mapper = mapper;
     }
 
@@ -51,7 +58,8 @@ public class PurchaseService implements IPurchaseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public PurchaseDetailedViewDTO recordPurchase(RecordPurchaseRequestDTO request) throws EntityNotFoundException {
+    public PurchaseDetailedViewDTO recordPurchase(RecordPurchaseRequestDTO request)
+            throws EntityNotFoundException, EntityAlreadyExistsException {
 
         // Validate supplier and user exists
         Supplier supplier = getSupplierEntityById(request.supplierId());
@@ -75,6 +83,15 @@ public class PurchaseService implements IPurchaseService {
         // Save purchase with materials and total cost
         Purchase savedPurchase = purchaseRepository.save(purchase);
 
+        String expenseDescription = createExpenseDescription(purchase);
+        expenseService.createPurchaseExpense(
+                savedPurchase.getId(),
+                expenseDescription,
+                totalCost,
+                savedPurchase.getPurchaseDate(),
+                request.creatorUserId()
+        );
+
         LOGGER.info("Purchase recorded with id: {}, total cost: {}", savedPurchase.getId(), totalCost);
 
         return mapper.mapToPurchaseDetailedViewDTO(savedPurchase);
@@ -82,7 +99,8 @@ public class PurchaseService implements IPurchaseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public PurchaseReadOnlyDTO updatePurchase(PurchaseUpdateDTO dto) throws EntityNotFoundException {
+    public PurchaseReadOnlyDTO updatePurchase(PurchaseUpdateDTO dto) throws EntityNotFoundException,
+            EntityAlreadyExistsException {
 
         Purchase existingPurchase = getPurchaseEntityById(dto.purchaseId());
 
@@ -95,6 +113,13 @@ public class PurchaseService implements IPurchaseService {
 
         Purchase savedPurchase = purchaseRepository.save(existingPurchase);
 
+        expenseService.updatePurchaseExpense(
+                savedPurchase.getId(),
+                savedPurchase.getTotalCost(),
+                savedPurchase.getPurchaseDate(),
+                dto.updaterUserId()
+        );
+
         LOGGER.info("Purchase {} updated", savedPurchase.getId());
 
         return mapper.mapToPurchaseReadOnlyDTO(savedPurchase);
@@ -105,6 +130,12 @@ public class PurchaseService implements IPurchaseService {
     public void deletePurchase(Long purchaseId) throws EntityNotFoundException {
 
         Purchase purchase = getPurchaseEntityById(purchaseId);
+
+        Expense expense = expenseRepository.findByPurchaseId(purchaseId);
+        if(expense != null) {
+            expenseService.deleteExpense(expense.getId());
+            LOGGER.info("Deleted expense for purchase {}", purchaseId);
+        }
 
         // Hard delete - purchases can be deleted completely
         purchaseRepository.delete(purchase);
@@ -185,6 +216,13 @@ public class PurchaseService implements IPurchaseService {
         return materialRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Material",
                         "Material with id=" + id + " was not found"));
+    }
+
+    private String createExpenseDescription(Purchase purchase){
+        if(purchase.getSupplier() != null){
+            return "Αγορά από " + purchase.getSupplier().getName() + " - " + purchase.getPurchaseDate();
+        }
+        return "Αγορά " + purchase.getId() + " - " + purchase.getPurchaseDate();
     }
 
     // =============================================================================

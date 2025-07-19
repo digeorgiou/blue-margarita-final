@@ -1,9 +1,8 @@
 package gr.aueb.cf.bluemargarita.service;
 
-import gr.aueb.cf.bluemargarita.core.enums.ExpenseType;
 import gr.aueb.cf.bluemargarita.core.filters.ProfitLossFilters;
-import gr.aueb.cf.bluemargarita.dto.analytics.ExpenseBreakdownDTO;
 import gr.aueb.cf.bluemargarita.dto.analytics.ProfitLossReportDTO;
+import gr.aueb.cf.bluemargarita.dto.expense.ExpenseTypeBreakdownDTO;
 import gr.aueb.cf.bluemargarita.repository.ExpenseRepository;
 import gr.aueb.cf.bluemargarita.repository.SaleRepository;
 import org.slf4j.Logger;
@@ -16,8 +15,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class ProfitLossService implements IProfitLossService{
 
@@ -25,11 +24,13 @@ public class ProfitLossService implements IProfitLossService{
 
     private final SaleRepository saleRepository;
     private final ExpenseRepository expenseRepository;
+    private final IExpenseService expenseService;
 
     @Autowired
-    public ProfitLossService(SaleRepository saleRepository, ExpenseRepository expenseRepository) {
+    public ProfitLossService(SaleRepository saleRepository, ExpenseRepository expenseRepository, IExpenseService expenseService) {
         this.saleRepository = saleRepository;
         this.expenseRepository = expenseRepository;
+        this.expenseService = expenseService;
     }
 
     @Override
@@ -60,7 +61,7 @@ public class ProfitLossService implements IProfitLossService{
         }
 
         // Get expense breakdown by type
-        List<ExpenseBreakdownDTO> expenseBreakdown = getExpenseBreakdown(startDate, endDate, totalExpenses);
+        List<ExpenseTypeBreakdownDTO> expenseBreakdown = expenseService.getExpenseBreakdownByType(startDate, endDate);
 
         LOGGER.info("Report generated - Revenue: €{}, Expenses: €{}, Profit: €{}",
                 totalRevenue, totalExpenses, netProfit);
@@ -98,48 +99,6 @@ public class ProfitLossService implements IProfitLossService{
         return expenseRepository.countExpensesBetweenDates(startDate, endDate).intValue();
     }
 
-    private List<ExpenseBreakdownDTO> getExpenseBreakdown(LocalDate startDate, LocalDate endDate, BigDecimal totalExpenses) {
-
-        List<Object[]> expensesByType = expenseRepository.findExpenseSummaryByType(startDate, endDate);
-
-        return expensesByType.stream()
-                .map(row -> {
-                    ExpenseType type = (ExpenseType) row[0];
-                    BigDecimal amount = (BigDecimal) row[1];
-                    Long count = (Long) row[2];
-
-                    BigDecimal percentage = totalExpenses.compareTo(BigDecimal.ZERO) > 0 ?
-                            amount.divide(totalExpenses, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)) :
-                            BigDecimal.ZERO;
-
-                    return new ExpenseBreakdownDTO(
-                            type,
-                            formatExpenseTypeName(type),
-                            amount,
-                            percentage,
-                            count.intValue()
-                    );
-                })
-                .collect(Collectors.toList());
-    }
-
-    private String formatExpenseTypeName(ExpenseType type) {
-        return switch (type) {
-            case PURCHASE_MATERIALS -> "ΑΓΟΡΕΣ ΥΛΙΚΩΝ";
-            case SALARY -> "ΜΙΣΘΟΔΟΣΙΑ";
-            case RENT -> "ΕΝΟΙΚΙΟ";
-            case UTILITIES -> "ΛΟΓΑΡΙΑΣΜΟΙ";
-            case MARKETING -> "ΔΙΑΦΗΜΙΣΗ";
-            case EQUIPMENT -> "ΕΞΟΠΛΙΣΜΟΣ";
-            case INSURANCE -> "ΑΣΦΑΛΙΣΗ";
-            case TAXES -> "ΦΟΡΟΙ";
-            case MAINTENANCE -> "ΣΥΝΤΗΡΗΣΗ";
-            case TRANSPORTATION -> "ΜΕΤΑΦΟΡΙΚΑ";
-            case ACCOUNTANT -> "ΛΟΓΙΣΤΗΣ";
-            case PROFESSIONAL_SERVICES -> "ΑΛΛΕΣ ΕΠΑΓΓΕΛΜΑΤΙΚΕΣ ΥΠΗΡΕΣΙΕΣ";
-            case OTHER -> "ΔΙΑΦΟΡΑ";
-        };
-    }
 }
 
 

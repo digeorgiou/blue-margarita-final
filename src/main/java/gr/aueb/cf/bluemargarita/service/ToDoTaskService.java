@@ -19,11 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class ToDoTaskService implements IToDoTaskService {
 
@@ -64,8 +64,7 @@ public class ToDoTaskService implements IToDoTaskService {
     @Transactional(rollbackFor = Exception.class)
     public ToDoTaskReadOnlyDTO updateTask(ToDoTaskUpdateDTO dto) throws EntityNotFoundException {
 
-        ToDoTask existingTask = taskRepository.findById(dto.taskId())
-                .orElseThrow(() -> new EntityNotFoundException("ToDoTask", "Task with id=" + dto.taskId() + " was not found"));
+        ToDoTask existingTask = getTaskEntityById(dto.taskId());
 
         // Update description and date only
         existingTask.setDescription(dto.description());
@@ -82,8 +81,7 @@ public class ToDoTaskService implements IToDoTaskService {
     @Transactional(rollbackFor = Exception.class)
     public ToDoTaskReadOnlyDTO updateTaskStatus(ToDoTaskStatusUpdateDTO dto) throws EntityNotFoundException {
 
-        ToDoTask task = taskRepository.findById(dto.taskId())
-                .orElseThrow(() -> new EntityNotFoundException("ToDoTask", "Task with id=" + dto.taskId() + " was not found"));
+        ToDoTask task = getTaskEntityById(dto.taskId());
 
         switch (dto.status()) {
             case COMPLETED:
@@ -108,13 +106,16 @@ public class ToDoTaskService implements IToDoTaskService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteTask(Long taskId) throws EntityNotFoundException {
 
-        ToDoTask task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new EntityNotFoundException("ToDoTask", "Task with id=" + taskId + " was not found"));
+        ToDoTask task = getTaskEntityById(taskId);
 
         taskRepository.delete(task);
 
         LOGGER.info("Task {} deleted", taskId);
     }
+
+    // =============================================================================
+    // TASK MANAGEMENT FROM DASHBOARD
+    // =============================================================================
 
     @Override
     public DashboardToDoTasksDTO getDashboardTasks(int displayLimit) {
@@ -177,6 +178,20 @@ public class ToDoTaskService implements IToDoTaskService {
 
         return mapper.mapToToDoTaskReadOnlyDTO(task);
     }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
+    // =============================================================================
+
+    private ToDoTask getTaskEntityById(Long taskId) throws EntityNotFoundException{
+        return taskRepository.findById(taskId)
+                        .orElseThrow(() -> new EntityNotFoundException("ToDoTask", "Task with id=" + taskId + " was not found"));
+    }
+
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Specifications
+    // =============================================================================
 
     private Specification<ToDoTask> getSpecsFromFilters(ToDoTaskFilters filters) {
         return Specification

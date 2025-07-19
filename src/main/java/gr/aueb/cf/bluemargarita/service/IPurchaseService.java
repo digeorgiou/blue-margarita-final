@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.service;
 
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.PurchaseFilters;
@@ -28,7 +29,7 @@ public interface IPurchaseService {
      * @return Detailed view of the created purchase
      * @throws EntityNotFoundException if supplier, user, or any material not found
      */
-    PurchaseDetailedViewDTO recordPurchase(RecordPurchaseRequestDTO request) throws EntityNotFoundException;
+    PurchaseDetailedViewDTO recordPurchase(RecordPurchaseRequestDTO request) throws EntityNotFoundException, EntityAlreadyExistsException;
 
     /**
      * Updates an existing purchase's basic information
@@ -38,7 +39,7 @@ public interface IPurchaseService {
      * @return Updated purchase as read-only DTO
      * @throws EntityNotFoundException if purchase, supplier, or user not found
      */
-    PurchaseReadOnlyDTO updatePurchase(PurchaseUpdateDTO dto) throws EntityNotFoundException;
+    PurchaseReadOnlyDTO updatePurchase(PurchaseUpdateDTO dto) throws EntityNotFoundException, EntityAlreadyExistsException;
 
     /**
      * Deletes a purchase completely

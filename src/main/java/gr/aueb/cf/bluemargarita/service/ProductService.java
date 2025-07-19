@@ -6,11 +6,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
-import gr.aueb.cf.bluemargarita.dto.customer.CustomerSalesDataDTO;
 import gr.aueb.cf.bluemargarita.dto.product.*;
-import gr.aueb.cf.bluemargarita.dto.sale.MonthlySalesDataDTO;
-import gr.aueb.cf.bluemargarita.dto.sale.WeeklySalesDataDTO;
-import gr.aueb.cf.bluemargarita.dto.sale.YearlySalesDataDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.*;
@@ -19,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-//@SuppressWarnings("unused")
+@SuppressWarnings("unused")
 @Service
 public class ProductService implements IProductService{
 
@@ -189,7 +184,7 @@ public class ProductService implements IProductService{
     }
 
     // =============================================================================
-    // PRODUCT LISTING AND FILTERING
+    // PRODUCT MANAGEMENT AND DETAILED VIEW
     // =============================================================================
 
     @Override
@@ -204,9 +199,7 @@ public class ProductService implements IProductService{
             ProductCostDataDTO data = getDataDTOForProduct(product);
             return mapper.mapToProductListItemDTO(product, data);
         });
-
         return new Paginated<>(mappedPage);
-
     }
 
     @Override
@@ -216,11 +209,10 @@ public class ProductService implements IProductService{
         return mapToProductDetailsDTO(product);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public int getActiveProductCount() {
-        return (int) productRepository.countByIsActiveTrue();
-    }
+    // =============================================================================
+    // PRODUCT AUTOCOMPLETE SEARCH FOR RECORD SALE PAGE
+    // =============================================================================
+
 
     @Override
     @Transactional(readOnly = true)
@@ -246,7 +238,7 @@ public class ProductService implements IProductService{
     }
 
     // =============================================================================
-    // SALES ANALYTICS (Sales Data Buttons)
+    // SALES ANALYTICS FOR SPECIFIC PRODUCT
     // =============================================================================
 
     @Override
@@ -256,50 +248,6 @@ public class ProductService implements IProductService{
                                                              LocalDate endDate)
             throws EntityNotFoundException {
         return analyticsService.getProductSalesAnalytics(productId, startDate, endDate);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<WeeklySalesDataDTO> getProductWeeklySales(Long productId,
-                                                          LocalDate startDate,
-                                                          LocalDate endDate)
-            throws EntityNotFoundException {
-        return analyticsService.getWeeklySalesData(productId, startDate, endDate);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<MonthlySalesDataDTO> getProductMonthlySales(Long productId,
-                                                            LocalDate startDate,
-                                                            LocalDate endDate)
-            throws EntityNotFoundException {
-        return analyticsService.getMonthlySalesData(productId, startDate, endDate);
-    }
-
-    public List<YearlySalesDataDTO> getProductYearlySales(Long productId,
-                                                          LocalDate startDate,
-                                                          LocalDate endDate) throws EntityNotFoundException{
-        return analyticsService.getYearlySalesData(productId, startDate, endDate);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<LocationSalesDataDTO> getTopLocationsByProductSales(Long productId,
-                                                                    LocalDate startDate,
-                                                                    LocalDate endDate,
-                                                                    int limit)
-            throws EntityNotFoundException {
-        return analyticsService.getTopLocationsByProductSales(productId, startDate, endDate, limit);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerSalesDataDTO> getTopCustomersByProductPurchases(Long productId,
-                                                                        LocalDate startDate,
-                                                                        LocalDate endDate,
-                                                                        int limit)
-            throws EntityNotFoundException {
-        return analyticsService.getTopCustomersByProductPurchases(productId, startDate, endDate, limit);
     }
 
     // =============================================================================
@@ -627,37 +575,6 @@ public class ProductService implements IProductService{
         );
     }
 
-    /**
-     * Extracts sort field from Pageable, defaults to "stock" if unsorted
-     */
-    private String getSortFieldFromPageable(Pageable pageable) {
-        if (pageable.getSort().isSorted()) {
-            return pageable.getSort().iterator().next().getProperty();
-        }
-        return "stock";
-    }
-
-    /**
-     * Extracts sort direction from Pageable, defaults to ASC if unsorted
-     */
-    private Sort.Direction getSortDirectionFromPageable(Pageable pageable) {
-        if (pageable.getSort().isSorted()) {
-            return pageable.getSort().iterator().next().getDirection();
-        }
-        return Sort.Direction.ASC;
-    }
-
-
-    // =============================================================================
-    // PRIVATE HELPER METHODS - Cost Calculations
-    // =============================================================================
-
-    /**
-     * Calculates total material cost for a product
-     */
-
-
-
     // =============================================================================
     // PRIVATE HELPER METHODS - Product Creation and Management
     // =============================================================================
@@ -771,23 +688,6 @@ public class ProductService implements IProductService{
         String costStr = cost.stripTrailingZeros().toPlainString().replace(".", "");
         if (costStr.length() > 8) {
             throw new EntityInvalidArgumentException("Procedure","Το κόστος διαδικασίας μπορεί να έχει μέχρι 6 ψηφία συνολικά");
-        }
-    }
-
-    /**
-     * Validates stock quantity - must be non-negative integer within reasonable range
-     */
-    private void validateStockQuantity(Integer quantity) throws EntityInvalidArgumentException{
-        if (quantity == null) {
-            throw new EntityInvalidArgumentException("Material","Η ποσότητα αποθέματος είναι απαραίτητη");
-        }
-
-        if (quantity < 0) {
-            throw new EntityInvalidArgumentException("Material","Η ποσότητα αποθέματος δεν μπορεί να είναι αρνητική");
-        }
-
-        if (quantity > 9999) {
-            throw new EntityInvalidArgumentException("Material","Η ποσότητα αποθέματος δεν μπορεί να υπερβαίνει τις 9999 μονάδες");
         }
     }
 

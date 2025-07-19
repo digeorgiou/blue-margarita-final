@@ -247,12 +247,30 @@ public class MaterialService implements IMaterialService {
     }
 
     // =============================================================================
-    // PRIVATE HELPER METHODS
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================
 
-    /**
-     * Helper method to create empty metrics DTO when no products use the material
-     */
+    private Material getMaterialEntityById(Long materialId) throws EntityNotFoundException{
+        return materialRepository.findById(materialId).orElseThrow(() ->
+                new EntityNotFoundException("Material", "Material with id=" + materialId +
+                        " was not found"));
+    }
+
+    private void validateUniqueName(String name) throws EntityAlreadyExistsException {
+        if (materialRepository.existsByName(name)) {
+            throw new EntityAlreadyExistsException("Material", "Material with description "
+                    + name + " already exists");
+        }
+    }
+
+    private User getUserEntityById(Long userId) throws EntityNotFoundException {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
+    }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Analytics Calculations
+    // =============================================================================
 
     private MaterialAnalyticsDTO getMaterialAnalytics(Long materialId){
 
@@ -338,23 +356,7 @@ public class MaterialService implements IMaterialService {
         );
     }
 
-    private Material getMaterialEntityById(Long materialId) throws EntityNotFoundException{
-        return materialRepository.findById(materialId).orElseThrow(() ->
-                new EntityNotFoundException("Material", "Material with id=" + materialId +
-                        " was not found"));
-    }
 
-    private void validateUniqueName(String name) throws EntityAlreadyExistsException {
-        if (materialRepository.existsByName(name)) {
-            throw new EntityAlreadyExistsException("Material", "Material with description "
-                    + name + " already exists");
-        }
-    }
-
-    private User getUserEntityById(Long userId) throws EntityNotFoundException {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
-    }
 
     private List<ProductUsageDTO> getTopProductsUsingMaterial(Long materialId) {
         // Get products that use this material
@@ -418,10 +420,9 @@ public class MaterialService implements IMaterialService {
         return Optional.of(new CategoryUsageDTO(categoryId, categoryName, productCount, percentage));
     }
 
-    /**
-     * Creates JPA Specification from filter criteria
-     * Combines name filtering and active status filtering using AND logic
-     */
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Specifications
+    // =============================================================================
 
     private Specification<Material> getSpecsFromFilters(MaterialFilters filters) {
         return Specification

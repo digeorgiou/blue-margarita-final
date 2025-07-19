@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class LocationService implements ILocationService {
 
@@ -168,7 +169,7 @@ public class LocationService implements ILocationService {
 
 
     // =============================================================================
-    // PRIVATE HELPER METHODS
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================
 
     private Location getLocationEntityById(Long locationId) throws EntityNotFoundException{
@@ -187,6 +188,10 @@ public class LocationService implements ILocationService {
                     " name " + name + " already exists");
         }
     }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Analytics Calculations
+    // =============================================================================
 
     private LocationAnalyticsDTO getLocationAnalytics(Long locationId) {
         // All-time metrics
@@ -267,6 +272,10 @@ public class LocationService implements ILocationService {
 
 
     }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Specifications
+    // =============================================================================
 
     private Specification<Location> getSpecsFromFilters(LocationFilters filters) {
         return Specification

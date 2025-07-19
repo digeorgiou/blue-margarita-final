@@ -20,6 +20,9 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
     List<Material> findByIsActiveTrue();
     List<Material> findByNameContainingIgnoreCaseAndIsActiveTrue(String name);
 
+    @Query("SELECT m.name FROM Material m WHERE m.id = :materialId")
+    String findMaterialNameById(@Param("materialId") Long materialId);
+
     @Query("SELECT COUNT(pm) FROM ProductMaterial pm WHERE pm.material.id = :materialId")
     Integer countProductsUsingMaterial(@Param("materialId") Long materialId);
 

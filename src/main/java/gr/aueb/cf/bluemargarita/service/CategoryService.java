@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Service
 public class CategoryService implements ICategoryService{
 
@@ -48,6 +49,10 @@ public class CategoryService implements ICategoryService{
         this.saleProductRepository = saleProductRepository;
         this.mapper = mapper;
     }
+
+    // =============================================================================
+    // CORE CRUD OPERATIONS
+    // =============================================================================
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -129,6 +134,10 @@ public class CategoryService implements ICategoryService{
         return mapper.mapToCategoryReadOnlyDTO(category);
     }
 
+    // =============================================================================
+    // CATEGORY VIEW / MANAGEMENT PAGE
+    // =============================================================================
+
     @Override
     @Transactional(readOnly = true)
     public CategoryDetailedViewDTO getCategoryDetailedView(Long categoryId) throws EntityNotFoundException{
@@ -144,16 +153,6 @@ public class CategoryService implements ICategoryService{
 
     @Override
     @Transactional(readOnly = true)
-    public List<CategoryForDropdownDTO> getActiveCategoriesForDropdown() {
-        return categoryRepository.findByIsActiveTrue()
-                .stream()
-                .map(category -> new CategoryForDropdownDTO(category.getId(), category.getName()))
-                .sorted((c1, c2) -> c1.name().compareToIgnoreCase(c2.name()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Paginated<CategoryReadOnlyDTO> getCategoriesFilteredPaginated(CategoryFilters filters) {
         var filtered = categoryRepository.findAll(
                 getSpecsFromFilters(filters),
@@ -162,6 +161,23 @@ public class CategoryService implements ICategoryService{
         return new Paginated<>(filtered.map(mapper::mapToCategoryReadOnlyDTO));
     }
 
+    // =============================================================================
+    // DROPDOWN FOR PRODUCT CREATION PAGE
+    // =============================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryForDropdownDTO> getActiveCategoriesForDropdown() {
+        return categoryRepository.findByIsActiveTrue()
+                .stream()
+                .map(category -> new CategoryForDropdownDTO(category.getId(), category.getName()))
+                .sorted((c1, c2) -> c1.name().compareToIgnoreCase(c2.name()))
+                .collect(Collectors.toList());
+    }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
+    // =============================================================================
 
     private Category getCategoryEntityById(Long id) throws EntityNotFoundException {
         return categoryRepository.findById(id).orElseThrow(()->
@@ -179,6 +195,10 @@ public class CategoryService implements ICategoryService{
                     " name " + name + " already exists");
         }
     }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Analytics Calculations
+    // =============================================================================
 
     private CategoryAnalyticsDTO getCategoryAnalytics(Long categoryId) {
 
@@ -269,6 +289,10 @@ public class CategoryService implements ICategoryService{
         return Optional.of(new ProductStatsSummaryDTO(productId,productName,productCode,totalSold,totalRevenue, lastSaleDate));
 
     }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Specifications
+    // =============================================================================
 
     private Specification<Category> getSpecsFromFilters(CategoryFilters filters) {
         return Specification

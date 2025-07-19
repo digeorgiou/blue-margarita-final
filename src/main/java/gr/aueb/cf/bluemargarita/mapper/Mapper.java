@@ -745,6 +745,28 @@ public class Mapper {
         );
     }
 
+    public SupplierDetailedViewDTO mapToSupplierDetailedView(Supplier supplier, SupplierAnalyticsDTO analytics, List<MaterialStatsSummaryDTO> topMaterials){
+        return new SupplierDetailedViewDTO(
+                supplier.getId(),
+                supplier.getName(),
+                supplier.getAddress(),
+                supplier.getTin(),
+                supplier.getPhoneNumber(),
+                supplier.getEmail(),
+                supplier.getCreatedAt(),
+                supplier.getUpdatedAt(),
+                supplier.getCreatedBy() != null ? supplier.getCreatedBy().getUsername() : "system",
+                supplier.getLastUpdatedBy() != null ? supplier.getLastUpdatedBy().getUsername() : "system",
+                supplier.getIsActive(),
+                supplier.getDeletedAt(),
+                analytics.totalPurchases(),
+                analytics.totalCostPaid() != null ? analytics.totalCostPaid() : BigDecimal.ZERO,
+                analytics.lastPurchaseDate(),
+                analytics.averagePurchaseValue(),
+                topMaterials
+        );
+    }
+
     //Task
 
     public ToDoTaskReadOnlyDTO mapToToDoTaskReadOnlyDTO(ToDoTask task){

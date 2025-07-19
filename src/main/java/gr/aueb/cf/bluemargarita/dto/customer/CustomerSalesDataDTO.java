@@ -7,9 +7,10 @@ public record CustomerSalesDataDTO(
         Long customerId,
         String customerName,
         String customerEmail,
-        Integer quantityPurchased,
+        BigDecimal quantityPurchased,
         BigDecimal totalRevenue,
         Integer numberOfSales,
+        BigDecimal averagePrice,
         LocalDate lastOrderDate
 )
 {}

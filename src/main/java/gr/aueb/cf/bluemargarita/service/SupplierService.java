@@ -7,10 +7,10 @@ import gr.aueb.cf.bluemargarita.core.filters.SupplierFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.SupplierSpecification;
 import gr.aueb.cf.bluemargarita.dto.supplier.*;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialStatsSummaryDTO;
-import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Supplier;
 import gr.aueb.cf.bluemargarita.model.User;
+import gr.aueb.cf.bluemargarita.repository.MaterialRepository;
 import gr.aueb.cf.bluemargarita.repository.SupplierRepository;
 import gr.aueb.cf.bluemargarita.repository.PurchaseRepository;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
@@ -36,16 +36,19 @@ public class SupplierService implements ISupplierService {
     private final SupplierRepository supplierRepository;
     private final PurchaseRepository purchaseRepository;
     private final UserRepository userRepository;
+    private final MaterialRepository materialRepository;
     private final Mapper mapper;
 
     @Autowired
     public SupplierService(SupplierRepository supplierRepository,
                            PurchaseRepository purchaseRepository,
                            UserRepository userRepository,
+                           MaterialRepository materialRepository,
                            Mapper mapper) {
         this.supplierRepository = supplierRepository;
         this.purchaseRepository = purchaseRepository;
         this.userRepository = userRepository;
+        this.materialRepository = materialRepository;
         this.mapper = mapper;
     }
 
@@ -58,18 +61,13 @@ public class SupplierService implements ISupplierService {
     public SupplierReadOnlyDTO createSupplier(SupplierInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
         // Validate unique constraints
-        if (dto.tin() != null && !dto.tin().trim().isEmpty() && supplierRepository.existsByTin(dto.tin())) {
-            throw new EntityAlreadyExistsException("Supplier", "Supplier with TIN " + dto.tin() + " already exists");
-        }
-
-        if (dto.email() != null && !dto.email().trim().isEmpty() && supplierRepository.existsByEmail(dto.email())) {
-            throw new EntityAlreadyExistsException("Supplier", "Supplier with email " + dto.email() + " already exists");
-        }
+        validateUniqueTin(dto.tin());
+        validateUniqueEmail(dto.email());
+        validateUniquePhoneNumber(dto.phoneNumber());
 
         Supplier supplier = mapper.mapSupplierInsertToModel(dto);
 
-        User creator = userRepository.findById(dto.creatorUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + dto.creatorUserId() + " not found"));
+        User creator = getUserEntityById(dto.creatorUserId());
 
         supplier.setCreatedBy(creator);
         supplier.setLastUpdatedBy(creator);
@@ -85,21 +83,21 @@ public class SupplierService implements ISupplierService {
     @Transactional(rollbackFor = Exception.class)
     public SupplierReadOnlyDTO updateSupplier(SupplierUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        Supplier existingSupplier = supplierRepository.findById(dto.supplierId())
-                .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + dto.supplierId() + " was not found"));
+        Supplier existingSupplier = getSupplierEntityById(dto.supplierId());
 
-        // Validate unique TIN if changed
-        if (dto.tin() != null && !dto.tin().equals(existingSupplier.getTin()) && supplierRepository.existsByTin(dto.tin())) {
-            throw new EntityAlreadyExistsException("Supplier", "Supplier with TIN " + dto.tin() + " already exists");
+        if (dto.tin() != null && !dto.tin().equals(existingSupplier.getTin())){
+            validateUniqueTin(dto.tin());
         }
 
-        // Validate unique email if changed
-        if (dto.email() != null && !dto.email().equals(existingSupplier.getEmail()) && supplierRepository.existsByEmail(dto.email())) {
-            throw new EntityAlreadyExistsException("Supplier", "Supplier with email " + dto.email() + " already exists");
+        if (dto.email() != null && !dto.email().equals(existingSupplier.getEmail())){
+            validateUniqueEmail(dto.email());
         }
 
-        User updater = userRepository.findById(dto.updaterUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", "Updater user with id=" + dto.updaterUserId() + " was not found"));
+        if (dto.phoneNumber() != null && !dto.phoneNumber().equals(existingSupplier.getPhoneNumber())){
+            validateUniquePhoneNumber(dto.phoneNumber());
+        }
+
+        User updater = getUserEntityById(dto.updaterUserId());
 
         Supplier updatedSupplier = mapper.mapSupplierUpdateToModel(dto, existingSupplier);
         updatedSupplier.setLastUpdatedBy(updater);
@@ -115,8 +113,7 @@ public class SupplierService implements ISupplierService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteSupplier(Long id) throws EntityNotFoundException {
 
-        Supplier supplier = supplierRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + id + " was not found"));
+        Supplier supplier = getSupplierEntityById(id);
 
         Integer purchaseCount = supplierRepository.countPurchasesBySupplierId(id);
 
@@ -139,14 +136,13 @@ public class SupplierService implements ISupplierService {
     @Transactional(readOnly = true)
     public SupplierReadOnlyDTO getSupplierById(Long id) throws EntityNotFoundException {
 
-        Supplier supplier = supplierRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + id + " was not found"));
+        Supplier supplier = getSupplierEntityById(id);
 
         return mapper.mapToSupplierReadOnlyDTO(supplier);
     }
 
     // =============================================================================
-    // QUERY OPERATIONS
+    // DROPDOWN FOR RECORD PURCHASE
     // =============================================================================
 
     @Override
@@ -159,24 +155,9 @@ public class SupplierService implements ISupplierService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<SupplierReadOnlyDTO> getFilteredSuppliers(SupplierFilters filters) {
-        return supplierRepository.findAll(getSpecsFromFilters(filters))
-                .stream()
-                .map(mapper::mapToSupplierReadOnlyDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Paginated<SupplierReadOnlyDTO> getSuppliersFilteredPaginated(SupplierFilters filters) {
-        var filtered = supplierRepository.findAll(
-                getSpecsFromFilters(filters),
-                filters.getPageable()
-        );
-        return new Paginated<>(filtered.map(mapper::mapToSupplierReadOnlyDTO));
-    }
+    // =============================================================================
+    // SEARCH SUPPLIER - AUTOCOMPLETE
+    // =============================================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -202,120 +183,130 @@ public class SupplierService implements ISupplierService {
     }
 
     // =============================================================================
-    // ANALYTICS AND DETAILED VIEWS
+    // MANAGEMENT PAGE - ANALYTICS VIEW
     // =============================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<SupplierReadOnlyDTO> getSuppliersFilteredPaginated(SupplierFilters filters) {
+        var filtered = supplierRepository.findAll(
+                getSpecsFromFilters(filters),
+                filters.getPageable()
+        );
+        return new Paginated<>(filtered.map(mapper::mapToSupplierReadOnlyDTO));
+    }
 
     @Override
     @Transactional(readOnly = true)
     public SupplierDetailedViewDTO getSupplierDetailedView(Long supplierId) throws EntityNotFoundException {
 
-        LOGGER.debug("Retrieving optimized analytics for supplier id: {}", supplierId);
+        Supplier supplier = getSupplierEntityById(supplierId);
 
-        Supplier supplier = supplierRepository.findById(supplierId)
-                .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id=" + supplierId + " was not found"));
+        SupplierAnalyticsDTO analytics = getSupplierAnalytics(supplierId);
 
-        // Basic metrics using single queries (following LocationService pattern)
+        List<MaterialStatsSummaryDTO> topMaterials = getTopMaterialsBySupplier(supplierId);
+
+        return  mapper.mapToSupplierDetailedView(supplier, analytics, topMaterials);
+    }
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Entity Validation and Retrieval
+    // =============================================================================
+
+    private Supplier getSupplierEntityById(Long supplierId) throws EntityNotFoundException {
+        return supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id " + supplierId + " not found"));
+    }
+
+    private User getUserEntityById(Long userId) throws EntityNotFoundException {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + userId + " not found"));
+    }
+
+    private void validateUniqueEmail(String email) throws EntityAlreadyExistsException {
+        if (email != null && supplierRepository.existsByEmail(email)) {
+            throw new EntityAlreadyExistsException("Supplier", "Supplier with email " + email + " already exists");
+        }
+    }
+
+    private void validateUniquePhoneNumber(String phoneNumber) throws EntityAlreadyExistsException {
+        if(phoneNumber != null && supplierRepository.existsByPhoneNumber(phoneNumber)){
+            throw new EntityAlreadyExistsException("Supplier", "Supplier with phone number " + phoneNumber + " already exists");
+        }
+    }
+
+    private void validateUniqueTin(String tin) throws EntityAlreadyExistsException {
+        if (tin != null && supplierRepository.existsByTin(tin)) {
+            throw new EntityAlreadyExistsException("Supplier", "Supplier with TIN " + tin + " already exists");
+        }
+    }
+
+
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Calculating Analytics
+    // =============================================================================
+
+    private SupplierAnalyticsDTO getSupplierAnalytics(Long supplierId){
+
         Integer totalPurchases = supplierRepository.countPurchasesBySupplierId(supplierId);
-
         if (totalPurchases == 0) {
-            // No purchases - return empty metrics
-            return createEmptySupplierMetricsDTO(supplier);
+            return createEmptySupplierAnalytics();
         }
 
-        // Get aggregated data in single queries (no loading all purchases into memory)
         BigDecimal totalCost = supplierRepository.sumTotalCostBySupplierId(supplierId);
         LocalDate lastPurchaseDate = supplierRepository.findLastPurchaseDateBySupplierId(supplierId);
 
-        // Calculate average purchase value
         BigDecimal averagePurchaseValue = totalCost != null && totalPurchases > 0 ?
                 totalCost.divide(BigDecimal.valueOf(totalPurchases), 2, RoundingMode.HALF_UP) :
                 BigDecimal.ZERO;
 
-        // Get top materials from this supplier (using aggregated query)
-        List<Object[]> topMaterialsData = supplierRepository.findTopMaterialsBySupplierId(supplierId);
-        List<MaterialStatsSummaryDTO> topMaterials = mapToMaterialStatsSummaryDTOs(topMaterialsData);
-
-        LOGGER.debug("Optimized analytics completed for supplier '{}': totalPurchases={}, totalCost={}, topMaterials={}",
-                supplier.getName(), totalPurchases, totalCost, topMaterials.size());
-
-        return new SupplierDetailedViewDTO(
-                supplier.getId(),
-                supplier.getName(),
-                supplier.getAddress(),
-                supplier.getTin(),
-                supplier.getPhoneNumber(),
-                supplier.getEmail(),
-                supplier.getCreatedAt(),
-                supplier.getUpdatedAt(),
-                supplier.getCreatedBy() != null ? supplier.getCreatedBy().getUsername() : "system",
-                supplier.getLastUpdatedBy() != null ? supplier.getLastUpdatedBy().getUsername() : "system",
-                supplier.getIsActive(),
-                supplier.getDeletedAt(),
+        return new SupplierAnalyticsDTO(
                 totalPurchases,
-                totalCost != null ? totalCost : BigDecimal.ZERO,
+                totalCost,
                 lastPurchaseDate,
-                averagePurchaseValue,
-                topMaterials
+                averagePurchaseValue
         );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<SupplierReadOnlyDTO> getAllActiveSuppliers() {
-        return supplierRepository.findByIsActiveTrue()
-                .stream()
-                .map(mapper::mapToSupplierReadOnlyDTO)
+    private List<MaterialStatsSummaryDTO> getTopMaterialsBySupplier(Long supplierId) {
+        // Get distinct materials purchased from this supplier
+        List<Long> materialIds = supplierRepository.findDistinctMaterialIdsBySupplierId(supplierId);
+
+        return materialIds.stream()
+                .map(materialId -> {
+                    String materialName = materialRepository.findMaterialNameById(materialId);
+                    BigDecimal totalQuantity = supplierRepository.sumQuantityBySupplierIdAndMaterialId(supplierId, materialId);
+                    BigDecimal totalCost = supplierRepository.sumCostBySupplierIdAndMaterialId(supplierId, materialId);
+                    LocalDate lastPurchaseDate = supplierRepository.findLastPurchaseDateBySupplierIdAndMaterialId(supplierId, materialId);
+
+                    return new MaterialStatsSummaryDTO(
+                            materialId,
+                            materialName,
+                            totalQuantity,
+                            totalCost,
+                            lastPurchaseDate
+                    );
+                })
+                .sorted((m1, m2) -> m2.totalCostPaid().compareTo(m1.totalCostPaid())) // Sort by cost descending
+                .limit(5)
                 .collect(Collectors.toList());
     }
 
-    // =============================================================================
-    // PRIVATE HELPER METHODS
-    // =============================================================================
 
-    /**
-     * Helper method to create empty metrics DTO when supplier has no purchases
-     */
-    private SupplierDetailedViewDTO createEmptySupplierMetricsDTO(Supplier supplier) {
-        return new SupplierDetailedViewDTO(
-                supplier.getId(),
-                supplier.getName(),
-                supplier.getAddress(),
-                supplier.getTin(),
-                supplier.getPhoneNumber(),
-                supplier.getEmail(),
-                supplier.getCreatedAt(),
-                supplier.getUpdatedAt(),
-                supplier.getCreatedBy() != null ? supplier.getCreatedBy().getUsername() : "system",
-                supplier.getLastUpdatedBy() != null ? supplier.getLastUpdatedBy().getUsername() : "system",
-                supplier.getIsActive(),
-                supplier.getDeletedAt(),
+    private SupplierAnalyticsDTO createEmptySupplierAnalytics(){
+        return new SupplierAnalyticsDTO(
                 0, // totalPurchases
                 BigDecimal.ZERO, // totalCost
                 null, // lastPurchaseDate
-                BigDecimal.ZERO, // averagePurchaseValue
-                Collections.emptyList() // topMaterials
+                BigDecimal.ZERO // averagePurchaseValue
         );
     }
 
-    /**
-     * Helper method to map Object[] to MaterialStatsSummaryDTO list
-     */
-    private List<MaterialStatsSummaryDTO> mapToMaterialStatsSummaryDTOs(List<Object[]> data) {
-        return data.stream()
-                .map(row -> new MaterialStatsSummaryDTO(
-                        ((Number) row[0]).longValue(), // materialId
-                        (String) row[1], // materialName
-                        (String) row[2], // description
-                        (BigDecimal) row[3], // totalQuantity
-                        (BigDecimal) row[4], // totalCost
-                        (LocalDate) row[5] // lastPurchaseDate
-                ))
-                .collect(Collectors.toList());
-    }
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Filtering and Specifications
+    // =============================================================================
 
-    /**
-     * Creates JPA Specification from filter criteria
-     */
     private Specification<Supplier> getSpecsFromFilters(SupplierFilters filters) {
         return Specification
                 .where(SupplierSpecification.supplierNameLike(filters.getName()))

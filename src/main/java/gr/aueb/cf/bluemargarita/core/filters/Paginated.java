@@ -24,4 +24,14 @@ public class Paginated<T>{
         this.currentPage = page.getNumber();
         this.pageSize = page.getSize();
     }
+
+    public Paginated(List<T> data, int currentPage, int pageSize,
+                    long totalElements){
+        this.data = data;
+        this.currentPage = currentPage;
+        this.pageSize = pageSize;
+        this.totalElements = totalElements;
+        this.totalPages = (int) Math.ceil((double) totalElements / pageSize);
+        this.numberOfElements = data.size();
+    }
 }

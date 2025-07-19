@@ -16,6 +16,7 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long>,
         JpaSpecificationExecutor<Supplier> {
     boolean existsByTin(String tin);
     boolean existsByEmail(String email);
+    boolean existsByPhoneNumber(String phoneNumber);
     List<Supplier> findByIsActiveTrue();
 
     /**
@@ -48,4 +49,24 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long>,
         LIMIT 5
         """, nativeQuery = true)
     List<Object[]> findTopMaterialsBySupplierId(@Param("supplierId") Long supplierId);
+
+    @Query("SELECT DISTINCT pm.material.id FROM PurchaseMaterial pm " +
+            "JOIN pm.purchase p WHERE p.supplier.id = :supplierId " +
+            "ORDER BY pm.material.name")
+    List<Long> findDistinctMaterialIdsBySupplierId(@Param("supplierId") Long supplierId);
+
+    @Query("SELECT COALESCE(SUM(pm.quantity), 0) FROM PurchaseMaterial pm " +
+            "JOIN pm.purchase p WHERE p.supplier.id = :supplierId AND pm.material.id = :materialId")
+    BigDecimal sumQuantityBySupplierIdAndMaterialId(@Param("supplierId") Long supplierId,
+                                                    @Param("materialId") Long materialId);
+
+    @Query("SELECT COALESCE(SUM(pm.quantity * pm.priceAtTheTime), 0) FROM PurchaseMaterial pm " +
+            "JOIN pm.purchase p WHERE p.supplier.id = :supplierId AND pm.material.id = :materialId")
+    BigDecimal sumCostBySupplierIdAndMaterialId(@Param("supplierId") Long supplierId,
+                                                @Param("materialId") Long materialId);
+
+    @Query("SELECT MAX(p.purchaseDate) FROM PurchaseMaterial pm " +
+            "JOIN pm.purchase p WHERE p.supplier.id = :supplierId AND pm.material.id = :materialId")
+    LocalDate findLastPurchaseDateBySupplierIdAndMaterialId(@Param("supplierId") Long supplierId,
+                                                            @Param("materialId") Long materialId);
 }
