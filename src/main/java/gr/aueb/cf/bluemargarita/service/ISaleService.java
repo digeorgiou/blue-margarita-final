@@ -1,14 +1,11 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
-import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.SaleFilters;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationResponseDTO;
-import gr.aueb.cf.bluemargarita.dto.product.ProductListItemDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.*;
-import gr.aueb.cf.bluemargarita.dto.shopping_cart.CartItemDTO;
-import org.springframework.data.domain.Pageable;
+import gr.aueb.cf.bluemargarita.dto.price_calculation.CartItemDTO;
 
 import java.math.BigDecimal;
 import java.util.List;

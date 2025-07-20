@@ -12,18 +12,32 @@ import java.util.List;
 public interface ProductMaterialRepository extends JpaRepository<ProductMaterial,Long>,
         JpaSpecificationExecutor<ProductMaterial> {
 
+    // =============================================================================
+    // MATERIAL QUERIES
+    // =============================================================================
+
     Integer countByMaterialId(Long materialId);
-    Integer countByProductId(Long productId);
 
-    // Sum quantities directly
-    @Query("SELECT COALESCE(SUM(pm.quantity), 0) FROM ProductMaterial pm WHERE pm.material.id = :materialId")
-    BigDecimal sumQuantityByMaterialId(@Param("materialId") Long materialId);
+    @Query("SELECT pm.product.id FROM ProductMaterial pm WHERE pm.material.id = :materialId AND pm.product.isActive = true")
+    List<Long> findProductIdsByMaterialId(@Param("materialId") Long materialId);
 
-    // Find relationships directly
-    List<ProductMaterial> findByMaterialId(Long materialId);
-    List<ProductMaterial> findByProductId(Long productId);
+    @Query("SELECT DISTINCT pm.product.category.id FROM ProductMaterial pm WHERE pm.material.id = :materialId AND pm.product.category IS NOT NULL AND pm.product.isActive = true")
+    List<Long> findCategoryIdsByMaterialId(@Param("materialId") Long materialId);
 
-    // Costs and quantities
+    // =============================================================================
+    // MATERIAL + CATEGORY QUERIES
+    // =============================================================================
+
+    @Query("SELECT COUNT(pm) FROM ProductMaterial pm WHERE pm.product.category.id = :categoryId AND pm.material.id = :materialId AND pm.product.isActive = true")
+    Integer countProductsByCategoryIdAndMaterialId(@Param("categoryId") Long categoryId, @Param("materialId") Long materialId);
+
+    // =============================================================================
+    // MATERIAL + PRODUCT QUERIES
+    // =============================================================================
+
     @Query("SELECT pm.quantity FROM ProductMaterial pm WHERE pm.product.id = :productId AND pm.material.id = :materialId")
     BigDecimal findQuantityByProductIdAndMaterialId(@Param("productId") Long productId, @Param("materialId") Long materialId);
+
+    @Query("SELECT AVG(pm.quantity * pm.material.currentUnitCost) FROM ProductMaterial pm WHERE pm.material.id = :materialId")
+    BigDecimal calculateAverageCostPerProductByMaterialId(@Param("materialId") Long materialId);
 }

@@ -7,10 +7,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Detailed DTO for location information including sales analytics and performance metrics
- * Used for location detail views and management pages
- */
 public record LocationDetailedViewDTO(
         // Basic location information
         Long locationId,

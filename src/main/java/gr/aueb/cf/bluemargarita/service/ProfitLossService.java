@@ -84,11 +84,11 @@ public class ProfitLossService implements IProfitLossService{
     // =============================================================================
 
     private BigDecimal calculateTotalRevenue(LocalDate startDate, LocalDate endDate) {
-        return saleRepository.sumRevenueBetweenDates(startDate, endDate);
+        return saleRepository.sumRevenueByDateRange(startDate, endDate);
     }
 
     private Integer countSales(LocalDate startDate, LocalDate endDate) {
-        return saleRepository.countSalesBetweenDates(startDate, endDate).intValue();
+        return saleRepository.countSalesByDateRange(startDate, endDate);
     }
 
     private BigDecimal calculateTotalExpenses(LocalDate startDate, LocalDate endDate) {

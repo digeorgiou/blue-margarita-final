@@ -8,6 +8,6 @@ public record ToDoTaskReadOnlyDTO(
         LocalDate date,
         LocalDate dateCompleted,
         String status,
-        String statusLabel, // "OVERDUE" , "TODAY" , THIS_WEEK, "FUTURE" , etc"
+        String statusLabel, // "OVERDUE" , "TODAY" , THIS_WEEK, "FUTURE"
         Integer daysFromToday // negative for overdue, 0 for today, positive for future
 ) {}

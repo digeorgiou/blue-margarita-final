@@ -106,7 +106,7 @@ public class CategoryService implements ICategoryService{
 
         Category category = getCategoryEntityById(id);
 
-        Integer productsCount = categoryRepository.countActiveProductsByCategoryId(id);
+        Integer productsCount = productRepository.countActiveByCategoryId(id);
 
         if(productsCount > 0){
             //Soft Delete if category is used in any products
@@ -202,14 +202,14 @@ public class CategoryService implements ICategoryService{
 
     private CategoryAnalyticsDTO getCategoryAnalytics(Long categoryId) {
 
-        Integer totalProducts = categoryRepository.countActiveProductsByCategoryId(categoryId);
+        Integer totalProducts = productRepository.countActiveByCategoryId(categoryId);
         // Check if category has products first
         if (totalProducts == 0) {
             return createEmptyCategoryAnalytics();
         }
 
         // Product metrics
-        BigDecimal averageProductPrice = categoryRepository.calculateAverageRetailPriceByCategoryId(categoryId);
+        BigDecimal averageProductPrice = productRepository.calculateAverageRetailPriceByCategoryId(categoryId);
 
         // All-time sales metrics
         Integer totalSalesCount = saleProductRepository.countByCategoryId(categoryId);

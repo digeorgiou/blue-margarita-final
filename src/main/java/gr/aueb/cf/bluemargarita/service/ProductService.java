@@ -156,7 +156,7 @@ public class ProductService implements IProductService{
 
         Product product = getProductEntityById(id);
 
-        Integer saleCount = saleProductRepository.countByProductId(id);
+        Integer saleCount = saleProductRepository.countSalesByProductId(id);
 
         if (saleCount > 0) {
             // Soft delete - preserve sales history

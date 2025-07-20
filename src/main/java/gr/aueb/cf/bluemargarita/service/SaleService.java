@@ -8,7 +8,7 @@ import gr.aueb.cf.bluemargarita.core.specifications.SaleSpecification;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationResponseDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.*;
-import gr.aueb.cf.bluemargarita.dto.shopping_cart.CartItemDTO;
+import gr.aueb.cf.bluemargarita.dto.price_calculation.CartItemDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.*;

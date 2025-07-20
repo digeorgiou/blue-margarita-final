@@ -1,7 +1,5 @@
 package gr.aueb.cf.bluemargarita.dto.price_calculation;
 
-import gr.aueb.cf.bluemargarita.dto.shopping_cart.CartItemDTO;
-
 import java.math.BigDecimal;
 import java.util.List;
 

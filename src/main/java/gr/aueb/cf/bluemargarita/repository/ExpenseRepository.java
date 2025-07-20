@@ -1,7 +1,6 @@
 package gr.aueb.cf.bluemargarita.repository;
 
 import gr.aueb.cf.bluemargarita.core.enums.ExpenseType;
-import gr.aueb.cf.bluemargarita.core.filters.ExpenseFilters;
 import gr.aueb.cf.bluemargarita.model.Expense;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,15 +22,6 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>,
     List<Expense> findAllByOrderByExpenseDateDescCreatedAtDesc(Pageable pageable);
 
     Expense findByPurchaseId(Long id);
-
-    @Query("SELECT e.expenseType, SUM(e.amount), COUNT(e) FROM Expense e " +
-            "WHERE (:dateFrom IS NULL OR e.expenseDate >= :dateFrom) AND " +
-            "(:dateTo IS NULL OR e.expenseDate <= :dateTo) " +
-            "GROUP BY e.expenseType ORDER BY SUM(e.amount) DESC")
-    List<Object[]> findExpenseSummaryByType(
-            @Param("dateFrom") LocalDate dateFrom,
-            @Param("dateTo") LocalDate dateTo
-    );
 
     /**
      * Simple method to sum all expenses between dates

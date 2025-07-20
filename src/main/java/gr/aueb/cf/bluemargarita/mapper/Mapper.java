@@ -166,47 +166,6 @@ public class Mapper {
         );
     }
 
-    public CustomerWithSalesDTO mapToCustomerWithSalesDTO(Customer customer) {
-        // Calculate sales statistics
-        int totalOrders =  customer.getAllSales().size();
-
-        BigDecimal totalOrderValue = customer.getAllSales().stream()
-                .map(Sale::getFinalTotalPrice)
-                .filter(price -> price != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        LocalDate lastOrderDate = customer.getAllSales().stream()
-                .map(Sale::getSaleDate)
-                .filter(date -> date != null)
-                .max(LocalDate::compareTo)
-                .orElse(null);
-
-        BigDecimal averageOrderValue = totalOrders > 0 && totalOrderValue.compareTo(BigDecimal.ZERO) > 0
-                ? totalOrderValue.divide(BigDecimal.valueOf(totalOrders), 2, BigDecimal.ROUND_HALF_UP)
-                : BigDecimal.ZERO;
-
-        return new CustomerWithSalesDTO(
-                customer.getId(),
-                customer.getFirstname(),
-                customer.getLastname(),
-                customer.getFullName(),
-                customer.getGender(),
-                customer.getPhoneNumber(),
-                customer.getAddress(),
-                customer.getEmail(),
-                customer.getTin(),
-                customer.getIsActive(),
-                customer.getCreatedAt(),
-                customer.getUpdatedAt(),
-                customer.getCreatedBy() != null ? customer.getCreatedBy().getUsername() : null,
-                customer.getLastUpdatedBy() != null ? customer.getLastUpdatedBy().getUsername() : null,
-                totalOrders,
-                totalOrderValue,
-                lastOrderDate,
-                averageOrderValue
-        );
-    }
-
     //Expense
 
     public ExpenseReadOnlyDTO mapToExpenseReadOnlyDTO(Expense expense) {
@@ -716,35 +675,6 @@ public class Mapper {
         );
     }
 
-    public SupplierListItemDTO mapToSupplierListItemDTO(Supplier supplier) {
-        // Calculate purchase statistics - this would be more efficient with repository aggregation
-        int totalPurchases = supplier.getAllPurchases().size();
-
-        BigDecimal totalCostPaid = supplier.getAllPurchases().stream()
-                .map(Purchase::getTotalCost)
-                .filter(cost -> cost != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        LocalDate lastPurchaseDate = supplier.getAllPurchases().stream()
-                .map(Purchase::getPurchaseDate)
-                .filter(date -> date != null)
-                .max(LocalDate::compareTo)
-                .orElse(null);
-
-        return new SupplierListItemDTO(
-                supplier.getId(),
-                supplier.getName(),
-                supplier.getAddress(),
-                supplier.getTin(),
-                supplier.getPhoneNumber(),
-                supplier.getEmail(),
-                supplier.getIsActive(),
-                totalPurchases,
-                totalCostPaid,
-                lastPurchaseDate
-        );
-    }
-
     public SupplierDetailedViewDTO mapToSupplierDetailedView(Supplier supplier, SupplierAnalyticsDTO analytics, List<MaterialStatsSummaryDTO> topMaterials){
         return new SupplierDetailedViewDTO(
                 supplier.getId(),
@@ -846,6 +776,5 @@ public class Mapper {
                 user.getLastUpdatedBy() == null ? "system" : user.getLastUpdatedBy().getUsername()
         );
     }
-
 
 }

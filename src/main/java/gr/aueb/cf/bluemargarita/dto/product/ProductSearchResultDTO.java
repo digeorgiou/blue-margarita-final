@@ -1,7 +1,5 @@
 package gr.aueb.cf.bluemargarita.dto.product;
 
-import java.math.BigDecimal;
-
 /**
  * DTO for product search results in sale creation
  */

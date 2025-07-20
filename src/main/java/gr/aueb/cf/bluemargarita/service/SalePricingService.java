@@ -2,7 +2,7 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationResponseDTO;
-import gr.aueb.cf.bluemargarita.dto.shopping_cart.CartItemDTO;
+import gr.aueb.cf.bluemargarita.dto.price_calculation.CartItemDTO;
 import gr.aueb.cf.bluemargarita.model.Product;
 import gr.aueb.cf.bluemargarita.model.Sale;
 import gr.aueb.cf.bluemargarita.model.SaleProduct;

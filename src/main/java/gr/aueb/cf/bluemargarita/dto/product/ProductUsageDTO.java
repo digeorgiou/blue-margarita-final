@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 /**
  * DTO for product usage statistics in material/procedure analytics
- *
+
  * Used to show which products use a specific material or procedure
  * and how much they use it.
  */

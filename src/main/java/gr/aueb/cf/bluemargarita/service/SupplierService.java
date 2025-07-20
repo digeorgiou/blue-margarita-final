@@ -10,10 +10,7 @@ import gr.aueb.cf.bluemargarita.dto.material.MaterialStatsSummaryDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Supplier;
 import gr.aueb.cf.bluemargarita.model.User;
-import gr.aueb.cf.bluemargarita.repository.MaterialRepository;
-import gr.aueb.cf.bluemargarita.repository.SupplierRepository;
-import gr.aueb.cf.bluemargarita.repository.PurchaseRepository;
-import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import gr.aueb.cf.bluemargarita.repository.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -35,6 +32,7 @@ public class SupplierService implements ISupplierService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SupplierService.class);
     private final SupplierRepository supplierRepository;
     private final PurchaseRepository purchaseRepository;
+    private final PurchaseMaterialRepository purchaseMaterialRepository;
     private final UserRepository userRepository;
     private final MaterialRepository materialRepository;
     private final Mapper mapper;
@@ -42,11 +40,13 @@ public class SupplierService implements ISupplierService {
     @Autowired
     public SupplierService(SupplierRepository supplierRepository,
                            PurchaseRepository purchaseRepository,
+                           PurchaseMaterialRepository purchaseMaterialRepository,
                            UserRepository userRepository,
                            MaterialRepository materialRepository,
                            Mapper mapper) {
         this.supplierRepository = supplierRepository;
         this.purchaseRepository = purchaseRepository;
+        this.purchaseMaterialRepository = purchaseMaterialRepository;
         this.userRepository = userRepository;
         this.materialRepository = materialRepository;
         this.mapper = mapper;
@@ -271,14 +271,14 @@ public class SupplierService implements ISupplierService {
 
     private List<MaterialStatsSummaryDTO> getTopMaterialsBySupplier(Long supplierId) {
         // Get distinct materials purchased from this supplier
-        List<Long> materialIds = purchaseRepository.findDistinctMaterialIdsBySupplierId(supplierId);
+        List<Long> materialIds = purchaseMaterialRepository.findDistinctMaterialIdsBySupplierId(supplierId);
 
         return materialIds.stream()
                 .map(materialId -> {
                     String materialName = materialRepository.findMaterialNameById(materialId);
-                    BigDecimal totalQuantity = purchaseRepository.sumQuantityBySupplierIdAndMaterialId(supplierId, materialId);
-                    BigDecimal totalCost = purchaseRepository.sumCostBySupplierIdAndMaterialId(supplierId, materialId);
-                    LocalDate lastPurchaseDate = purchaseRepository.findLastPurchaseDateBySupplierIdAndMaterialId(supplierId, materialId);
+                    BigDecimal totalQuantity = purchaseMaterialRepository.sumQuantityBySupplierIdAndMaterialId(supplierId, materialId);
+                    BigDecimal totalCost = purchaseMaterialRepository.sumCostBySupplierIdAndMaterialId(supplierId, materialId);
+                    LocalDate lastPurchaseDate = purchaseMaterialRepository.findLastPurchaseDateBySupplierIdAndMaterialId(supplierId, materialId);
 
                     return new MaterialStatsSummaryDTO(
                             materialId,

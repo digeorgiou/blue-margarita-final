@@ -115,7 +115,7 @@ public class MaterialService implements IMaterialService {
         Material material = getMaterialEntityById(id);
 
         Integer totalProducts = productMaterialRepository.countByMaterialId(id);
-        Integer totalPurchases = materialRepository.countPurchasesContainingMaterial(id);
+        Integer totalPurchases = purchaseMaterialRepository.countDistinctPurchasesByMaterialId(id);
 
         if (totalProducts > 0 || totalPurchases > 0) {
             // Soft Delete if material is used in any purchases or products
@@ -278,7 +278,7 @@ public class MaterialService implements IMaterialService {
         if (totalProductsUsing == 0) {
             return createEmptyMaterialAnalytics();
         }
-        BigDecimal averageCostPerProduct = materialRepository.calculateAverageCostPerProductByMaterialId(materialId);
+        BigDecimal averageCostPerProduct = productMaterialRepository.calculateAverageCostPerProductByMaterialId(materialId);
         Integer purchaseCount = purchaseMaterialRepository.countPurchasesByMaterialId(materialId);
         LocalDate lastPurchaseDate = purchaseMaterialRepository.findLastPurchaseDateByMaterialId(materialId);
 
@@ -360,7 +360,7 @@ public class MaterialService implements IMaterialService {
 
     private List<ProductUsageDTO> getTopProductsUsingMaterial(Long materialId) {
         // Get products that use this material
-        List<Long> productIds = productRepository.findProductIdsByMaterialId(materialId);
+        List<Long> productIds = productMaterialRepository.findProductIdsByMaterialId(materialId);
 
         if (productIds.isEmpty()) {
             return Collections.emptyList();
@@ -392,7 +392,7 @@ public class MaterialService implements IMaterialService {
     }
 
     private List<CategoryUsageDTO> getCategoryDistribution(Long materialId){
-        List<Long> categoryIds = productRepository.findCategoryIdsByMaterialId(materialId);
+        List<Long> categoryIds = productMaterialRepository.findCategoryIdsByMaterialId(materialId);
 
         if (categoryIds.isEmpty()) {
             return Collections.emptyList();
@@ -409,7 +409,7 @@ public class MaterialService implements IMaterialService {
 
     private Optional<CategoryUsageDTO> getCategoryUsageForMaterial(Long categoryId, Long materialId, Integer totalProducts) {
         String categoryName = categoryRepository.findCategoryNameById(categoryId);
-        Integer productCount = productRepository.countProductsByCategoryIdAndMaterialId(categoryId, materialId);
+        Integer productCount = productMaterialRepository.countProductsByCategoryIdAndMaterialId(categoryId, materialId);
 
         if (productCount == 0) {
             return Optional.empty();

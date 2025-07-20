@@ -87,7 +87,7 @@ public class ProductSalesAnalyticsService {
         List<CustomerSalesDataDTO> topCustomers = getTopCustomersByProductPurchases(productId, startDate, endDate, 5);
 
         // Get last sale date using repository query
-        LocalDate lastSaleDate = productRepository.findLastSaleDateByProductId(productId);
+        LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductId(productId);
 
         LOGGER.debug("Optimized analytics completed: salesCount={}, totalQuantity={}, totalRevenue={}",
                 salesCount, totalQuantity, totalRevenue);
@@ -252,7 +252,7 @@ public class ProductSalesAnalyticsService {
                     String productCode = productRepository.findProductCodeById(productId);
                     BigDecimal totalQuantity = saleProductRepository.sumQuantityByProductIdAndDateRange(productId, startDate, endDate);
                     BigDecimal totalRevenue = saleProductRepository.sumRevenueByProductIdAndDateRange(productId, startDate, endDate);
-                    LocalDate lastSaleDate = productRepository.findLastSaleDateByProductId(productId);
+                    LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductId(productId);
 
                     return new ProductStatsSummaryDTO(
                             productId,
@@ -281,7 +281,7 @@ public class ProductSalesAnalyticsService {
                     String productCode = productRepository.findProductCodeById(productId);
                     BigDecimal totalQuantity = saleProductRepository.sumQuantityByProductIdAndDateRange(productId, startDate, endDate);
                     BigDecimal totalRevenue = saleProductRepository.sumRevenueByProductIdAndDateRange(productId, startDate, endDate);
-                    LocalDate lastSaleDate = productRepository.findLastSaleDateByProductId(productId);
+                    LocalDate lastSaleDate = saleProductRepository.findLastSaleDateByProductId(productId);
 
                     return new ProductStatsSummaryDTO(
                             productId,

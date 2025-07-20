@@ -10,7 +10,7 @@ import gr.aueb.cf.bluemargarita.dto.product.ProductSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.PaymentMethodDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.RecordSaleRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleDetailedViewDTO;
-import gr.aueb.cf.bluemargarita.dto.shopping_cart.CartItemDTO;
+import gr.aueb.cf.bluemargarita.dto.price_calculation.CartItemDTO;
 import gr.aueb.cf.bluemargarita.service.ICustomerService;
 import gr.aueb.cf.bluemargarita.service.ILocationService;
 import gr.aueb.cf.bluemargarita.service.IProductService;

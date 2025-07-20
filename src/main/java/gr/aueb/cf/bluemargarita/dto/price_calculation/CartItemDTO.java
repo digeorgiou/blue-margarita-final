@@ -1,4 +1,4 @@
-package gr.aueb.cf.bluemargarita.dto.shopping_cart;
+package gr.aueb.cf.bluemargarita.dto.price_calculation;
 
 import java.math.BigDecimal;
 

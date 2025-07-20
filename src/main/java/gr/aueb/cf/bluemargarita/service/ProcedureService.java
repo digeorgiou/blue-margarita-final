@@ -44,7 +44,8 @@ public class ProcedureService implements IProcedureService {
 
     @Autowired
     public ProcedureService(ProcedureRepository procedureRepository, UserRepository userRepository, ProductRepository productRepository,
-                            CategoryRepository categoryRepository, ProductProcedureRepository productProcedureRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
+                            CategoryRepository categoryRepository, ProductProcedureRepository productProcedureRepository,
+                            SaleProductRepository saleProductRepository, Mapper mapper) {
         this.procedureRepository = procedureRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
@@ -106,7 +107,7 @@ public class ProcedureService implements IProcedureService {
 
         Procedure procedure = getProcedureEntityById(id);
 
-        Integer productCount = procedureRepository.countProductsByProcedureId(id);
+        Integer productCount = productProcedureRepository.countByProductId(id);
 
         if (productCount > 0) {
             // Soft Delete if procedure is used in any products
@@ -256,13 +257,12 @@ public class ProcedureService implements IProcedureService {
             return createEmptyProcedureAnalytics();
         }
 
-        // Usage metrics (like your customer basic metrics)
-        Object[] costStats = procedureRepository.calculateCostStatsByProcedureId(procedureId);
+        // Usage metrics
         BigDecimal averageProcedureCost = productProcedureRepository.calculateAverageCostByProcedureId(procedureId);
 
-        BigDecimal averageProductSellingPrice = procedureRepository.calculateAverageProductPriceByProcedureId(procedureId);
+        BigDecimal averageProductSellingPrice = productProcedureRepository.calculateAverageProductPriceByProcedureId(procedureId);
 
-        // All-time sales metrics (like your customer all-time metrics)
+        // All-time sales metrics
         Integer totalSalesCount = saleProductRepository.countSalesByProcedureId(procedureId);
         BigDecimal totalRevenue = BigDecimal.ZERO;
         LocalDate lastSaleDate = null;
@@ -314,7 +314,7 @@ public class ProcedureService implements IProcedureService {
 
     private List<ProductUsageDTO> getTopProductsUsingProcedure(Long procedureId) {
         // Get products that use this procedure
-        List<Long> productIds = productRepository.findProductIdsByProcedureId(procedureId);
+        List<Long> productIds = productProcedureRepository.findProductIdsByProcedureId(procedureId);
 
         if (productIds.isEmpty()) {
             return Collections.emptyList();
@@ -343,7 +343,7 @@ public class ProcedureService implements IProcedureService {
 
     private List<CategoryUsageDTO> getCategoryDistributionForProcedure(Long procedureId) {
         // Get all categories that have products using this procedure
-        List<Long> categoryIds = productRepository.findCategoryIdsByProcedureId(procedureId);
+        List<Long> categoryIds = productProcedureRepository.findCategoryIdsByProcedureId(procedureId);
 
         if (categoryIds.isEmpty()) {
             return Collections.emptyList();
