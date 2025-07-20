@@ -1,132 +1,61 @@
-# Compiled class files
-*.class
+# Backend (Spring Boot / Java)
+backend/target/
+backend/build/
+backend/.gradle/
+backend/out/
+backend/*.jar
+backend/*.war
+backend/*.log
+backend/.idea/
+backend/*.iml
+backend/.settings/
+backend/.project
+backend/.classpath
 
-# Log files
-*.log
-logs/
-log/
+# Frontend (React / Node.js)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# Virtual machine crash logs
-hs_err_pid*
-replay_pid*
-
-# Gradle Files
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-# Maven Files
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-# STS (Spring Tool Suite)
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-# IntelliJ IDEA
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-# NetBeans
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-# VS Code
+# IDE Files
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # OS Files
 .DS_Store
 .DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+ehthumbs.db
 
-# Environment Variables and Configuration Files with Secrets
+# Environment Variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
-# Database files
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
-# Application specific
-application-local.properties
-application-secrets.properties
-application-prod.properties
-
-# Security and sensitive configuration
-keystore.p12
-*.pem
-*.key
-*.crt
+# Logs
+logs/
+*.log
 
 # Temporary files
 *.tmp
 *.temp
-*.swp
-*.swo
-*~
-
-# Backup files
-*.bak
-*.backup
-
-# Test coverage reports
-coverage/
-*.lcov
-
-# Node modules
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Docker
 .dockerignore
-docker-compose.override.yml
-
-# Local development files
-scratch/
-temp/
-local/
