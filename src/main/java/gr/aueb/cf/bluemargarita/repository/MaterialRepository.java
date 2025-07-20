@@ -19,7 +19,7 @@ public interface MaterialRepository extends JpaRepository<Material, Long>,
     @Query("SELECT m.name FROM Material m WHERE m.id = :materialId")
     String findMaterialNameById(@Param("materialId") Long materialId);
 
-    @Query("SELECT m.costPerUnit FROM Material m WHERE m.id = :materialId")
+    @Query("SELECT m.currentUnitCost FROM Material m WHERE m.id = :materialId")
     BigDecimal findCostPerUnitById(@Param("materialId") Long materialId);
 
 }

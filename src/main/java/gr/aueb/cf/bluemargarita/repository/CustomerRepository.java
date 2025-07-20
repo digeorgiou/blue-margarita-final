@@ -17,7 +17,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>,
     boolean existsByPhoneNumber(String phoneNumber);
     List<Customer> findByIsActiveTrue();
 
-    @Query("SELECT CONCAT(c.firstName, ' ', c.lastName) FROM Customer c WHERE c.id = :customerId")
+    @Query("SELECT CONCAT(c.firstname, ' ', c.lastname) FROM Customer c WHERE c.id = :customerId")
     String findCustomerNameById(@Param("customerId") Long customerId);
 
     @Query("SELECT c.email FROM Customer c WHERE c.id = :customerId")
