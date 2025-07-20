@@ -11,10 +11,7 @@ import gr.aueb.cf.bluemargarita.dto.sale.PaymentMethodDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.RecordSaleRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.CartItemDTO;
-import gr.aueb.cf.bluemargarita.service.ICustomerService;
-import gr.aueb.cf.bluemargarita.service.ILocationService;
-import gr.aueb.cf.bluemargarita.service.IProductService;
-import gr.aueb.cf.bluemargarita.service.ISaleService;
+import gr.aueb.cf.bluemargarita.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -48,6 +45,7 @@ public class RecordSaleRestController {
     private final ICustomerService customerService;
     private final IProductService productService;
     private final ILocationService locationService;
+    private final ICategoryService categoryService;
 
     // =============================================================================
     // PAGE INITIALIZATION - LOAD ALL FORM DATA
@@ -55,7 +53,8 @@ public class RecordSaleRestController {
 
     @Operation(
             summary = "Get Record Sale page initialization data",
-            description = "Retrieves all necessary data for the Record Sale page in a single request: payment methods dropdown, locations dropdown, and initial form setup data. Optimized for page load.",
+            description = "Retrieves all necessary data for the Record Sale page in a single request: " +
+                    "payment methods dropdown, locations dropdown, categories dropdown and initial form setup data. Optimized for page load.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -75,6 +74,7 @@ public class RecordSaleRestController {
         // Form dropdown data
         pageData.put("paymentMethods", saleService.getAvailablePaymentMethods());
         pageData.put("locations", locationService.getActiveLocationsForDropdown());
+        pageData.put("categoreies", categoryService.getActiveCategoriesForDropdown());
 
         return new ResponseEntity<>(pageData, HttpStatus.OK);
     }

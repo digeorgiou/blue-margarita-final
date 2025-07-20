@@ -6,8 +6,10 @@ import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
 import gr.aueb.cf.bluemargarita.dto.procedure.*;
+import gr.aueb.cf.bluemargarita.dto.product.PriceRecalculationResultDTO;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.service.IProcedureService;
+import gr.aueb.cf.bluemargarita.service.IProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,6 +38,7 @@ import java.util.List;
 public class ProcedureRestController {
 
     private final IProcedureService procedureService;
+    private final IProductService productService;
 
     // =============================================================================
     // CORE CRUD OPERATIONS - FOR PROCEDURE MANAGEMENT PAGE
@@ -304,4 +307,39 @@ public class ProcedureRestController {
         return new ResponseEntity<>(procedures, HttpStatus.OK);
     }
 
+    // =============================================================================
+    // BULK OPERATIONS - PRICE RECALCULATION
+    // =============================================================================
+
+    @Operation(
+            summary = "Recalculate all product prices",
+            description = "Recalculates suggested prices for ALL active products based on current procedure costs and markup factors. " +
+                    "This is a bulk administrative operation that can affect many products. Use this when procedure costs have changed " +
+                    "and you want to update all product prices accordingly. Requires ADMIN role.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Price recalculation completed with detailed results",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = PriceRecalculationResultDTO.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "User not found",
+                            content = @Content(mediaType = "application/json")
+                    )
+            }
+    )
+    @PostMapping("/recalculate-all-prices")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PriceRecalculationResultDTO> recalculateAllProductPrices(
+            @Parameter(description = "User ID performing the bulk price update", required = true)
+            @RequestParam Long updaterUserId) throws EntityNotFoundException {
+
+        PriceRecalculationResultDTO result = productService.recalculateAllProductPrices(updaterUserId);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+
+    }
 }

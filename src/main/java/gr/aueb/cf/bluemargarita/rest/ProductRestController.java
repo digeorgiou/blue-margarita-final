@@ -7,10 +7,6 @@ import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.dto.product.*;
-import gr.aueb.cf.bluemargarita.dto.stock.BulkStockUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.stock.StockManagementDTO;
-import gr.aueb.cf.bluemargarita.dto.stock.StockUpdateDTO;
-import gr.aueb.cf.bluemargarita.dto.stock.StockUpdateResultDTO;
 import gr.aueb.cf.bluemargarita.service.IProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -122,10 +118,14 @@ public class ProductRestController {
     public ResponseEntity<ProductListItemDTO> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody ProductUpdateDTO productUpdateDTO,
-            BindingResult bindingResult) throws ValidationException, EntityAlreadyExistsException, EntityNotFoundException {
+            BindingResult bindingResult) throws ValidationException, EntityAlreadyExistsException, EntityNotFoundException, EntityInvalidArgumentException  {
 
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
+        }
+
+        if (!id.equals(productUpdateDTO.productId())) {
+            throw new EntityInvalidArgumentException("Product", "Path ID does not match DTO product ID");
         }
 
         ProductListItemDTO product = productService.updateProduct(productUpdateDTO);
@@ -420,6 +420,47 @@ public class ProductRestController {
         ProductListItemDTO product = productService.removeProcedureFromProduct(productId, procedureId, updaterUserId);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
+
+    // =============================================================================
+    // SALES ANALYTICS (Sales Data Buttons)
+    // =============================================================================
+
+    @Operation(
+            summary = "Get product sales analytics",
+            description = "Retrieves comprehensive sales analytics for a specific product including trends, comparisons, top customers/locations, and period analysis. " +
+                    "Used for 'Sales Analytics' button on products page.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Complete sales analytics with trends and comparisons",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ProductSalesAnalyticsDTO.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Product not found",
+                            content = @Content(mediaType = "application/json")
+                    )
+            }
+    )
+    @GetMapping("/{productId}/sales-analytics")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<ProductSalesAnalyticsDTO> getProductSalesAnalytics(
+            @PathVariable Long productId,
+            @Parameter(description = "Analysis period start date (YYYY-MM-DD)", required = true)
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "Analysis period end date (YYYY-MM-DD)", required = true)
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) throws EntityNotFoundException {
+
+        ProductSalesAnalyticsDTO analytics = productService.getProductSalesAnalytics(productId, startDate, endDate);
+        return new ResponseEntity<>(analytics, HttpStatus.OK);
+    }
+
+    // =============================================================================
+    // TOP PERFORMING PRODUCTS
+    // =============================================================================
 
     @Operation(
             summary = "Get all top products for period with pagination",

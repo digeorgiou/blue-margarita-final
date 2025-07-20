@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.rest;
 
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotAuthorizedException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
@@ -73,7 +74,7 @@ public class PurchaseRestController {
     public ResponseEntity<PurchaseReadOnlyDTO> updatePurchase(
             @PathVariable Long id,
             @Valid @RequestBody PurchaseUpdateDTO dto,
-            BindingResult bindingResult) throws EntityNotFoundException, ValidationException, EntityNotAuthorizedException {
+            BindingResult bindingResult) throws EntityNotFoundException, ValidationException, EntityNotAuthorizedException, EntityAlreadyExistsException {
 
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);

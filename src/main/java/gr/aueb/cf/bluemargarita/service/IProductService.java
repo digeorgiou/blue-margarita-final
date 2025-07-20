@@ -226,4 +226,18 @@ public interface IProductService {
      * @throws EntityNotFoundException if updater user not found
      */
     PriceRecalculationResultDTO recalculateAllProductPrices(Long updaterUserId) throws EntityNotFoundException;
+
+
+    /**
+     * Retrieves products where final selling prices are significantly different from suggested prices
+     * Used in dashboard to identify products that may need price adjustments after cost changes
+
+     * This method is particularly useful after running recalculateAllProductPrices() to identify
+     * products where the current selling prices are too low/high compared to updated suggested prices
+     *
+     * @param thresholdPercentage Minimum percentage difference to be considered significant (e.g., 20.0 for 20%)
+     * @param limit Maximum number of products to return (typically 5-10 for dashboard)
+     * @return List of products with significant price differences, ordered by severity (highest difference first)
+     */
+    List<MispricedProductAlertDTO> getMispricedProductsAlert(BigDecimal thresholdPercentage, int limit);
 }

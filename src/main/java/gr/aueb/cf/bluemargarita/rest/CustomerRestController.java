@@ -8,6 +8,7 @@ import gr.aueb.cf.bluemargarita.core.filters.CustomerFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.dto.customer.*;
 import gr.aueb.cf.bluemargarita.service.CustomerService;
+import gr.aueb.cf.bluemargarita.service.ICustomerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,7 +34,7 @@ import java.util.List;
 @Tag(name = "Customer Management", description = "APIs for managing customers in the jewelry business")
 public class CustomerRestController {
 
-    private final CustomerService customerService;
+    private final ICustomerService customerService;
 
     // =============================================================================
     // CORE CRUD OPERATIONS - FOR CUSTOMER MANAGEMENT PAGE

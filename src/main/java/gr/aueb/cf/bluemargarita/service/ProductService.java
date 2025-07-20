@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.service;
 
+import gr.aueb.cf.bluemargarita.core.enums.PricingIssueType;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -475,6 +477,27 @@ public class ProductService implements IProductService{
     }
 
     // =============================================================================
+    // WRONG PRICING ALERTS
+    // =============================================================================
+
+    public List<MispricedProductAlertDTO> getMispricedProductsAlert(BigDecimal thresholdPercentage, int limit) {
+        Pageable pageable = PageRequest.of(0, limit * 2);
+        List<Product> productsWithIssues = productRepository.findProductsWithAnyPricingIssues(thresholdPercentage, pageable);
+
+        List<MispricedProductAlertDTO> mispricedProducts = productsWithIssues.stream()
+                .map(product -> createMispricedProductAlertDTO(product, thresholdPercentage))
+                .filter(Objects::nonNull)
+                .sorted((p1,p2)->p2.priceDifferencePercentage().compareTo(p1.priceDifferencePercentage()))
+                .limit(limit)
+                .collect(Collectors.toList());
+
+        LOGGER.info("Found {} mispriced products out of {} candidates",
+                mispricedProducts.size(), productsWithIssues.size());
+
+        return mispricedProducts;
+    }
+
+    // =============================================================================
     // PRIVATE HELPER METHODS - Data Mapping and Calculations
     // =============================================================================
 
@@ -890,5 +913,70 @@ public class ProductService implements IProductService{
         return new ProductCostDataDTO(totalCost, percentageDiff, isLowStock);
     }
 
+
+    // =============================================================================
+    // PRIVATE HELPER METHODS - Mispricing calculations
+    // =============================================================================
+
+    private MispricedProductAlertDTO createMispricedProductAlertDTO(Product product, BigDecimal thresholdPercentage) {
+
+        // Calculate percentage differences
+        BigDecimal retailDifference = calculatePriceDifferencePercentage(
+                product.getSuggestedRetailSellingPrice(),
+                product.getFinalSellingPriceRetail()
+        );
+
+        BigDecimal wholesaleDifference = calculatePriceDifferencePercentage(
+                product.getSuggestedWholeSaleSellingPrice(),
+                product.getFinalSellingPriceWholesale()
+        );
+
+        if(retailDifference.subtract(thresholdPercentage).intValue() < 0 && wholesaleDifference.subtract(thresholdPercentage).intValue() < 0){
+            return null;
+        }
+
+        // Determine issue type
+        PricingIssueType issueType = determinePricingIssueType(
+                retailDifference, wholesaleDifference, thresholdPercentage
+        );
+
+        return new MispricedProductAlertDTO(
+                product.getId(),
+                product.getName(),
+                product.getCode(),
+                product.getCategory() != null ? product.getCategory().getName() : "No Category",
+                product.getSuggestedRetailSellingPrice(),
+                product.getFinalSellingPriceRetail(),
+                retailDifference,
+                product.getSuggestedWholeSaleSellingPrice(),
+                product.getFinalSellingPriceWholesale(),
+                wholesaleDifference,
+                issueType
+        );
+    }
+
+    private BigDecimal calculatePriceDifferencePercentage(BigDecimal suggestedPrice, BigDecimal finalPrice) {
+        return suggestedPrice.subtract(finalPrice)
+                .divide(finalPrice, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
+    }
+
+
+    private PricingIssueType determinePricingIssueType(
+            BigDecimal retailDifference,
+            BigDecimal wholesaleDifference,
+            BigDecimal threshold) {
+
+        boolean retailUnderpriced = retailDifference.compareTo(threshold.negate()) <= 0;
+        boolean wholesaleUnderpriced = wholesaleDifference.compareTo(threshold.negate()) <= 0;
+
+        if (retailUnderpriced && wholesaleUnderpriced) {
+            return PricingIssueType.BOTH_UNDERPRICED;
+        } else if (retailUnderpriced) {
+            return PricingIssueType.RETAIL_UNDERPRICED;
+        } else if (wholesaleUnderpriced) {
+            return PricingIssueType.WHOLESALE_UNDERPRICED;
+        } else return PricingIssueType.NO_ISSUES;
+    }
 
 }

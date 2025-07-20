@@ -4,13 +4,12 @@ import gr.aueb.cf.bluemargarita.core.enums.TaskStatus;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.core.filters.ToDoTaskFilters;
 import gr.aueb.cf.bluemargarita.dto.product.ProductListItemDTO;
+import gr.aueb.cf.bluemargarita.dto.stock.StockAlertDTO;
 import gr.aueb.cf.bluemargarita.dto.task.*;
-import gr.aueb.cf.bluemargarita.service.IProductService;
-import gr.aueb.cf.bluemargarita.service.IPurchaseService;
-import gr.aueb.cf.bluemargarita.service.ISaleService;
-import gr.aueb.cf.bluemargarita.service.IToDoTaskService;
+import gr.aueb.cf.bluemargarita.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,6 +28,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +43,7 @@ public class DashboardRestController {
     private final ISaleService saleService;
     private final IPurchaseService purchaseService;
     private final IProductService productService;
+    private final IStockManagementService stockManagementService;
     private final IToDoTaskService toDoTaskService;
 
     // =============================================================================
@@ -80,7 +81,7 @@ public class DashboardRestController {
 
         // Inventory alerts (5 lowest stock)
         Pageable lowStockPageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.ASC, "stock"));
-        overview.put("lowStockProducts", productService.getAllLowStockProducts(lowStockPageable));
+        overview.put("lowStockProducts", stockManagementService.getLowStockProducts(5));
 
         // Top products for this month (5 best performers)
         LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
@@ -89,6 +90,9 @@ public class DashboardRestController {
 
         // Tasks (organized: overdue/today + this week)
         overview.put("dashboardTasks", toDoTaskService.getDashboardTasks(5));
+
+        // Pricing alerts - products where selling price is significantly different from suggested price
+        overview.put("mispricedProducts", productService.getMispricedProductsAlert(BigDecimal.valueOf(20), 5));
 
         return new ResponseEntity<>(overview, HttpStatus.OK);
     }
@@ -113,16 +117,39 @@ public class DashboardRestController {
     )
     @GetMapping("/low-stock-products/all")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Paginated<ProductListItemDTO>> getAllLowStockProducts(
+    public ResponseEntity<Paginated<StockAlertDTO>> getAllLowStockProducts(
+            @Parameter(description = "Product name or code filter") @RequestParam(required = false) String nameOrCode,
+            @Parameter(description = "Category ID filter") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "Procedure ID filter") @RequestParam(required = false) Long procedureId,
+            @Parameter(description = "Material name filter") @RequestParam(required = false) String materialName,
+            @Parameter(description = "Material ID filter") @RequestParam(required = false) Long materialId,
+            @Parameter(description = "Minimum stock filter") @RequestParam(required = false) Integer minStock,
+            @Parameter(description = "Maximum stock filter") @RequestParam(required = false) Integer maxStock,
+            @Parameter(description = "Active status filter") @RequestParam(required = false) Boolean isActive,
             @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
             @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "stock") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "ASC") String sortDirection) {
 
-        Pageable pageable = PageRequest.of(page, pageSize,
-                Sort.by(Sort.Direction.valueOf(sortDirection.toUpperCase()), sortBy));
+        ProductFilters filters = ProductFilters.builder()
+                .nameOrCode(nameOrCode)
+                .categoryId(categoryId)
+                .procedureId(procedureId)
+                .materialName(materialName)
+                .materialId(materialId)
+                .minStock(minStock)
+                .maxStock(maxStock)
+                .isActive(isActive)
+                .lowStock(true)
+                .build();
 
-        Paginated<ProductListItemDTO> lowStockProducts = productService.getAllLowStockProducts(pageable);
+        // Set pagination properties using request parameters (with defaults)
+        filters.setPage(page);
+        filters.setPageSize(pageSize);
+        filters.setSortBy(sortBy);
+        filters.setSortDirection(Sort.Direction.valueOf(sortDirection.toUpperCase()));
+
+        Paginated<StockAlertDTO> lowStockProducts = stockManagementService.getAllLowStockProductsPaginated(filters);
         return new ResponseEntity<>(lowStockProducts, HttpStatus.OK);
     }
 

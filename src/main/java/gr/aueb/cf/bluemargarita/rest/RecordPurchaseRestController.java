@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.rest;
 
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialSearchResultDTO;
@@ -157,7 +158,7 @@ public class RecordPurchaseRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PurchaseDetailedViewDTO> recordPurchase(
             @Valid @RequestBody RecordPurchaseRequestDTO request,
-            BindingResult bindingResult) throws EntityNotFoundException, ValidationException {
+            BindingResult bindingResult) throws EntityNotFoundException, ValidationException, EntityAlreadyExistsException {
 
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);

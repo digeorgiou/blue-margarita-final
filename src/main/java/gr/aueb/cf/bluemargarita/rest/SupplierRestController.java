@@ -250,28 +250,4 @@ public class SupplierRestController {
         return new ResponseEntity<>(supplierDetails, HttpStatus.OK);
     }
 
-    // =============================================================================
-    // CONVENIENCE ENDPOINTS
-    // =============================================================================
-
-    @Operation(
-            summary = "Get all active suppliers",
-            description = "Retrieves all active suppliers without pagination. Used for simple listings.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of all active suppliers",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = SupplierReadOnlyDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<SupplierReadOnlyDTO>> getAllActiveSuppliers() {
-        List<SupplierReadOnlyDTO> suppliers = supplierService.getAllActiveSuppliers();
-        return new ResponseEntity<>(suppliers, HttpStatus.OK);
-    }
 }

@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.repository;
 
 import gr.aueb.cf.bluemargarita.model.Product;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -53,7 +54,30 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     BigDecimal calculateTotalInventoryValue();
 
 
+    // =============================================================================
+    // WRONG PRICING ALERT
+    // =============================================================================
+
+    @Query("""
+    SELECT p FROM Product p
+    WHERE p.isActive = true
+        AND (
+          ((p.suggestedRetailSellingPrice - p.finalSellingPriceRetail) / p.finalSellingPriceRetail) * 100 >= :threshold
+          OR
+          ((p.suggestedWholeSaleSellingPrice - p.finalSellingPriceWholesale) / p.finalSellingPriceRetail) * 100 >= :threshold
+      )
+    """)
+    List<Product> findProductsWithAnyPricingIssues(@Param("threshold") BigDecimal threshold, Pageable pageable);
 
 
-
+    @Query("""
+    SELECT COUNT(p) FROM Product p
+    WHERE p.isActive = true
+      AND (
+          ((p.suggestedRetailSellingPrice - p.finalSellingPriceRetail) / p.finalSellingPriceRetail) * 100 >= :threshold
+          OR
+          ((p.suggestedWholeSaleSellingPrice - p.finalSellingPriceWholesale) / p.finalSellingPriceRetail) * 100 >= :threshold
+      )
+    """)
+    long countProductsWithPricingIssues(@Param("threshold") BigDecimal threshold);
 }
