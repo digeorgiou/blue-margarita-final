@@ -4,6 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.MaterialSpecification;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUsageDTO;
@@ -172,26 +173,26 @@ public class MaterialService implements IMaterialService {
 
     @Override
     @Transactional(readOnly = true)
-    public Paginated<ProductUsageDTO> getAllProductsUsingMaterial(Long materialId, Pageable pageable)
+    public Paginated<ProductUsageDTO> getAllProductsUsingMaterial(Long materialId, ProductFilters filters)
             throws EntityNotFoundException {
 
         // Verify material exists
         getMaterialEntityById(materialId);
 
         // Apply default sorting if none specified
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(
-                    pageable.getPageNumber(),
-                    pageable.getPageSize(),
-                    Sort.by(Sort.Direction.DESC, "finalSellingPriceRetail")
-            );
+        if(filters.getPageable().getSort().isUnsorted()){
+            filters.setSortBy("finalSellingPriceRetail");
+            filters.setSortDirection(Sort.Direction.DESC);
         }
 
-        // Use specification to find products
-        Specification<Product> spec = ProductSpecification.hasProductMaterial(materialId);
-        Page<Product> products = productRepository.findAll(spec, pageable);
+        // Combine material specification with product filters
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.hasProductMaterial(materialId))
+                .and(getProductSpecsFromFilters(filters));
 
-        // Map to DTOs
+        Page<Product> products = productRepository.findAll(spec, filters.getPageable());
+
+        // Map to DTOs with material usage information
         Page<ProductUsageDTO> mappedProducts = products.map(product -> {
             try {
                 return product.getAllProductMaterials()
@@ -208,7 +209,8 @@ public class MaterialService implements IMaterialService {
                                     product.getCode(),
                                     quantity,
                                     costImpact,
-                                    product.getCategory() != null ? product.getCategory().getName() : "No Category"
+                                    product.getCategory() != null ?
+                                            product.getCategory().getName() : "No Category"
                             );
                         })
                         .orElse(null);
@@ -428,6 +430,21 @@ public class MaterialService implements IMaterialService {
         return Specification
                 .where(MaterialSpecification.materialNameLike(filters.getName()))
                 .and(MaterialSpecification.materialIsActive(filters.getIsActive()));
+    }
+
+    private Specification<Product> getProductSpecsFromFilters(ProductFilters filters) {
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.productNameOrCodeLike(filters.getNameOrCode()))
+                .and(ProductSpecification.productCategoryId(filters.getCategoryId()))
+                .and(ProductSpecification.productRetailPriceBetween(filters.getMinPrice(), filters.getMaxPrice()))
+                .and(ProductSpecification.productStockBetween(filters.getMinStock(), filters.getMaxStock()))
+                .and(ProductSpecification.productIsActive(filters.getIsActive()))
+                .and(ProductSpecification.productLowStock(filters.getLowStock()));
+
+        if (filters.getProcedureId() != null) {
+            return spec.and(ProductSpecification.productUsesProcedureById(filters.getProcedureId()));
+        }
+        return spec;
     }
 
 }

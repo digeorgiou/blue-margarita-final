@@ -240,4 +240,15 @@ public interface IProductService {
      * @return List of products with significant price differences, ordered by severity (highest difference first)
      */
     List<MispricedProductAlertDTO> getMispricedProductsAlert(BigDecimal thresholdPercentage, int limit);
+
+
+    /**
+     * Retrieves all mispriced products with pagination and filtering
+     * Used for "View All Mispriced Products" functionality from dashboard
+     *
+     * @param thresholdPercentage Minimum percentage difference to be considered significant
+     * @param pageable Pagination and sorting parameters
+     * @return Paginated list of mispriced products with filtering support
+     */
+    Paginated<MispricedProductAlertDTO> getAllMispricedProductsPaginated(BigDecimal thresholdPercentage, Pageable pageable);
 }

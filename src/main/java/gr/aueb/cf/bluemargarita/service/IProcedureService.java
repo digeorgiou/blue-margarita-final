@@ -4,6 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
+import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureInsertDTO;
@@ -119,13 +120,13 @@ public interface IProcedureService {
     ProcedureDetailedViewDTO getProcedureDetailedById(Long id) throws EntityNotFoundException;
 
     /**
-     * Retrieves paginated list of all products using a specific procedure
+     * Retrieves paginated and filtered list of all products using a specific procedure
      * @param procedureId Procedure ID to find products for
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated list of products using this material with usage details
-     * @throws EntityNotFoundException if material not found
+     * @param filters Filter criteria including pagination, search, category, price, stock filters
+     * @return Paginated list of products using this procedure with usage details
+     * @throws EntityNotFoundException if procedure not found
      */
-    Paginated<ProductUsageDTO> getAllProductsUsingProcedure(Long procedureId, Pageable pageable)
+    Paginated<ProductUsageDTO> getAllProductsUsingProcedure(Long procedureId, ProductFilters filters)
             throws EntityNotFoundException;
 
 

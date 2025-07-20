@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
+import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.core.specifications.ProcedureSpecification;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUsageDTO;
@@ -167,44 +168,51 @@ public class ProcedureService implements IProcedureService {
 
     @Override
     @Transactional(readOnly = true)
-    public Paginated<ProductUsageDTO> getAllProductsUsingProcedure(Long procedureId, Pageable pageable)
+    public Paginated<ProductUsageDTO> getAllProductsUsingProcedure(Long procedureId, ProductFilters filters)
             throws EntityNotFoundException {
 
         // Verify procedure exists
         getProcedureEntityById(procedureId);
 
         // Apply default sorting if none specified
-        if (pageable.getSort().isUnsorted()) {
-            // Default: Sort by procedure cost descending
-            pageable = PageRequest.of(
-                    pageable.getPageNumber(),
-                    pageable.getPageSize(),
-                    Sort.by(Sort.Direction.DESC, "finalSellingPriceRetail")
-            );
+        if (filters.getPageable().getSort().isUnsorted()) {
+            filters.setSortBy("finalSellingPriceRetail");
+            filters.setSortDirection(Sort.Direction.DESC);
         }
 
-        Specification<Product> spec = ProductSpecification.hasProcedureProduct(procedureId);
-        Page<Product> products = productRepository.findAll(spec, pageable);
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.productUsesProcedureById(procedureId))
+                .and(getProductSpecsFromFilters(filters));
 
-        Page<ProductUsageDTO> mappedProducts = products.map(product -> product.getAllProcedureProducts()
-                .stream()
-                .filter(pm -> pm.getProcedure().getId().equals(procedureId))
-                .findFirst()
-                .map(procedureProduct -> {
-                    BigDecimal quantity = BigDecimal.ONE;
-                    BigDecimal costImpact = procedureProduct.getCost();
+        Page<Product> products = productRepository.findAll(spec, filters.getPageable());
 
-                    return new ProductUsageDTO(
-                            product.getId(),
-                            product.getName(),
-                            product.getCode(),
-                            quantity,
-                            costImpact,
-                            product.getCategory() != null ? product.getCategory().getName() : "No Category"
-                    );
+        // Map to DTOs with procedure usage information
+        Page<ProductUsageDTO> mappedProducts = products.map(product -> {
+            try {
+                return product.getAllProcedureProducts()
+                        .stream()
+                        .filter(pp -> pp.getProcedure().getId().equals(procedureId))
+                        .findFirst()
+                        .map(productProcedure -> {
+                            BigDecimal costImpact = productProcedure.getCost();
 
-                })
-                .orElse(null));
+                            return new ProductUsageDTO(
+                                    product.getId(),
+                                    product.getName(),
+                                    product.getCode(),
+                                    BigDecimal.ONE, // Procedures typically have quantity of 1
+                                    costImpact,
+                                    product.getCategory() != null ?
+                                            product.getCategory().getName() : "No Category"
+                            );
+                        })
+                        .orElse(null);
+            } catch (Exception e) {
+                LOGGER.error("Error processing product {} for procedure {}: {}",
+                        product.getId(), procedureId, e.getMessage(), e);
+                return null;
+            }
+        });
 
         return new Paginated<>(mappedProducts);
 
@@ -382,5 +390,23 @@ public class ProcedureService implements IProcedureService {
         return Specification
                 .where(ProcedureSpecification.procedureNameLike(filters.getName()))
                 .and(ProcedureSpecification.procedureIsActive(filters.getIsActive()));
+    }
+
+    private Specification<Product> getProductSpecsFromFilters(ProductFilters filters){
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.productNameOrCodeLike(filters.getNameOrCode()))
+                .and(ProductSpecification.productCategoryId(filters.getCategoryId()))
+                .and(ProductSpecification.productRetailPriceBetween(filters.getMinPrice(), filters.getMaxPrice()))
+                .and(ProductSpecification.productStockBetween(filters.getMinStock(), filters.getMaxStock()))
+                .and(ProductSpecification.productIsActive(filters.getIsActive()))
+                .and(ProductSpecification.productLowStock(filters.getLowStock()));
+
+        if (filters.getMaterialId() != null) {
+            spec = spec.and(ProductSpecification.productContainsMaterialById(filters.getMaterialId()));
+        } else if (filters.getMaterialName() != null && !filters.getMaterialName().trim().isEmpty()) {
+            spec = spec.and(ProductSpecification.productContainsMaterialByName(filters.getMaterialName()));
+        }
+
+        return spec;
     }
 }

@@ -6,6 +6,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.core.filters.ToDoTaskFilters;
+import gr.aueb.cf.bluemargarita.dto.product.MispricedProductAlertDTO;
 import gr.aueb.cf.bluemargarita.dto.product.ProductListItemDTO;
 import gr.aueb.cf.bluemargarita.dto.stock.StockAlertDTO;
 import gr.aueb.cf.bluemargarita.dto.task.*;
@@ -152,6 +153,51 @@ public class DashboardRestController {
         Paginated<StockAlertDTO> lowStockProducts = stockManagementService.getAllLowStockProductsPaginated(filters);
         return new ResponseEntity<>(lowStockProducts, HttpStatus.OK);
     }
+
+    @Operation(
+            summary = "Get all mispriced products",
+            description = "Retrieves all products with significant pricing differences with pagination. " +
+                    "Used when clicking 'View All' from dashboard mispriced products widget.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Paginated list of all mispriced products",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = Paginated.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/mispriced-products/all")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<Paginated<MispricedProductAlertDTO>> getAllMispricedProducts(
+            @Parameter(description = "Threshold percentage for price difference")
+            @RequestParam(required = false, defaultValue = "20") BigDecimal thresholdPercentage,
+            @Parameter(description = "Product name or code filter")
+            @RequestParam(required = false) String nameOrCode,
+            @Parameter(description = "Category ID filter")
+            @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "Issue type filter")
+            @RequestParam(required = false) String issueType,
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(required = false, defaultValue = "20") int pageSize,
+            @Parameter(description = "Sort field")
+            @RequestParam(required = false, defaultValue = "priceDifferencePercentage") String sortBy,
+            @Parameter(description = "Sort direction")
+            @RequestParam(required = false, defaultValue = "DESC") String sortDirection) {
+
+        Pageable pageable = PageRequest.of(page, pageSize,
+                Sort.by(Sort.Direction.valueOf(sortDirection.toUpperCase()), sortBy));
+
+        Paginated<MispricedProductAlertDTO> mispricedProducts =
+                productService.getAllMispricedProductsPaginated(thresholdPercentage, pageable);
+
+        return new ResponseEntity<>(mispricedProducts, HttpStatus.OK);
+    }
+
 
     @Operation(
             summary = "Get all tasks with filters",

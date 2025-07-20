@@ -480,6 +480,8 @@ public class ProductService implements IProductService{
     // WRONG PRICING ALERTS
     // =============================================================================
 
+    @Override
+    @Transactional(readOnly = true)
     public List<MispricedProductAlertDTO> getMispricedProductsAlert(BigDecimal thresholdPercentage, int limit) {
         Pageable pageable = PageRequest.of(0, limit * 2);
         List<Product> productsWithIssues = productRepository.findProductsWithAnyPricingIssues(thresholdPercentage, pageable);
@@ -495,6 +497,46 @@ public class ProductService implements IProductService{
                 mispricedProducts.size(), productsWithIssues.size());
 
         return mispricedProducts;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Paginated<MispricedProductAlertDTO> getAllMispricedProductsPaginated(BigDecimal thresholdPercentage, Pageable pageable) {
+        // We multiply by 3 to account for products that might be filtered out
+        int batchSize = Math.max(1000, (pageable.getPageNumber() + 1) * pageable.getPageSize() * 3);
+        Pageable candidatePageable = PageRequest.of(0, batchSize);
+
+        // Get candidate products with potential pricing issues
+        List<Product> candidateProducts = productRepository.findProductsWithAnyPricingIssues(thresholdPercentage, candidatePageable);
+
+        // Convert to DTOs and filter out products that don't meet our criteria
+        // Remove products that don't have significant pricing issues
+        List<MispricedProductAlertDTO> allMispricedProducts = candidateProducts.stream()
+                .map(product -> createMispricedProductAlertDTO(product, thresholdPercentage))
+                .filter(Objects::nonNull).sorted((p1, p2) -> {
+                    // Compare by absolute value of price difference (most significant issues first)
+                    BigDecimal p1MaxDiff = p1.priceDifferencePercentage().abs()
+                            .max(p1.wholesalePriceDifferencePercentage().abs());
+                    BigDecimal p2MaxDiff = p2.priceDifferencePercentage().abs()
+                            .max(p2.wholesalePriceDifferencePercentage().abs());
+                    return p2MaxDiff.compareTo(p1MaxDiff);
+                }).collect(Collectors.toList());
+
+        // Manual pagination
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), allMispricedProducts.size());
+
+        List<MispricedProductAlertDTO> pageContent = new ArrayList<>();
+        if (start < allMispricedProducts.size()) {
+            pageContent = allMispricedProducts.subList(start, end);
+        }
+
+        return new Paginated<>(
+                pageContent,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                allMispricedProducts.size()
+        );
     }
 
     // =============================================================================
@@ -931,8 +973,9 @@ public class ProductService implements IProductService{
                 product.getFinalSellingPriceWholesale()
         );
 
-        if(retailDifference.subtract(thresholdPercentage).intValue() < 0 && wholesaleDifference.subtract(thresholdPercentage).intValue() < 0){
-            return null;
+        if (retailDifference.abs().compareTo(thresholdPercentage) < 0 &&
+                wholesaleDifference.abs().compareTo(thresholdPercentage) < 0) {
+            return null; // Neither price difference is significant enough
         }
 
         // Determine issue type
@@ -960,7 +1003,6 @@ public class ProductService implements IProductService{
                 .divide(finalPrice, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
     }
-
 
     private PricingIssueType determinePricingIssueType(
             BigDecimal retailDifference,

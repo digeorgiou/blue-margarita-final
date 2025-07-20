@@ -4,6 +4,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.dto.material.*;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import org.springframework.data.domain.Pageable;
@@ -117,11 +118,11 @@ public interface IMaterialService {
     /**
      * Retrieves paginated list of all products using a specific material
      * @param materialId Material ID to find products for
-     * @param pageable Pagination and sorting parameters
+     * @param filters Pagination and filtering parameters
      * @return Paginated list of products using this material with usage details
      * @throws EntityNotFoundException if material not found
      */
-    Paginated<ProductUsageDTO> getAllProductsUsingMaterial(Long materialId, Pageable pageable)
+    Paginated<ProductUsageDTO> getAllProductsUsingMaterial(Long materialId, ProductFilters filters)
             throws EntityNotFoundException;
 
     // =============================================================================

@@ -5,6 +5,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.dto.material.*;
 import gr.aueb.cf.bluemargarita.dto.product.PriceRecalculationResultDTO;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
@@ -28,6 +29,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -244,8 +246,10 @@ public class MaterialRestController {
     }
 
     @Operation(
-            summary = "Get all products using this material",
-            description = "Retrieves paginated list of all products that use this material. Used for material detail view product listing.",
+            summary = "Get products using material with filtering",
+            description = "Retrieves paginated and filtered list of products using specific material. " +
+                    "Supports filtering by product name/code, category, price range, stock levels, and active status. " +
+                    "Used for material detail view product listing with advanced filtering capabilities.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -266,18 +270,42 @@ public class MaterialRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Paginated<ProductUsageDTO>> getAllProductsUsingMaterial(
             @PathVariable Long id,
+            @Parameter(description = "Product name or code search") @RequestParam(required = false) String nameOrCode,
+            @Parameter(description = "Category filter") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "Procedure filter (products that use BOTH this material AND the specified procedure)") @RequestParam(required = false) Long procedureId,
+            @Parameter(description = "Minimum price filter") @RequestParam(required = false) BigDecimal minPrice,
+            @Parameter(description = "Maximum price filter") @RequestParam(required = false) BigDecimal maxPrice,
+            @Parameter(description = "Minimum stock filter") @RequestParam(required = false) Integer minStock,
+            @Parameter(description = "Maximum stock filter") @RequestParam(required = false) Integer maxStock,
+            @Parameter(description = "Active status filter") @RequestParam(required = false) Boolean isActive,
+            @Parameter(description = "Low stock filter") @RequestParam(required = false) Boolean lowStock,
             @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
-            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "name") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "ASC") String sortDirection) throws EntityNotFoundException {
+            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "finalSellingPriceRetail") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "DESC") String sortDirection) throws EntityNotFoundException {
 
-        Pageable pageable = PageRequest.of(page, pageSize,
-                Sort.by(Sort.Direction.valueOf(sortDirection.toUpperCase()), sortBy));
+        // Build filters object
+        ProductFilters filters = ProductFilters.builder()
+                .nameOrCode(nameOrCode)
+                .categoryId(categoryId)
+                .procedureId(procedureId)
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .minStock(minStock)
+                .maxStock(maxStock)
+                .isActive(isActive)
+                .lowStock(lowStock)
+                .build();
 
-        Paginated<ProductUsageDTO> products = materialService.getAllProductsUsingMaterial(id, pageable);
+        // Set pagination properties
+        filters.setPage(page);
+        filters.setPageSize(pageSize);
+        filters.setSortBy(sortBy);
+        filters.setSortDirection(Sort.Direction.valueOf(sortDirection.toUpperCase()));
+
+        Paginated<ProductUsageDTO> products = materialService.getAllProductsUsingMaterial(id, filters);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
-
 
     // =============================================================================
     // BULK OPERATIONS - PRICE RECALCULATION
