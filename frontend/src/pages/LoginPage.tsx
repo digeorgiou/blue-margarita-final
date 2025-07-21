@@ -1,28 +1,57 @@
+// pages/Login/Login.tsx
 import React, { useState } from 'react';
-import {
-    Box,
-    TextField,
-    Button,
-    Typography,
-    Alert,
-    CircularProgress,
-    Container,
-    Paper,
-} from '@mui/material';
-import { Lock as LockIcon } from '@mui/icons-material';
-import { useAuth } from '../hooks/useAuth';
-import { AuthenticationRequest } from '../interfaces/auth';
+import { Button, Input, Alert, LoadingSpinner, Card } from '../components/ui';
+import { authService } from '../services/authService';
 
-const LoginPage: React.FC = () => {
-    const { login, isLoading, error } = useAuth();
-    const [formData, setFormData] = useState<AuthenticationRequest>({
+interface LoginFormData {
+    username: string;
+    password: string;
+}
+
+interface LoginPageProps {
+    onLoginSuccess: () => void;
+}
+
+const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+    // Form state
+    const [formData, setFormData] = useState<LoginFormData>({
         username: '',
-        password: '',
+        password: ''
     });
-    const [formErrors, setFormErrors] = useState<Partial<AuthenticationRequest>>({});
 
+    // UI state
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Form validation errors
+    const [formErrors, setFormErrors] = useState<Partial<LoginFormData>>({});
+
+    // Handle input changes
+    const handleInputChange = (field: keyof LoginFormData) => (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: event.target.value
+        }));
+
+        // Clear field error when user starts typing
+        if (formErrors[field]) {
+            setFormErrors(prev => ({
+                ...prev,
+                [field]: undefined
+            }));
+        }
+
+        // Clear general error
+        if (error) {
+            setError(null);
+        }
+    };
+
+    // Validate form
     const validateForm = (): boolean => {
-        const errors: Partial<AuthenticationRequest> = {};
+        const errors: Partial<LoginFormData> = {};
 
         if (!formData.username.trim()) {
             errors.username = 'Username is required';
@@ -40,23 +69,7 @@ const LoginPage: React.FC = () => {
         return Object.keys(errors).length === 0;
     };
 
-    const handleInputChange = (field: keyof AuthenticationRequest) => (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: event.target.value,
-        }));
-
-        // Clear field error when user starts typing
-        if (formErrors[field]) {
-            setFormErrors(prev => ({
-                ...prev,
-                [field]: undefined,
-            }));
-        }
-    };
-
+    // Handle form submission
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
 
@@ -64,127 +77,107 @@ const LoginPage: React.FC = () => {
             return;
         }
 
+        setLoading(true);
+        setError(null);
+
         try {
-            await login(formData);
-            // Navigation to dashboard will be handled by the router
-        } catch (error) {
-            // Error is handled by the AuthContext
-            console.error('Login failed:', error);
+            await authService.authenticate({
+                username: formData.username,
+                password: formData.password
+            });
+
+            // Login successful
+            onLoginSuccess();
+
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Login failed';
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <Container component="main" maxWidth="sm">
-            <Box
-                sx={{
-                    marginTop: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    minHeight: '100vh',
-                }}
-            >
-                <Paper
-                    elevation={6}
-                    sx={{
-                        padding: 4,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        width: '100%',
-                        maxWidth: 400,
-                    }}
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
+
+                {/* Login Card */}
+                <Card
+                    title="Welcome Back"
+                    icon="🔐"
+                    className="mb-6"
                 >
-                    {/* Logo/Icon */}
-                    <Box
-                        sx={{
-                            width: 56,
-                            height: 56,
-                            borderRadius: '50%',
-                            backgroundColor: 'primary.main',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 2,
-                        }}
-                    >
-                        <LockIcon sx={{ color: 'white', fontSize: 24 }} />
-                    </Box>
+                    <form id="login-form" onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* Title */}
-                    <Typography component="h1" variant="h4" gutterBottom>
-                        Blue Margarita
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" mb={3}>
-                        Sign in to your account
-                    </Typography>
+                        {/* Error Alert */}
+                        {error && (
+                            <Alert variant="error">
+                                {error}
+                            </Alert>
+                        )}
 
-                    {/* Error Alert */}
-                    {error && (
-                        <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
-
-                    {/* Login Form */}
-                    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="username"
+                        {/* Username Input */}
+                        <Input
                             label="Username"
-                            name="username"
-                            autoComplete="username"
-                            autoFocus
+                            type="text"
+                            placeholder="Enter your username"
                             value={formData.username}
                             onChange={handleInputChange('username')}
-                            error={!!formErrors.username}
-                            helperText={formErrors.username}
-                            disabled={isLoading}
+                            error={formErrors.username}
+                            required
+                            disabled={loading}
                         />
 
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="password"
+                        {/* Password Input */}
+                        <Input
                             label="Password"
                             type="password"
-                            id="password"
-                            autoComplete="current-password"
+                            placeholder="Enter your password"
                             value={formData.password}
                             onChange={handleInputChange('password')}
-                            error={!!formErrors.password}
-                            helperText={formErrors.password}
-                            disabled={isLoading}
+                            error={formErrors.password}
+                            required
+                            disabled={loading}
                         />
 
+                        {/* Login Button */}
                         <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            sx={{ mt: 3, mb: 2, py: 1.5 }}
-                            disabled={isLoading}
-                            startIcon={isLoading ? <CircularProgress size={20} /> : null}
+                            variant="primary"
+                            size="lg"
+                            disabled={loading}
                         >
-                            {isLoading ? 'Signing In...' : 'Sign In'}
+                            {loading ? (
+                                <div className="flex items-center justify-center">
+                                    <LoadingSpinner />
+                                    <span className="ml-2">Signing in...</span>
+                                </div>
+                            ) : (
+                                'Sign In'
+                            )}
                         </Button>
-                    </Box>
+                    </form>
+                </Card>
 
-                    {/* Test Credentials Info */}
-                    <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.50', borderRadius: 1, width: '100%' }}>
-                        <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                            Test the connection with your Spring Boot API
-                        </Typography>
-                        <Typography variant="body2" color="text.primary">
-                            Use any valid credentials from your database
-                        </Typography>
-                    </Box>
-                </Paper>
-            </Box>
-        </Container>
+                {/* Help Card */}
+                <Card className="text-center">
+                    <div className="space-y-3">
+                        <h3 className="text-lg font-semibold text-gray-900">Need Help?</h3>
+                        <div className="space-y-2 text-sm text-gray-600">
+                            <p>
+                                <strong>Demo Credentials:</strong><br />
+                                Username: demo<br />
+                                Password: demo123
+                            </p>
+                            <p className="text-xs">
+                                Contact your administrator if you need access to the system.
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+
+            </div>
+        </div>
     );
 };
 
-export default LoginPage;
+export default Login;

@@ -1,4 +1,4 @@
-// Authentication interfaces matching your Spring Boot DTOs
+// types/api/auth.ts
 
 export interface AuthenticationRequest {
     username: string;
@@ -6,14 +6,15 @@ export interface AuthenticationRequest {
 }
 
 export interface AuthenticationResponse {
-    username: string;
     token: string;
+    username: string;
+    expiresIn?: number;
 }
 
 export interface UserReadOnly {
     id: number;
     username: string;
-    role: string;
+    role: UserRole;
     isActive: boolean;
     deletedAt: string | null;
     createdAt: string;
@@ -25,21 +26,24 @@ export interface UserReadOnly {
 export interface UserInsert {
     username: string;
     password: string;
-    confirmedPassword: string;
+    role?: UserRole;
 }
 
-export interface ApiError {
-    message: string;
-    status: number;
-    timestamp: string;
-    path: string;
+export interface UserUpdate {
+    id: number;
+    username?: string;
+    password?: string;
+    role?: UserRole;
+    isActive?: boolean;
 }
+
+export type UserRole = 'USER' | 'ADMIN';
 
 export interface AuthContextType {
     user: UserReadOnly | null;
     token: string | null;
-    login: (credentials: AuthenticationRequest) => Promise<void>;
-    logout: () => void;
     isLoading: boolean;
     error: string | null;
+    login: (credentials: AuthenticationRequest) => Promise<void>;
+    logout: () => Promise<void>;
 }

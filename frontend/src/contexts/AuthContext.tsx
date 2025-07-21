@@ -1,7 +1,7 @@
 // Authentication context for managing global auth state
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { AuthContextType, AuthenticationRequest, UserReadOnly } from '../interfaces/auth';
+import { AuthContextType, AuthenticationRequest, UserReadOnly } from '../types/api/auth.ts'
 import { authService } from '../services/authService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

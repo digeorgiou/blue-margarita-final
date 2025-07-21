@@ -1,23 +1,9 @@
-// Authentication service to communicate with Spring Boot API
+// services/authService.ts
+import { AuthenticationRequest, AuthenticationResponse } from '../types/api/auth';
 
-import { AuthenticationRequest, AuthenticationResponse, UserReadOnly, UserInsert } from '../interfaces/auth';
-
-const API_BASE_URL = '/api'; // Using Vite proxy
+const API_BASE_URL = '/api';
 
 class AuthService {
-    private getAuthHeaders(token?: string): HeadersInit {
-        const headers: HeadersInit = {
-            'Content-Type': 'application/json',
-        };
-
-        const authToken = token || this.getStoredToken();
-        if (authToken) {
-            headers['Authorization'] = `Bearer ${authToken}`;
-        }
-
-        return headers;
-    }
-
     private getStoredToken(): string | null {
         return localStorage.getItem('authToken');
     }
@@ -28,6 +14,24 @@ class AuthService {
 
     private removeStoredToken(): void {
         localStorage.removeItem('authToken');
+    }
+
+    // Public method to get token (needed by App.tsx)
+    getToken(): string | null {
+        return this.getStoredToken();
+    }
+
+    getAuthHeaders(token?: string): HeadersInit {
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+        };
+
+        const authToken = token || this.getStoredToken();
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        return headers;
     }
 
     // Authenticate user and get JWT token
@@ -51,60 +55,6 @@ class AuthService {
             return data;
         } catch (error) {
             console.error('Authentication error:', error);
-            throw error;
-        }
-    }
-
-    // Register new user
-    async register(userData: UserInsert): Promise<UserReadOnly> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/users/register`, {
-                method: 'POST',
-                headers: this.getAuthHeaders(),
-                body: JSON.stringify(userData),
-            });
-
-            if (!response.ok) {
-                if (response.status === 409) {
-                    throw new Error('Username already exists');
-                }
-                if (response.status === 400) {
-                    throw new Error('Invalid user data');
-                }
-                throw new Error(`Registration failed: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Registration error:', error);
-            throw error;
-        }
-    }
-
-    // Get user by ID
-    async getUserById(id: number): Promise<UserReadOnly> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-                method: 'GET',
-                headers: this.getAuthHeaders(),
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Unauthorized');
-                }
-                if (response.status === 403) {
-                    throw new Error('Access denied');
-                }
-                if (response.status === 404) {
-                    throw new Error('User not found');
-                }
-                throw new Error(`Failed to fetch user: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Get user error:', error);
             throw error;
         }
     }
@@ -142,13 +92,9 @@ class AuthService {
 
     // Check if user is authenticated
     isAuthenticated(): boolean {
-        return !!this.getStoredToken();
-    }
-
-    // Get stored token
-    getToken(): string | null {
-        return this.getStoredToken();
+        return this.getStoredToken() !== null;
     }
 }
 
+// Export singleton instance
 export const authService = new AuthService();
