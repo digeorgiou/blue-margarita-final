@@ -40,7 +40,7 @@ public class SaleSpecification {
             if (customerId == null) {
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
             }
-            Join<Sale, Customer> customerJoin = root.join("customer");
+            Join<Sale, Customer> customerJoin = root.join("customer", JoinType.LEFT);
             return criteriaBuilder.equal(customerJoin.get("id"), customerId);
         };
     }

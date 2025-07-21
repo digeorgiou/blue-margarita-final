@@ -236,18 +236,22 @@ public class SalePricingService {
      */
     private void applyDiscountToSaleProducts(Sale sale, BigDecimal discountPercentage) {
         for (SaleProduct saleProduct : sale.getAllSaleProducts()) {
+            BigDecimal suggestedPrice = sale.getIsWholesale() ?
+                    saleProduct.getProduct().getFinalSellingPriceWholesale() :
+                    saleProduct.getProduct().getFinalSellingPriceRetail();
+
             BigDecimal actualPrice = calculateActualSellingPrice(
                     saleProduct.getProduct(),
                     discountPercentage,
                     sale.getIsWholesale()
             );
+
+            saleProduct.setSuggestedPriceAtTheTime(suggestedPrice);  // ADD THIS LINE
             saleProduct.setPriceAtTheTime(actualPrice);
 
-            LOGGER.debug("Applied discount to product {} - Original: {}, Discounted: {}",
+            LOGGER.debug("Applied pricing to product {} - Suggested: {}, Actual: {}",
                     saleProduct.getProduct().getCode(),
-                    sale.getIsWholesale() ?
-                            saleProduct.getProduct().getFinalSellingPriceWholesale() :
-                            saleProduct.getProduct().getFinalSellingPriceRetail(),
+                    suggestedPrice,
                     actualPrice);
         }
     }

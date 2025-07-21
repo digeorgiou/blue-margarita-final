@@ -81,7 +81,6 @@ public class DashboardRestController {
         overview.put("recentPurchases", purchaseService.getRecentPurchases(5));
 
         // Inventory alerts (5 lowest stock)
-        Pageable lowStockPageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.ASC, "stock"));
         overview.put("lowStockProducts", stockManagementService.getLowStockProducts(5));
 
         // Top products for this month (5 best performers)
@@ -225,7 +224,7 @@ public class DashboardRestController {
             @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "ASC") String sortDirection) {
 
         ToDoTaskFilters filters = ToDoTaskFilters.builder()
-                .status(TaskStatus.valueOf(status))
+                .status(status != null ? TaskStatus.valueOf(status.toUpperCase()) : null)
                 .dateFrom(dateFrom)
                 .dateTo(dateTo)
                 .build();

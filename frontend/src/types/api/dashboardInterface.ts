@@ -1,6 +1,6 @@
 export interface DashboardOverviewDTO {
-    weeklySales: number;
-    monthlySales: number;
+    weeklySales: SalesSummaryDTO;
+    monthlySales: SalesSummaryDTO;
     recentSales: SaleListItemDTO[];
     recentPurchases: PurchaseReadOnlyDTO[];
     lowStockProducts: ProductListItemDTO[];
@@ -16,6 +16,14 @@ export interface SaleListItemDTO {
     customerName: string;
     totalAmount: number;
     // Add other fields based on your DTO
+}
+
+export interface SalesSummaryDTO {
+    count: number;
+    totalRevenue: number;
+    averageOrderValue: number;
+    totalDiscount: number;
+    averageDiscount: number;
 }
 
 export interface PurchaseReadOnlyDTO {

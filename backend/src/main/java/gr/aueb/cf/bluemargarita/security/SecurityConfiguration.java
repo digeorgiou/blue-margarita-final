@@ -59,6 +59,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/customers/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/suppliers/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/dashboard/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/tasks/**").hasAnyRole("USER", "ADMIN")
 
                         // All other requests require authentication
                         .anyRequest().authenticated()

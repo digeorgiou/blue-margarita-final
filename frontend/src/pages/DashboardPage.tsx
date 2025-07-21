@@ -122,13 +122,13 @@ const Dashboard: React.FC = () => {
                         <div className="grid grid-cols-2 gap-6">
                             <StatCard
                                 label="This Week"
-                                value={formatMoney(data.weeklySales)}
+                                value={formatMoney(data.weeklySales.totalRevenue)}  // Changed
                                 isBig={true}
                                 color="green"
                             />
                             <StatCard
                                 label="This Month"
-                                value={formatMoney(data.monthlySales)}
+                                value={formatMoney(data.monthlySales.totalRevenue)} // Changed
                                 color="blue"
                             />
                         </div>
