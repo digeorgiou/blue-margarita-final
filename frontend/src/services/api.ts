@@ -39,18 +39,18 @@ class ApiService {
         );
     }
 
-    // Generic HTTP methods
+    // Generic HTTP methods with better typing
     async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
         const response = await this.api.get<T>(url, config);
         return response.data;
     }
 
-    async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    async post<T, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T> {
         const response = await this.api.post<T>(url, data, config);
         return response.data;
     }
 
-    async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    async put<T, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T> {
         const response = await this.api.put<T>(url, data, config);
         return response.data;
     }
@@ -60,7 +60,7 @@ class ApiService {
         return response.data;
     }
 
-    async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    async patch<T, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T> {
         const response = await this.api.patch<T>(url, data, config);
         return response.data;
     }

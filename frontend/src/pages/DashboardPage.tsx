@@ -11,7 +11,7 @@ const Dashboard: React.FC = () => {
 
     // Function to format money
     const formatMoney = (amount: number): string => {
-        return `€${amount.toFixed(2)}`;
+        return `€${amount}`;
     };
 
     // Function to format dates
