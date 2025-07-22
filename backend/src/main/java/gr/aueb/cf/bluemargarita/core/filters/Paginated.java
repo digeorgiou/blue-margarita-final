@@ -10,9 +10,9 @@ import java.util.List;
 public class Paginated<T>{
 
     List<T> data;
-    long totalElements;
+    long totalElements; //total count across all pages
     int totalPages;
-    int numberOfElements;
+    int numberOfElements; //count in current page
     int currentPage;
     int pageSize;
 

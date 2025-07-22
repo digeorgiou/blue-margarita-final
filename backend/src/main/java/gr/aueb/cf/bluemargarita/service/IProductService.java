@@ -34,7 +34,7 @@ public interface IProductService {
     /**
      * Creates a new product with automatic pricing calculation and optional materials/procedures
      * Business Logic:
-     * 1. Validates unique name and code constraints
+     * 1. Validates unique name and productCode constraints
      * 2. Validates category exists and is active
      * 3. Creates product with relationships
      * 4. Calculates suggested prices based on materials, procedures, and markup factors
@@ -42,7 +42,7 @@ public interface IProductService {
      *
      * @param dto Product creation data including optional materials and procedures
      * @return Created product as enhanced list item DTO
-     * @throws EntityAlreadyExistsException if product name or code already exists
+     * @throws EntityAlreadyExistsException if product name or productCode already exists
      * @throws EntityNotFoundException if referenced entities (category, user, materials, procedures) not found
      */
     ProductListItemDTO createProduct(ProductInsertDTO dto)
@@ -53,7 +53,7 @@ public interface IProductService {
      *
      * @param dto Product update data
      * @return Updated product as enhanced list item DTO
-     * @throws EntityAlreadyExistsException if new name or code conflicts with existing product
+     * @throws EntityAlreadyExistsException if new name or productCode conflicts with existing product
      * @throws EntityNotFoundException if product or referenced entities not found
      */
     ProductListItemDTO updateProduct(ProductUpdateDTO dto)
@@ -95,7 +95,7 @@ public interface IProductService {
     /**
      * Retrieves active products matching search term
      * with limited info needed for autocomplete in record sale page
-     * @param searchTerm matches with name or code
+     * @param searchTerm matches with name or productCode
      * @return List of products with basic info
      */
     List<ProductSearchResultDTO> searchProductsForAutocomplete(String searchTerm);

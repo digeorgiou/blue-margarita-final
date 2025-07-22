@@ -101,7 +101,7 @@ public class ProductService implements IProductService{
         // Save again with relationships and pricing
         savedProduct = productRepository.save(savedProduct);
 
-        LOGGER.info("Product created with id: {} and code: {}",
+        LOGGER.info("Product created with id: {} and productCode: {}",
                 savedProduct.getId(), savedProduct.getCode());
 
         ProductCostDataDTO data = calculateProductCostData(savedProduct);
@@ -123,7 +123,7 @@ public class ProductService implements IProductService{
             validateUniqueName(dto.name());
         }
 
-        // Validate unique code if changed
+        // Validate unique productCode if changed
         if (!existingProduct.getCode().equals(dto.code())) {
             validateUniqueCode(dto.code());
         }
@@ -681,7 +681,7 @@ public class ProductService implements IProductService{
     private void validateUniqueCode(String code) throws EntityAlreadyExistsException {
         if (productRepository.existsByCode(code)) {
             throw new EntityAlreadyExistsException("Product",
-                    "Product with code " + code + " already exists");
+                    "Product with productCode " + code + " already exists");
         }
     }
 

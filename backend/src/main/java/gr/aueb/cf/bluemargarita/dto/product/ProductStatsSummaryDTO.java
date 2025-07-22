@@ -11,7 +11,7 @@ public record ProductStatsSummaryDTO(
 
         Long productId,
         String productName,
-        String code,
+        String productCode,
         BigDecimal totalItemsSold,
         BigDecimal totalRevenue,
         LocalDate lastSaleDate

@@ -81,10 +81,12 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         setError(null);
 
         try {
-            await authService.authenticate({
+            const payload = {
                 username: formData.username,
                 password: formData.password
-            });
+            };
+            console.log("Sending auth payload:", payload); // Debug
+            await authService.authenticate(payload);
 
             // Login successful
             onLoginSuccess();

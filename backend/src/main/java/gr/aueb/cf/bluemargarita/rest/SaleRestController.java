@@ -159,7 +159,7 @@ public class SaleRestController {
     public ResponseEntity<PaginatedFilteredSalesWithSummary> searchSalesWithSummary(
             @Parameter(description = "Customer ID filter") @RequestParam(required = false) Long customerId,
             @Parameter(description = "Customer name or email filter") @RequestParam(required = false) String customerNameOrEmail,
-            @Parameter(description = "Product name or code filter") @RequestParam(required = false) String productNameOrCode,
+            @Parameter(description = "Product name or productCode filter") @RequestParam(required = false) String productNameOrCode,
             @Parameter(description = "Product ID filter") @RequestParam(required = false) Long productId,
             @Parameter(description = "Location ID filter") @RequestParam(required = false) Long locationId,
             @Parameter(description = "Category ID filter") @RequestParam(required = false) Long categoryId,

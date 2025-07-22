@@ -90,9 +90,6 @@ public class ToDoTaskService implements IToDoTaskService {
             case PENDING:
                 task.markAsPending();
                 break;
-            case CANCELLED:
-                task.markAsCancelled();
-                break;
         }
 
         ToDoTask savedTask = taskRepository.save(task);

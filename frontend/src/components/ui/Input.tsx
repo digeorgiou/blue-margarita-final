@@ -1,19 +1,23 @@
 import {InputProps} from "../../types/components/input";
 
-const Input = ({
-            label,
-            placeholder,
-            value,
-            onChange,
-            type = "text",
-            required = false,
-            disabled = false,
-            error,
-            className = '',
-            id
-               }: InputProps) => {
+const Input: React.FC<InputProps> = ({
+                                         label,
+                                         placeholder,
+                                         value,
+                                         onChange,
+                                         type = "text",
+                                         required = false,
+                                         disabled = false,
+                                         error,
+                                         className = '',
+                                         id,
+                                         min,
+                                         max,
+                                         step
+                                     })=> {
 
     const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`
+
     return (
         <div className={`w-full ${className}`}>
             {/* Label */}
@@ -36,17 +40,20 @@ const Input = ({
                 placeholder={placeholder}
                 required={required}
                 disabled={disabled}
+                min={min}
+                max={max}
+                step={step}
                 className={`
-          w-full px-3 py-2 border rounded-lg text-sm
-          transition-colors duration-200
-          placeholder-gray-400
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500
-          ${error
+                    w-full px-3 py-2 border rounded-lg text-sm
+                    transition-colors duration-200
+                    placeholder-gray-400
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500
+                    ${error
                     ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                     : 'border-gray-300 hover:border-gray-400'
                 }
-        `}
+                `}
             />
 
             {/* Error Message */}

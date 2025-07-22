@@ -135,7 +135,7 @@ public class DashboardRestController {
     @GetMapping("/low-stock-products/all")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Paginated<StockAlertDTO>> getAllLowStockProducts(
-            @Parameter(description = "Product name or code filter") @RequestParam(required = false) String nameOrCode,
+            @Parameter(description = "Product name or productCode filter") @RequestParam(required = false) String nameOrCode,
             @Parameter(description = "Category ID filter") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "Procedure ID filter") @RequestParam(required = false) Long procedureId,
             @Parameter(description = "Material name filter") @RequestParam(required = false) String materialName,
@@ -190,7 +190,7 @@ public class DashboardRestController {
     public ResponseEntity<Paginated<MispricedProductAlertDTO>> getAllMispricedProducts(
             @Parameter(description = "Threshold percentage for price difference")
             @RequestParam(required = false, defaultValue = "20") BigDecimal thresholdPercentage,
-            @Parameter(description = "Product name or code filter")
+            @Parameter(description = "Product name or productCode filter")
             @RequestParam(required = false) String nameOrCode,
             @Parameter(description = "Category ID filter")
             @RequestParam(required = false) Long categoryId,

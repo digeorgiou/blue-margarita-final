@@ -98,19 +98,19 @@ export interface ProductListItemDTO {
     // Add other fields based on your DTO
 }
 
-export interface ProductStatsSummaryDTO {
+export interface BaseProduct {
     productId : number;
     productName : string;
-    code : string;
+    productCode : string;
+}
+
+export interface ProductStatsSummaryDTO extends BaseProduct{
     totalItemsSold : number;
     totalRevenue : number;
     lastSaleDate: string;
 }
 
-export interface StockAlertDTO {
-    productId : number;
-    productCode : string;
-    productName : string;
+export interface StockAlertDTO extends BaseProduct {
     currentStock : number;
     lowStockThreshold : number;
     stockStatus : string;
@@ -141,10 +141,7 @@ export interface ToDoTaskSummaryDTO {
     totalPendingCount: number;
 }
 
-export interface MispricedProductAlertDTO {
-    productId: number;
-    productName: string;
-    productCode: string;
+export interface MispricedProductAlertDTO extends BaseProduct {
     categoryName: string;
     suggestedRetailPrice: number;
     finalRetailPrice: number;
@@ -186,11 +183,10 @@ export interface ToDoTaskUpdateDTO {
 }
 
 export interface Paginated<T> {
-    content: T[];
-    totalElements: number;
+    data: T[];
+    totalElements: number;      //total count across all pages
+    numberOfElements: number;   //count in current page
     totalPages: number;
     currentPage: number;
     pageSize: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
 }

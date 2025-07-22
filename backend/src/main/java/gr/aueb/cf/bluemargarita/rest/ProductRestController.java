@@ -48,7 +48,7 @@ public class ProductRestController {
 
     @Operation(
             summary = "Create a new product",
-            description = "Creates a new jewelry product with unique name and code validation, optional materials and procedures. Used in product management.",
+            description = "Creates a new jewelry product with unique name and productCode validation, optional materials and procedures. Used in product management.",
             responses = {
                     @ApiResponse(
                             responseCode = "201",
@@ -65,7 +65,7 @@ public class ProductRestController {
                     ),
                     @ApiResponse(
                             responseCode = "409",
-                            description = "Product with name or code already exists",
+                            description = "Product with name or productCode already exists",
                             content = @Content(mediaType = "application/json")
                     )
             }
@@ -108,7 +108,7 @@ public class ProductRestController {
                     ),
                     @ApiResponse(
                             responseCode = "409",
-                            description = "Product with name or code already exists",
+                            description = "Product with name or productCode already exists",
                             content = @Content(mediaType = "application/json")
                     )
             }
@@ -175,7 +175,7 @@ public class ProductRestController {
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Paginated<ProductListItemDTO>> getProductsFilteredPaginated(
-            @Parameter(description = "Product name or code filter") @RequestParam(required = false) String nameOrCode,
+            @Parameter(description = "Product name or productCode filter") @RequestParam(required = false) String nameOrCode,
             @Parameter(description = "Category ID filter") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "Procedure ID filter") @RequestParam(required = false) Long procedureId,
             @Parameter(description = "Material name filter") @RequestParam(required = false) String materialName,
@@ -262,7 +262,7 @@ public class ProductRestController {
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<ProductSearchResultDTO>> searchProductsForAutocomplete(
-            @Parameter(description = "Search term (product name or code)", required = true)
+            @Parameter(description = "Search term (product name or productCode)", required = true)
             @RequestParam String searchTerm) {
 
         List<ProductSearchResultDTO> products = productService.searchProductsForAutocomplete(searchTerm);

@@ -719,10 +719,6 @@ public class Mapper {
         if (task.getStatus() == TaskStatus.COMPLETED) {
             return "COMPLETED";
         }
-
-        if (task.getStatus() ==TaskStatus.CANCELLED) {
-            return "CANCELLED";
-        }
         // For PENDING tasks, determine based on date
         if (task.getDate().isBefore(today)) {
             return "OVERDUE";

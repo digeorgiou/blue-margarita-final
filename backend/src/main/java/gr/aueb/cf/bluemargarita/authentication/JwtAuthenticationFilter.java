@@ -77,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             LOGGER.error("ERROR: Exception in JWT processing: ", e); // CHANGE TO ERROR
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType("application/json");
-            String jsonBody = "{\"code\": \"invalidToken\", \"description\":\"" + e.getMessage() + "\"}";
+            String jsonBody = "{\"productCode\": \"invalidToken\", \"description\":\"" + e.getMessage() + "\"}";
             response.getWriter().write(jsonBody);
             return;
         }

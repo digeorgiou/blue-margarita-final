@@ -4,6 +4,7 @@ export type ButtonProps = {
     variant?: 'primary' | 'secondary' | 'success' | 'danger';
     size?: 'sm' | 'md' | 'lg';
     disabled?: boolean;
+    type?: 'button' | 'submit' | 'reset';
 }
 
 export type ActionButtonProps = {

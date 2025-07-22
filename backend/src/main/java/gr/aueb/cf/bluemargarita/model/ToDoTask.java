@@ -42,10 +42,6 @@ public class ToDoTask {
         return status == TaskStatus.PENDING;
     }
 
-    public boolean isCancelled() {
-        return status == TaskStatus.CANCELLED;
-    }
-
     public void markAsCompleted() {
         this.status = TaskStatus.COMPLETED;
         this.dateCompleted = LocalDate.now();
@@ -54,10 +50,5 @@ public class ToDoTask {
     public void markAsPending() {
         this.status = TaskStatus.PENDING;
         this.dateCompleted = null;
-    }
-
-    public void markAsCancelled() {
-        this.status = TaskStatus.CANCELLED;
-        this.dateCompleted = LocalDate.now();
     }
 }

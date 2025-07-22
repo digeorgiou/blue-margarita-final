@@ -18,7 +18,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType("application/json;charset=UTF-8");
 
         //Write a custom JSON response with the collected information
-        String json = "{\"code\": \"userNotAuthorized\", \"description\" : " +
+        String json = "{\"productCode\": \"userNotAuthorized\", \"description\" : " +
                 "\"User is not allowed to access this endpoint.\"}";
         response.getWriter().write(json);
 

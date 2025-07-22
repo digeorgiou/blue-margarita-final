@@ -5,6 +5,9 @@ import { authService } from './services/authService';
 import { LoadingSpinner } from "./components/ui";
 import Layout from "./pages/Layout.tsx"
 import Dashboard from "./pages/DashboardPage.tsx";
+import LowStockProductsPage from './pages/LowStockProductsPage';
+import MispricedProductsPage from './pages/MispricedProductsPage';
+import AllTasksPage from './pages/AllTasksPage';
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -25,6 +28,14 @@ const App: React.FC = () => {
         switch (currentPage) {
             case 'dashboard':
                 return <Dashboard onNavigate={handleNavigation} />;
+            case 'low-stock-products':
+                return <LowStockProductsPage onNavigate={handleNavigation} />;
+
+            case 'mispriced-products':
+                return <MispricedProductsPage onNavigate={handleNavigation} />;
+
+            case 'all-tasks':
+                return <AllTasksPage onNavigate={handleNavigation} />;
             case 'manage-sales':
                 return <div className="p-4"><h1 className="text-2xl text-white">Manage Sales - Coming Soon</h1></div>;
             case 'manage-products':
@@ -132,7 +143,7 @@ const App: React.FC = () => {
 
     // Show dashboard with Layout (THIS IS THE KEY CHANGE!)
     return (
-        <div className="bg-gradient-to-r from-blue-900 to-purple-200 min-h-screen">
+        <div className="bg-gradient-to-r from-blue-900 to-purple-300 min-h-screen">
             <Layout
                 currentPage={currentPage}
                 onNavigate={handleNavigation}

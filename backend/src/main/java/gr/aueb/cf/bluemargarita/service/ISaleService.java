@@ -102,7 +102,7 @@ public interface ISaleService {
      * - Location (dropdown selection by ID)
      * - Category (dropdown selection by ID)
      * - Payment method (dropdown selection)
-     * - Product (autocomplete by name/code OR precise selection by ID)
+     * - Product (autocomplete by name/productCode OR precise selection by ID)
      * - Customer (autocomplete by name/email OR precise selection by ID)
      *
      * Summary is only calculated if filtered results ≤ 100 for performance

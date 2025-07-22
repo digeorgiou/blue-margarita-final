@@ -146,7 +146,7 @@ public class ProductSpecification {
     }
 
     /**
-     * Combined specification for product search (name OR code)
+     * Combined specification for product search (name OR productCode)
      */
     public static Specification<Product> productNameOrCodeLike(String searchTerm) {
         return (root, query, criteriaBuilder) -> {
@@ -156,7 +156,7 @@ public class ProductSpecification {
             String upperSearchTerm = "%" + searchTerm.toUpperCase() + "%";
             return criteriaBuilder.or(
                     criteriaBuilder.like(criteriaBuilder.upper(root.get("name")), upperSearchTerm),
-                    criteriaBuilder.like(criteriaBuilder.upper(root.get("code")), upperSearchTerm)
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("productCode")), upperSearchTerm)
             );
         };
     }

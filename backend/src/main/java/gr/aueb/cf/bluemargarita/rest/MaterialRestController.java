@@ -248,7 +248,7 @@ public class MaterialRestController {
     @Operation(
             summary = "Get products using material with filtering",
             description = "Retrieves paginated and filtered list of products using specific material. " +
-                    "Supports filtering by product name/code, category, price range, stock levels, and active status. " +
+                    "Supports filtering by product name/productCode, category, price range, stock levels, and active status. " +
                     "Used for material detail view product listing with advanced filtering capabilities.",
             responses = {
                     @ApiResponse(
@@ -270,7 +270,7 @@ public class MaterialRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Paginated<ProductUsageDTO>> getAllProductsUsingMaterial(
             @PathVariable Long id,
-            @Parameter(description = "Product name or code search") @RequestParam(required = false) String nameOrCode,
+            @Parameter(description = "Product name or productCode search") @RequestParam(required = false) String nameOrCode,
             @Parameter(description = "Category filter") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "Procedure filter (products that use BOTH this material AND the specified procedure)") @RequestParam(required = false) Long procedureId,
             @Parameter(description = "Minimum price filter") @RequestParam(required = false) BigDecimal minPrice,

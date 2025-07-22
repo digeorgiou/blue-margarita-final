@@ -82,6 +82,139 @@ class DashboardService {
     }
 
     // =============================================================================
+    // VIEW ALL FUNCTIONALITY
+    // =============================================================================
+
+    /**
+     * Get all low stock products with pagination and filtering
+     * Used when clicking "View All" from dashboard low stock widget
+     */
+    async getAllLowStockProducts(params:{
+        nameOrCode?: string;
+        categoryId?: number;
+        procedureId?: number;
+        materialName?: string;
+        materialId?: number;
+        minStock?: number;
+        maxStock?: number;
+        isActive?: boolean;
+        page?: number;
+        pageSize?: number;
+        sortBy?: string;
+        sortDirection?: string;
+    } = {}) : Promise<Paginated<StockAlertDTO>> {
+        try {
+            const queryParams = new URLSearchParams();
+
+            // Add all parameters to query string if they exist
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    queryParams.append(key, value.toString());
+                }
+            });
+
+            const response = await fetch(`${API_BASE_URL}/low-stock-products/all?${queryParams}`, {
+                method: 'GET',
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch all low stock products: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('All low stock products error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get all mispriced products with pagination and filtering
+     * Used when clicking "View All" from dashboard mispriced products widget
+     */
+    async getAllMispricedProducts(params: {
+        thresholdPercentage?: number;
+        nameOrCode?: string;
+        categoryId?: number;
+        issueType?: string;
+        page?: number;
+        pageSize?: number;
+        sortBy?: string;
+        sortDirection?: string;
+    } = {}): Promise<Paginated<MispricedProductAlertDTO>> {
+        try {
+            const queryParams = new URLSearchParams();
+
+            // Set default threshold if not provided
+            if (!params.thresholdPercentage) {
+                params.thresholdPercentage = 20;
+            }
+
+            // Add all parameters to query string if they exist
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    queryParams.append(key, value.toString());
+                }
+            });
+
+            const response = await fetch(`${API_BASE_URL}/mispriced-products/all?${queryParams}`, {
+                method: 'GET',
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch all mispriced products: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('All mispriced products error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get all tasks with pagination and filtering
+     * Used when clicking "View All Tasks" from dashboard task widget
+     */
+    async getAllTasks(params: {
+        status?: string;
+        dateFrom?: string;
+        dateTo?: string;
+        page?: number;
+        pageSize?: number;
+        sortBy?: string;
+        sortDirection?: string;
+    } = {}): Promise<Paginated<ToDoTaskReadOnlyDTO>> {
+        try {
+            const queryParams = new URLSearchParams();
+
+            // Add all parameters to query string if they exist
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    queryParams.append(key, value.toString());
+                }
+            });
+
+            const response = await fetch(`${API_BASE_URL}/tasks/all?${queryParams}`, {
+                method: 'GET',
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch all tasks: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('All tasks error:', error);
+            throw error;
+        }
+    }
+
+
+    // =============================================================================
     // INDIVIDUAL WIDGET DATA (for refresh/reload specific sections)
     // =============================================================================
 
@@ -216,43 +349,6 @@ class DashboardService {
     }
 
     /**
-     * Get all tasks with pagination (for "View All" functionality)
-     */
-    async getAllTasks(params: {
-        status?: string;
-        dateFrom?: string;
-        dateTo?: string;
-        page?: number;
-        pageSize?: number;
-        sortBy?: string;
-        sortDirection?: string;
-    } = {}): Promise<Paginated<ToDoTaskReadOnlyDTO>> {
-        try {
-            const queryParams = new URLSearchParams();
-
-            Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined && value !== null) {
-                    queryParams.append(key, value.toString());
-                }
-            });
-
-            const response = await fetch(`${API_BASE_URL}/tasks/all?${queryParams}`, {
-                method: 'GET',
-                headers: this.getAuthHeaders(),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch all tasks: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('All tasks error:', error);
-            throw error;
-        }
-    }
-
-    /**
      * Create a new task from dashboard
      */
     async createTask(taskData: ToDoTaskInsertDTO): Promise<ToDoTaskReadOnlyDTO> {
@@ -331,11 +427,31 @@ class DashboardService {
      * Mark task as completed
      */
     async completeTask(taskId: number): Promise<ToDoTaskReadOnlyDTO> {
-        return this.updateTask({
-            id: taskId,
-            status: 'COMPLETED'
-        });
+        try {
+            const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    ...this.getAuthHeaders(),
+                    'Content-Type' : 'application/json'
+                },
+                body : JSON.stringify({
+                    taskId : taskId,
+                    status : 'COMPLETED'
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to complete task: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Completing task error:', error);
+            throw error;
+        }
     }
+
 
     // =============================================================================
     // ALERTS

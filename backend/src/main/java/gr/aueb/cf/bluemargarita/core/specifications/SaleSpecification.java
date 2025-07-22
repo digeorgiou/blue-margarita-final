@@ -111,7 +111,7 @@ public class SaleSpecification {
     }
 
     /**
-     * Filter sales by product name or code
+     * Filter sales by product name or productCode
      * Joins with SaleProduct and Product entities
      */
     public static Specification<Sale> hasProductNameOrCode(String productNameOrCode) {
@@ -128,7 +128,7 @@ public class SaleSpecification {
 
             return criteriaBuilder.or(
                     criteriaBuilder.like(criteriaBuilder.upper(productJoin.get("name")), searchTerm),
-                    criteriaBuilder.like(criteriaBuilder.upper(productJoin.get("code")), searchTerm)
+                    criteriaBuilder.like(criteriaBuilder.upper(productJoin.get("productCode")), searchTerm)
             );
         };
     }

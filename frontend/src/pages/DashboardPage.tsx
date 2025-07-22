@@ -68,6 +68,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         }
     };
 
+    // Navigation handlers for "View All" buttons
+    const handleViewAllLowStock = () => {
+        onNavigate('low-stock-products');
+    };
+
+    const handleViewAllMispriced = () => {
+        onNavigate('mispriced-products');
+    };
+
+    const handleViewAllTasks = () => {
+        onNavigate('all-tasks');
+    };
+
     // Quick action handlers
     const handleRecordSale = () => {
         onNavigate('record-sale');
@@ -232,7 +245,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                     <ListItem
                                         key={product.productId}
                                         primaryText={product.productName}
-                                        secondaryText={`Code: ${product.code} | Sold: ${product.totalItemsSold} units`}
+                                        secondaryText={`Code: ${product.productCode} | Sold: ${product.totalItemsSold} units`}
                                         rightText={formatMoney(product.totalRevenue)}
                                         rightTextColor="green"
                                     />
@@ -313,6 +326,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 ➕ Add New Task
                             </Button>
                         </div>
+                        {(data.dashboardTasks.overdueAndTodayTasks.length > 0 || data.dashboardTasks.hasMoreTasks) && (
+                            <Button variant="secondary" size="sm" onClick={handleViewAllTasks}>
+                                📋 View All Tasks
+                            </Button>
+                        )}
                     </Card>
 
                     {/* Low Stock Alert Card */}
@@ -336,6 +354,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 ))
                             )}
                         </div>
+                        {data.lowStockProducts.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                                <Button variant="secondary" size="sm" onClick={handleViewAllLowStock}>
+                                    📋 View All Low Stock Products
+                                </Button>
+                            </div>
+                        )}
                     </Card>
 
                     {/* Mispriced Products Alert Card */}
@@ -393,6 +418,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 })
                             )}
                         </div>
+                        {data.mispricedProducts.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                                <Button variant="secondary" size="sm" onClick={handleViewAllMispriced}>
+                                    💸 View All Mispriced Products
+                                </Button>
+                            </div>
+                        )}
                     </Card>
 
                     {/* This Week Tasks Card */}

@@ -113,7 +113,7 @@ public class RecordSaleRestController {
 
     @Operation(
             summary = "Search products for autocomplete",
-            description = "Searches products for autocomplete functionality when adding items to sale cart. Returns products matching name or code.",
+            description = "Searches products for autocomplete functionality when adding items to sale cart. Returns products matching name or productCode.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -128,7 +128,7 @@ public class RecordSaleRestController {
     @GetMapping("/products/search")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<ProductSearchResultDTO>> searchProducts(
-            @Parameter(description = "Search term (product name or code)", required = true)
+            @Parameter(description = "Search term (product name or productCode)", required = true)
             @RequestParam String searchTerm) {
 
         List<ProductSearchResultDTO> products = productService.searchProductsForAutocomplete(searchTerm);

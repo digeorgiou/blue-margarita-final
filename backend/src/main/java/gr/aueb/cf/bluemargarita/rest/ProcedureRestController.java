@@ -252,7 +252,7 @@ public class ProcedureRestController {
     @Operation(
             summary = "Get products using procedure with filtering",
             description = "Retrieves paginated and filtered list of products using specific procedure. " +
-                    "Supports filtering by product name/code, category, material, price range, stock levels, and active status. " +
+                    "Supports filtering by product name/productCode, category, material, price range, stock levels, and active status. " +
                     "Used for procedure detail view product listing with advanced filtering capabilities.",
             responses = {
                     @ApiResponse(
@@ -274,7 +274,7 @@ public class ProcedureRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Paginated<ProductUsageDTO>> getAllProductsUsingProcedure(
             @PathVariable Long id,
-            @Parameter(description = "Product name or code search") @RequestParam(required = false) String nameOrCode,
+            @Parameter(description = "Product name or productCode search") @RequestParam(required = false) String nameOrCode,
             @Parameter(description = "Category filter") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "Material name search (products that use BOTH this procedure AND contain the material)") @RequestParam(required = false) String materialName,
             @Parameter(description = "Material ID filter (products that use BOTH this procedure AND the specified material)") @RequestParam(required = false) Long materialId,

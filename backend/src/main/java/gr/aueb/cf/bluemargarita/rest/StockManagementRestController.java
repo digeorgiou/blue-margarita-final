@@ -84,7 +84,7 @@ public class StockManagementRestController {
     @GetMapping("/products")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Paginated<StockManagementDTO>> getProductsForStockManagement(
-            @Parameter(description = "Product name or code filter") @RequestParam(required = false) String nameOrCode,
+            @Parameter(description = "Product name or productCode filter") @RequestParam(required = false) String nameOrCode,
             @Parameter(description = "Category ID filter") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "Low stock filter") @RequestParam(required = false) Boolean lowStock,
             @Parameter(description = "Minimum stock filter") @RequestParam(required = false) Integer minStock,
@@ -195,7 +195,7 @@ public class StockManagementRestController {
 
     @Operation(
             summary = "Search products for stock updates",
-            description = "Searches products for autocomplete functionality when selecting products for stock updates. Returns products matching name or code.",
+            description = "Searches products for autocomplete functionality when selecting products for stock updates. Returns products matching name or productCode.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -210,7 +210,7 @@ public class StockManagementRestController {
     @GetMapping("/products/search")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<ProductSearchResultDTO>> searchProducts(
-            @Parameter(description = "Search term (product name or code)", required = true)
+            @Parameter(description = "Search term (product name or productCode)", required = true)
             @RequestParam String searchTerm) {
 
         List<ProductSearchResultDTO> products = productService.searchProductsForAutocomplete(searchTerm);
