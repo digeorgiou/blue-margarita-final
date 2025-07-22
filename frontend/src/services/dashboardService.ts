@@ -1,16 +1,30 @@
 // Dashboard service to communicate with Spring Boot Dashboard API
 import { authService } from './authService';
-import {DashboardOverviewDTO, SaleListItemDTO, PurchaseReadOnlyDTO, ProductListItemDTO , ToDoTaskReadOnlyDTO,
-DashboardToDoTasksDTO, MispricedProductAlertDTO, StockAlertDTO, ToDoTaskInsertDTO,ToDoTaskUpdateDTO ,
-Paginated} from "../types/api/dashboardInterface.ts";
+import {
+    DashboardOverviewDTO, SaleListItemDTO, PurchaseReadOnlyDTO, ProductListItemDTO, ToDoTaskReadOnlyDTO,
+    DashboardToDoTasksDTO, MispricedProductAlertDTO, StockAlertDTO, ToDoTaskInsertDTO, ToDoTaskUpdateDTO,
+    Paginated, SalesSummaryDTO
+} from "../types/api/dashboardInterface.ts";
 
 const API_BASE_URL = '/api/dashboard';
 
 
 
 class DashboardService {
-     private getAuthHeaders(): HeadersInit {
-        return authService.getAuthHeaders();
+    private getAuthHeaders(): HeadersInit {
+        const headers = authService.getAuthHeaders();
+        console.log('Auth headers being sent:', headers); // Add debug logging
+        return headers;
+    }
+    // Helper method to handle auth errors and redirect to login if needed
+    private handleAuthError(response: Response): void {
+        if (response.status === 401) {
+            console.error('Authentication failed - token may be expired or invalid');
+            // Clear the token and redirect to login
+            authService.logout();
+            // Optionally trigger a page reload to go back to login
+            window.location.reload();
+        }
     }
 
     // =============================================================================
@@ -22,12 +36,23 @@ class DashboardService {
      */
     async getDashboardOverview(): Promise<DashboardOverviewDTO> {
         try {
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const token = authService.getToken();
+            if (!token) {
+                throw new Error('No authentication token available');
+            }
+
             const response = await fetch(`${API_BASE_URL}/overview`, {
                 method: 'GET',
                 headers: this.getAuthHeaders(),
             });
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    this.handleAuthError(response);
+                    throw new Error('Authentication failed - please log in again');
+                }
                 throw new Error(`Failed to fetch dashboard overview: ${response.status}`);
             }
 
@@ -45,7 +70,7 @@ class DashboardService {
     /**
      * Get sales summary data
      */
-    async getSalesSummary(): Promise<{ weeklySales: number; monthlySales: number }> {
+    async getSalesSummary(): Promise<{ weeklySales: SalesSummaryDTO; monthlySales: SalesSummaryDTO }> {
         try {
             const response = await fetch(`${API_BASE_URL}/sales/summary`, {
                 method: 'GET',

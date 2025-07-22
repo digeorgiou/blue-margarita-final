@@ -5,14 +5,18 @@ const API_BASE_URL = '/api';
 
 class AuthService {
     private getStoredToken(): string | null {
-        return localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken');
+        console.log('Getting stored token:', token ? 'exists' : 'null');
+        return token;
     }
 
     private setStoredToken(token: string): void {
+        console.log('Setting token in localStorage');
         localStorage.setItem('authToken', token);
     }
 
     private removeStoredToken(): void {
+        console.log('Removing token from localStorage');
         localStorage.removeItem('authToken');
     }
 
@@ -29,6 +33,9 @@ class AuthService {
         const authToken = token || this.getStoredToken();
         if (authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
+            console.log('Auth headers with token:', { ...headers, Authorization: 'Bearer [TOKEN]' });
+        } else {
+            console.log('Auth headers without token:', headers);
         }
 
         return headers;
@@ -37,11 +44,15 @@ class AuthService {
     // Authenticate user and get JWT token
     async authenticate(credentials: AuthenticationRequest): Promise<AuthenticationResponse> {
         try {
+            console.log('Attempting authentication for user:', credentials.username);
+
             const response = await fetch(`${API_BASE_URL}/auth/authenticate`, {
                 method: 'POST',
                 headers: this.getAuthHeaders(),
                 body: JSON.stringify(credentials),
             });
+
+            console.log('Authentication response status:', response.status);
 
             if (!response.ok) {
                 if (response.status === 401) {
@@ -51,7 +62,11 @@ class AuthService {
             }
 
             const data: AuthenticationResponse = await response.json();
+            console.log('Authentication successful, received token for user:', data.username);
+
             this.setStoredToken(data.token);
+            console.log('Token stored successfully');
+
             return data;
         } catch (error) {
             console.error('Authentication error:', error);
@@ -62,12 +77,30 @@ class AuthService {
     // Validate current token
     async validateToken(): Promise<boolean> {
         try {
+            const token = this.getStoredToken();
+            if (!token) {
+                console.log('No token to validate');
+                return false;
+            }
+
+            console.log('Validating token with backend...');
+
             const response = await fetch(`${API_BASE_URL}/auth/validate`, {
                 method: 'GET',
                 headers: this.getAuthHeaders(),
             });
 
-            return response.ok;
+            console.log('Token validation response status:', response.status);
+
+            const isValid = response.ok;
+            console.log('Token validation result:', isValid);
+
+            if (!isValid) {
+                console.log('Token validation failed, clearing token');
+                this.removeStoredToken();
+            }
+
+            return isValid;
         } catch (error) {
             console.error('Token validation error:', error);
             return false;
@@ -77,22 +110,29 @@ class AuthService {
     // Logout user
     async logout(): Promise<void> {
         try {
+            console.log('Initiating logout...');
+
             // Call logout endpoint
             await fetch(`${API_BASE_URL}/auth/logout`, {
                 method: 'POST',
                 headers: this.getAuthHeaders(),
             });
+
+            console.log('Logout endpoint called successfully');
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
             // Always remove token from storage
             this.removeStoredToken();
+            console.log('Logout completed, token removed');
         }
     }
 
     // Check if user is authenticated
     isAuthenticated(): boolean {
-        return this.getStoredToken() !== null;
+        const hasToken = this.getStoredToken() !== null;
+        console.log('Is authenticated check:', hasToken);
+        return hasToken;
     }
 }
 
