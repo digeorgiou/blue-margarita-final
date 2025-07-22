@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardService } from '../services/dashboardService';
-import {DashboardOverviewDTO} from "../types/api/dashboardInterface.ts";
-import {Button, Card, ListItem, LoadingSpinner, StatCard, TaskItem, TaskStat} from '../components/ui'
+import {
+    DashboardOverviewDTO,
+    ToDoTaskReadOnlyDTO,
+    getPaymentMethodLabel,
+    getPricingIssueTypeLabel
+} from "../types/api/dashboardInterface.ts";
+import { Button, Card, ListItem, LoadingSpinner, StatCard, TaskItem, TaskStat, QuickActions } from '../components/ui';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+    onNavigate: (page: string) => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     // State management
     const [data, setData] = useState<DashboardOverviewDTO | null>(null);
     const [loading, setLoading] = useState(true);
@@ -11,13 +20,25 @@ const Dashboard: React.FC = () => {
 
     // Function to format money
     const formatMoney = (amount: number): string => {
-        return `€${amount}`;
+        return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
     // Function to format dates
     const formatDate = (dateString: string): string => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB');
+        return date.toLocaleDateString('el-GR');
+    };
+
+    // Function to format task date with status
+    const formatTaskDate = (task: ToDoTaskReadOnlyDTO): string => {
+        const date = formatDate(task.date);
+        if (task.daysFromToday < 0) {
+            return `${date} (${Math.abs(task.daysFromToday)} days overdue)`;
+        } else if (task.daysFromToday === 0) {
+            return `${date} (Today)`;
+        } else {
+            return `${date} (in ${task.daysFromToday} days)`;
+        }
     };
 
     // Function to load dashboard data
@@ -47,6 +68,19 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    // Quick action handlers
+    const handleRecordSale = () => {
+        onNavigate('record-sale');
+    };
+
+    const handleRecordPurchase = () => {
+        onNavigate('record-purchase');
+    };
+
+    const handleStockManagement = () => {
+        onNavigate('stock-management');
+    };
+
     // Load data when component mounts
     useEffect(() => {
         loadDashboard();
@@ -55,7 +89,7 @@ const Dashboard: React.FC = () => {
     // Loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-100 p-4">
+            <div className="min-h-screen p-4">
                 <LoadingSpinner />
             </div>
         );
@@ -64,7 +98,7 @@ const Dashboard: React.FC = () => {
     // Error state
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-100 p-4">
+            <div className="min-h-screen p-4">
                 <div className="max-w-2xl mx-auto">
                     <div className="bg-white rounded-xl shadow-md p-8 text-center">
                         <div className="text-6xl mb-4">😵</div>
@@ -82,7 +116,7 @@ const Dashboard: React.FC = () => {
     // No data state
     if (!data) {
         return (
-            <div className="min-h-screen bg-gray-100 p-4">
+            <div className="min-h-screen p-4">
                 <div className="max-w-2xl mx-auto">
                     <div className="bg-white rounded-xl shadow-md p-8 text-center">
                         <div className="text-6xl mb-4">📊</div>
@@ -98,21 +132,31 @@ const Dashboard: React.FC = () => {
 
     // Main dashboard render
     return (
-        <div className="min-h-screen bg-gray-100 p-4">
+        <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto">
 
                 {/* Dashboard Header */}
-                <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8 border border-white/20">
                     <div className="flex justify-between items-center">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">Blue Margarita Dashboard</h1>
-                            <p className="text-gray-600 mt-1">Welcome back! Here's what's happening today.</p>
+                            <p className="text-gray-700 mt-1">Welcome back! Here's what's happening today.</p>
                         </div>
-                        <Button onClick={loadDashboard} variant="primary">
+                        <button
+                            onClick={loadDashboard}
+                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
+                        >
                             🔄 Refresh
-                        </Button>
+                        </button>
                     </div>
                 </div>
+
+                {/* THIS IS WHERE QuickActions IS USED! */}
+                <QuickActions
+                    onRecordSale={handleRecordSale}
+                    onRecordPurchase={handleRecordPurchase}
+                    onStockManagement={handleStockManagement}
+                />
 
                 {/* Dashboard Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -122,15 +166,35 @@ const Dashboard: React.FC = () => {
                         <div className="grid grid-cols-2 gap-6">
                             <StatCard
                                 label="This Week"
-                                value={formatMoney(data.weeklySales.totalRevenue)}  // Changed
+                                value={formatMoney(data.weeklySales.totalRevenue)}
                                 isBig={true}
                                 color="green"
                             />
                             <StatCard
                                 label="This Month"
-                                value={formatMoney(data.monthlySales.totalRevenue)} // Changed
+                                value={formatMoney(data.monthlySales.totalRevenue)}
                                 color="blue"
                             />
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span className="text-gray-600">Weekly Sales: </span>
+                                    <span className="font-semibold">{data.weeklySales.totalSalesCount}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-600">Monthly Sales: </span>
+                                    <span className="font-semibold">{data.monthlySales.totalSalesCount}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-600">Avg Weekly: </span>
+                                    <span className="font-semibold">{formatMoney(data.weeklySales.averageOrderValue)}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-600">Avg Monthly: </span>
+                                    <span className="font-semibold">{formatMoney(data.monthlySales.averageOrderValue)}</span>
+                                </div>
+                            </div>
                         </div>
                     </Card>
 
@@ -138,20 +202,42 @@ const Dashboard: React.FC = () => {
                     <Card title="Tasks Overview" icon="📋" className="lg:col-span-1">
                         <div className="grid grid-cols-3 gap-3">
                             <TaskStat
-                                number={data.dashboardTasks.summary.overdueTasks}
+                                number={data.dashboardTasks.summary.overdueCount}
                                 label="Overdue"
                                 color="red"
                             />
                             <TaskStat
-                                number={data.dashboardTasks.summary.todayTasks}
+                                number={data.dashboardTasks.summary.todayCount}
                                 label="Today"
                                 color="yellow"
                             />
                             <TaskStat
-                                number={data.dashboardTasks.summary.totalPendingTasks}
+                                number={data.dashboardTasks.summary.totalPendingCount}
                                 label="Total"
                                 color="blue"
                             />
+                        </div>
+                    </Card>
+
+                    {/* Top Products This Month */}
+                    <Card title="Top Products This Month" icon="🏆" className="lg:col-span-1">
+                        <div className="space-y-3">
+                            {data.topProductsThisMonth.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <div className="text-4xl mb-2">📦</div>
+                                    <p className="text-gray-500 italic">No sales data available</p>
+                                </div>
+                            ) : (
+                                data.topProductsThisMonth.slice(0, 5).map((product) => (
+                                    <ListItem
+                                        key={product.productId}
+                                        primaryText={product.productName}
+                                        secondaryText={`Code: ${product.code} | Sold: ${product.totalItemsSold} units`}
+                                        rightText={formatMoney(product.totalRevenue)}
+                                        rightTextColor="green"
+                                    />
+                                ))
+                            )}
                         </div>
                     </Card>
 
@@ -168,8 +254,8 @@ const Dashboard: React.FC = () => {
                                     <ListItem
                                         key={sale.id}
                                         primaryText={sale.customerName}
-                                        secondaryText={formatDate(sale.saleDate)}
-                                        rightText={formatMoney(sale.totalAmount)}
+                                        secondaryText={`${formatDate(sale.saleDate)} | ${getPaymentMethodLabel(sale.paymentMethod)} | ${sale.productCount} items`}
+                                        rightText={formatMoney(sale.grandTotal)}
                                         rightTextColor="green"
                                     />
                                 ))
@@ -190,7 +276,7 @@ const Dashboard: React.FC = () => {
                                     <ListItem
                                         key={purchase.id}
                                         primaryText={purchase.supplierName}
-                                        secondaryText={formatDate(purchase.purchaseDate)}
+                                        secondaryText={`${formatDate(purchase.purchaseDate)} | ${purchase.itemCount} items`}
                                         rightText={formatMoney(purchase.totalCost)}
                                         rightTextColor="red"
                                     />
@@ -211,7 +297,12 @@ const Dashboard: React.FC = () => {
                                 data.dashboardTasks.overdueAndTodayTasks.map((task) => (
                                     <TaskItem
                                         key={task.id}
-                                        task={task}
+                                        task={{
+                                            id: task.id,
+                                            description: task.description,
+                                            date: formatTaskDate(task),
+                                            status: task.status
+                                        }}
                                         onComplete={completeTask}
                                     />
                                 ))
@@ -235,16 +326,102 @@ const Dashboard: React.FC = () => {
                             ) : (
                                 data.lowStockProducts.map((product) => (
                                     <ListItem
-                                        key={product.id}
-                                        primaryText={product.name}
-                                        secondaryText={`Stock: ${product.currentStock}`}
-                                        rightText="LOW STOCK"
+                                        key={product.productId}
+                                        primaryText={product.productName}
+                                        secondaryText={`Code: ${product.productCode} | Stock: ${product.currentStock} | Min: ${product.lowStockThreshold}`}
+                                        rightText={product.stockStatus}
                                         rightTextColor="red"
                                         isWarning={true}
                                     />
                                 ))
                             )}
                         </div>
+                    </Card>
+
+                    {/* Mispriced Products Alert Card */}
+                    <Card title="Mispriced Products" icon="💸" className="lg:col-span-2 xl:col-span-1">
+                        <div className="space-y-3">
+                            {data.mispricedProducts.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <div className="text-4xl mb-2">💰</div>
+                                    <p className="text-gray-500 italic">All prices are optimal</p>
+                                </div>
+                            ) : (
+                                data.mispricedProducts.map((product) => {
+                                    // Determine which price to show based on issue type
+                                    const showRetailPrice = product.issueType === 'RETAIL_UNDERPRICED' || product.issueType === 'BOTH_UNDERPRICED';
+                                    const showWholesalePrice = product.issueType === 'WHOLESALE_UNDERPRICED' || product.issueType === 'BOTH_UNDERPRICED';
+
+                                    let priceDetails = '';
+                                    if (showRetailPrice && showWholesalePrice) {
+                                        priceDetails = `Retail: ${formatMoney(product.suggestedRetailPrice)} → ${formatMoney(product.finalRetailPrice)} | Wholesale: ${formatMoney(product.suggestedWholesalePrice)} → ${formatMoney(product.finalWholesalePrice)}`;
+                                    } else if (showRetailPrice) {
+                                        priceDetails = `Retail: ${formatMoney(product.suggestedRetailPrice)} → ${formatMoney(product.finalRetailPrice)}`;
+                                    } else if (showWholesalePrice) {
+                                        priceDetails = `Wholesale: ${formatMoney(product.suggestedWholesalePrice)} → ${formatMoney(product.finalWholesalePrice)}`;
+                                    }
+
+                                    return (
+                                        <div
+                                            key={product.productId}
+                                            className="p-3 rounded-lg border-l-4 bg-yellow-50 border-yellow-400"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <p className="font-semibold text-gray-900">{product.productName}</p>
+                                                    <p className="text-sm text-gray-600 mb-1">
+                                                        {product.categoryName} | Code: {product.productCode}
+                                                    </p>
+                                                    <p className="text-sm text-gray-700">
+                                                        <span className="font-medium">{getPricingIssueTypeLabel(product.issueType)}</span>
+                                                    </p>
+                                                    <p className="text-xs text-gray-600 mt-1">
+                                                        {priceDetails}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-bold text-red-600">
+                                                        {product.priceDifferencePercentage.toFixed(1)}%
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        underpriced
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </Card>
+
+                    {/* This Week Tasks Card */}
+                    <Card title="This Week Tasks" icon="📅" className="lg:col-span-2 xl:col-span-1">
+                        <div className="space-y-3">
+                            {data.dashboardTasks.thisWeekTasks.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <div className="text-4xl mb-2">🌟</div>
+                                    <p className="text-gray-500 italic">No tasks scheduled this week</p>
+                                </div>
+                            ) : (
+                                data.dashboardTasks.thisWeekTasks.slice(0, 5).map((task) => (
+                                    <ListItem
+                                        key={task.id}
+                                        primaryText={task.description}
+                                        secondaryText={formatTaskDate(task)}
+                                        rightText={task.statusLabel}
+                                        rightTextColor={task.status === 'COMPLETED' ? 'green' : 'blue'}
+                                    />
+                                ))
+                            )}
+                        </div>
+                        {data.dashboardTasks.hasMoreTasks && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                                <Button variant="secondary" size="sm">
+                                    📋 View All Tasks
+                                </Button>
+                            </div>
+                        )}
                     </Card>
 
                 </div>

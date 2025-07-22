@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Login from './pages/LoginPage';
 import { authService } from './services/authService';
-import LoadingSpinner from "./components/ui/LoadingSpinner.tsx";
+import { LoadingSpinner } from "./components/ui";
+import Layout from "./pages/Layout.tsx"
 import Dashboard from "./pages/DashboardPage.tsx";
 
 type AppState = 'loading' | 'login' | 'dashboard';
@@ -11,44 +12,72 @@ const App: React.FC = () => {
     const [appState, setAppState] = useState<AppState>('loading');
     const [user, setUser] = useState<string | null>(null);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [currentPage, setCurrentPage] = useState('dashboard');
+
+    // Navigation handler
+    const handleNavigation = (page: string) => {
+        setCurrentPage(page);
+        console.log(`Navigating to: ${page}`);
+    };
+
+    // Render page content based on currentPage
+    const renderPageContent = () => {
+        switch (currentPage) {
+            case 'dashboard':
+                return <Dashboard onNavigate={handleNavigation} />;
+            case 'manage-sales':
+                return <div className="p-4"><h1 className="text-2xl text-white">Manage Sales - Coming Soon</h1></div>;
+            case 'manage-products':
+                return <div className="p-4"><h1 className="text-2xl text-white">Manage Products - Coming Soon</h1></div>;
+            case 'customers':
+                return <div className="p-4"><h1 className="text-2xl text-white">Customers - Coming Soon</h1></div>;
+            case 'materials':
+                return <div className="p-4"><h1 className="text-2xl text-white">Materials - Coming Soon</h1></div>;
+            case 'purchases':
+                return <div className="p-4"><h1 className="text-2xl text-white">Purchases - Coming Soon</h1></div>;
+            case 'locations':
+                return <div className="p-4"><h1 className="text-2xl text-white">Locations - Coming Soon</h1></div>;
+            case 'record-sale':
+                return <div className="p-4"><h1 className="text-2xl text-white">Record Sale - Coming Soon</h1></div>;
+            case 'record-purchase':
+                return <div className="p-4"><h1 className="text-2xl text-white">Record Purchase - Coming Soon</h1></div>;
+            case 'stock-management':
+                return <div className="p-4"><h1 className="text-2xl text-white">Stock Management - Coming Soon</h1></div>;
+            default:
+                return <Dashboard onNavigate={handleNavigation} />;
+        }
+    };
 
     // Check if user is already logged in when app starts
     useEffect(() => {
-        // Only run this check on initial app load, not after login
         if (!isInitialLoad) return;
 
         const checkAuthStatus = async () => {
             try {
                 console.log('Checking initial auth status...');
 
-                // Check if there's a stored token
                 const token = authService.getToken();
                 console.log('Stored token exists:', !!token);
 
                 if (token) {
-                    // Validate the token with the server
                     console.log('Validating token...');
                     const isValid = await authService.validateToken();
                     console.log('Token validation result:', isValid);
 
                     if (isValid) {
-                        // Token is valid, user is logged in
                         setUser('Current User');
                         setAppState('dashboard');
                     } else {
-                        // Token is invalid, redirect to login
                         console.log('Token invalid, clearing...');
                         await authService.logout();
                         setAppState('login');
                     }
                 } else {
-                    // No token found, redirect to login
                     console.log('No token found, going to login');
                     setAppState('login');
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                // On error, redirect to login
                 setAppState('login');
             } finally {
                 setIsInitialLoad(false);
@@ -63,7 +92,6 @@ const App: React.FC = () => {
         console.log('Login successful, setting dashboard state');
         setUser('Current User');
         setAppState('dashboard');
-        // Don't trigger auth check again since we just logged in successfully
     };
 
     // Handle logout
@@ -72,10 +100,9 @@ const App: React.FC = () => {
             await authService.logout();
             setUser(null);
             setAppState('login');
-            setIsInitialLoad(true); // Reset for next login
+            setIsInitialLoad(true);
         } catch (error) {
             console.error('Logout failed:', error);
-            // Even if logout fails, clear local state
             setUser(null);
             setAppState('login');
             setIsInitialLoad(true);
@@ -85,10 +112,10 @@ const App: React.FC = () => {
     // Show loading spinner while checking auth status
     if (appState === 'loading') {
         return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <div className="bg-gradient-to-r from-[#20043d] via-[#280a48] to-[#ecd4ff] min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <LoadingSpinner />
-                    <p className="mt-4 text-gray-600">Please wait while we check your session</p>
+                    <p className="mt-4 text-white">Please wait while we check your session</p>
                 </div>
             </div>
         );
@@ -96,34 +123,24 @@ const App: React.FC = () => {
 
     // Show login page
     if (appState === 'login') {
-        return <Login onLoginSuccess={handleLoginSuccess} />;
+        return (
+            <div className="bg-gradient-to-r from-[#20043d] via-[#280a48] to-[#ecd4ff] min-h-screen">
+                <Login onLoginSuccess={handleLoginSuccess} />
+            </div>
+        );
     }
 
-    // Show dashboard (with logout capability)
+    // Show dashboard with Layout (THIS IS THE KEY CHANGE!)
     return (
-        <div className="min-h-screen">
-            {/* Simple header with logout */}
-            <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center">
-                        <h1 className="text-xl font-semibold text-gray-900">Blue Margarita</h1>
-                        {user && (
-                            <span className="ml-4 text-sm text-gray-600">Welcome, {user}</span>
-                        )}
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                    >
-                        Sign Out
-                    </button>
-                </div>
-            </header>
-
-            {/* Dashboard content */}
-            <main>
-                <Dashboard />
-            </main>
+        <div className="bg-gradient-to-r from-blue-900 to-purple-200 min-h-screen">
+            <Layout
+                currentPage={currentPage}
+                onNavigate={handleNavigation}
+                user={user}
+                onLogout={handleLogout}
+            >
+                {renderPageContent()}
+            </Layout>
         </div>
     );
 };

@@ -6,10 +6,16 @@ import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
 import gr.aueb.cf.bluemargarita.core.filters.ToDoTaskFilters;
+import gr.aueb.cf.bluemargarita.dto.analytics.DashboardOverviewDTO;
 import gr.aueb.cf.bluemargarita.dto.product.MispricedProductAlertDTO;
 import gr.aueb.cf.bluemargarita.dto.product.ProductListItemDTO;
+import gr.aueb.cf.bluemargarita.dto.product.ProductStatsSummaryDTO;
+import gr.aueb.cf.bluemargarita.dto.purchase.PurchaseReadOnlyDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.SaleReadOnlyDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.SalesSummaryDTO;
 import gr.aueb.cf.bluemargarita.dto.stock.StockAlertDTO;
 import gr.aueb.cf.bluemargarita.dto.task.*;
+import gr.aueb.cf.bluemargarita.model.Purchase;
 import gr.aueb.cf.bluemargarita.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,6 +38,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -69,31 +76,41 @@ public class DashboardRestController {
     )
     @GetMapping("/overview")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Map<String, Object>> getDashboardOverview() {
-        Map<String, Object> overview = new HashMap<>();
+    public ResponseEntity<DashboardOverviewDTO> getDashboardOverview() {
 
         // Sales summaries
-        overview.put("weeklySales", saleService.getWeeklySalesSummary());
-        overview.put("monthlySales", saleService.getMonthlySalesSummary());
+        SalesSummaryDTO weeklySales = saleService.getWeeklySalesSummary();
+        SalesSummaryDTO monthlySales = saleService.getMonthlySalesSummary();
+
 
         // Recent activity (5 each)
-        overview.put("recentSales", saleService.getRecentSales(5));
-        overview.put("recentPurchases", purchaseService.getRecentPurchases(5));
+        List<SaleReadOnlyDTO> recentSales = saleService.getRecentSales(5);
+        List<PurchaseReadOnlyDTO> recentPurchases = purchaseService.getRecentPurchases(5);
 
         // Inventory alerts (5 lowest stock)
-        overview.put("lowStockProducts", stockManagementService.getLowStockProducts(5));
+        List<StockAlertDTO> lowStockProducts = stockManagementService.getLowStockProducts(5);
 
         // Top products for this month (5 best performers)
         LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
         LocalDate monthEnd = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
-        overview.put("topProductsThisMonth", productService.getTopProductsByMonthlyRevenue(monthStart, monthEnd, 5));
+        List<ProductStatsSummaryDTO> topProductsThisMonth = productService.getTopProductsByMonthlyRevenue(monthStart, monthEnd, 5);
 
         // Tasks (organized: overdue/today + this week)
-        overview.put("dashboardTasks", toDoTaskService.getDashboardTasks(5));
+        DashboardToDoTasksDTO dashboardTasks = toDoTaskService.getDashboardTasks(5);
 
         // Pricing alerts - products where selling price is significantly different from suggested price
-        overview.put("mispricedProducts", productService.getMispricedProductsAlert(BigDecimal.valueOf(20), 5));
+        List<MispricedProductAlertDTO> mispricedProducts = productService.getMispricedProductsAlert(BigDecimal.valueOf(20), 5);
 
+        DashboardOverviewDTO overview = new DashboardOverviewDTO(
+                weeklySales,
+                monthlySales,
+                recentSales,
+                recentPurchases,
+                lowStockProducts,
+                topProductsThisMonth,
+                dashboardTasks,
+                mispricedProducts
+        );
         return new ResponseEntity<>(overview, HttpStatus.OK);
     }
 

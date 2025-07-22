@@ -512,7 +512,7 @@ public class Mapper {
 
         return new SaleReadOnlyDTO(
                 sale.getId(),
-                sale.getCustomer().getFullName(),
+                sale.getCustomer() != null ? sale.getCustomer().getFullName() : "Περαστικός",
                 sale.getLocation().getName(),
                 sale.getSaleDate(),
                 sale.getSuggestedTotalPrice(),

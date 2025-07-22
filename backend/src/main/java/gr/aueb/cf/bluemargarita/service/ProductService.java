@@ -1009,8 +1009,8 @@ public class ProductService implements IProductService{
             BigDecimal wholesaleDifference,
             BigDecimal threshold) {
 
-        boolean retailUnderpriced = retailDifference.compareTo(threshold.negate()) <= 0;
-        boolean wholesaleUnderpriced = wholesaleDifference.compareTo(threshold.negate()) <= 0;
+        boolean retailUnderpriced = retailDifference.compareTo(threshold) >= 0;
+        boolean wholesaleUnderpriced = wholesaleDifference.compareTo(threshold) >= 0;
 
         if (retailUnderpriced && wholesaleUnderpriced) {
             return PricingIssueType.BOTH_UNDERPRICED;

@@ -7,3 +7,6 @@ export { default as ListItem } from './ListItem';
 export { default as StatCard } from './StatCard';
 export { default as TaskItem } from './TaskItem';
 export { default as TaskStat } from './TaskStat';
+export { default as Sidebar } from './Sidebar';
+export { default as ActionButton } from './ActionButton';
+export { default as QuickActions } from './QuickActions';

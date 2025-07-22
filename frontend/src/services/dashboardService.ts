@@ -1,14 +1,21 @@
 // Dashboard service to communicate with Spring Boot Dashboard API
 import { authService } from './authService';
 import {
-    DashboardOverviewDTO, SaleListItemDTO, PurchaseReadOnlyDTO, ProductListItemDTO, ToDoTaskReadOnlyDTO,
-    DashboardToDoTasksDTO, MispricedProductAlertDTO, StockAlertDTO, ToDoTaskInsertDTO, ToDoTaskUpdateDTO,
-    Paginated, SalesSummaryDTO
+    DashboardOverviewDTO,
+    SaleReadOnlyDTO,
+    PurchaseReadOnlyDTO,
+    StockAlertDTO,
+    ProductStatsSummaryDTO,
+    ToDoTaskReadOnlyDTO,
+    DashboardToDoTasksDTO,
+    MispricedProductAlertDTO,
+    ToDoTaskInsertDTO,
+    ToDoTaskUpdateDTO,
+    Paginated,
+    SalesSummaryDTO
 } from "../types/api/dashboardInterface.ts";
 
 const API_BASE_URL = '/api/dashboard';
-
-
 
 class DashboardService {
     private getAuthHeaders(): HeadersInit {
@@ -16,15 +23,26 @@ class DashboardService {
         console.log('Auth headers being sent:', headers); // Add debug logging
         return headers;
     }
+
     // Helper method to handle auth errors and redirect to login if needed
     private handleAuthError(response: Response): void {
+        console.error('AUTH ERROR DETAILS:', {
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url,
+            headers: Object.fromEntries(response.headers.entries())
+        });
         if (response.status === 401) {
             console.error('Authentication failed - token may be expired or invalid');
-            // Clear the token and redirect to login
-            authService.logout();
-            // Optionally trigger a page reload to go back to login
-            window.location.reload();
+
+            // TEMPORARY: Comment out automatic logout for debugging
+            // authService.logout();
+            // window.location.reload();
+
+            // Instead, just throw an error so we can see it
+            throw new Error(`401 Unauthorized: ${response.statusText} - Check console for details`);
         }
+
     }
 
     // =============================================================================
@@ -91,7 +109,7 @@ class DashboardService {
     /**
      * Get recent sales for dashboard widget
      */
-    async getRecentSales(limit: number = 5): Promise<SaleListItemDTO[]> {
+    async getRecentSales(limit: number = 5): Promise<SaleReadOnlyDTO[]> {
         try {
             const response = await fetch(`${API_BASE_URL}/sales/recent?limit=${limit}`, {
                 method: 'GET',
@@ -133,7 +151,7 @@ class DashboardService {
     /**
      * Get low stock products alert
      */
-    async getLowStockProducts(limit: number = 5): Promise<ProductListItemDTO[]> {
+    async getLowStockProducts(limit: number = 5): Promise<StockAlertDTO[]> {
         try {
             const response = await fetch(`${API_BASE_URL}/products/low-stock?limit=${limit}`, {
                 method: 'GET',
@@ -154,7 +172,7 @@ class DashboardService {
     /**
      * Get top performing products this month
      */
-    async getTopProducts(limit: number = 5): Promise<ProductListItemDTO[]> {
+    async getTopProducts(limit: number = 5): Promise<ProductStatsSummaryDTO[]> {
         try {
             const response = await fetch(`${API_BASE_URL}/products/top?limit=${limit}`, {
                 method: 'GET',
