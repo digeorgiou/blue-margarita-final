@@ -119,6 +119,11 @@ class DashboardService {
             });
 
             if (!response.ok) {
+                // Add proper 401 error handling like other methods
+                if (response.status === 401) {
+                    this.handleAuthError(response);
+                    throw new Error('Authentication failed - please log in again');
+                }
                 throw new Error(`Failed to fetch all low stock products: ${response.status}`);
             }
 
@@ -128,6 +133,7 @@ class DashboardService {
             throw error;
         }
     }
+
 
     /**
      * Get all mispriced products with pagination and filtering

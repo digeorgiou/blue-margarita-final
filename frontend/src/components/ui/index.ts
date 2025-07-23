@@ -10,3 +10,4 @@ export { default as TaskStat } from './TaskStat';
 export { default as Sidebar } from './Sidebar';
 export { default as ActionButton } from './ActionButton';
 export { default as QuickActions } from './QuickActions';
+export { default as Logo } from './LogoImage.tsx';

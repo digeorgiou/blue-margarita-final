@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {dashboardService} from "../../../services/dashboardService.ts";
-import {Button, Card, LoadingSpinner, Input} from "../"
-import type { StockAlertDTO, Paginated} from "../../../types/api/dashboardInterface.ts";
+import { dashboardService } from "../../../services/dashboardService.ts";
+import { Button, Card, LoadingSpinner, Input } from "../"
+import type { StockAlertDTO, Paginated } from "../../../types/api/dashboardInterface.ts";
 
 interface LowStockProductsListProps {
     onNavigate: (page: string) => void;
@@ -13,10 +13,14 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
     const [error, setError] = useState<string | null>(null);
 
     // Filter states
-    const [searchTerm, setSearchTerm] = useState('');
+    const [nameOrCodeFilter, setNameOrCodeFilter] = useState('');
+    const [categoryIdFilter, setCategoryIdFilter] = useState('');
+    const [materialNameFilter, setMaterialNameFilter] = useState('');
+    const [minStockFilter, setMinStockFilter] = useState('');
+    const [maxStockFilter, setMaxStockFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize] = useState(20);
-    const [sortBy, setSortBy] = useState('currentStock');
+    const [sortBy, setSortBy] = useState('stock'); // Fixed: use 'stock' not 'currentStock'
     const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('ASC');
 
     const loadData = async () => {
@@ -25,7 +29,11 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
             setError(null);
 
             const params = {
-                nameOrCode: searchTerm || undefined,
+                nameOrCode: nameOrCodeFilter.trim() || undefined,
+                categoryId: categoryIdFilter ? Number(categoryIdFilter) : undefined,
+                materialName: materialNameFilter.trim() || undefined,
+                minStock: minStockFilter ? Number(minStockFilter) : undefined,
+                maxStock: maxStockFilter ? Number(maxStockFilter) : undefined,
                 page: currentPage,
                 pageSize: pageSize,
                 sortBy: sortBy,
@@ -33,12 +41,16 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                 isActive: true
             };
 
+            console.log('Sending params:', params); // Debug log
+
             // Create clean params object (remove empty filters)
             const cleanParams = Object.fromEntries(
                 Object.entries(params).filter(([, value]) =>
                     value !== '' && value !== null && value !== undefined
                 )
             );
+
+            console.log('Clean params:', cleanParams); // Debug log
 
             const response = await dashboardService.getAllLowStockProducts(cleanParams);
             setData(response);
@@ -51,20 +63,26 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
         }
     };
 
-    // Load data when dependencies change
+    // Load data when dependencies change (but not on filter input changes)
     useEffect(() => {
         loadData();
     }, [currentPage, sortBy, sortDirection]);
 
-    // Debounced search
+    // Debounced search for text filters
     useEffect(() => {
         const debounceTimer = setTimeout(() => {
-            setCurrentPage(0);
+            setCurrentPage(0); // Reset to first page when filtering
             loadData();
         }, 500);
 
         return () => clearTimeout(debounceTimer);
-    }, [searchTerm]);
+    }, [nameOrCodeFilter, materialNameFilter]);
+
+    // Immediate load for number/dropdown filters
+    useEffect(() => {
+        setCurrentPage(0);
+        loadData();
+    }, [categoryIdFilter, minStockFilter, maxStockFilter]);
 
     const handleSort = (field: string) => {
         if (sortBy === field) {
@@ -75,17 +93,13 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
         }
     };
 
-    const getStockStatusColor = (status: string) => {
-        switch (status.toUpperCase()) {
-            case 'CRITICAL':
-                return 'text-red-600 bg-red-100';
-            case 'LOW':
-                return 'text-yellow-600 bg-yellow-100';
-            case 'OUT_OF_STOCK':
-                return 'text-gray-600 bg-gray-100';
-            default:
-                return 'text-blue-600 bg-blue-100';
-        }
+    const handleClearFilters = () => {
+        setNameOrCodeFilter('');
+        setCategoryIdFilter('');
+        setMaterialNameFilter('');
+        setMinStockFilter('');
+        setMaxStockFilter('');
+        setCurrentPage(0);
     };
 
     const hasNext = data !== null ? data.currentPage + 1 < data.totalPages : false;
@@ -134,30 +148,91 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                         </Button>
                     </div>
 
-                    {/* Search */}
-                    <div className="flex gap-4 items-center">
-                        <div className="flex-1">
+                    {/* Filters */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Product Name/Code
+                            </label>
                             <Input
                                 type="text"
-                                placeholder="Search by product name or code..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                value={nameOrCodeFilter}
+                                onChange={(e) => setNameOrCodeFilter(e.target.value)}
+                                placeholder="Search by name or code..."
                             />
                         </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Category ID
+                            </label>
+                            <Input
+                                type="number"
+                                value={categoryIdFilter}
+                                onChange={(e) => setCategoryIdFilter(e.target.value)}
+                                placeholder="Category ID..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Material Name
+                            </label>
+                            <Input
+                                type="text"
+                                value={materialNameFilter}
+                                onChange={(e) => setMaterialNameFilter(e.target.value)}
+                                placeholder="Material name..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Min Stock
+                            </label>
+                            <Input
+                                type="number"
+                                value={minStockFilter}
+                                onChange={(e) => setMinStockFilter(e.target.value)}
+                                placeholder="Min stock..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Max Stock
+                            </label>
+                            <Input
+                                type="number"
+                                value={maxStockFilter}
+                                onChange={(e) => setMaxStockFilter(e.target.value)}
+                                placeholder="Max stock..."
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filter Actions */}
+                    <div className="flex gap-2 mt-4">
+                        <Button onClick={handleClearFilters} variant="secondary" size="sm">
+                            Clear Filters
+                        </Button>
+                        <Button onClick={loadData} variant="outline-secondary" size="sm">
+                            🔄 Refresh
+                        </Button>
                     </div>
                 </div>
 
                 {/* Results */}
-                <Card title={`Low Stock Products (${data?.totalElements || 0} total)`} icon="📋">
-                    {data?.data && data.data.length > 0 ? (
+                <Card title={`Low Stock Products (${data?.totalElements || 0} total)`} icon="⚠️">
+                    {data && data.data && data.data.length > 0 ? (
                         <>
                             {/* Table Header - Desktop */}
-                            <div className="hidden md:grid md:grid-cols-6 gap-4 p-3 bg-gray-100 rounded-lg font-semibold text-gray-700 mb-4">
+                            <div className="hidden md:grid md:grid-cols-5 gap-4 p-3 bg-gray-100 rounded-lg font-semibold text-gray-700 mb-4">
                                 <button
                                     onClick={() => handleSort('productName')}
                                     className="text-left hover:text-blue-600 transition-colors"
                                 >
-                                    Product {sortBy === 'productName' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                                    Product Name {sortBy === 'productName' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
                                 <button
                                     onClick={() => handleSort('productCode')}
@@ -165,45 +240,44 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                                 >
                                     Code {sortBy === 'productCode' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
-                                <span>Category</span>
                                 <button
-                                    onClick={() => handleSort('currentStock')}
+                                    onClick={() => handleSort('stock')}
                                     className="text-left hover:text-blue-600 transition-colors"
                                 >
-                                    Current Stock {sortBy === 'currentStock' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                                    Current Stock {sortBy === 'stock' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
-                                <span>Min Stock</span>
-                                <button
-                                    onClick={() => handleSort('stockStatus')}
-                                    className="text-left hover:text-blue-600 transition-colors"
-                                >
-                                    Status {sortBy === 'stockStatus' && (sortDirection === 'ASC' ? '↑' : '↓')}
-                                </button>
+                                <span>Threshold</span>
+                                <span>Status</span>
                             </div>
 
                             {/* Product List */}
                             <div className="space-y-3">
                                 {data.data.map((product) => (
-                                    <div key={product.productId} className="p-4 rounded-lg border-l-4 bg-yellow-50 border-yellow-400">
+                                    <div
+                                        key={product.productId}
+                                        className="p-4 rounded-lg border-l-4 border-red-400 bg-red-50 hover:bg-red-100 transition-colors"
+                                    >
                                         {/* Mobile Layout */}
                                         <div className="md:hidden">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div className="flex-1">
-                                                    <p className="font-semibold text-gray-900">{product.productName}</p>
+                                                    <h3 className="font-semibold text-gray-900">{product.productName}</h3>
                                                     <p className="text-sm text-gray-600">Code: {product.productCode}</p>
                                                 </div>
-                                                <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${getStockStatusColor(product.stockStatus)}`}>
-                                                    {product.stockStatus}
-                                                </span>
+                                                <div className="text-right">
+                                                    <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold uppercase">
+                                                        {product.stockStatus}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <div className="flex justify-between text-sm">
-                                                <span>Current: <strong>{product.currentStock}</strong></span>
-                                                <span>Min: <strong>{product.lowStockThreshold}</strong></span>
+                                                <span className="text-gray-600">Stock: <span className="font-semibold text-red-600">{product.currentStock}</span></span>
+                                                <span className="text-gray-600">Threshold: {product.lowStockThreshold}</span>
                                             </div>
                                         </div>
 
                                         {/* Desktop Layout */}
-                                        <div className="hidden md:grid md:grid-cols-6 gap-4 items-center">
+                                        <div className="hidden md:grid md:grid-cols-5 gap-4 items-center">
                                             <div>
                                                 <p className="font-semibold text-gray-900">{product.productName}</p>
                                             </div>
@@ -211,13 +285,13 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                                                 <p className="text-gray-700">{product.productCode}</p>
                                             </div>
                                             <div>
-                                                <p className="font-bold text-red-600">{product.currentStock}</p>
+                                                <span className="font-bold text-red-600">{product.currentStock}</span>
                                             </div>
                                             <div>
-                                                <p className="text-gray-700">{product.lowStockThreshold}</p>
+                                                <span className="text-gray-700">{product.lowStockThreshold}</span>
                                             </div>
                                             <div>
-                                                <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${getStockStatusColor(product.stockStatus)}`}>
+                                                <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold uppercase">
                                                     {product.stockStatus}
                                                 </span>
                                             </div>
@@ -228,9 +302,9 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
 
                             {/* Pagination */}
                             {data.totalPages > 1 && (
-                                <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
-                                    <div className="text-sm text-gray-600">
-                                        Showing {(currentPage * pageSize) + 1} to {Math.min((currentPage + 1) * pageSize, data.totalElements)} of {data.totalElements} products
+                                <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
+                                    <div className="text-sm text-gray-700">
+                                        Showing {(data.currentPage * data.pageSize) + 1} to {Math.min((data.currentPage + 1) * data.pageSize, data.totalElements)} of {data.totalElements} products
                                     </div>
                                     <div className="flex gap-2">
                                         <Button
@@ -259,8 +333,15 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                     ) : (
                         <div className="text-center py-12">
                             <div className="text-6xl mb-4">✅</div>
-                            <h3 className="text-xl font-semibold text-gray-800 mb-2">Great news!</h3>
-                            <p className="text-gray-600">All products are well stocked</p>
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">No low stock products found</h3>
+                            <p className="text-gray-600 mb-4">
+                                {nameOrCodeFilter || categoryIdFilter || materialNameFilter || minStockFilter || maxStockFilter
+                                    ? 'Try adjusting your filters to see more products.'
+                                    : 'All products are well stocked!'}
+                            </p>
+                            <Button onClick={handleClearFilters} variant="secondary">
+                                Clear Filters
+                            </Button>
                         </div>
                     )}
                 </Card>

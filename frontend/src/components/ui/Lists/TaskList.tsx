@@ -3,7 +3,7 @@ import { dashboardService } from "../../../services/dashboardService.ts";
 import { Button, Card, LoadingSpinner, Input } from "../"
 import TaskModal from "../modals/TaskModal.tsx";
 import type { ToDoTaskReadOnlyDTO, Paginated } from "../../../types/api/dashboardInterface.ts";
-import {Trash2, SquarePen, Check, RotateCcw} from 'lucide-react'
+import {Trash2, SquarePen, Check, RotateCcw, Plus, RefreshCw} from 'lucide-react'
 
 interface TaskListProps {
     onNavigate: (page: string) => void;
@@ -44,11 +44,23 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
         }
     };
 
+    const formatTaskStatus = (task : ToDoTaskReadOnlyDTO) : string => {
+        if(task.statusLabel === 'OVERDUE'){
+            return "Εκπρόθεσμο"
+        } else if (task.statusLabel === 'TODAY'){
+            return "Σήμερα"
+        } else if (task.statusLabel === 'THIS_WEEK'){
+            return "Εβδομάδας"
+        } else {
+            return "Μελλοντικό"
+        }
+    }
+
     const formatDaysInfo = (task: ToDoTaskReadOnlyDTO): React.ReactNode => {
         if (task.status === 'COMPLETED' && task.dateCompleted) {
             return (
                 <span className="text-green-600 font-semibold">
-                    Completed {formatDate(task.dateCompleted)}
+                    Ολοκληρώθηκε {formatDate(task.dateCompleted)}
                 </span>
             );
         }
@@ -56,15 +68,15 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
         if (task.daysFromToday < 0) {
             return (
                 <span className="text-red-600 font-semibold">
-                    {Math.abs(task.daysFromToday)} overdue
+                    {Math.abs(task.daysFromToday)} μέρες πριν
                 </span>
             );
         } else if (task.daysFromToday === 0) {
-            return <span className="text-orange-600 font-semibold">Today</span>;
+            return <span className="text-orange-600 font-semibold">Σήμερα</span>;
         } else {
             return (
                 <span className="text-gray-600">
-                    In {task.daysFromToday} days
+                    Σε {task.daysFromToday} μέρες
                 </span>
             );
         }
@@ -197,7 +209,7 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                 await dashboardService.createTask(taskData);
             } else if (modalMode === 'update' && selectedTask) {
                 await dashboardService.updateTask(selectedTask.id, {
-                    id: selectedTask.id,
+                    taskId: selectedTask.id,
                     description: taskData.description,
                     date: taskData.date
                 });
@@ -227,7 +239,7 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                         <h2 className="text-2xl font-bold text-red-600 mb-4">Oops! Something went wrong</h2>
                         <p className="text-gray-600 mb-6">{error}</p>
                         <Button onClick={loadData} variant="primary">
-                            Try Again
+                            Προσπαθήστε ξανά
                         </Button>
                     </div>
                 </div>
@@ -242,21 +254,21 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                 <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8 border border-white/20">
                     <div className="flex justify-between items-center mb-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">📋 All Tasks</h1>
-                            <p className="text-gray-700 mt-1">Manage your todo tasks and track progress</p>
+                            <h1 className="text-3xl font-bold text-gray-900">📋 Όλα τα tasks</h1>
+                            <p className="text-gray-700 mt-1">Διαχειριστείτε τις εκκρεμότητες σας</p>
                         </div>
                         <div className="flex gap-3">
                             <Button
                                 onClick={() => onNavigate('dashboard')}
                                 variant="secondary"
                             >
-                                ← Back to Dashboard
+                                ← Επιστροφή στην Αρχική
                             </Button>
                             <Button
-                                variant="primary"
+                                variant="success"
                                 onClick={handleAddNewTask}
                             >
-                                ➕ Add New Task
+                                <Plus /> Προσθήκη Νέου Task
                             </Button>
                         </div>
                     </div>
@@ -265,22 +277,21 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Status
+                                Κατάσταση
                             </label>
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             >
-                                <option value="">All Statuses</option>
-                                <option value="PENDING">Pending</option>
-                                <option value="COMPLETED">Completed</option>
-                                <option value="CANCELLED">Cancelled</option>
+                                <option value="">Όλα</option>
+                                <option value="PENDING">Εκκρεμούν</option>
+                                <option value="COMPLETED">Ολοκληρωμένα</option>
                             </select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Date From
+                                Από
                             </label>
                             <Input
                                 type="date"
@@ -290,7 +301,7 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Date To
+                                Έως
                             </label>
                             <Input
                                 type="date"
@@ -300,14 +311,24 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                         </div>
                         <div className="flex gap-2">
                             <Button onClick={handleClearFilters} variant="secondary" size="sm">
-                                Clear Filters
+                                Καθαρισμός φίλτρων
+                            </Button>
+                            <Button
+                                onClick={loadData}
+                                variant="purple"
+                                size="sm"
+                                disabled={loading}
+                            >
+                                Ανανέωση Σελίδας
+                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                             </Button>
                         </div>
+
                     </div>
                 </div>
 
                 {/* Results */}
-                <Card title={`Tasks (${data?.totalElements || 0} total)`} icon="📋">
+                <Card title={`Σύνολο (${data?.totalElements || 0} tasks)`} icon="📋">
                     {data && data.data && data.data.length > 0 ? (
                         <>
                             {/* Table Header - Desktop */}
@@ -316,13 +337,13 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                                     onClick={() => handleSort('description')}
                                     className="text-left hover:text-blue-600 transition-colors"
                                 >
-                                    Description {sortBy === 'description' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                                    Περιγραφή {sortBy === 'description' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
                                 <button
                                     onClick={() => handleSort('date')}
                                     className="text-left hover:text-blue-600 transition-colors"
                                 >
-                                    Date {sortBy === 'date' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                                    Ημερομηνία {sortBy === 'date' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
                                 <button
                                     onClick={() => handleSort('status')}
@@ -330,8 +351,8 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                                 >
                                     Status {sortBy === 'status' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
-                                <span>Days</span>
-                                <span>Actions</span>
+                                <span>Ημέρες</span>
+                                <span>Ενέργειες</span>
                             </div>
 
                             {/* Task List */}
@@ -357,9 +378,33 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                                                         <p className="font-semibold text-gray-900">{task.description}</p>
                                                         <p className="text-sm text-gray-600">{formatTaskDate(task)}</p>
                                                     </div>
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(task.status, task.daysFromToday)}`}>
-                                                        {task.statusLabel}
-                                                    </span>
+
+                                                    {/* Mobile Action Buttons */}
+                                                    <div className="flex gap-2 flex-wrap">
+                                                        {task.status === 'PENDING' && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="success"
+                                                                onClick={() => handleCompleteTask(task.id)}
+                                                            >
+                                                                <Check />
+                                                            </Button>
+                                                        )}
+                                                        <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            onClick={() => handleUpdateTask(task)}
+                                                        >
+                                                            <SquarePen />
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="danger"
+                                                            onClick={() => handleDeleteTask(task.id)}
+                                                        >
+                                                            <Trash2 />
+                                                        </Button>
+                                                    </div>
                                                 </div>
 
                                                 {/* Mobile Days Info */}
@@ -367,32 +412,7 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                                                     {formatDaysInfo(task)}
                                                 </div>
 
-                                                {/* Mobile Action Buttons */}
-                                                <div className="flex gap-2 flex-wrap">
-                                                    {task.status === 'PENDING' && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="success"
-                                                            onClick={() => handleCompleteTask(task.id)}
-                                                        >
-                                                            <Check /> Complete
-                                                        </Button>
-                                                    )}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="secondary"
-                                                        onClick={() => handleUpdateTask(task)}
-                                                    >
-                                                        <SquarePen /> Edit
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="danger"
-                                                        onClick={() => handleDeleteTask(task.id)}
-                                                    >
-                                                        <Trash2 /> Delete
-                                                    </Button>
-                                                </div>
+
                                             </div>
 
                                             {/* Desktop Layout */}
@@ -404,8 +424,8 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                                                     <p className="text-gray-700">{formatDate(task.date)}</p>
                                                 </div>
                                                 <div>
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(task.status, task.daysFromToday)}`}>
-                                                        {task.statusLabel}
+                                                    <span className={`px-4 py-2 rounded-full text-xs font-bold ${getStatusColor(task.status, task.daysFromToday)}`}>
+                                                        {formatTaskStatus(task)}
                                                     </span>
                                                 </div>
                                                 <div>

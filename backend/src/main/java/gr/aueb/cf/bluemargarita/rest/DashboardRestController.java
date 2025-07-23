@@ -132,6 +132,7 @@ public class DashboardRestController {
                     )
             }
     )
+
     @GetMapping("/low-stock-products/all")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Paginated<StockAlertDTO>> getAllLowStockProducts(
@@ -169,6 +170,7 @@ public class DashboardRestController {
         Paginated<StockAlertDTO> lowStockProducts = stockManagementService.getAllLowStockProductsPaginated(filters);
         return new ResponseEntity<>(lowStockProducts, HttpStatus.OK);
     }
+
 
     @Operation(
             summary = "Get all mispriced products",

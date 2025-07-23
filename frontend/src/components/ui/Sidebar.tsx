@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {SidebarProps, NavigationItem} from "../../types/components/sidebar.ts";
+
 import {
     ShoppingCart,
     Package,
@@ -9,7 +10,7 @@ import {
     MapPin,
     Home,
     Menu,
-    X
+    Smartphone
 } from 'lucide-react';
 
 
@@ -19,43 +20,43 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
     const navigationItems: NavigationItem[] = [
         {
             id: 'dashboard',
-            label: 'Dashboard',
+            label: 'Αρχική',
             icon: <Home className="w-5 h-5" />,
             href: 'dashboard'
         },
         {
             id: 'manage-sales',
-            label: 'Manage Sales',
+            label: 'Πωλήσεις',
             icon: <ShoppingCart className="w-5 h-5" />,
             href: 'manage-sales'
         },
         {
             id: 'manage-products',
-            label: 'Manage Products',
+            label: 'Προϊόντα',
             icon: <Package className="w-5 h-5" />,
             href: 'manage-products'
         },
         {
             id: 'customers',
-            label: 'Customers',
+            label: 'Πελάτες',
             icon: <Users className="w-5 h-5" />,
             href: 'customers'
         },
         {
             id: 'materials',
-            label: 'Materials',
+            label: 'Υλικά',
             icon: <Layers className="w-5 h-5" />,
             href: 'materials'
         },
         {
             id: 'purchases',
-            label: 'Purchases',
+            label: 'Αγορές',
             icon: <ShoppingBag className="w-5 h-5" />,
             href: 'purchases'
         },
         {
             id: 'locations',
-            label: 'Locations',
+            label: 'Τοποθεσίες',
             icon: <MapPin className="w-5 h-5" />,
             href: 'locations'
         }
@@ -85,20 +86,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
             `}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/20">
-                    {!isCollapsed && (
-                        <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-sm">BM</span>
-                            </div>
-                            <span className="text-white font-semibold">Blue Margarita</span>
-                        </div>
-                    )}
 
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
                         className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                     >
-                        {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                        {isCollapsed ? <Menu className="w-6 h-7" /> : <Smartphone className="w-6 h-7" />}
                     </button>
                 </div>
 

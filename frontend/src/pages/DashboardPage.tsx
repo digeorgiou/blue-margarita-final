@@ -4,9 +4,10 @@ import {
     DashboardOverviewDTO,
     ToDoTaskReadOnlyDTO,
     getPaymentMethodLabel,
-    getPricingIssueTypeLabel
 } from "../types/api/dashboardInterface.ts";
-import { Button, Card, ListItem, LoadingSpinner, StatCard, TaskItem, TaskStat, QuickActions } from '../components/ui';
+import { Button, ListItem, LoadingSpinner, StatCard, TaskItem, QuickActions } from '../components/ui';
+import DashboardCard from '../components/ui/DashboardCard';
+import TaskModal from "../components/ui/modals/TaskModal.tsx";
 
 interface DashboardProps {
     onNavigate: (page: string) => void;
@@ -17,6 +18,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     const [data, setData] = useState<DashboardOverviewDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [taskView, setTaskView] = useState<'active' | 'week'>('active');
+
+    //Modal state
+    const[isModalOpen, setIsModalOpen] = useState(false);
+    const[modalMode, setModalMode] = useState<'create' | 'update'> ('create');
+    const[selectedTask, setSelectedTask] = useState<ToDoTaskReadOnlyDTO | null>(null);
 
     // Function to format money
     const formatMoney = (amount: number): string => {
@@ -33,11 +40,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     const formatTaskDate = (task: ToDoTaskReadOnlyDTO): string => {
         const date = formatDate(task.date);
         if (task.daysFromToday < 0) {
-            return `${date} (${Math.abs(task.daysFromToday)} days overdue)`;
+            return `${date} (Πριν ${Math.abs(task.daysFromToday)} ημέρες)`;
         } else if (task.daysFromToday === 0) {
-            return `${date} (Today)`;
+            return `${date} (Σήμερα)`;
         } else {
-            return `${date} (in ${task.daysFromToday} days)`;
+            return `${date} (Σε ${task.daysFromToday} ημέρες)`;
         }
     };
 
@@ -46,10 +53,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         try {
             setLoading(true);
             setError(null);
-
             const dashboardData = await dashboardService.getDashboardOverview();
             setData(dashboardData);
-
         } catch (err) {
             setError('Failed to load dashboard data');
             console.error('Dashboard error:', err);
@@ -62,37 +67,36 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     const completeTask = async (taskId: number) => {
         try {
             await dashboardService.completeTask(taskId);
-            loadDashboard(); // Reload to see updated tasks
+            loadDashboard();
         } catch (err) {
             console.error('Failed to complete task:', err);
         }
     };
 
-    // Navigation handlers for "View All" buttons
-    const handleViewAllLowStock = () => {
-        onNavigate('low-stock-products');
+    const handleAddNewTask = () => {
+        setSelectedTask(null);
+        setModalMode('create');
+        setIsModalOpen(true);
     };
 
-    const handleViewAllMispriced = () => {
-        onNavigate('mispriced-products');
+    const handleTaskSubmit = async (taskData: { description: string; date: string }) => {
+        try {
+            await dashboardService.createTask(taskData);
+            loadDashboard(); // Refresh the task list
+        } catch (err) {
+            console.error('Failed to save task:', err);
+            alert('Failed to save task. Please try again.');
+        }
     };
 
-    const handleViewAllTasks = () => {
-        onNavigate('all-tasks');
-    };
 
-    // Quick action handlers
-    const handleRecordSale = () => {
-        onNavigate('record-sale');
-    };
-
-    const handleRecordPurchase = () => {
-        onNavigate('record-purchase');
-    };
-
-    const handleStockManagement = () => {
-        onNavigate('stock-management');
-    };
+    // Navigation handlers
+    const handleViewAllLowStock = () => onNavigate('low-stock-products');
+    const handleViewAllMispriced = () => onNavigate('mispriced-products');
+    const handleViewAllTasks = () => onNavigate('all-tasks');
+    const handleRecordSale = () => onNavigate('record-sale');
+    const handleRecordPurchase = () => onNavigate('record-purchase');
+    const handleStockManagement = () => onNavigate('stock-management');
 
     // Load data when component mounts
     useEffect(() => {
@@ -143,28 +147,37 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         );
     }
 
+    // Task toggle component
+    const TaskToggle = () => (
+        <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+                onClick={() => setTaskView('active')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    taskView === 'active'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                }`}
+            >
+                Σήμερα
+            </button>
+            <button
+                onClick={() => setTaskView('week')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    taskView === 'week'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                }`}
+            >
+                Εβδομάδας
+            </button>
+        </div>
+    );
+
     // Main dashboard render
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto">
 
-                {/* Dashboard Header */}
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8 border border-white/20">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Blue Margarita Dashboard</h1>
-                            <p className="text-gray-700 mt-1">Welcome back! Here's what's happening today.</p>
-                        </div>
-                        <button
-                            onClick={loadDashboard}
-                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
-                        >
-                            🔄 Refresh
-                        </button>
-                    </div>
-                </div>
-
-                {/* THIS IS WHERE QuickActions IS USED! */}
                 <QuickActions
                     onRecordSale={handleRecordSale}
                     onRecordPurchase={handleRecordPurchase}
@@ -175,16 +188,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
                     {/* Sales Summary Card */}
-                    <Card title="Sales Summary" icon="💰" className="lg:col-span-1">
+                    <DashboardCard
+                        title="Σύνοψη Πωλήσεων"
+                        icon="💰"
+                        height="md"
+                    >
                         <div className="grid grid-cols-2 gap-6">
                             <StatCard
-                                label="This Week"
+                                label="Τζίρος Εβδομάδας"
                                 value={formatMoney(data.weeklySales.totalRevenue)}
                                 isBig={true}
                                 color="green"
                             />
                             <StatCard
-                                label="This Month"
+                                label="Τζίρος Μήνα"
                                 value={formatMoney(data.monthlySales.totalRevenue)}
                                 color="blue"
                             />
@@ -192,198 +209,206 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         <div className="mt-4 pt-4 border-t border-gray-200">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <span className="text-gray-600">Weekly Sales: </span>
+                                    <span className="text-gray-600">Πωλήσεις εβδομάδας: </span>
                                     <span className="font-semibold">{data.weeklySales.totalSalesCount}</span>
                                 </div>
                                 <div>
-                                    <span className="text-gray-600">Monthly Sales: </span>
+                                    <span className="text-gray-600">Πωλήσεις μήνα: </span>
                                     <span className="font-semibold">{data.monthlySales.totalSalesCount}</span>
                                 </div>
                                 <div>
-                                    <span className="text-gray-600">Avg Weekly: </span>
+                                    <span className="text-gray-600">Μ.Ο Εβδομάδας: </span>
                                     <span className="font-semibold">{formatMoney(data.weeklySales.averageOrderValue)}</span>
                                 </div>
                                 <div>
-                                    <span className="text-gray-600">Avg Monthly: </span>
+                                    <span className="text-gray-600">Μ.Ο Μήνα: </span>
                                     <span className="font-semibold">{formatMoney(data.monthlySales.averageOrderValue)}</span>
                                 </div>
                             </div>
                         </div>
-                    </Card>
+                    </DashboardCard>
 
-                    {/* Tasks Overview Card */}
-                    <Card title="Tasks Overview" icon="📋" className="lg:col-span-1">
-                        <div className="grid grid-cols-3 gap-3">
-                            <TaskStat
-                                number={data.dashboardTasks.summary.overdueCount}
-                                label="Overdue"
-                                color="red"
-                            />
-                            <TaskStat
-                                number={data.dashboardTasks.summary.todayCount}
-                                label="Today"
-                                color="yellow"
-                            />
-                            <TaskStat
-                                number={data.dashboardTasks.summary.totalPendingCount}
-                                label="Total"
-                                color="blue"
-                            />
-                        </div>
-                    </Card>
+                    {/* Combined Tasks Card */}
+                    <DashboardCard
+                        title="To Do List"
+                        icon="📋"
+                        height="md"
+                        headerRight={<TaskToggle />}
+                        footer={
+                            <div className="flex gap-2">
+                                <Button variant="outline-primary" size="sm" className="flex-1" onClick={handleAddNewTask}>
+                                    ➕ Προσθήκη task
+                                </Button>
+                                <Button variant="ghost-primary" size="sm" onClick={handleViewAllTasks}>
+                                    📋 Προβολή Όλων
+                                </Button>
+                            </div>
+                        }
+                    >
+                        {taskView === 'active' ? (
+                            <div className="space-y-3">
+                                {data.dashboardTasks.overdueAndTodayTasks.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <div className="text-4xl mb-2">✨</div>
+                                        <p className="text-gray-500 italic">No active tasks</p>
+                                    </div>
+                                ) : (
+                                    data.dashboardTasks.overdueAndTodayTasks.map((task) => (
+                                        <TaskItem
+                                            key={task.id}
+                                            task={{
+                                                id: task.id,
+                                                description: task.description,
+                                                date: formatTaskDate(task),
+                                                status: task.status
+                                            }}
+                                            onComplete={completeTask}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {data.dashboardTasks.thisWeekTasks.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <div className="text-4xl mb-2">🌟</div>
+                                        <p className="text-gray-500 italic">No tasks scheduled this week</p>
+                                    </div>
+                                ) : (
+                                    data.dashboardTasks.thisWeekTasks.slice(0, 10).map((task) => (
+                                        <TaskItem
+                                            key={task.id}
+                                            task={{
+                                                id: task.id,
+                                                description: task.description,
+                                                date: formatTaskDate(task),
+                                                status: task.status
+                                            }}
+                                            onComplete={completeTask}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </DashboardCard>
 
-                    {/* Top Products This Month */}
-                    <Card title="Top Products This Month" icon="🏆" className="lg:col-span-1">
+                    {/* Top Products Card */}
+                    <DashboardCard
+                        title="Τα 5 καλύτερα προϊόντα του μήνα"
+                        icon="🏆"
+                        height="md"
+                    >
                         <div className="space-y-3">
                             {data.topProductsThisMonth.length === 0 ? (
                                 <div className="text-center py-8">
                                     <div className="text-4xl mb-2">📦</div>
-                                    <p className="text-gray-500 italic">No sales data available</p>
+                                    <p className="text-gray-500 italic">Δεν υπάρχουν δεδομένα</p>
                                 </div>
                             ) : (
-                                data.topProductsThisMonth.slice(0, 5).map((product) => (
+                                data.topProductsThisMonth.map((product) => (
                                     <ListItem
                                         key={product.productId}
                                         primaryText={product.productName}
-                                        secondaryText={`Code: ${product.productCode} | Sold: ${product.totalItemsSold} units`}
+                                        secondaryText={`Κωδικός: ${product.productCode} | Πουλήθηκαν: ${product.totalItemsSold} κομμάτια`}
                                         rightText={formatMoney(product.totalRevenue)}
                                         rightTextColor="green"
                                     />
                                 ))
                             )}
                         </div>
-                    </Card>
+                    </DashboardCard>
 
                     {/* Recent Sales Card */}
-                    <Card title="Recent Sales" icon="🛒" className="lg:col-span-1 xl:col-span-1">
+                    <DashboardCard
+                        title="Οι 5 πιο πρόσφατες πωλήσεις"
+                        icon="🛒"
+                        height="md"
+                    >
                         <div className="space-y-3">
                             {data.recentSales.length === 0 ? (
                                 <div className="text-center py-8">
                                     <div className="text-4xl mb-2">🛍️</div>
-                                    <p className="text-gray-500 italic">No recent sales</p>
+                                    <p className="text-gray-500 italic">Δεν υπάρχουν πωλήσεις</p>
                                 </div>
                             ) : (
-                                data.recentSales.slice(0, 5).map((sale) => (
+                                data.recentSales.map((sale) => (
                                     <ListItem
                                         key={sale.id}
                                         primaryText={sale.customerName}
-                                        secondaryText={`${formatDate(sale.saleDate)} | ${getPaymentMethodLabel(sale.paymentMethod)} | ${sale.productCount} items`}
+                                        secondaryText={`${formatDate(sale.saleDate)} | ${getPaymentMethodLabel(sale.paymentMethod)} | ${sale.productCount} ${sale.productCount > 1 ? 'προϊόντα' : 'προϊόν'}`}
                                         rightText={formatMoney(sale.grandTotal)}
                                         rightTextColor="green"
                                     />
                                 ))
                             )}
                         </div>
-                    </Card>
-
-                    {/* Recent Purchases Card */}
-                    <Card title="Recent Purchases" icon="📦" className="lg:col-span-1">
-                        <div className="space-y-3">
-                            {data.recentPurchases.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <div className="text-4xl mb-2">📦</div>
-                                    <p className="text-gray-500 italic">No recent purchases</p>
-                                </div>
-                            ) : (
-                                data.recentPurchases.slice(0, 5).map((purchase) => (
-                                    <ListItem
-                                        key={purchase.id}
-                                        primaryText={purchase.supplierName}
-                                        secondaryText={`${formatDate(purchase.purchaseDate)} | ${purchase.itemCount} items`}
-                                        rightText={formatMoney(purchase.totalCost)}
-                                        rightTextColor="red"
-                                    />
-                                ))
-                            )}
-                        </div>
-                    </Card>
-
-                    {/* Active Tasks Card */}
-                    <Card title="Active Tasks" icon="✅" className="lg:col-span-1">
-                        <div className="space-y-3">
-                            {data.dashboardTasks.overdueAndTodayTasks.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <div className="text-4xl mb-2">✨</div>
-                                    <p className="text-gray-500 italic">No active tasks</p>
-                                </div>
-                            ) : (
-                                data.dashboardTasks.overdueAndTodayTasks.map((task) => (
-                                    <TaskItem
-                                        key={task.id}
-                                        task={{
-                                            id: task.id,
-                                            description: task.description,
-                                            date: formatTaskDate(task),
-                                            status: task.status
-                                        }}
-                                        onComplete={completeTask}
-                                    />
-                                ))
-                            )}
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                            <Button variant="secondary" size="sm">
-                                ➕ Add New Task
-                            </Button>
-                        </div>
-                        {(data.dashboardTasks.overdueAndTodayTasks.length > 0 || data.dashboardTasks.hasMoreTasks) && (
-                            <Button variant="secondary" size="sm" onClick={handleViewAllTasks}>
-                                📋 View All Tasks
-                            </Button>
-                        )}
-                    </Card>
+                    </DashboardCard>
 
                     {/* Low Stock Alert Card */}
-                    <Card title="Low Stock Alert" icon="⚠️" className="lg:col-span-2 xl:col-span-1">
+                    <DashboardCard
+                        title="Προϊόντα με χαμηλό απόθεμα"
+                        icon="⚠️"
+                        height="md"
+                        footer={
+                            data.lowStockProducts.length > 0 && (
+                                <Button variant="ghost-secondary" size="sm" onClick={handleViewAllLowStock} className="w-full">
+                                    📋 Προβολή όλων
+                                </Button>
+                            )
+                        }
+                    >
                         <div className="space-y-3">
                             {data.lowStockProducts.length === 0 ? (
                                 <div className="text-center py-8">
                                     <div className="text-4xl mb-2">✅</div>
-                                    <p className="text-gray-500 italic">All products well stocked</p>
+                                    <p className="text-gray-500 italic">Δεν υπάρχουν προϊόντα με χαμηλό απόθεμα</p>
                                 </div>
                             ) : (
                                 data.lowStockProducts.map((product) => (
                                     <ListItem
                                         key={product.productId}
                                         primaryText={product.productName}
-                                        secondaryText={`Code: ${product.productCode} | Stock: ${product.currentStock} | Min: ${product.lowStockThreshold}`}
-                                        rightText={product.stockStatus}
+                                        secondaryText={`Κωδικός: ${product.productCode}`}
+                                        rightText={`Απόθεμα: ${product.currentStock} | Όριο: ${product.lowStockThreshold}`}
                                         rightTextColor="red"
                                         isWarning={true}
                                     />
                                 ))
                             )}
                         </div>
-                        {data.lowStockProducts.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                <Button variant="secondary" size="sm" onClick={handleViewAllLowStock}>
-                                    📋 View All Low Stock Products
-                                </Button>
-                            </div>
-                        )}
-                    </Card>
+                    </DashboardCard>
 
-                    {/* Mispriced Products Alert Card */}
-                    <Card title="Mispriced Products" icon="💸" className="lg:col-span-2 xl:col-span-1">
+                    {/* Mispriced Products Card */}
+                    <DashboardCard
+                        title="Προϊόντα με λάθος τιμή"
+                        icon="💸"
+                        height="md"
+                        footer={
+                            data.mispricedProducts.length > 0 && (
+                                <Button variant="ghost-secondary" size="sm" onClick={handleViewAllMispriced} className="w-full">
+                                    💸 Προβολή όλων
+                                </Button>
+                            )
+                        }
+                    >
                         <div className="space-y-3">
                             {data.mispricedProducts.length === 0 ? (
                                 <div className="text-center py-8">
                                     <div className="text-4xl mb-2">💰</div>
-                                    <p className="text-gray-500 italic">All prices are optimal</p>
+                                    <p className="text-gray-500 italic">Όλες οι τιμές είναι σωστές</p>
                                 </div>
                             ) : (
                                 data.mispricedProducts.map((product) => {
-                                    // Determine which price to show based on issue type
                                     const showRetailPrice = product.issueType === 'RETAIL_UNDERPRICED' || product.issueType === 'BOTH_UNDERPRICED';
                                     const showWholesalePrice = product.issueType === 'WHOLESALE_UNDERPRICED' || product.issueType === 'BOTH_UNDERPRICED';
 
                                     let priceDetails = '';
                                     if (showRetailPrice && showWholesalePrice) {
-                                        priceDetails = `Retail: ${formatMoney(product.suggestedRetailPrice)} → ${formatMoney(product.finalRetailPrice)} | Wholesale: ${formatMoney(product.suggestedWholesalePrice)} → ${formatMoney(product.finalWholesalePrice)}`;
+                                        priceDetails = `Από λιανική προτεινόμενη: ${formatMoney(product.suggestedRetailPrice)} → ${formatMoney(product.finalRetailPrice)}\nΑπό χονδρική προτεινόμενη: ${formatMoney(product.suggestedWholesalePrice)} → ${formatMoney(product.finalWholesalePrice)}`;
                                     } else if (showRetailPrice) {
-                                        priceDetails = `Retail: ${formatMoney(product.suggestedRetailPrice)} → ${formatMoney(product.finalRetailPrice)}`;
+                                        priceDetails = `Από λιανική προτεινόμενη: ${formatMoney(product.suggestedRetailPrice)} → ${formatMoney(product.finalRetailPrice)}`;
                                     } else if (showWholesalePrice) {
-                                        priceDetails = `Wholesale: ${formatMoney(product.suggestedWholesalePrice)} → ${formatMoney(product.finalWholesalePrice)}`;
+                                        priceDetails = `Από χονδρική προτεινόμενη: ${formatMoney(product.suggestedWholesalePrice)} → ${formatMoney(product.finalWholesalePrice)}`;
                                     }
 
                                     return (
@@ -393,23 +418,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                         >
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
-                                                    <p className="font-semibold text-gray-900">{product.productName}</p>
-                                                    <p className="text-sm text-gray-600 mb-1">
-                                                        {product.categoryName} | Code: {product.productCode}
-                                                    </p>
-                                                    <p className="text-sm text-gray-700">
-                                                        <span className="font-medium">{getPricingIssueTypeLabel(product.issueType)}</span>
-                                                    </p>
-                                                    <p className="text-xs text-gray-600 mt-1">
+                                                    <p className="font-semibold text-gray-900">{product.productCode}</p>
+                                                    <p className="text-xs text-gray-600 mt-1 whitespace-pre-line">
                                                         {priceDetails}
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="font-bold text-red-600">
                                                         {product.priceDifferencePercentage.toFixed(1)}%
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        underpriced
                                                     </div>
                                                 </div>
                                             </div>
@@ -418,46 +434,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 })
                             )}
                         </div>
-                        {data.mispricedProducts.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                <Button variant="secondary" size="sm" onClick={handleViewAllMispriced}>
-                                    💸 View All Mispriced Products
-                                </Button>
-                            </div>
-                        )}
-                    </Card>
-
-                    {/* This Week Tasks Card */}
-                    <Card title="This Week Tasks" icon="📅" className="lg:col-span-2 xl:col-span-1">
-                        <div className="space-y-3">
-                            {data.dashboardTasks.thisWeekTasks.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <div className="text-4xl mb-2">🌟</div>
-                                    <p className="text-gray-500 italic">No tasks scheduled this week</p>
-                                </div>
-                            ) : (
-                                data.dashboardTasks.thisWeekTasks.slice(0, 5).map((task) => (
-                                    <ListItem
-                                        key={task.id}
-                                        primaryText={task.description}
-                                        secondaryText={formatTaskDate(task)}
-                                        rightText={task.statusLabel}
-                                        rightTextColor={task.status === 'COMPLETED' ? 'green' : 'blue'}
-                                    />
-                                ))
-                            )}
-                        </div>
-                        {data.dashboardTasks.hasMoreTasks && (
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                <Button variant="secondary" size="sm">
-                                    📋 View All Tasks
-                                </Button>
-                            </div>
-                        )}
-                    </Card>
+                    </DashboardCard>
 
                 </div>
             </div>
+
+            {/* Task Modal */}
+            <TaskModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleTaskSubmit}
+                mode={modalMode}
+                initialData={selectedTask ? {
+                    id: selectedTask.id,
+                    description: selectedTask.description,
+                    date: selectedTask.date
+                } : undefined}
+            />
+
         </div>
     );
 };

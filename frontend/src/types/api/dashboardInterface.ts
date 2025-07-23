@@ -176,7 +176,7 @@ export interface ToDoTaskInsertDTO {
 }
 
 export interface ToDoTaskUpdateDTO {
-    id: number;
+    taskId: number;
     description?: string;
     date?: string;
 }
