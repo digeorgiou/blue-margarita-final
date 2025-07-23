@@ -179,7 +179,6 @@ export interface ToDoTaskUpdateDTO {
     id: number;
     description?: string;
     date?: string;
-    status?: 'PENDING' | 'COMPLETED' | 'CANCELLED';
 }
 
 export interface Paginated<T> {

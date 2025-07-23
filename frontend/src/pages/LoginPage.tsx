@@ -70,8 +70,17 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     };
 
     // Handle form submission
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleLoginSubmit = async (event: React.FormEvent) => {
+        console.log('=== LOGIN SUBMIT STARTED ===');
+        console.log('Event:', event);
+        console.log('Event target:', event.target);
+
+
         event.preventDefault();
+
+        console.log('Form data:', formData);
+        console.log('Validation result:', validateForm());
+
 
         if (!validateForm()) {
             return;
@@ -86,10 +95,14 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 password: formData.password
             };
             console.log("Sending auth payload:", payload); // Debug
-            await authService.authenticate(payload);
+
+            const result = await authService.authenticate(payload);
+            console.log('Auth service result:', result);
 
             // Login successful
+            console.log('Calling onLoginSuccess...');
             onLoginSuccess();
+
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Login failed';
@@ -109,7 +122,7 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     icon="🔐"
                     className="mb-6"
                 >
-                    <form id="login-form" onSubmit={handleSubmit} className="space-y-6">
+                    <form id="login-form" onSubmit={handleLoginSubmit} className="space-y-6">
 
                         {/* Error Alert */}
                         {error && (
@@ -144,6 +157,7 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
                         {/* Login Button */}
                         <Button
+                            type="submit"
                             variant="primary"
                             size="lg"
                             disabled={loading}

@@ -376,9 +376,9 @@ class DashboardService {
     /**
      * Update an existing task
      */
-    async updateTask(taskData: ToDoTaskUpdateDTO): Promise<ToDoTaskReadOnlyDTO> {
+    async updateTask(id : number, taskData: ToDoTaskUpdateDTO): Promise<ToDoTaskReadOnlyDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/tasks/${taskData.id}`, {
+            const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
                 method: 'PUT',
                 headers: this.getAuthHeaders(),
                 body: JSON.stringify(taskData),
@@ -448,6 +448,36 @@ class DashboardService {
             return await response.json();
         } catch (error) {
             console.error('Completing task error:', error);
+            throw error;
+        }
+    }
+
+
+    /**
+     * Mark task as pending
+     */
+    async restoreTask(taskId: number): Promise<ToDoTaskReadOnlyDTO> {
+        try {
+            const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    ...this.getAuthHeaders(),
+                    'Content-Type' : 'application/json'
+                },
+                body : JSON.stringify({
+                    taskId : taskId,
+                    status : 'PENDING'
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to restore task: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Restoring task error:', error);
             throw error;
         }
     }

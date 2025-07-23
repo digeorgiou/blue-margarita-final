@@ -3,7 +3,7 @@ import { dashboardService } from "../../../services/dashboardService.ts";
 import { Button, Card, LoadingSpinner, Input } from "../"
 import TaskModal from "../modals/TaskModal.tsx";
 import type { ToDoTaskReadOnlyDTO, Paginated } from "../../../types/api/dashboardInterface.ts";
-import {Trash2, SquarePen, Check} from 'lucide-react'
+import {Trash2, SquarePen, Check, RotateCcw} from 'lucide-react'
 
 interface TaskListProps {
     onNavigate: (page: string) => void;
@@ -156,6 +156,16 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
         }
     };
 
+    const handleRestoreTask = async (taskId: number) => {
+        try {
+            await dashboardService.restoreTask(taskId);
+            loadData();
+        } catch (err) {
+            console.error('Failed to complete task:', err);
+            alert('Failed to restore task. Please try again.');
+        }
+    }
+
     const handleUpdateTask = (task: ToDoTaskReadOnlyDTO) => {
         setSelectedTask(task);
         setModalMode('update');
@@ -186,7 +196,7 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
             if (modalMode === 'create') {
                 await dashboardService.createTask(taskData);
             } else if (modalMode === 'update' && selectedTask) {
-                await dashboardService.updateTask({
+                await dashboardService.updateTask(selectedTask.id, {
                     id: selectedTask.id,
                     description: taskData.description,
                     date: taskData.date
@@ -409,6 +419,15 @@ const TaskList: React.FC<TaskListProps> = ({ onNavigate }) => {
                                                             onClick={() => handleCompleteTask(task.id)}
                                                         >
                                                             <Check />
+                                                        </Button>
+                                                    )}
+                                                    {task.status === 'COMPLETED' && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="primary"
+                                                            onClick={() => handleRestoreTask(task.id)}
+                                                        >
+                                                            <RotateCcw />
                                                         </Button>
                                                     )}
                                                     <Button
