@@ -247,7 +247,7 @@ public class StockManagementRestController {
     )
     @PatchMapping("/update-stock")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<StockUpdateResultDTO> updateProductStock(
+    public ResponseEntity<StockUpdateResultDTO> updatePuproductStock(
             @Valid @RequestBody StockUpdateDTO updateDTO,
             BindingResult bindingResult) throws ValidationException, EntityNotFoundException {
 

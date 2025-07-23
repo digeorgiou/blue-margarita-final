@@ -1,16 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardService } from "../../../services/dashboardService.ts";
+import { stockManagementService } from "../../../services/stockManagementService.ts";
 import { Button, Card, LoadingSpinner, Input } from "../"
 import type { StockAlertDTO, Paginated } from "../../../types/api/dashboardInterface.ts";
+import type { CategoryForDropdownDTO } from "../../../types/api/categoryInterface.ts";
+import type { StockUpdateDTO, StockUpdateResultDTO } from "../../../types/api/stockManagementInterface.ts";
+import { authService } from "../../../services/authService.ts";
 
 interface LowStockProductsListProps {
     onNavigate: (page: string) => void;
 }
 
+const getCategoriesForDropdown = async (): Promise<CategoryForDropdownDTO[]> => {
+    try {
+        const response = await fetch('/api/categories/dropdown', {
+            method: 'GET',
+            headers: authService.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch categories: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Categories fetch error:', error);
+        throw error;
+    }
+};
+
 const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate }) => {
     const [data, setData] = useState<Paginated<StockAlertDTO> | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
+
+    // Modal states
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<StockAlertDTO | null>(null);
+    const [newStockAmount, setNewStockAmount] = useState('');
+    const [updateLoading, setUpdateLoading] = useState(false);
 
     // Filter states
     const [nameOrCodeFilter, setNameOrCodeFilter] = useState('');
@@ -20,8 +49,22 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
     const [maxStockFilter, setMaxStockFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize] = useState(20);
-    const [sortBy, setSortBy] = useState('stock'); // Fixed: use 'stock' not 'currentStock'
+    const [sortBy, setSortBy] = useState('stock');
     const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('ASC');
+
+    // Load categories on component mount
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const categoriesData = await getCategoriesForDropdown();
+                setCategories(categoriesData);
+            } catch (err) {
+                console.error('Failed to load categories:', err);
+                // Don't fail the whole component if categories fail
+            }
+        };
+        loadCategories();
+    }, []);
 
     const loadData = async () => {
         try {
@@ -31,7 +74,6 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
             const params = {
                 nameOrCode: nameOrCodeFilter.trim() || undefined,
                 categoryId: categoryIdFilter ? Number(categoryIdFilter) : undefined,
-                materialName: materialNameFilter.trim() || undefined,
                 minStock: minStockFilter ? Number(minStockFilter) : undefined,
                 maxStock: maxStockFilter ? Number(maxStockFilter) : undefined,
                 page: currentPage,
@@ -102,6 +144,51 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
         setCurrentPage(0);
     };
 
+    const handleUpdateStock = (product: StockAlertDTO) => {
+        setSelectedProduct(product);
+        setNewStockAmount("");
+        setShowUpdateModal(true);
+    };
+
+    const handleModalClose = () => {
+        setShowUpdateModal(false);
+        setSelectedProduct(null);
+        setNewStockAmount('');
+        setUpdateLoading(false);
+    };
+
+    const handleStockUpdate = async () => {
+        if (!selectedProduct || !newStockAmount) return;
+
+        try {
+            setUpdateLoading(true);
+
+            const stockUpdateData: StockUpdateDTO = {
+                productId: selectedProduct.productId,
+                updateType : 'SET',
+                quantity: parseInt(newStockAmount),
+                updaterUserId: 1 // might want to get this from auth context
+            };
+
+            const result: StockUpdateResultDTO = await stockManagementService.updateProductStock(stockUpdateData);
+
+            // Show success message (you might want to add a toast notification here)
+            console.log('Stock updated successfully:', result);
+
+            // Close modal
+            handleModalClose();
+
+            // Refresh the data
+            await loadData();
+
+        } catch (error) {
+            console.error('Failed to update stock:', error);
+            setError('Failed to update stock. Please try again.');
+        } finally {
+            setUpdateLoading(false);
+        }
+    };
+
     const hasNext = data !== null ? data.currentPage + 1 < data.totalPages : false;
     const hasPrevious = data !== null ? data.currentPage > 0 : false;
 
@@ -164,26 +251,20 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Category ID
+                                Category
                             </label>
-                            <Input
-                                type="number"
+                            <select
                                 value={categoryIdFilter}
                                 onChange={(e) => setCategoryIdFilter(e.target.value)}
-                                placeholder="Category ID..."
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Material Name
-                            </label>
-                            <Input
-                                type="text"
-                                value={materialNameFilter}
-                                onChange={(e) => setMaterialNameFilter(e.target.value)}
-                                placeholder="Material name..."
-                            />
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>
@@ -229,16 +310,16 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                             {/* Table Header - Desktop */}
                             <div className="hidden md:grid md:grid-cols-5 gap-4 p-3 bg-gray-100 rounded-lg font-semibold text-gray-700 mb-4">
                                 <button
-                                    onClick={() => handleSort('productName')}
+                                    onClick={() => handleSort('name')}
                                     className="text-left hover:text-blue-600 transition-colors"
                                 >
-                                    Product Name {sortBy === 'productName' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                                    Product Name {sortBy === 'name' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
                                 <button
-                                    onClick={() => handleSort('productCode')}
+                                    onClick={() => handleSort('code')}
                                     className="text-left hover:text-blue-600 transition-colors"
                                 >
-                                    Code {sortBy === 'productCode' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                                    Code {sortBy === 'code' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
                                 <button
                                     onClick={() => handleSort('stock')}
@@ -295,6 +376,16 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                                                     {product.stockStatus}
                                                 </span>
                                             </div>
+                                            <div className="mt-2">
+                                                <Button
+                                                    onClick={() => handleUpdateStock(product)}
+                                                    variant="primary"
+                                                    size="sm"
+                                                    className="w-full"
+                                                >
+                                                    Update Stock
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -345,6 +436,83 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                         </div>
                     )}
                 </Card>
+
+                {/* Update Stock Modal */}
+                {showUpdateModal && selectedProduct && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                            <div className="p-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-bold text-gray-900">Update Stock</h2>
+                                    <button
+                                        onClick={handleModalClose}
+                                        className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+                                        disabled={updateLoading}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {/* Product Info */}
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        <h3 className="font-semibold text-gray-900">{selectedProduct.productName}</h3>
+                                        <p className="text-sm text-gray-600">Code: {selectedProduct.productCode}</p>
+                                        <p className="text-sm text-gray-600">Current Stock:
+                                            <span className={`font-semibold ml-1 ${selectedProduct.currentStock <= 5 ? 'text-red-600' : selectedProduct.currentStock <= 10 ? 'text-orange-600' : 'text-gray-900'}`}>
+                                                {selectedProduct.currentStock}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    {/* New Stock Amount */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            New Stock Amount *
+                                        </label>
+                                        <Input
+                                            type="number"
+                                            value={newStockAmount}
+                                            onChange={(e) => setNewStockAmount(e.target.value)}
+                                            placeholder="Enter new stock amount..."
+                                            disabled={updateLoading}
+                                            min="0"
+                                        />
+                                    </div>
+
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-3 pt-4">
+                                        <Button
+                                            onClick={handleModalClose}
+                                            variant="secondary"
+                                            disabled={updateLoading}
+                                            className="flex-1"
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            onClick={handleStockUpdate}
+                                            variant="primary"
+                                            disabled={updateLoading || !newStockAmount}
+                                            className="flex-1"
+                                        >
+                                            {updateLoading ? (
+                                                <div className="flex items-center justify-center">
+                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                                    Updating...
+                                                </div>
+                                            ) : (
+                                                'Update Stock'
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
             </div>
         </div>
     );

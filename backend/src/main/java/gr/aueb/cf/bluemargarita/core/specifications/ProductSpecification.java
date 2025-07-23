@@ -156,7 +156,7 @@ public class ProductSpecification {
             String upperSearchTerm = "%" + searchTerm.toUpperCase() + "%";
             return criteriaBuilder.or(
                     criteriaBuilder.like(criteriaBuilder.upper(root.get("name")), upperSearchTerm),
-                    criteriaBuilder.like(criteriaBuilder.upper(root.get("productCode")), upperSearchTerm)
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("code")), upperSearchTerm)
             );
         };
     }

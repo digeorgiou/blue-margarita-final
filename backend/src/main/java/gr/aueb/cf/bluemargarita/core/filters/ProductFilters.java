@@ -14,6 +14,12 @@ import java.math.BigDecimal;
 public class ProductFilters extends GenericFilters {
 
     @Nullable
+    private String productName;
+
+    @Nullable
+    private String productCode;
+
+    @Nullable
     private String nameOrCode;
 
     @Nullable

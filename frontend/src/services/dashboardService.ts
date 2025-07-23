@@ -458,7 +458,6 @@ class DashboardService {
         }
     }
 
-
     /**
      * Mark task as pending
      */

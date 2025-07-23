@@ -12,10 +12,8 @@ public record StockUpdateResultDTO(
         Integer newStock,
         Integer changeAmount,
         boolean success,
-        String errorMessage,     // If update failed
 
         String operationType,        // "ADD", "REMOVE", "SET"
-        String movementReason,       // "MANUAL", "SALE", "PURCHASE", "ADJUSTMENT"
         LocalDateTime updatedAt
 ) {
 }

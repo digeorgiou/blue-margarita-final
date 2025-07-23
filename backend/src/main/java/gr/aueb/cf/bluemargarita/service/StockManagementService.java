@@ -71,9 +71,7 @@ public class StockManagementService implements IStockManagementService{
                     result.newStock(),
                     result.changeAmount(),
                     true,
-                    null,
                     updateDTO.updateType().toString(),
-                    "MANUAL",
                     LocalDateTime.now()
             );
 
@@ -86,9 +84,7 @@ public class StockManagementService implements IStockManagementService{
                     result.previousStock(),
                     0,
                     false,
-                    e.getMessage(),
                     updateDTO.updateType().toString(),
-                    "MANUAL",
                     LocalDateTime.now()
             );
         }
@@ -113,9 +109,7 @@ public class StockManagementService implements IStockManagementService{
                         0,
                         0,
                         false,
-                        e.getMessage(),
                         update.updateType().toString(),
-                        "MANUAL",
                         LocalDateTime.now()
                 ));
             }
