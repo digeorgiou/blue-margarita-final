@@ -61,11 +61,8 @@ public class RecordPurchaseRestController {
     )
     @GetMapping("/init")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Map<String, Object>> getRecordPurchasePageData() {
-        Map<String, Object> pageData = new HashMap<>();
-
-        // Form dropdown data
-        pageData.put("suppliers", supplierService.getActiveSuppliersForDropdown());
+    public ResponseEntity<List<SupplierDropdownDTO>> getRecordPurchasePageData() {
+        List<SupplierDropdownDTO> pageData = supplierService.getActiveSuppliersForDropdown();
 
         return new ResponseEntity<>(pageData, HttpStatus.OK);
     }
@@ -91,7 +88,7 @@ public class RecordPurchaseRestController {
     @GetMapping("/suppliers/search")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<SupplierSearchResultDTO>> searchSuppliers(
-            @Parameter(description = "Search term (name, email, or phone)", required = true)
+            @Parameter(description = "Search term (name, email, or tin)", required = true)
             @RequestParam String searchTerm) {
 
         List<SupplierSearchResultDTO> suppliers = supplierService.searchSuppliersForAutocomplete(searchTerm);

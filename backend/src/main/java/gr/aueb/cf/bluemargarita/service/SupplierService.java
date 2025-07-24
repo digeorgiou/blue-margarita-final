@@ -167,7 +167,7 @@ public class SupplierService implements ISupplierService {
         }
 
         Specification<Supplier> spec = Specification
-                .where(SupplierSpecification.supplierNameLike(searchTerm.trim()))
+                .where(SupplierSpecification.supplierNameOrTinOrEmailLike(searchTerm.trim()))
                 .and(SupplierSpecification.supplierIsActive(true));
 
         return supplierRepository.findAll(spec)

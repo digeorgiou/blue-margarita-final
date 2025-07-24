@@ -16,3 +16,8 @@ export { default as FilterContainer } from './FilterContainer';
 export { default as PageHeader } from './PageHeader';
 export { default as PaginationControls } from './PaginationControls';
 export { default as LowStockProductItem } from './LowStockProductItem';
+
+export { default as CustomerSearchDropdown } from './searchDropdowns/CustomerSearchDropdown';
+export { default as ProductSearchDropdown } from './searchDropdowns/ProductSearchDropdown';
+export { default as CartItem } from './CartItem';
+export { default as CartSummary } from './CartSummary';

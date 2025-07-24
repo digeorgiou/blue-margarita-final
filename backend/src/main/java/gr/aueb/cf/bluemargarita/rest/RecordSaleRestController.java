@@ -2,12 +2,14 @@ package gr.aueb.cf.bluemargarita.rest;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
+import gr.aueb.cf.bluemargarita.dto.category.CategoryForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.location.LocationForDropdownDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.PriceCalculationResponseDTO;
 import gr.aueb.cf.bluemargarita.dto.product.ProductSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.PaymentMethodDTO;
+import gr.aueb.cf.bluemargarita.dto.sale.RecordPageDataDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.RecordSaleRequestDTO;
 import gr.aueb.cf.bluemargarita.dto.sale.SaleDetailedViewDTO;
 import gr.aueb.cf.bluemargarita.dto.price_calculation.CartItemDTO;
@@ -68,13 +70,13 @@ public class RecordSaleRestController {
     )
     @GetMapping("/init")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Map<String, Object>> getRecordSalePageData() {
-        Map<String, Object> pageData = new HashMap<>();
-
+    public ResponseEntity<RecordPageDataDTO> getRecordSalePageData() {
         // Form dropdown data
-        pageData.put("paymentMethods", saleService.getAvailablePaymentMethods());
-        pageData.put("locations", locationService.getActiveLocationsForDropdown());
-        pageData.put("categoreies", categoryService.getActiveCategoriesForDropdown());
+        List<PaymentMethodDTO> paymentMethods = saleService.getAvailablePaymentMethods();
+        List<LocationForDropdownDTO> locations = locationService.getActiveLocationsForDropdown();
+        List<CategoryForDropdownDTO> categories = categoryService.getActiveCategoriesForDropdown();
+
+        RecordPageDataDTO pageData = new RecordPageDataDTO(paymentMethods, locations, categories);
 
         return new ResponseEntity<>(pageData, HttpStatus.OK);
     }

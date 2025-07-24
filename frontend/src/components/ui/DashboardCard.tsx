@@ -21,17 +21,19 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
     return (
         <div className={`bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6 ${heightClasses[height]} flex flex-col ${className}`}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                <div className="flex items-center">
-                    <span className="text-2xl mr-3">{icon}</span>
-                    <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-                </div>
-                {headerRight && (
-                    <div className="flex-shrink-0">
-                        {headerRight}
+            {title && icon && (
+                <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                    <div className="flex items-center">
+                        <span className="text-2xl mr-3">{icon}</span>
+                        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
                     </div>
-                )}
-            </div>
+                    {headerRight && (
+                        <div className="flex-shrink-0">
+                            {headerRight}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Content - Scrollable */}
             <div className={`flex-1 overflow-y-auto ${contentClassName}`}>

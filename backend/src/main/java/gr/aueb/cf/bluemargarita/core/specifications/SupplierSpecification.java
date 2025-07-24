@@ -2,6 +2,7 @@ package gr.aueb.cf.bluemargarita.core.specifications;
 
 import gr.aueb.cf.bluemargarita.model.Customer;
 import gr.aueb.cf.bluemargarita.model.Supplier;
+import org.springframework.boot.autoconfigure.rsocket.RSocketProperties;
 import org.springframework.data.jpa.domain.Specification;
 
 public class SupplierSpecification {
@@ -42,6 +43,20 @@ public class SupplierSpecification {
             return criteriaBuilder.like(
                     criteriaBuilder.upper(root.get("tin")),
                     "%" + tin.toUpperCase() + "%"
+            );
+        };
+    }
+
+    public static Specification<Supplier> supplierNameOrTinOrEmailLike(String searchTerm){
+        return (root, query, criteriaBuilder) -> {
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+            String upperSearchTerm = "%" + searchTerm.toUpperCase() + "%";
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("name")), upperSearchTerm),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("tin")), upperSearchTerm),
+                    criteriaBuilder.like(criteriaBuilder.upper(root.get("email")), upperSearchTerm)
             );
         };
     }

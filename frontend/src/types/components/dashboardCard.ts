@@ -1,6 +1,6 @@
 export type DashboardCardProps = {
-    title: string;
-    icon: string;
+    title?: string;
+    icon?: string | React.JSX.Element;
     children: React.ReactNode;
     footer?: React.ReactNode;
     headerRight?: React.ReactNode;

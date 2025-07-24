@@ -8,6 +8,7 @@ import Dashboard from "./pages/DashboardPage.tsx";
 import LowStockProductsPage from './pages/LowStockProductsPage';
 import MispricedProductsPage from './pages/MispricedProductsPage';
 import AllTasksPage from './pages/AllTasksPage';
+import RecordSalePage from "./pages/RecordSalePage.tsx";
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -49,7 +50,7 @@ const App: React.FC = () => {
             case 'locations':
                 return <div className="p-4"><h1 className="text-2xl text-white">Locations - Coming Soon</h1></div>;
             case 'record-sale':
-                return <div className="p-4"><h1 className="text-2xl text-white">Record Sale - Coming Soon</h1></div>;
+                return <RecordSalePage onNavigate={handleNavigation} />;
             case 'record-purchase':
                 return <div className="p-4"><h1 className="text-2xl text-white">Record Purchase - Coming Soon</h1></div>;
             case 'stock-management':

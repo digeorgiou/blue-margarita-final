@@ -1,5 +1,5 @@
 export type InputProps = {
-    label?: string;
+    label?: string | React.ReactNode;
     placeholder?: string;
     value?: string | number;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;

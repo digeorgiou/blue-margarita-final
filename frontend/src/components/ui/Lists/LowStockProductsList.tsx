@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardService } from "../../../services/dashboardService.ts";
 import { categoryService } from "../../../services/categoryService.ts";
-import { LowStockProductItem, Card, LoadingSpinner, Input, ErrorDisplay, PageHeader, FilterContainer, PaginationControls } from "../"
+import { LowStockProductItem, Card, LoadingSpinner, Input, ErrorDisplay, Button } from "../"
+import { RefreshCw } from "lucide-react";
 import { StockUpdateModal} from "../modals/StockUpdateModal.tsx";
 import { usePagination} from "../../../hooks/usePagination.ts";
 import { useSorting } from "../../../hooks/useSorting.ts";
@@ -119,78 +120,92 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                    <PageHeader
-                        title="Low Stock Products"
-                        subtitle="Products running low on stock"
-                        icon="⚠️"
-                        onBack={() => onNavigate('dashboard')}
-                    />
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8 border border-white/20">
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">⚠️ Προϊόντα σε χαμηλό απόθεμα</h1>
+                            <p className="text-gray-700 mt-1">Διαχειριστέ τα προϊόντα που είναι σε χαμηλό απόθεμα</p>
+                        </div>
+                        <Button
+                            onClick={() => onNavigate('dashboard')}
+                            variant="secondary"
+                        >
+                            ← Back to Dashboard
+                        </Button>
+                    </div>
 
                     {/* Filters */}
-                    <FilterContainer
-                        title="Filter Products"
-                        onClearFilters={handleClearFilters}
-                        onRefresh={loadData}
-                        isLoading={loading}
-                    >
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Product Name/Code
-                                </label>
-                                <Input
-                                    type="text"
-                                    value={nameOrCodeFilter}
-                                    onChange={(e) => setNameOrCodeFilter(e.target.value)}
-                                    placeholder="Search..."
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Category
-                                </label>
-                                <select
-                                    value={categoryIdFilter}
-                                    onChange={(e) => setCategoryIdFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="">All Categories</option>
-                                    {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Min Stock
-                                </label>
-                                <Input
-                                    type="number"
-                                    value={minStockFilter}
-                                    onChange={(e) => setMinStockFilter(e.target.value)}
-                                    placeholder="Min stock..."
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Max Stock
-                                </label>
-                                <Input
-                                    type="number"
-                                    value={maxStockFilter}
-                                    onChange={(e) => setMaxStockFilter(e.target.value)}
-                                    placeholder="Max stock..."
-                                />
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Όνομα/Κωδικός Προϊόντος
+                            </label>
+                            <Input
+                                type="text"
+                                value={nameOrCodeFilter}
+                                onChange={(e) => setNameOrCodeFilter(e.target.value)}
+                                placeholder="Search..."
+                            />
                         </div>
-                    </FilterContainer>
 
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Category
+                            </label>
+                            <select
+                                value={categoryIdFilter}
+                                onChange={(e) => setCategoryIdFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Min Stock
+                            </label>
+                            <Input
+                                type="number"
+                                value={minStockFilter}
+                                onChange={(e) => setMinStockFilter(e.target.value)}
+                                placeholder="Min..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Max Stock
+                            </label>
+                            <Input
+                                type="number"
+                                value={maxStockFilter}
+                                onChange={(e) => setMaxStockFilter(e.target.value)}
+                                placeholder="Max..."
+                            />
+                        </div>
+
+                        <div className="flex gap-2">
+                            <Button onClick={handleClearFilters} variant="secondary" size="sm">
+                                Clear Filters
+                            </Button>
+                            <Button
+                                onClick={loadData}
+                                variant="purple"
+                                size="sm"
+                                disabled={loading}
+                            >
+                                Refresh
+                                <RefreshCw className={`w-4 h-4 ml-1 ${loading ? 'animate-spin' : ''}`} />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Results */}
                 <Card title={`Low Stock Products (${data?.totalElements || 0} total)`} icon="⚠️">
@@ -216,8 +231,13 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                                 >
                                     Current Stock {sortBy === 'stock' && (sortDirection === 'ASC' ? '↑' : '↓')}
                                 </button>
-                                <span>Threshold</span>
-                                <span>Status</span>
+                                <button
+                                    onClick={() => handleSort('minStock')}
+                                    className="text-left hover:text-blue-600 transition-colors"
+                                >
+                                    Min Stock {sortBy === 'minStock' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                                </button>
+                                <span>Actions</span>
                             </div>
 
                             {/* Product List */}
@@ -232,35 +252,63 @@ const LowStockProductsList: React.FC<LowStockProductsListProps> = ({ onNavigate 
                             </div>
 
                             {/* Pagination */}
-                            <PaginationControls
-                                currentPage={currentPage}
-                                totalPages={data.totalPages}
-                                totalElements={data.totalElements}
-                                hasNext={hasNext}
-                                hasPrevious={hasPrevious}
-                                onPageChange={setCurrentPage}
-                            />
-                            </>
-                        ) : (
+                            {data.totalPages > 1 && (
+                                <div className="flex justify-between items-center mt-6">
+                                    <div className="text-sm text-gray-600">
+                                        Showing {data.currentPage * 20 + 1} to {Math.min((data.currentPage + 1) * 20, data.totalElements)} of {data.totalElements} products
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            onClick={() => setCurrentPage(currentPage - 1)}
+                                            disabled={!hasPrevious}
+                                            variant="secondary"
+                                            size="sm"
+                                        >
+                                            Previous
+                                        </Button>
+                                        <span className="px-3 py-1 bg-gray-100 rounded-md text-sm">
+                                            Page {currentPage + 1} of {data.totalPages}
+                                        </span>
+                                        <Button
+                                            onClick={() => setCurrentPage(currentPage + 1)}
+                                            disabled={!hasNext}
+                                            variant="secondary"
+                                            size="sm"
+                                        >
+                                            Next
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    ) : (
                         <div className="text-center py-12">
-                            <div className="text-6xl mb-4">✅</div>
-                            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Low Stock Products</h3>
-                            <p className="text-gray-600">
+                            <div className="text-6xl mb-4">✨</div>
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">No low stock products found</h3>
+                            <p className="text-gray-600 mb-4">
                                 {nameOrCodeFilter || categoryIdFilter || materialNameFilter || minStockFilter || maxStockFilter
-                                    ? 'Try adjusting your filters to see more products.'
-                                    : 'All products are well stocked!'}
+                                    ? 'Try adjusting your filters or clearing them to see more products.'
+                                    : 'All products are adequately stocked!'}
                             </p>
+                            <Button onClick={handleClearFilters} variant="secondary">
+                                Clear Filters
+                            </Button>
                         </div>
                     )}
                 </Card>
 
                 {/* Stock Update Modal */}
-                <StockUpdateModal
-                    isOpen={showUpdateModal}
-                    onClose={() => setShowUpdateModal(false)}
-                    product={selectedProduct}
-                    onStockUpdated={loadData}
-                />
+                {showUpdateModal && selectedProduct && (
+                    <StockUpdateModal
+                        isOpen={showUpdateModal}
+                        onClose={() => setShowUpdateModal(false)}
+                        product={selectedProduct}
+                        onStockUpdated={() => {
+                            loadData();
+                            setShowUpdateModal(false);
+                        }}
+                    />
+                )}
             </div>
         </div>
     );
