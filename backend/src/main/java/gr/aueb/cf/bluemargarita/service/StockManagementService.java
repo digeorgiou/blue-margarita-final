@@ -248,7 +248,6 @@ public class StockManagementService implements IStockManagementService{
     public List<StockAlertDTO> getNegativeStockProducts(int limit) {
 
         ProductFilters filters = ProductFilters.builder()
-                .negativeStock(true)
                 .isActive(true)
                 .build();
 
@@ -270,24 +269,18 @@ public class StockManagementService implements IStockManagementService{
                 .isActive(true)
                 .build();
 
-        ProductFilters negativeStockFilters = ProductFilters.builder()
-                .negativeStock(true)
-                .isActive(true)
-                .build();
 
 
         // Multiple simple repository calls
         Integer totalProducts = productRepository.countByIsActiveTrue();
         Integer lowStockCount = countProductsByFilters(lowStockFilters);
-        Integer negativeStockCount = countProductsByFilters(negativeStockFilters);
         BigDecimal totalInventoryValue = productRepository.calculateTotalInventoryValue();
 
-        Double healthPercentage = calculateStockHealthPercentage(totalProducts, lowStockCount, negativeStockCount);
+        Double healthPercentage = calculateStockHealthPercentage(totalProducts, lowStockCount);
 
         return new StockOverviewDTO(
                 totalProducts,
                 lowStockCount,
-                negativeStockCount,
                 totalInventoryValue,
                 healthPercentage
         );
@@ -350,10 +343,9 @@ public class StockManagementService implements IStockManagementService{
                 result.newStock(), result.changeAmount());
     }
 
-    private Double calculateStockHealthPercentage(Integer total, Integer low, Integer negative) {
+    private Double calculateStockHealthPercentage(Integer total, Integer low) {
         if (total == 0) return 100.0;
-        Integer problematicStock = low + negative;
-        return ((total - problematicStock) * 100.0) / total;
+        return ((total - low) * 100.0) / total;
     }
 
 
@@ -363,8 +355,7 @@ public class StockManagementService implements IStockManagementService{
                 .and(ProductSpecification.productCategoryId(filters.getCategoryId()))
                 .and(ProductSpecification.productStockBetween(filters.getMinStock(), filters.getMaxStock()))
                 .and(ProductSpecification.productIsActive(filters.getIsActive()))
-                .and(ProductSpecification.productLowStock(filters.getLowStock()))
-                .and(ProductSpecification.productNegativeStock(filters.getNegativeStock()));
+                .and(ProductSpecification.productLowStock(filters.getLowStock()));
     }
 
     private Integer countProductsByFilters(ProductFilters filters) {

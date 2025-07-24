@@ -157,7 +157,7 @@ public class DashboardRestController {
                 .materialId(materialId)
                 .minStock(minStock)
                 .maxStock(maxStock)
-                .isActive(isActive)
+                .isActive(true)
                 .lowStock(true)
                 .build();
 

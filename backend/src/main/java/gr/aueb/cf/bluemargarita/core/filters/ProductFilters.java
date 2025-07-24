@@ -51,7 +51,4 @@ public class ProductFilters extends GenericFilters {
 
     @Nullable
     private Boolean lowStock; // Products below lowStockAlert threshold
-
-    @Nullable
-    private Boolean negativeStock;
 }

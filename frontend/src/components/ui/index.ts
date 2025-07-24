@@ -11,3 +11,8 @@ export { default as Sidebar } from './Sidebar';
 export { default as ActionButton } from './ActionButton';
 export { default as QuickActions } from './QuickActions';
 export { default as Logo } from './LogoImage.tsx';
+export { default as ErrorDisplay } from './ErrorDisplay';
+export { default as FilterContainer } from './FilterContainer';
+export { default as PageHeader } from './PageHeader';
+export { default as PaginationControls } from './PaginationControls';
+export { default as LowStockProductItem } from './LowStockProductItem';

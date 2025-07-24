@@ -3,6 +3,7 @@ package gr.aueb.cf.bluemargarita.core.specifications;
 import gr.aueb.cf.bluemargarita.model.*;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
@@ -126,22 +127,12 @@ public class ProductSpecification {
             if (lowStock == null || !lowStock) {
                 return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
             }
-            // Products where stock <= lowStockAlert
-            return criteriaBuilder.lessThanOrEqualTo(
+            Predicate predicate = criteriaBuilder.lessThanOrEqualTo(
                     root.get("stock"),
                     root.get("lowStockAlert")
             );
-        };
-    }
 
-    public static Specification<Product> productNegativeStock(Boolean lowStock) {
-        return (root, query, criteriaBuilder) -> {
-
-            // Products where stock <= 0
-            return criteriaBuilder.lessThanOrEqualTo(
-                    root.get("stock"),
-                    0
-            );
+            return predicate;
         };
     }
 
