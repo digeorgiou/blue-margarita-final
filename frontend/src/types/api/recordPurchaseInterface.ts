@@ -8,6 +8,7 @@ export interface RecordPurchaseRequestDTO {
 export interface PurchaseMaterialRequestDTO {
     materialId: number;
     quantity: number;
+    pricePerUnit: number;
 }
 
 

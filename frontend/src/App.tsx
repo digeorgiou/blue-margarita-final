@@ -9,6 +9,7 @@ import LowStockProductsPage from './pages/LowStockProductsPage';
 import MispricedProductsPage from './pages/MispricedProductsPage';
 import AllTasksPage from './pages/AllTasksPage';
 import RecordSalePage from "./pages/RecordSalePage.tsx";
+import RecordPurchasePage from "./pages/RecordPurchasePage.tsx";
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -52,7 +53,7 @@ const App: React.FC = () => {
             case 'record-sale':
                 return <RecordSalePage onNavigate={handleNavigation} />;
             case 'record-purchase':
-                return <div className="p-4"><h1 className="text-2xl text-white">Record Purchase - Coming Soon</h1></div>;
+                return <RecordPurchasePage onNavigate={handleNavigation} />;
             case 'stock-management':
                 return <div className="p-4"><h1 className="text-2xl text-white">Stock Management - Coming Soon</h1></div>;
             default:

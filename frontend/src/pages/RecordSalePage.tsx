@@ -8,13 +8,13 @@ import {
     PriceCalculationRequestDTO,
     PriceCalculationResponseDTO, SaleDetailedViewDTO,
 } from "../types/api/recordSaleInterface.ts";
-import { Modal } from '../components/ui/modals/Modal'; // Assuming you have a Modal component
+import { SaleSuccessModal } from '../components/ui/modals/SaleSuccessModal';
 import { CustomerSearchResultDTO } from "../types/api/customerInterface.ts";
 import { Button, LoadingSpinner, Input, Alert, CustomerSearchDropdown, ProductSearchDropdown } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
 import CartSummary from '../components/ui/CartSummary';
 import CartItem from '../components/ui/CartItem';
-import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator, CheckCircle } from 'lucide-react';
+import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator } from 'lucide-react';
 
 interface RecordSalePageProps {
     onNavigate: (page: string) => void;
@@ -523,8 +523,8 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                 <div className="flex items-center justify-center h-full">
                                     <div className="text-center text-gray-500">
                                         <Calculator className="w-24 h-24 mx-auto mb-8 opacity-30" />
-                                        <p className="text-3xl font-semibold mb-4">Add products to see pricing</p>
-                                        <p className="text-xl">Product totals, discounts, and final pricing will appear here</p>
+                                        <p className="text-3xl font-semibold mb-4">Δεν έχουν προστεθεί προϊόντα</p>
+                                        <p className="text-xl">Προσθέστε προϊόντα και οι τιμές τους θα εμφανιστούν εδώ</p>
                                     </div>
                                 </div>
                             )}
@@ -534,79 +534,26 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
             </div>
 
             {showSuccessModal && recordedSaleDetails && (
-                <Modal onClose={() => {
-                    setShowSuccessModal(false);
-                    onNavigate('dashboard');
-                }}>
-                    <div className="text-center">
-                        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                            <CheckCircle className="h-6 w-6 text-green-600" />
-                        </div>
-                        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2">
-                            Η πώληση καταγράφηκε με επιτυχία!
-                        </h3>
-                        <p className="text-sm text-gray-500 mb-6">
-                            Αριθμός Πώλησης: #{recordedSaleDetails.saleId}
-                        </p>
-
-                        <div className="bg-gray-50 p-4 rounded-lg mb-6 text-left">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Ημερομηνία:</p>
-                                    <p className="text-sm">{recordedSaleDetails.saleDate}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Τοποθεσία:</p>
-                                    <p className="text-sm">{recordedSaleDetails.location.name}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Τρόπος Πληρωμής:</p>
-                                    <p className="text-sm">{recordedSaleDetails.paymentMethod}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Τύπος:</p>
-                                    <p className="text-sm">{recordedSaleDetails.isWholesale ? 'Χονδρική' : 'Λιανική'}</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                <div className="flex justify-between mb-2">
-                                    <p className="text-sm font-medium">Συνολική Αξία:</p>
-                                    <p className="text-sm font-medium">{formatMoney(recordedSaleDetails.subtotal)}</p>
-                                </div>
-                                <div className="flex justify-between mb-2">
-                                    <p className="text-sm font-medium">Συσκευασία:</p>
-                                    <p className="text-sm font-medium">{formatMoney(recordedSaleDetails.packagingCost)}</p>
-                                </div>
-                                {recordedSaleDetails.discountAmount > 0 && (
-                                    <div className="flex justify-between mb-2 text-red-600">
-                                        <p className="text-sm font-medium">Έκπτωση ({recordedSaleDetails.discountPercentage.toFixed(1)}%):</p>
-                                        <p className="text-sm font-medium">-{formatMoney(recordedSaleDetails.discountAmount)}</p>
-                                    </div>
-                                )}
-                                <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
-                                    <p className="text-lg font-bold">Τελικό Ποσό:</p>
-                                    <p className="text-lg font-bold">{formatMoney(recordedSaleDetails.finalTotal)}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-5 sm:mt-6">
-                            <Button
-                                onClick={() => {
-                                    setShowSuccessModal(false);
-                                    onNavigate('dashboard');
-                                }}
-                                variant="primary"
-                                className="w-full justify-center"
-                            >
-                                Κλείσιμο
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                <SaleSuccessModal
+                    sale={recordedSaleDetails}
+                    onClose={() => {
+                        setShowSuccessModal(false);
+                        // Reset form for new sale
+                        setSelectedCustomer(null);
+                        setSelectedLocation(null);
+                        setSelectedPaymentMethod('');
+                        setCart([]);
+                        setCartPricing(null);
+                        setUserFinalPrice(0);
+                        setUserDiscountPercentage(0);
+                        setPackagingCost(0);
+                        setSaleDate(new Date().toISOString().split('T')[0]);
+                        setError(null);
+                        setRecordedSaleDetails(null);
+                        onNavigate('record-sale');
+                    }}
+                />
             )}
-
         </div>
     );
 };

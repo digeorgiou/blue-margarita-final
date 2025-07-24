@@ -11,6 +11,17 @@ export interface ProcedureReadOnlyDTO {
     deletedAt: string;
 }
 
+export interface ProcedureInsertDTO {
+    name: string;
+    creatorUserId: number;
+}
+
+export interface ProcedureUpdateDTO {
+    procedureId: number;
+    updaterUserId: number;
+    name: string;
+}
+
 export interface ProcedureForDropdownDTO {
     id: number;
     name: string;

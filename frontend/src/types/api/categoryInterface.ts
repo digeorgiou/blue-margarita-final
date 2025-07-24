@@ -11,6 +11,17 @@ export interface CategoryReadOnlyDTO {
     deletedAt: string;
 }
 
+export interface CategoryInsertDTO {
+    name : string;
+    creatorUserId: number;
+}
+
+export interface CategoryUpdateDTO {
+    categoryId: number;
+    updaterUserId: number;
+    name: string;
+}
+
 export interface CategoryForDropdownDTO {
     id: number;
     name: string;

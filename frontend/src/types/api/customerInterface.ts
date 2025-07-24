@@ -10,6 +10,29 @@ export interface CustomerListItemDTO {
     tin: string;
 }
 
+export interface CustomerInsertDTO {
+    firstname: string;
+    lastname: string;
+    gender: GenderType;
+    phoneNumber: string;
+    address: string;
+    email: string;
+    tin: string;
+    creatorUserId: number;
+}
+
+export interface CustomerUpdateDTO {
+    customerId: number;
+    updaterUserId: number;
+    firstname: string;
+    lastname: string;
+    gender: GenderType;
+    phoneNumber: string;
+    address: string;
+    email: string;
+    tin: string;
+}
+
 export interface CustomerSearchResultDTO {
     id: number;
     fullName: string;

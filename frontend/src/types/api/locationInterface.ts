@@ -11,6 +11,17 @@ export interface LocationReadOnlyDTO {
     deletedAt: string;
 }
 
+export interface LocationInsertDTO{
+    name: string;
+    creatorUserId: number;
+}
+
+export interface LocationUpdateDTO {
+    locationId: number;
+    updaterUserId: number;
+    name: string;
+}
+
 export interface LocationForDropdownDTO {
     id: number;
     name: string;

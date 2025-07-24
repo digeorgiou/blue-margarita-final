@@ -11,6 +11,21 @@ export interface MaterialReadOnlyDTO {
     deletedAt: string;
 }
 
+export interface MaterialInsertDTO {
+    name: string;
+    currentUnitCost: number;
+    unitOfMeasure: string;
+    creatorUserId: number;
+}
+
+export interface MaterialUpdateDTO {
+    materialId: number;
+    updaterUserId: number;
+    name: string;
+    currentUnitCost: number;
+    unitOfMeasure: string;
+}
+
 export interface MaterialSearchResultDTO {
     materialId: number;
     materialName: string;
@@ -76,4 +91,14 @@ export interface ProductUsageDTO {
     productCode: string;
     usageCount: number;
     totalRevenue: number;
+}
+
+export interface PriceRecalculationResultDT {
+    totalProductsProcessed: number;
+    productsUpdated: number;
+    productsSkipped: number;
+    productsFailed: number;
+    processedAt: string;
+    processedByUsername: string;
+    failedProductCodes: string[];
 }
