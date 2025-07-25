@@ -12,6 +12,7 @@ import RecordSalePage from "./pages/RecordSalePage.tsx";
 import RecordPurchasePage from "./pages/RecordPurchasePage.tsx";
 import CategoryManagementPage   from "./pages/CategoryManagementPage.tsx";
 import LocationManagementPage from "./pages/LocationManagementPage.tsx";
+import CustomerManagementPage from "./pages/CustomerManagementPage.tsx";
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -45,7 +46,7 @@ const App: React.FC = () => {
             case 'manage-products':
                 return <div className="p-4"><h1 className="text-2xl text-white">Manage Products - Coming Soon</h1></div>;
             case 'customers':
-                return <div className="p-4"><h1 className="text-2xl text-white">Manage Customers - Coming Soon</h1></div>;
+                return <CustomerManagementPage/>;
             case 'materials':
                 return <div className="p-4"><h1 className="text-2xl text-white">Materials - Coming Soon</h1></div>;
             case 'purchases':

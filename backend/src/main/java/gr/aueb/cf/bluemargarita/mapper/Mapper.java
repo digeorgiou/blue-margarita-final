@@ -104,10 +104,10 @@ public class Mapper {
                 .firstname(dto.firstname())
                 .lastname(dto.lastname())
                 .gender(dto.gender())
-                .phoneNumber(dto.phoneNumber())
-                .address(dto.address())
-                .email(dto.email())
-                .tin(dto.tin())
+                .phoneNumber(normalizeOptionalStringField(dto.phoneNumber()))
+                .address(normalizeOptionalStringField(dto.address()))
+                .email(normalizeOptionalStringField(dto.email()))
+                .tin(normalizeOptionalStringField(dto.tin()))
                 .isActive(true)
                 .build();
     }
@@ -773,4 +773,7 @@ public class Mapper {
         );
     }
 
+    private String normalizeOptionalStringField(String value) {
+        return value != null && value.trim().isEmpty() ? null : value;
+    }
 }

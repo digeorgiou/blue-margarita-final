@@ -34,4 +34,9 @@ export { default as LocationCreateModal } from './modals/location/LocationCreate
 export { default as LocationUpdateModal } from './modals/location/LocationUpdateModal.tsx'
 export { default as LocationDetailModal } from './modals/location/LocationDetailModal.tsx'
 
+export { default as CustomerCreateModal } from './modals/customer/CustomerCreateModal'
+export { default as CustomerUpdateModal } from './modals/customer/CustomerUpdateModal'
+export { default as CustomerDetailModal } from './modals/customer/CustomerDetailModal'
+export { default as CustomerSearchBar } from './searchBars/CustomerSearchBar.tsx'
+
 

@@ -55,11 +55,11 @@ public class CustomerService implements ICustomerService {
     @Transactional(rollbackFor = Exception.class)
     public CustomerListItemDTO createCustomer(CustomerInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        validateUniqueEmail(dto.email());
-        validateUniqueTin(dto.tin());
-        validateUniquePhoneNumber(dto.phoneNumber());
-
         Customer customer = mapper.mapCustomerInsertToModel(dto);
+
+        validateUniqueEmail(customer.getEmail());
+        validateUniqueTin(customer.getTin());
+        validateUniquePhoneNumber(customer.getPhoneNumber());
 
         User creator = getUserEntityById(dto.creatorUserId());
 

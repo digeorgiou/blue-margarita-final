@@ -1,19 +1,56 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
-export function usePagination(initialPage = 0) {
+interface UsePaginationProps {
+    initialPage?: number;
+    initialPageSize?: number;
+    onPageChange?: (page: number, pageSize: number) => void;
+}
+
+interface UsePaginationReturn {
+    currentPage: number;
+    pageSize: number;
+    setPage: (page: number) => void;
+    setPageSize: (size: number) => void;
+    resetPagination: () => void;
+    getPaginationParams: () => { page: number; pageSize: number };
+}
+
+export const usePagination = ({
+                                  initialPage = 0,
+                                  initialPageSize = 12,
+                                  onPageChange
+                              }: UsePaginationProps = {}): UsePaginationReturn => {
     const [currentPage, setCurrentPage] = useState(initialPage);
+    const [pageSize, setPageSize] = useState(initialPageSize);
 
-    const nextPage = () => setCurrentPage(prev => prev + 1);
-    const prevPage = () => setCurrentPage(prev => Math.max(0, prev - 1));
-    const resetPage = () => setCurrentPage(0);
-    const goToPage = (page: number) => setCurrentPage(Math.max(0, page));
+    const setPage = useCallback((page: number) => {
+        setCurrentPage(page);
+        onPageChange?.(page, pageSize);
+    }, [pageSize, onPageChange]);
+
+    const setPageSizeAndResetPage = useCallback((size: number) => {
+        setPageSize(size);
+        setCurrentPage(0);
+        onPageChange?.(0, size);
+    }, [onPageChange]);
+
+    const resetPagination = useCallback(() => {
+        setCurrentPage(initialPage);
+        setPageSize(initialPageSize);
+        onPageChange?.(initialPage, initialPageSize);
+    }, [initialPage, initialPageSize, onPageChange]);
+
+    const getPaginationParams = useCallback(() => ({
+        page: currentPage,
+        pageSize: pageSize
+    }), [currentPage, pageSize]);
 
     return {
         currentPage,
-        setCurrentPage,
-        nextPage,
-        prevPage,
-        resetPage,
-        goToPage
+        pageSize,
+        setPage,
+        setPageSize: setPageSizeAndResetPage,
+        resetPagination,
+        getPaginationParams
     };
-}
+};

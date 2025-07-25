@@ -1,106 +1,128 @@
+// CustomerCreateModal.tsx using the useFormErrorHandler hook
+
 import React, { useState } from 'react';
 import { User, Phone, CreditCard } from 'lucide-react';
 import { BaseFormModal, Input } from '../../index';
-import { GenderType, GenderTypeLabels } from '../../../../types/api/customerInterface';
+import { CustomerInsertDTO, GenderType, GenderTypeLabels } from '../../../../types/api/customerInterface';
+import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 
 interface CustomerCreateModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: CustomerFormData) => Promise<void>;
-}
-
-interface CustomerFormData {
-    firstname: string;
-    lastname: string;
-    gender: GenderType;
-    phoneNumber: string;
-    address: string;
-    email: string;
-    tin: string;
+    onSubmit: (data: CustomerInsertDTO) => Promise<void>;
+    currentUserId: number;
 }
 
 const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                                                                      isOpen,
                                                                      onClose,
-                                                                     onSubmit
+                                                                     onSubmit,
+                                                                     currentUserId
                                                                  }) => {
-    const [formData, setFormData] = useState<CustomerFormData>({
+    const [formData, setFormData] = useState<CustomerInsertDTO>({
         firstname: '',
         lastname: '',
         gender: GenderType.FEMALE,
         phoneNumber: '',
         address: '',
         email: '',
-        tin: ''
+        tin: '',
+        creatorUserId: currentUserId
     });
 
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Use the reusable error handler hook
+    const {
+        fieldErrors,
+        generalError,
+        handleApiError,
+        clearErrors,
+        clearFieldError
+    } = useFormErrorHandler({
+        // Map specific business errors to field errors
+        businessErrorToFieldMap: {
+            'CUSTOMER_EMAIL_EXISTS': 'email',
+            'CUSTOMER_TIN_EXISTS': 'tin'
+        }
+    });
+
+    // Minimal client-side validation - let backend handle all the real validation
     const validateForm = (): boolean => {
-        const newErrors: { [key: string]: string } = {};
-
-        // Required fields validation (only firstname and lastname)
+        // Only check if required fields are present (basic UX check)
         if (!formData.firstname.trim()) {
-            newErrors.firstname = 'Το όνομα είναι υποχρεωτικό';
-        } else if (formData.firstname.trim().length < 2) {
-            newErrors.firstname = 'Το όνομα πρέπει να έχει τουλάχιστον 2 χαρακτήρες';
+            return false;
         }
 
         if (!formData.lastname.trim()) {
-            newErrors.lastname = 'Το επώνυμο είναι υποχρεωτικό';
-        } else if (formData.lastname.trim().length < 2) {
-            newErrors.lastname = 'Το επώνυμο πρέπει να έχει τουλάχιστον 2 χαρακτήρες';
+            return false;
         }
 
-        if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-            newErrors.email = 'Μη έγκυρη διεύθυνση email';
-        }
-
-        if (formData.address.trim() && formData.address.trim().length < 5) {
-            newErrors.address = 'Η διεύθυνση πρέπει να έχει τουλάχιστον 5 χαρακτήρες';
-        }
-
-        // Optional TIN validation
-        if (formData.tin.trim() && !/^\d{9}$/.test(formData.tin.trim())) {
-            newErrors.tin = 'Το ΑΦΜ πρέπει να έχει 9 ψηφία';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
-        await onSubmit(formData);
-        handleClose();
+        return true;
     };
 
     const handleClose = () => {
         setFormData({
             firstname: '',
             lastname: '',
-            gender: GenderType.FEMALE, // Consistent with initial state
+            gender: GenderType.FEMALE,
             phoneNumber: '',
             address: '',
             email: '',
-            tin: ''
+            tin: '',
+            creatorUserId: currentUserId
         });
-        setErrors({}); // Clear errors on close
+        clearErrors();
         onClose();
     };
 
-    const handleInputChange = (field: keyof CustomerFormData, value: string | GenderType) => {
+    const handleInputChange = (field: keyof CustomerInsertDTO, value: string | GenderType | number) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
         // Clear field error when user starts typing
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }));
+        if (fieldErrors[field]) {
+            clearFieldError(field);
+        }
+
+        // Clear general error when user makes changes
+        if (generalError) {
+            clearErrors();
         }
     };
 
-    // Check if form is valid (for submit button state)
-    const isFormValid = formData.firstname.trim().length >= 2 &&
-        formData.lastname.trim().length >= 2;
+    const handleSubmit = async () => {
+        if (!validateForm()) return;
+
+        setIsSubmitting(true);
+        clearErrors();
+
+        try {
+            // Send data to backend - let backend validation handle everything
+            const dataToSubmit: CustomerInsertDTO = {
+                firstname: formData.firstname.trim(),
+                lastname: formData.lastname.trim(),
+                gender: formData.gender,
+                phoneNumber: formData.phoneNumber?.trim() || '',
+                address: formData.address?.trim() || '',
+                email: formData.email?.trim() || '',
+                tin: formData.tin?.trim() || '',
+                creatorUserId: currentUserId
+            };
+
+            await onSubmit(dataToSubmit);
+            handleClose();
+        } catch (error) {
+            // Use the reusable error handler (hook handles type conversion)
+            await handleApiError(error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Let backend validation handle form validity - only check basic required fields
+    const isFormValid = formData.firstname.trim().length > 0 &&
+        formData.lastname.trim().length > 0 &&
+        !isSubmitting;
 
     return (
         <BaseFormModal
@@ -108,11 +130,20 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
             onClose={handleClose}
             title="Δημιουργία Νέου Πελάτη"
             onSubmit={handleSubmit}
-            submitText="Δημιουργία Πελάτη"
+            submitText={isSubmitting ? "Δημιουργία..." : "Δημιουργία Πελάτη"}
             cancelText="Ακύρωση"
             isValid={isFormValid}
         >
             <div className="space-y-6">
+                {/* General Error Display */}
+                {generalError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm text-red-800">
+                            {generalError}
+                        </p>
+                    </div>
+                )}
+
                 {/* Personal Information */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center">
@@ -123,18 +154,20 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
                             label="Όνομα *"
-                            value={formData.firstname}
+                            value={formData.firstname || ''}
                             onChange={(e) => handleInputChange('firstname', e.target.value)}
                             placeholder="π.χ. Γιάννης"
-                            error={errors.firstname}
+                            error={fieldErrors.firstname}
+                            disabled={isSubmitting}
                         />
 
                         <Input
                             label="Επώνυμο *"
-                            value={formData.lastname}
+                            value={formData.lastname || ''}
                             onChange={(e) => handleInputChange('lastname', e.target.value)}
                             placeholder="π.χ. Παπαδόπουλος"
-                            error={errors.lastname}
+                            error={fieldErrors.lastname}
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -145,7 +178,8 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                         <select
                             value={formData.gender}
                             onChange={(e) => handleInputChange('gender', e.target.value as GenderType)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            disabled={isSubmitting}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         >
                             {Object.values(GenderType).map(gender => (
                                 <option key={gender} value={gender}>
@@ -153,6 +187,9 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                                 </option>
                             ))}
                         </select>
+                        {fieldErrors.gender && (
+                            <p className="mt-1 text-sm text-red-600">{fieldErrors.gender}</p>
+                        )}
                     </div>
                 </div>
 
@@ -165,27 +202,30 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
 
                     <Input
                         label="Τηλέφωνο"
-                        value={formData.phoneNumber}
+                        value={formData.phoneNumber || ''}
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                         placeholder="π.χ. 6901234567"
-                        error={errors.phoneNumber}
+                        error={fieldErrors.phoneNumber}
+                        disabled={isSubmitting}
                     />
 
                     <Input
                         label="Email"
                         type="email"
-                        value={formData.email}
+                        value={formData.email || ''}
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="π.χ. customer@example.com"
-                        error={errors.email}
+                        error={fieldErrors.email}
+                        disabled={isSubmitting}
                     />
 
                     <Input
                         label="Διεύθυνση"
-                        value={formData.address}
+                        value={formData.address || ''}
                         onChange={(e) => handleInputChange('address', e.target.value)}
                         placeholder="π.χ. Πατησίων 123, Αθήνα"
-                        error={errors.address}
+                        error={fieldErrors.address}
+                        disabled={isSubmitting}
                     />
                 </div>
 
@@ -198,10 +238,11 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
 
                     <Input
                         label="ΑΦΜ (Προαιρετικό)"
-                        value={formData.tin}
+                        value={formData.tin || ''}
                         onChange={(e) => handleInputChange('tin', e.target.value)}
                         placeholder="π.χ. 123456789"
-                        error={errors.tin}
+                        error={fieldErrors.tin}
+                        disabled={isSubmitting}
                     />
                     <p className="text-sm text-gray-500">
                         Το ΑΦΜ είναι υποχρεωτικό για χονδρικούς πελάτες

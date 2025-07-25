@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Phone, CreditCard } from 'lucide-react';
 import { BaseFormModal, Input } from '../../index';
-import { GenderType, GenderTypeLabels } from '../../../../types/api/customerInterface';
+import { GenderType, GenderTypeLabels, CustomerListItemDTO } from '../../../../types/api/customerInterface';
 
-interface CustomerCreateModalProps {
+interface CustomerUpdateModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: CustomerFormData) => Promise<void>;
+    customer: CustomerListItemDTO;
 }
 
 interface CustomerFormData {
@@ -19,49 +20,66 @@ interface CustomerFormData {
     tin: string;
 }
 
-const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
+const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                                                                      isOpen,
                                                                      onClose,
-                                                                     onSubmit
+                                                                     onSubmit,
+                                                                     customer
                                                                  }) => {
     const [formData, setFormData] = useState<CustomerFormData>({
         firstname: '',
         lastname: '',
-        gender: GenderType.FEMALE,
+        gender: GenderType.OTHER,
         phoneNumber: '',
         address: '',
         email: '',
         tin: ''
     });
+    const [errors, setErrors] = useState<Partial<CustomerFormData>>({});
 
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    // Initialize form data when customer changes
+    useEffect(() => {
+        if (customer) {
+            setFormData({
+                firstname: customer.firstname || '',
+                lastname: customer.lastname || '',
+                gender: GenderType.OTHER, // Default since it's not in CustomerListItemDTO
+                phoneNumber: customer.phoneNumber || '',
+                address: customer.address || '',
+                email: customer.email || '',
+                tin: customer.tin || ''
+            });
+        }
+    }, [customer]);
 
     const validateForm = (): boolean => {
-        const newErrors: { [key: string]: string } = {};
+        const newErrors: Partial<CustomerFormData> = {};
 
-        // Required fields validation (only firstname and lastname)
         if (!formData.firstname.trim()) {
             newErrors.firstname = 'Το όνομα είναι υποχρεωτικό';
-        } else if (formData.firstname.trim().length < 2) {
-            newErrors.firstname = 'Το όνομα πρέπει να έχει τουλάχιστον 2 χαρακτήρες';
         }
 
         if (!formData.lastname.trim()) {
             newErrors.lastname = 'Το επώνυμο είναι υποχρεωτικό';
-        } else if (formData.lastname.trim().length < 2) {
-            newErrors.lastname = 'Το επώνυμο πρέπει να έχει τουλάχιστον 2 χαρακτήρες';
         }
 
-        if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-            newErrors.email = 'Μη έγκυρη διεύθυνση email';
+        if (!formData.phoneNumber.trim()) {
+            newErrors.phoneNumber = 'Το τηλέφωνο είναι υποχρεωτικό';
+        } else if (!/^\d{10}$/.test(formData.phoneNumber.replace(/[\s-]/g, ''))) {
+            newErrors.phoneNumber = 'Το τηλέφωνο πρέπει να έχει 10 ψηφία';
         }
 
-        if (formData.address.trim() && formData.address.trim().length < 5) {
-            newErrors.address = 'Η διεύθυνση πρέπει να έχει τουλάχιστον 5 χαρακτήρες';
+        if (!formData.address.trim()) {
+            newErrors.address = 'Η διεύθυνση είναι υποχρεωτική';
         }
 
-        // Optional TIN validation
-        if (formData.tin.trim() && !/^\d{9}$/.test(formData.tin.trim())) {
+        if (!formData.email.trim()) {
+            newErrors.email = 'Το email είναι υποχρεωτικό';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Μη έγκυρο email';
+        }
+
+        if (formData.tin && !/^\d{9}$/.test(formData.tin)) {
             newErrors.tin = 'Το ΑΦΜ πρέπει να έχει 9 ψηφία';
         }
 
@@ -76,43 +94,58 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
     };
 
     const handleClose = () => {
-        setFormData({
-            firstname: '',
-            lastname: '',
-            gender: GenderType.FEMALE, // Consistent with initial state
-            phoneNumber: '',
-            address: '',
-            email: '',
-            tin: ''
-        });
-        setErrors({}); // Clear errors on close
+        setErrors({});
         onClose();
     };
 
     const handleInputChange = (field: keyof CustomerFormData, value: string | GenderType) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-
-        // Clear field error when user starts typing
         if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }));
+            setErrors(prev => ({ ...prev, [field]: undefined }));
         }
     };
 
-    // Check if form is valid (for submit button state)
-    const isFormValid = formData.firstname.trim().length >= 2 &&
-        formData.lastname.trim().length >= 2;
+    const isValid = !!(
+        formData.firstname.trim() &&
+        formData.lastname.trim() &&
+        formData.phoneNumber.trim() &&
+        formData.address.trim() &&
+        formData.email.trim() &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
+        /^\d{10}$/.test(formData.phoneNumber.replace(/[\s-]/g, '')) &&
+        (!formData.tin || /^\d{9}$/.test(formData.tin))
+    );
+
+    const hasChanges = customer ? (
+        formData.firstname.trim() !== customer.firstname ||
+        formData.lastname.trim() !== customer.lastname ||
+        formData.phoneNumber.trim() !== customer.phoneNumber ||
+        formData.address.trim() !== customer.address ||
+        formData.email.trim() !== customer.email ||
+        formData.tin.trim() !== (customer.tin || '')
+    ) : true;
 
     return (
         <BaseFormModal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Δημιουργία Νέου Πελάτη"
+            title="Επεξεργασία Πελάτη"
             onSubmit={handleSubmit}
-            submitText="Δημιουργία Πελάτη"
+            submitText="Ενημέρωση"
             cancelText="Ακύρωση"
-            isValid={isFormValid}
+            isValid={isValid && hasChanges}
         >
             <div className="space-y-6">
+                {/* Customer Info */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Στοιχεία Πελάτη</h4>
+                    <div className="text-sm text-gray-600 space-y-1">
+                        <p><strong>ID:</strong> {customer?.customerId}</p>
+                        <p><strong>Τρέχον Email:</strong> {customer?.email}</p>
+                        <p><strong>Τρέχον Τηλέφωνο:</strong> {customer?.phoneNumber}</p>
+                    </div>
+                </div>
+
                 {/* Personal Information */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center">
@@ -125,16 +158,16 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                             label="Όνομα *"
                             value={formData.firstname}
                             onChange={(e) => handleInputChange('firstname', e.target.value)}
-                            placeholder="π.χ. Γιάννης"
                             error={errors.firstname}
+                            placeholder="π.χ. Γιάννης"
                         />
 
                         <Input
                             label="Επώνυμο *"
                             value={formData.lastname}
                             onChange={(e) => handleInputChange('lastname', e.target.value)}
-                            placeholder="π.χ. Παπαδόπουλος"
                             error={errors.lastname}
+                            placeholder="π.χ. Παπαδόπουλος"
                         />
                     </div>
 
@@ -164,28 +197,28 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                     </h3>
 
                     <Input
-                        label="Τηλέφωνο"
+                        label="Τηλέφωνο *"
                         value={formData.phoneNumber}
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                        placeholder="π.χ. 6901234567"
                         error={errors.phoneNumber}
+                        placeholder="π.χ. 6901234567"
                     />
 
                     <Input
-                        label="Email"
+                        label="Email *"
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        placeholder="π.χ. customer@example.com"
                         error={errors.email}
+                        placeholder="π.χ. customer@example.com"
                     />
 
                     <Input
-                        label="Διεύθυνση"
+                        label="Διεύθυνση *"
                         value={formData.address}
                         onChange={(e) => handleInputChange('address', e.target.value)}
-                        placeholder="π.χ. Πατησίων 123, Αθήνα"
                         error={errors.address}
+                        placeholder="π.χ. Πατησίων 123, Αθήνα"
                     />
                 </div>
 
@@ -200,22 +233,25 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                         label="ΑΦΜ (Προαιρετικό)"
                         value={formData.tin}
                         onChange={(e) => handleInputChange('tin', e.target.value)}
-                        placeholder="π.χ. 123456789"
                         error={errors.tin}
+                        placeholder="π.χ. 123456789"
                     />
                     <p className="text-sm text-gray-500">
                         Το ΑΦΜ είναι υποχρεωτικό για χονδρικούς πελάτες
                     </p>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                        💡 <strong>Συμβουλή:</strong> Βεβαιωθείτε ότι τα στοιχεία επικοινωνίας είναι σωστά για την καλύτερη εξυπηρέτηση του πελάτη.
-                    </p>
-                </div>
+                {/* Change indicator */}
+                {!hasChanges && isValid && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <p className="text-sm text-yellow-800">
+                            ℹ️ Δεν έχουν γίνει αλλαγές στα στοιχεία του πελάτη.
+                        </p>
+                    </div>
+                )}
             </div>
         </BaseFormModal>
     );
 };
 
-export default CustomerCreateModal;
+export default CustomerUpdateModal;

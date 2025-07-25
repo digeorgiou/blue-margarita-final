@@ -14,10 +14,10 @@ export interface CustomerInsertDTO {
     firstname: string;
     lastname: string;
     gender: GenderType;
-    phoneNumber: string;
-    address: string;
-    email: string;
-    tin: string;
+    phoneNumber: string | null;
+    address: string | null;
+    email: string | null;
+    tin: string | null;
     creatorUserId: number;
 }
 
@@ -92,11 +92,12 @@ export const getGenderTypeLabel = (type: GenderType): string => {
 };
 
 export interface Paginated<T> {
-    content: T[];
+    data: T[];
     totalElements: number;
     totalPages: number;
     currentPage: number;
     pageSize: number;
+    numberOfElements: number;
     hasNext: boolean;
     hasPrevious: boolean;
 }
