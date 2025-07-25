@@ -1,16 +1,16 @@
 import { authService } from './authService';
 import {
-    CategoryReadOnlyDTO,
-    CategoryInsertDTO,
-    CategoryUpdateDTO,
-    CategoryForDropdownDTO,
-    CategoryDetailedViewDTO,
-    Paginated
-} from "../types/api/categoryInterface.ts";
+    LocationReadOnlyDTO,
+    LocationInsertDTO,
+    LocationUpdateDTO,
+    LocationForDropdownDTO,
+    LocationDetailedViewDTO,
+} from "../types/api/locationInterface.ts";
+import { Paginated } from "../types/api/dashboardInterface.ts";
 
-const API_BASE_URL = '/api/categories';
+const API_BASE_URL = '/api/locations';
 
-class CategoryService {
+class LocationService {
 
     private getAuthHeaders(): HeadersInit {
         const headers = authService.getAuthHeaders();
@@ -32,10 +32,10 @@ class CategoryService {
     }
 
     // =============================================================================
-    // CORE CRUD OPERATIONS - FOR CATEGORY MANAGEMENT PAGE
+    // CORE CRUD OPERATIONS - FOR LOCATION MANAGEMENT PAGE
     // =============================================================================
 
-    async createCategory(categoryData: CategoryInsertDTO): Promise<CategoryReadOnlyDTO> {
+    async createLocation(locationData: LocationInsertDTO): Promise<LocationReadOnlyDTO> {
         try {
             const response = await fetch(`${API_BASE_URL}`, {
                 method: 'POST',
@@ -43,7 +43,7 @@ class CategoryService {
                     ...this.getAuthHeaders(),
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(categoryData)
+                body: JSON.stringify(locationData)
             });
 
             if (!response.ok) {
@@ -55,27 +55,27 @@ class CategoryService {
                     throw new Error('Authentication failed - please log in again');
                 }
                 if (response.status === 409) {
-                    throw new Error('Category with name already exists');
+                    throw new Error('Location with name already exists');
                 }
-                throw new Error(`Failed to create category: ${response.status}`);
+                throw new Error(`Failed to create location: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Create category error:', error);
+            console.error('Create location error:', error);
             throw error;
         }
     }
 
-    async updateCategory(categoryData: CategoryUpdateDTO): Promise<CategoryReadOnlyDTO> {
+    async updateLocation(locationId: number, locationData: LocationUpdateDTO): Promise<LocationReadOnlyDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryData.categoryId}`, {
+            const response = await fetch(`${API_BASE_URL}/${locationId}`, {
                 method: 'PUT',
                 headers: {
                     ...this.getAuthHeaders(),
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(categoryData)
+                body: JSON.stringify(locationData)
             });
 
             if (!response.ok) {
@@ -87,24 +87,24 @@ class CategoryService {
                     throw new Error('Authentication failed - please log in again');
                 }
                 if (response.status === 404) {
-                    throw new Error('Category not found');
+                    throw new Error('Location not found');
                 }
                 if (response.status === 409) {
-                    throw new Error('Category with name already exists');
+                    throw new Error('Location with name already exists');
                 }
-                throw new Error(`Failed to update category: ${response.status}`);
+                throw new Error(`Failed to update location: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Update category error:', error);
+            console.error('Update location error:', error);
             throw error;
         }
     }
 
-    async deleteCategory(categoryId: number): Promise<void> {
+    async deleteLocation(locationId: number): Promise<void> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}`, {
+            const response = await fetch(`${API_BASE_URL}/${locationId}`, {
                 method: 'DELETE',
                 headers: this.getAuthHeaders()
             });
@@ -118,19 +118,19 @@ class CategoryService {
                     throw new Error('Access denied - requires ADMIN role');
                 }
                 if (response.status === 404) {
-                    throw new Error('Category not found');
+                    throw new Error('Location not found');
                 }
-                throw new Error(`Failed to delete category: ${response.status}`);
+                throw new Error(`Failed to delete location: ${response.status}`);
             }
         } catch (error) {
-            console.error('Delete category error:', error);
+            console.error('Delete location error:', error);
             throw error;
         }
     }
 
-    async getCategoryById(categoryId: number): Promise<CategoryReadOnlyDTO> {
+    async getLocationById(locationId: number): Promise<LocationReadOnlyDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}`, {
+            const response = await fetch(`${API_BASE_URL}/${locationId}`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
@@ -141,30 +141,30 @@ class CategoryService {
                     throw new Error('Authentication failed - please log in again');
                 }
                 if (response.status === 404) {
-                    throw new Error('Category not found');
+                    throw new Error('Location not found');
                 }
-                throw new Error(`Failed to get category: ${response.status}`);
+                throw new Error(`Failed to get location: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Get category by ID error:', error);
+            console.error('Get location by ID error:', error);
             throw error;
         }
     }
 
     // =============================================================================
-    // CATEGORY VIEWING AND DETAILS - FOR CATEGORY MANAGEMENT PAGE
+    // LOCATION VIEWING AND LISTING - FOR LOCATION MANAGEMENT PAGE
     // =============================================================================
 
-    async getCategoriesFilteredPaginated(filters: {
+    async getLocationsFilteredPaginated(filters: {
         name?: string;
         isActive?: boolean;
         page?: number;
         pageSize?: number;
         sortBy?: string;
         sortDirection?: string;
-    }): Promise<Paginated<CategoryReadOnlyDTO>> {
+    }): Promise<Paginated<LocationReadOnlyDTO>> {
         try {
             const queryParams = new URLSearchParams();
 
@@ -185,19 +185,19 @@ class CategoryService {
                     this.handleAuthError(response);
                     throw new Error('Authentication failed - please log in again');
                 }
-                throw new Error(`Failed to get categories: ${response.status}`);
+                throw new Error(`Failed to get locations: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Get categories filtered paginated error:', error);
+            console.error('Get locations filtered paginated error:', error);
             throw error;
         }
     }
 
-    async getCategoryDetailedView(categoryId: number): Promise<CategoryDetailedViewDTO> {
+    async getLocationDetailedView(locationId: number): Promise<LocationDetailedViewDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}/details`, {
+            const response = await fetch(`${API_BASE_URL}/${locationId}/details`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
@@ -208,23 +208,23 @@ class CategoryService {
                     throw new Error('Authentication failed - please log in again');
                 }
                 if (response.status === 404) {
-                    throw new Error('Category not found');
+                    throw new Error('Location not found');
                 }
-                throw new Error(`Failed to get category detailed view: ${response.status}`);
+                throw new Error(`Failed to get location detailed view: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Get category detailed view error:', error);
+            console.error('Get location detailed view error:', error);
             throw error;
         }
     }
 
     // =============================================================================
-    // DROPDOWN AND SELECTION ENDPOINTS - FOR PRODUCT FORMS
+    // DROPDOWN AND SELECTION ENDPOINTS - FOR SALES AND OTHER FORMS
     // =============================================================================
 
-    async getCategoriesForDropdown(): Promise<CategoryForDropdownDTO[]> {
+    async getActiveLocationsForDropdown(): Promise<LocationForDropdownDTO[]> {
         try {
             const response = await fetch(`${API_BASE_URL}/dropdown`, {
                 method: 'GET',
@@ -236,16 +236,16 @@ class CategoryService {
                     this.handleAuthError(response);
                     throw new Error('Authentication failed - please log in again');
                 }
-                throw new Error(`Failed to get categories dropdown: ${response.status}`);
+                throw new Error(`Failed to get locations dropdown: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Categories dropdown error:', error);
+            console.error('Locations dropdown error:', error);
             throw error;
         }
     }
 }
 
 // Export a singleton instance
-export const categoryService = new CategoryService();
+export const locationService = new LocationService();

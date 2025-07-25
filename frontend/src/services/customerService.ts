@@ -1,16 +1,16 @@
 import { authService } from './authService';
 import {
-    CategoryReadOnlyDTO,
-    CategoryInsertDTO,
-    CategoryUpdateDTO,
-    CategoryForDropdownDTO,
-    CategoryDetailedViewDTO,
+    CustomerListItemDTO,
+    CustomerInsertDTO,
+    CustomerUpdateDTO,
+    CustomerDetailedViewDTO,
+    CustomerSearchResultDTO,
     Paginated
-} from "../types/api/categoryInterface.ts";
+} from "../types/api/customerInterface.ts";
 
-const API_BASE_URL = '/api/categories';
+const API_BASE_URL = '/api/customers';
 
-class CategoryService {
+class CustomerService {
 
     private getAuthHeaders(): HeadersInit {
         const headers = authService.getAuthHeaders();
@@ -32,10 +32,10 @@ class CategoryService {
     }
 
     // =============================================================================
-    // CORE CRUD OPERATIONS - FOR CATEGORY MANAGEMENT PAGE
+    // CORE CRUD OPERATIONS - FOR CUSTOMER MANAGEMENT PAGE
     // =============================================================================
 
-    async createCategory(categoryData: CategoryInsertDTO): Promise<CategoryReadOnlyDTO> {
+    async createCustomer(customerData: CustomerInsertDTO): Promise<CustomerListItemDTO> {
         try {
             const response = await fetch(`${API_BASE_URL}`, {
                 method: 'POST',
@@ -43,7 +43,7 @@ class CategoryService {
                     ...this.getAuthHeaders(),
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(categoryData)
+                body: JSON.stringify(customerData)
             });
 
             if (!response.ok) {
@@ -55,27 +55,27 @@ class CategoryService {
                     throw new Error('Authentication failed - please log in again');
                 }
                 if (response.status === 409) {
-                    throw new Error('Category with name already exists');
+                    throw new Error('Customer with email or TIN already exists');
                 }
-                throw new Error(`Failed to create category: ${response.status}`);
+                throw new Error(`Failed to create customer: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Create category error:', error);
+            console.error('Create customer error:', error);
             throw error;
         }
     }
 
-    async updateCategory(categoryData: CategoryUpdateDTO): Promise<CategoryReadOnlyDTO> {
+    async updateCustomer(customerId: number, customerData: CustomerUpdateDTO): Promise<CustomerListItemDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryData.categoryId}`, {
+            const response = await fetch(`${API_BASE_URL}/${customerId}`, {
                 method: 'PUT',
                 headers: {
                     ...this.getAuthHeaders(),
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(categoryData)
+                body: JSON.stringify(customerData)
             });
 
             if (!response.ok) {
@@ -87,24 +87,24 @@ class CategoryService {
                     throw new Error('Authentication failed - please log in again');
                 }
                 if (response.status === 404) {
-                    throw new Error('Category not found');
+                    throw new Error('Customer not found');
                 }
                 if (response.status === 409) {
-                    throw new Error('Category with name already exists');
+                    throw new Error('Email or TIN conflicts with existing customer');
                 }
-                throw new Error(`Failed to update category: ${response.status}`);
+                throw new Error(`Failed to update customer: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Update category error:', error);
+            console.error('Update customer error:', error);
             throw error;
         }
     }
 
-    async deleteCategory(categoryId: number): Promise<void> {
+    async deleteCustomer(customerId: number): Promise<void> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}`, {
+            const response = await fetch(`${API_BASE_URL}/${customerId}`, {
                 method: 'DELETE',
                 headers: this.getAuthHeaders()
             });
@@ -118,19 +118,19 @@ class CategoryService {
                     throw new Error('Access denied - requires ADMIN role');
                 }
                 if (response.status === 404) {
-                    throw new Error('Category not found');
+                    throw new Error('Customer not found');
                 }
-                throw new Error(`Failed to delete category: ${response.status}`);
+                throw new Error(`Failed to delete customer: ${response.status}`);
             }
         } catch (error) {
-            console.error('Delete category error:', error);
+            console.error('Delete customer error:', error);
             throw error;
         }
     }
 
-    async getCategoryById(categoryId: number): Promise<CategoryReadOnlyDTO> {
+    async getCustomerById(customerId: number): Promise<CustomerDetailedViewDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}`, {
+            const response = await fetch(`${API_BASE_URL}/${customerId}`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
@@ -141,34 +141,44 @@ class CategoryService {
                     throw new Error('Authentication failed - please log in again');
                 }
                 if (response.status === 404) {
-                    throw new Error('Category not found');
+                    throw new Error('Customer not found');
                 }
-                throw new Error(`Failed to get category: ${response.status}`);
+                throw new Error(`Failed to get customer: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Get category by ID error:', error);
+            console.error('Get customer by ID error:', error);
             throw error;
         }
     }
 
     // =============================================================================
-    // CATEGORY VIEWING AND DETAILS - FOR CATEGORY MANAGEMENT PAGE
+    // CUSTOMER VIEWING AND DETAILS - FOR CUSTOMER MANAGEMENT PAGE
     // =============================================================================
 
-    async getCategoriesFilteredPaginated(filters: {
-        name?: string;
+    async getCustomersFilteredPaginated(filters: {
+        email?: string;
+        lastname?: string;
+        tin?: string;
+        phoneNumber?: string;
+        searchTerm?: string;
+        wholesaleOnly?: boolean;
         isActive?: boolean;
         page?: number;
         pageSize?: number;
         sortBy?: string;
         sortDirection?: string;
-    }): Promise<Paginated<CategoryReadOnlyDTO>> {
+    }): Promise<Paginated<CustomerListItemDTO>> {
         try {
             const queryParams = new URLSearchParams();
 
-            if (filters.name) queryParams.append('name', filters.name);
+            if (filters.email) queryParams.append('email', filters.email);
+            if (filters.lastname) queryParams.append('lastname', filters.lastname);
+            if (filters.tin) queryParams.append('tin', filters.tin);
+            if (filters.phoneNumber) queryParams.append('phoneNumber', filters.phoneNumber);
+            if (filters.searchTerm) queryParams.append('searchTerm', filters.searchTerm);
+            if (filters.wholesaleOnly !== undefined) queryParams.append('wholesaleOnly', filters.wholesaleOnly.toString());
             if (filters.isActive !== undefined) queryParams.append('isActive', filters.isActive.toString());
             if (filters.page !== undefined) queryParams.append('page', filters.page.toString());
             if (filters.pageSize !== undefined) queryParams.append('pageSize', filters.pageSize.toString());
@@ -185,19 +195,19 @@ class CategoryService {
                     this.handleAuthError(response);
                     throw new Error('Authentication failed - please log in again');
                 }
-                throw new Error(`Failed to get categories: ${response.status}`);
+                throw new Error(`Failed to get customers: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Get categories filtered paginated error:', error);
+            console.error('Get customers filtered paginated error:', error);
             throw error;
         }
     }
 
-    async getCategoryDetailedView(categoryId: number): Promise<CategoryDetailedViewDTO> {
+    async getCustomerDetailedView(customerId: number): Promise<CustomerDetailedViewDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}/details`, {
+            const response = await fetch(`${API_BASE_URL}/${customerId}/details`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
@@ -208,25 +218,28 @@ class CategoryService {
                     throw new Error('Authentication failed - please log in again');
                 }
                 if (response.status === 404) {
-                    throw new Error('Category not found');
+                    throw new Error('Customer not found');
                 }
-                throw new Error(`Failed to get category detailed view: ${response.status}`);
+                throw new Error(`Failed to get customer detailed view: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Get category detailed view error:', error);
+            console.error('Get customer detailed view error:', error);
             throw error;
         }
     }
 
     // =============================================================================
-    // DROPDOWN AND SELECTION ENDPOINTS - FOR PRODUCT FORMS
+    // CUSTOMER SEARCH - FOR RECORD SALE PAGE
     // =============================================================================
 
-    async getCategoriesForDropdown(): Promise<CategoryForDropdownDTO[]> {
+    async searchCustomersForAutocomplete(searchTerm: string): Promise<CustomerSearchResultDTO[]> {
         try {
-            const response = await fetch(`${API_BASE_URL}/dropdown`, {
+            const queryParams = new URLSearchParams();
+            queryParams.append('searchTerm', searchTerm);
+
+            const response = await fetch(`${API_BASE_URL}/search?${queryParams}`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
@@ -236,16 +249,16 @@ class CategoryService {
                     this.handleAuthError(response);
                     throw new Error('Authentication failed - please log in again');
                 }
-                throw new Error(`Failed to get categories dropdown: ${response.status}`);
+                throw new Error(`Failed to search customers: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Categories dropdown error:', error);
+            console.error('Search customers for autocomplete error:', error);
             throw error;
         }
     }
 }
 
 // Export a singleton instance
-export const categoryService = new CategoryService();
+export const customerService = new CustomerService();
