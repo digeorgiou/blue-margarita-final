@@ -11,6 +11,7 @@ import AllTasksPage from './pages/AllTasksPage';
 import RecordSalePage from "./pages/RecordSalePage.tsx";
 import RecordPurchasePage from "./pages/RecordPurchasePage.tsx";
 import CategoryManagementPage   from "./pages/CategoryManagementPage.tsx";
+import LocationManagementPage from "./pages/LocationManagementPage.tsx";
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -40,7 +41,7 @@ const App: React.FC = () => {
             case 'all-tasks':
                 return <AllTasksPage onNavigate={handleNavigation} />;
             case 'manage-sales':
-                return <CategoryManagementPage/>;
+                return <div className="p-4"><h1 className="text-2xl text-white">Manage Sales - Coming Soon</h1></div>;
             case 'manage-products':
                 return <div className="p-4"><h1 className="text-2xl text-white">Manage Products - Coming Soon</h1></div>;
             case 'customers':
@@ -49,8 +50,10 @@ const App: React.FC = () => {
                 return <div className="p-4"><h1 className="text-2xl text-white">Materials - Coming Soon</h1></div>;
             case 'purchases':
                 return <div className="p-4"><h1 className="text-2xl text-white">Purchases - Coming Soon</h1></div>;
+            case 'categories':
+                return <CategoryManagementPage/>;
             case 'locations':
-                return <div className="p-4"><h1 className="text-2xl text-white">Locations - Coming Soon</h1></div>;
+                return <LocationManagementPage/>;
             case 'record-sale':
                 return <RecordSalePage onNavigate={handleNavigation} />;
             case 'record-purchase':

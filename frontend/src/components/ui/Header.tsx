@@ -2,7 +2,20 @@ import React from 'react';
 import LogoImage from './LogoImage';
 import logo from '../../assets/white.png'
 import Button from './Button'; // Import our custom Button component
-import { LogOut, Home, ShoppingCart, Package, Users, Layers, ShoppingBag, MapPin, CheckSquare, AlertTriangle, DollarSign } from 'lucide-react';
+import {
+    LogOut,
+    Home,
+    ShoppingCart,
+    Package,
+    Users,
+    Layers,
+    ShoppingBag,
+    MapPin,
+    CheckSquare,
+    AlertTriangle,
+    DollarSign,
+    Gem
+} from 'lucide-react';
 import {HeaderProps} from "../../types/components/header.ts";
 
 const Header: React.FC<HeaderProps> = ({
@@ -36,15 +49,20 @@ const Header: React.FC<HeaderProps> = ({
                 icon: <Layers className="w-9 h-9" />,
                 description: 'Raw materials and inventory'
             },
+            'categories': {
+                title:'Κατηγορίες',
+                icon: <Gem className="w-9 h-9" />,
+                description: 'Διαχειριστείτε τις κατηγορίες των προϊόντων σας και παρακολουθήστε τα στατιστικά ανα κατηγορία'
+            },
             'purchases': {
                 title: 'Purchases',
                 icon: <ShoppingBag className="w-9 h-9" />,
                 description: 'Purchase orders and supplier management'
             },
             'locations': {
-                title: 'Locations',
+                title: 'Τοποθεσίες',
                 icon: <MapPin className="w-9 h-9" />,
-                description: 'Store locations and warehouse management'
+                description: 'Διαχειριστείτε τις τοποθεσίες πώλησεις σας και παρακολουθήστε τα στατιστικά ανα τοποθεσία'
             },
             'all-tasks': {
                 title: 'Tasks',

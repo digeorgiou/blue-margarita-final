@@ -24,8 +24,14 @@ export { default as CartSummary } from './CartSummary';
 export { default as DashboardCard } from './DashboardCard';
 export { default as ManagementList } from './ManagementList';
 
+export { default as BaseFormModal } from './modals/BaseFormModal.tsx'
+
 export { default as CategoryDropdownList } from './Lists/dropdown/CategoryDropdownList'
 export { default as LocationDropdownList } from './Lists/dropdown/LocationDropdownList'
 export { default as PaymentMethodDropdownList } from './Lists/dropdown/PaymentMethodDropdownList'
+
+export { default as LocationCreateModal } from './modals/location/LocationCreateModal.tsx'
+export { default as LocationUpdateModal } from './modals/location/LocationUpdateModal.tsx'
+export { default as LocationDetailModal } from './modals/location/LocationDetailModal.tsx'
 
 
