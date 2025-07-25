@@ -10,6 +10,7 @@ import MispricedProductsPage from './pages/MispricedProductsPage';
 import AllTasksPage from './pages/AllTasksPage';
 import RecordSalePage from "./pages/RecordSalePage.tsx";
 import RecordPurchasePage from "./pages/RecordPurchasePage.tsx";
+import CategoryManagementPage   from "./pages/CategoryManagementPage.tsx";
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -39,7 +40,7 @@ const App: React.FC = () => {
             case 'all-tasks':
                 return <AllTasksPage onNavigate={handleNavigation} />;
             case 'manage-sales':
-                return <div className="p-4"><h1 className="text-2xl text-white">Manage Sales - Coming Soon</h1></div>;
+                return <CategoryManagementPage/>;
             case 'manage-products':
                 return <div className="p-4"><h1 className="text-2xl text-white">Manage Products - Coming Soon</h1></div>;
             case 'customers':
