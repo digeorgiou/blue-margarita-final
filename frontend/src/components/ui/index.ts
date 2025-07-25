@@ -21,3 +21,5 @@ export { default as CustomerSearchDropdown } from './searchDropdowns/CustomerSea
 export { default as ProductSearchDropdown } from './searchDropdowns/ProductSearchDropdown';
 export { default as CartItem } from './CartItem';
 export { default as CartSummary } from './CartSummary';
+export { default as DashboardCard } from './DashboardCard';
+export { default as ManagementList } from './ManagementList';
