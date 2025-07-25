@@ -9,6 +9,8 @@ export interface CategoryReadOnlyDTO {
     lastUpdatedBy: string;
     isActive: boolean;
     deletedAt: string;
+
+    [key: string]: unknown;
 }
 
 export interface CategoryInsertDTO {

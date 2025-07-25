@@ -25,6 +25,7 @@ export type ButtonProps = {
     disabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
     className?: string;
+    title?: string;
 }
 
 export type ActionButtonProps = {

@@ -1,6 +1,6 @@
 import {ButtonProps} from '../../types/components/button'
 
-const Button = ({children, onClick, variant = 'primary', size = 'md', disabled, type = 'button', className = ''} : ButtonProps) => {
+const Button = ({children, onClick, variant = 'primary', size = 'md', disabled, type = 'button', className = '', title} : ButtonProps) => {
 
     const baseClasses = "relative font-semibold rounded-xl transition-all duration-300 ease-out " +
         "focus:outline-none focus:ring-4 focus:ring-offset-2 " +
@@ -113,6 +113,7 @@ const Button = ({children, onClick, variant = 'primary', size = 'md', disabled, 
         <button className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses} ${className}`}
                 onClick={onClick}
                 disabled={disabled}
+                title={title}
                 type={type}
         >
             <span className="relative z-10 flex items-center justify-center gap-2">

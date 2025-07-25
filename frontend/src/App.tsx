@@ -43,7 +43,7 @@ const App: React.FC = () => {
             case 'manage-products':
                 return <div className="p-4"><h1 className="text-2xl text-white">Manage Products - Coming Soon</h1></div>;
             case 'customers':
-                return <div className="p-4"><h1 className="text-2xl text-white">Customers - Coming Soon</h1></div>;
+                return <div className="p-4"><h1 className="text-2xl text-white">Manage Customers - Coming Soon</h1></div>;
             case 'materials':
                 return <div className="p-4"><h1 className="text-2xl text-white">Materials - Coming Soon</h1></div>;
             case 'purchases':

@@ -13,10 +13,12 @@ const Input: React.FC<InputProps> = ({
                                          id,
                                          min,
                                          max,
-                                         step
+                                         step,
+                                        icon,
+                                        maxLength
                                      })=> {
 
-    const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`
+    const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`;
 
     return (
         <div className={`w-full ${className}`}>
@@ -31,30 +33,44 @@ const Input: React.FC<InputProps> = ({
                 </label>
             )}
 
-            {/* Input Field */}
-            <input
-                id={inputId}
-                type={type}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                required={required}
-                disabled={disabled}
-                min={min}
-                max={max}
-                step={step}
-                className={`
-                    w-full px-3 py-2 border rounded-lg text-sm
-                    transition-colors duration-200
-                    placeholder-gray-400
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500
-                    ${error
-                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                    : 'border-gray-300 hover:border-gray-400'
-                }
-                `}
-            />
+            {/* Input Field Container */}
+            <div className="relative">
+                {/* Icon */}
+                {icon && (
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className="text-gray-400">
+                            {icon}
+                        </div>
+                    </div>
+                )}
+
+                {/* Input Field */}
+                <input
+                    id={inputId}
+                    type={type}
+                    value={value}
+                    onChange={onChange}
+                    placeholder={placeholder}
+                    required={required}
+                    disabled={disabled}
+                    min={min}
+                    max={max}
+                    step={step}
+                    maxLength={maxLength}
+                    className={`
+                        w-full py-2 border rounded-lg text-sm
+                        transition-colors duration-200
+                        placeholder-gray-400
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                        disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500
+                        ${icon ? 'pl-10 pr-3' : 'px-3'}
+                        ${error
+                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }
+                    `}
+                />
+            </div>
 
             {/* Error Message */}
             {error && (
@@ -65,6 +81,6 @@ const Input: React.FC<InputProps> = ({
             )}
         </div>
     );
-}
+};
 
 export default Input;

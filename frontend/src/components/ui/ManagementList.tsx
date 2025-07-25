@@ -2,7 +2,7 @@ import React from 'react';
 import { LoadingSpinner } from '../ui';
 
 interface ManagementListProps<T> {
-    items: T[];
+    items?: T[]; // Made optional to handle undefined case
     renderItem: (item: T) => React.ReactNode;
     loading: boolean;
     emptyMessage: string;
@@ -10,7 +10,7 @@ interface ManagementListProps<T> {
 }
 
 function ManagementList<T>({
-                               items,
+                               items = [], // Default to empty array
                                renderItem,
                                loading,
                                emptyMessage,
@@ -24,7 +24,8 @@ function ManagementList<T>({
         );
     }
 
-    if (items.length === 0) {
+    // Safety check for undefined or null items
+    if (!items || items.length === 0) {
         return (
             <div className="text-center py-12">
                 <div className="text-6xl mb-4">{emptyIcon}</div>
@@ -36,7 +37,7 @@ function ManagementList<T>({
     return (
         <div className="space-y-2">
             {items.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div key={index}>
                     {renderItem(item)}
                 </div>
             ))}

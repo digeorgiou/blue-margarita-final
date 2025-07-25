@@ -12,4 +12,6 @@ export type InputProps = {
     min?: number | string;
     max?: number | string;
     step?: number | string;
+    icon?: React.ReactNode;
+    maxLength?: number;
 }
