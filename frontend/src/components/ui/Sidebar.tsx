@@ -10,7 +10,12 @@ import {
     MapPin,
     Home,
     Menu,
-    Smartphone
+    Smartphone,
+    Gem,
+    Truck,
+    Wrench,
+    Receipt,
+    TrendingUp
 } from 'lucide-react';
 
 
@@ -59,6 +64,36 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
             label: 'Τοποθεσίες',
             icon: <MapPin className="w-5 h-5" />,
             href: 'locations'
+        },
+        {
+            id: 'categories',
+            label: 'Κατηγορίες',
+            icon: <Gem className="w-5 h-5" />,
+            href: 'categories'
+        },
+        {
+            id: 'suppliers',
+            label: 'Προμηθευτές',
+            icon: <Truck className="w-5 h-5" />,
+            href: 'suppliers'
+        },
+        {
+            id: 'procedures',
+            label: 'Διαδικασίες',
+            icon: <Wrench className="w-5 h-5" />,
+            href: 'procedures'
+        },
+        {
+            id: 'expenses',
+            label: 'Έξοδα',
+            icon: <Receipt className="w-5 h-5" />,
+            href: 'expenses'
+        },
+        {
+            id: 'profit-losses',
+            label: 'Κέρδη/Ζημίες',
+            icon: <TrendingUp className="w-5 h-5" />,
+            href: 'profit-losses'
         }
     ];
 
