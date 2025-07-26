@@ -4,7 +4,7 @@ import {
     ExpenseReadOnlyDTO,
     ExpenseInsertDTO,
     ExpenseUpdateDTO,
-    ExpensesOverviewDTO,
+    ExpenseTypeDTO,
     PaginatedFilteredExpensesWithSummary,
     ExpenseTypeBreakdownDTO,
 } from '../types/api/expenseInterface';
@@ -27,7 +27,7 @@ class ExpenseService {
      * Get all necessary data for the Expense Management page in a single request
      * Returns expense types dropdown and recent expenses overview
      */
-    async getExpenseManagementPageData(): Promise<ExpensesOverviewDTO> {
+    async getExpenseTypes(): Promise<ExpenseTypeDTO[]> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/init`, {
                 method: 'GET',

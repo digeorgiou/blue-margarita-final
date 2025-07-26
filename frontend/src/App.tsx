@@ -16,6 +16,7 @@ import CustomerManagementPage from "./pages/CustomerManagementPage.tsx";
 import SupplierManagementPage from "./pages/SupplierManagementPage.tsx";
 import ProcedureManagementPage from "./pages/ProcedureManagementPage.tsx";
 import MaterialManagementPage from "./pages/MaterialManagementPage.tsx";
+import ExpenseManagementPage from "./pages/ExpenseManagementPage.tsx";
 
 
 type AppState = 'loading' | 'login' | 'dashboard';
@@ -69,6 +70,8 @@ const App: React.FC = () => {
                 return <RecordPurchasePage onNavigate={handleNavigation} />;
             case 'stock-management':
                 return <div className="p-4"><h1 className="text-2xl text-white">Stock Management - Coming Soon</h1></div>;
+            case 'expenses' :
+                return <ExpenseManagementPage/>
             default:
                 return <Dashboard onNavigate={handleNavigation} />;
         }

@@ -1,8 +1,3 @@
-export interface ExpensesOverviewDTO {
-    expenseTypes: ExpenseTypeDTO[];
-    recentExpenses: ExpenseReadOnlyDTO[];
-}
-
 export interface ExpenseTypeDTO {
     value: string;
     displayName: string;

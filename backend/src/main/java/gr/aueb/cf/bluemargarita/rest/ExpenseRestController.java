@@ -57,14 +57,12 @@ public class ExpenseRestController {
     )
     @GetMapping("/init")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<ExpensesOverviewDTO> getExpenseManagementPageData() {
+    public ResponseEntity<List<ExpenseTypeDTO>> getExpenseTypes() {
 
         List<ExpenseTypeDTO> expenseTypes = expenseService.getAllAvailableExpenseTypes();
-        List<ExpenseReadOnlyDTO> recentExpenses = expenseService.getRecentExpenses(10);
 
-        ExpensesOverviewDTO overview = new ExpensesOverviewDTO(expenseTypes, recentExpenses);
 
-        return new ResponseEntity<>(overview, HttpStatus.OK);
+        return new ResponseEntity<>(expenseTypes, HttpStatus.OK);
     }
 
     // =============================================================================
