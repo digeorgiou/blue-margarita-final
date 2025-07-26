@@ -13,6 +13,10 @@ import RecordPurchasePage from "./pages/RecordPurchasePage.tsx";
 import CategoryManagementPage   from "./pages/CategoryManagementPage.tsx";
 import LocationManagementPage from "./pages/LocationManagementPage.tsx";
 import CustomerManagementPage from "./pages/CustomerManagementPage.tsx";
+import SupplierManagementPage from "./pages/SupplierManagementPage.tsx";
+import ProcedureManagementPage from "./pages/ProcedureManagementPage.tsx";
+import MaterialManagementPage from "./pages/MaterialManagementPage.tsx";
+
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -48,13 +52,17 @@ const App: React.FC = () => {
             case 'customers':
                 return <CustomerManagementPage/>;
             case 'materials':
-                return <div className="p-4"><h1 className="text-2xl text-white">Materials - Coming Soon</h1></div>;
+                return <MaterialManagementPage/>;
             case 'purchases':
                 return <div className="p-4"><h1 className="text-2xl text-white">Purchases - Coming Soon</h1></div>;
             case 'categories':
                 return <CategoryManagementPage/>;
             case 'locations':
                 return <LocationManagementPage/>;
+            case 'suppliers':
+                return <SupplierManagementPage/>;
+            case 'procedures':
+                return <ProcedureManagementPage/>
             case 'record-sale':
                 return <RecordSalePage onNavigate={handleNavigation} />;
             case 'record-purchase':

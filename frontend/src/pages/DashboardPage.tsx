@@ -191,7 +191,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                     <DashboardCard
                         title="Σύνοψη Πωλήσεων"
                         icon="💰"
-                        height="md"
+                        height="xl"
                     >
                         <div className="grid grid-cols-2 gap-6">
                             <StatCard
@@ -232,7 +232,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                     <DashboardCard
                         title="To Do List"
                         icon="📋"
-                        height="md"
+                        height="xl"
                         headerRight={<TaskToggle />}
                         footer={
                             <div className="flex gap-2">
@@ -296,7 +296,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                     <DashboardCard
                         title="Τα 5 καλύτερα προϊόντα του μήνα"
                         icon="🏆"
-                        height="md"
+                        height="xl"
                     >
                         <div className="space-y-3">
                             {data.topProductsThisMonth.length === 0 ? (
@@ -322,7 +322,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                     <DashboardCard
                         title="Οι 5 πιο πρόσφατες πωλήσεις"
                         icon="🛒"
-                        height="md"
+                        height="xl"
                     >
                         <div className="space-y-3">
                             {data.recentSales.length === 0 ? (
@@ -348,7 +348,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                     <DashboardCard
                         title="Προϊόντα με χαμηλό απόθεμα"
                         icon="⚠️"
-                        height="md"
+                        height="xl"
                         footer={
                             data.lowStockProducts.length > 0 && (
                                 <Button variant="ghost-secondary" size="sm" onClick={handleViewAllLowStock} className="w-full">
@@ -382,7 +382,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                     <DashboardCard
                         title="Προϊόντα με λάθος τιμή"
                         icon="💸"
-                        height="md"
+                        height="xl"
                         footer={
                             data.mispricedProducts.length > 0 && (
                                 <Button variant="ghost-secondary" size="sm" onClick={handleViewAllMispriced} className="w-full">

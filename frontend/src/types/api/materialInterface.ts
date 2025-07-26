@@ -89,8 +89,9 @@ export interface ProductUsageDTO {
     productId: number;
     productName: string;
     productCode: string;
-    usageCount: number;
-    totalRevenue: number;
+    usageQuantity: number;
+    costImpact: number;
+    categoryName: string;
 }
 
 export interface PriceRecalculationResultDT {
