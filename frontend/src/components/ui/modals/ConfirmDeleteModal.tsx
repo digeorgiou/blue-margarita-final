@@ -6,18 +6,22 @@ interface ConfirmDeleteModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => Promise<void>;
-    entityName: string;
-    entityDisplayName: string;
+    title: string;
+    message: string;
     warningMessage?: string;
+    confirmText?: string;
+    cancelText?: string;
 }
 
 const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                                                                    isOpen,
                                                                    onClose,
                                                                    onConfirm,
-                                                                   entityName,
-                                                                   entityDisplayName,
-                                                                   warningMessage
+                                                                   title,
+                                                                   message,
+                                                                   warningMessage,
+                                                                   confirmText = "Διαγραφή",
+                                                                   cancelText = "Ακύρωση"
                                                                }) => {
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -25,8 +29,10 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
         setIsDeleting(true);
         try {
             await onConfirm();
+            onClose(); // Close modal after successful deletion
         } catch (error) {
             console.error('Delete error:', error);
+            // Don't close modal on error so user can see the error
         } finally {
             setIsDeleting(false);
         }
@@ -45,7 +51,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                                 <AlertTriangle className="w-5 h-5 text-red-600" />
                             </div>
                             <h2 className="text-xl font-semibold text-gray-900">
-                                Διαγραφή {entityName}
+                                {title}
                             </h2>
                         </div>
                         <button
@@ -60,7 +66,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                     {/* Content */}
                     <div className="mb-6">
                         <p className="text-gray-600 mb-3">
-                            Είστε σίγουροι ότι θέλετε να διαγράψετε {entityName.toLowerCase()} "{entityDisplayName}";
+                            {message}
                         </p>
                         {warningMessage && (
                             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
@@ -73,25 +79,26 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                     <div className="flex justify-end space-x-3">
                         <Button
                             type="button"
-                            variant="secondary"
+                            variant="outline-secondary"
                             onClick={onClose}
                             disabled={isDeleting}
                         >
-                            Ακύρωση
+                            {cancelText}
                         </Button>
                         <Button
                             type="button"
                             variant="danger"
                             onClick={handleConfirm}
                             disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700 text-white"
                         >
                             {isDeleting ? (
-                                <>
-                                    <LoadingSpinner />
+                                <div className="flex items-center">
+                                    <LoadingSpinner/>
                                     Διαγραφή...
-                                </>
+                                </div>
                             ) : (
-                                'Διαγραφή'
+                                confirmText
                             )}
                         </Button>
                     </div>

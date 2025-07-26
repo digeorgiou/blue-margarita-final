@@ -1,50 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Alert, CustomerSearchBar, CustomerDetailModal, CustomerUpdateModal, CustomerCreateModal} from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
 import { customerService } from '../services/customerService';
-import { usePagination } from '../hooks/usePagination';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Users, UserPlus, Search } from 'lucide-react';
 import type {
     CustomerListItemDTO,
     CustomerDetailedViewDTO,
     CustomerInsertDTO,
-    GenderType,
+    CustomerUpdateDTO,
     Paginated
 } from '../types/api/customerInterface';
 
 const CustomerManagementPage = () => {
-    // Search and filter state
+    // Search and pagination state - simplified
     const [searchTerm, setSearchTerm] = useState('');
-    const [wholesaleOnly, setWholesaleOnly] = useState(false);
+    const [tinOnlyFilter, setTinOnlyFilter] = useState(false); // Changed from wholesaleOnly to tinOnlyFilter
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize, setPageSize] = useState(12);
     const [searchResults, setSearchResults] = useState<Paginated<CustomerListItemDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
-    // Enhanced pagination hook with page size selection
-    const {
-        pageSize,
-        setPage,
-        setPageSize,
-        getPaginationParams,
-        resetPagination
-    } = usePagination({
-        initialPageSize: 12,
-        onPageChange: () => {
-            // Use a ref or state to track if we should skip the initial call
-            if (skipInitialPageChange.current) {
-                skipInitialPageChange.current = false;
-                return;
-            }
-            searchCustomers();
-        }
-    });
-
-    const skipInitialPageChange = useRef(true);
-
-    // Enhanced error handling hook
+    // Error handling
     const { generalError, handleApiError, clearErrors } = useFormErrorHandler();
 
     // Modal states
@@ -56,7 +36,6 @@ const CustomerManagementPage = () => {
 
     // Selected customer states
     const [selectedCustomer, setSelectedCustomer] = useState<CustomerListItemDTO | null>(null);
-    const [selectedCustomerFull, setSelectedCustomerFull] = useState<CustomerDetailedViewDTO | null>(null);
     const [customerDetails, setCustomerDetails] = useState<CustomerDetailedViewDTO | null>(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
 
@@ -66,8 +45,8 @@ const CustomerManagementPage = () => {
     // Get current user ID (you'd get this from auth context)
     const getCurrentUserId = () => 1; // Placeholder
 
-    // Enhanced search customers function
-    const searchCustomers = async () => {
+    // Simple search function
+    const searchCustomers = async (page: number = currentPage, size: number = pageSize) => {
         try {
             setLoading(true);
             clearErrors();
@@ -78,13 +57,13 @@ const CustomerManagementPage = () => {
                 return;
             }
 
-            const paginationParams = getPaginationParams();
-
             const filters = {
                 searchTerm: searchTerm.trim() || undefined,
-                wholesaleOnly: wholesaleOnly || undefined,
+                // You can add the backend filter for TIN when you implement it
+                // tinNotNull: tinOnlyFilter || undefined,
                 isActive: true,
-                ...paginationParams,
+                page,
+                pageSize: size,
                 sortBy: 'lastname',
                 sortDirection: 'ASC'
             };
@@ -99,30 +78,42 @@ const CustomerManagementPage = () => {
         }
     };
 
-    // Effect for search term changes only - debounced
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            // Only search if term is empty (load all) or has 2+ characters
-            if (searchTerm.length === 0 || searchTerm.length >= 2) {
-                resetPagination();
-                // Search after pagination reset
-                searchCustomers();
-            }
-        }, 300);
-
-        return () => clearTimeout(timeoutId);
-    }, [searchTerm, wholesaleOnly]);
-
-    // Initial load only
+    // Load initial data
     useEffect(() => {
         searchCustomers();
     }, []);
 
-    // Load customer details for modals
-    const loadCustomerDetails = async (id: number) => {
+    // Debounced search when search term changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            // Reset to page 0 when search changes
+            setCurrentPage(0);
+            searchCustomers(0, pageSize);
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, tinOnlyFilter]);
+
+    // Simple pagination handlers
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        searchCustomers(page, pageSize);
+    };
+
+    const handlePageSizeChange = (newPageSize: number) => {
+        setPageSize(newPageSize);
+        setCurrentPage(0); // Reset to first page
+        searchCustomers(0, newPageSize);
+    };
+
+    // Modal handlers
+    const handleViewDetails = async (customer: CustomerListItemDTO) => {
+        setSelectedCustomer(customer);
+        setDetailsLoading(true);
+        setIsDetailsModalOpen(true);
+
         try {
-            setDetailsLoading(true);
-            const details = await customerService.getCustomerDetailedView(id);
+            const details = await customerService.getCustomerDetailedView(customer.customerId);
             setCustomerDetails(details);
         } catch (err) {
             await handleApiError(err);
@@ -131,23 +122,22 @@ const CustomerManagementPage = () => {
         }
     };
 
-    // Load full customer data for update modal
-    const loadFullCustomerData = async (id: number) => {
-        try {
-            const customerData = await customerService.getCustomerDetailedView(id);
-            setSelectedCustomerFull(customerData);
-        } catch (err) {
-            await handleApiError(err);
-        }
+    const handleEdit = (customer: CustomerListItemDTO) => {
+        setSelectedCustomer(customer);
+        setIsUpdateModalOpen(true);
     };
 
-    // Handle create customer
-    const handleCreateCustomer = async (data: CustomerInsertDTO): Promise<void> => {
-        await customerService.createCustomer({
-            ...data,
-            creatorUserId: getCurrentUserId()
-        });
-        await searchCustomers();
+    const handleDelete = (customer: CustomerListItemDTO) => {
+        setSelectedCustomer(customer);
+        setIsDeleteModalOpen(true);
+    };
+
+    // CRUD operations
+    const handleCreateCustomer = async (data: CustomerInsertDTO) => {
+        // DON'T catch errors here - let them bubble up to the modal!
+        // The modal's useFormErrorHandler will handle them and show backend messages
+        await customerService.createCustomer(data);
+        await searchCustomers(); // Refresh results
         setSuccessMessage({
             title: 'Επιτυχής Δημιουργία',
             message: `Ο πελάτης "${data.firstname} ${data.lastname}" δημιουργήθηκε επιτυχώς.`
@@ -155,56 +145,32 @@ const CustomerManagementPage = () => {
         setIsSuccessModalOpen(true);
     };
 
-    // Handle update customer
-    const handleUpdateCustomer = async (data: { firstname: string; lastname: string; gender: GenderType; phoneNumber: string; address: string; email: string; tin: string; }) => {
-        if (!selectedCustomer) return;
-
-        try {
-            const updateData = {
-                customerId: selectedCustomer.customerId,
-                updaterUserId: getCurrentUserId(),
-                ...data
-            };
-
-            await customerService.updateCustomer(selectedCustomer.customerId, updateData);
-            await searchCustomers();
-            setSuccessMessage({
-                title: 'Επιτυχής Ενημέρωση',
-                message: `Ο πελάτης "${data.firstname} ${data.lastname}" ενημερώθηκε επιτυχώς.`
-            });
-            setIsSuccessModalOpen(true);
-        } catch (err) {
-            await handleApiError(err);
-        }
+    const handleUpdateCustomer = async (data: CustomerUpdateDTO) => {
+        // DON'T catch errors here - let them bubble up to the modal!
+        // The modal's useFormErrorHandler will handle them and show backend messages
+        await customerService.updateCustomer(data.customerId, data);
+        await searchCustomers(); // Refresh results
+        setSuccessMessage({
+            title: 'Επιτυχής Ενημέρωση',
+            message: `Ο πελάτης "${data.firstname} ${data.lastname}" ενημερώθηκε επιτυχώς.`
+        });
+        setIsSuccessModalOpen(true);
     };
 
-    // Handle delete customer
     const handleDeleteCustomer = async () => {
         if (!selectedCustomer) return;
 
         try {
             await customerService.deleteCustomer(selectedCustomer.customerId);
-            await searchCustomers();
+            await searchCustomers(); // Refresh results
             setSuccessMessage({
                 title: 'Επιτυχής Διαγραφή',
                 message: `Ο πελάτης "${selectedCustomer.firstname} ${selectedCustomer.lastname}" διαγράφηκε επιτυχώς.`
             });
             setIsSuccessModalOpen(true);
         } catch (err) {
+            // Keep error handling for delete since it's not in a modal with useFormErrorHandler
             await handleApiError(err);
-        }
-    };
-
-    // Enhanced pagination handlers with immediate search
-    const handlePageChange = (page: number) => {
-        if (!loading) {
-            setPage(page);
-        }
-    };
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        if (!loading) {
-            setPageSize(newPageSize);
         }
     };
 
@@ -231,14 +197,14 @@ const CustomerManagementPage = () => {
                     </Button>
                 </div>
 
-                {/* Enhanced Error Display */}
+                {/* Error Display */}
                 {generalError && (
                     <Alert variant="error" className="shadow-sm" onClose={clearErrors}>
                         {generalError}
                     </Alert>
                 )}
 
-                {/* Enhanced Pagination Controls - Moved to top */}
+                {/* Pagination Controls - Top */}
                 {searchResults && searchResults.totalElements > 0 && (
                     <EnhancedPaginationControls
                         paginationData={{
@@ -263,88 +229,73 @@ const CustomerManagementPage = () => {
                     <CustomerSearchBar
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
-                        wholesaleOnly={wholesaleOnly}
-                        onWholesaleOnlyChange={setWholesaleOnly}
-                        searchResults={searchResults ? {
-                            ...searchResults,
-                            hasNext: searchResults.currentPage < searchResults.totalPages - 1,
-                            hasPrevious: searchResults.currentPage > 0
-                        } : {
-                            data: [],
-                            totalElements: 0,
-                            totalPages: 0,
-                            numberOfElements: 0,
-                            currentPage: 0,
-                            pageSize: pageSize,
-                            hasNext: false,
-                            hasPrevious: false
-                        }}
+                        tinOnlyFilter={tinOnlyFilter}
+                        onTinOnlyFilterChange={setTinOnlyFilter}
+                        searchResults={searchResults ? searchResults.data : []}
                         loading={loading}
-                        onViewDetails={(customer) => {
-                            setSelectedCustomer(customer);
-                            setIsDetailsModalOpen(true);
-                            loadCustomerDetails(customer.customerId);
-                        }}
-                        onEdit={async (customer) => {
-                            setSelectedCustomer(customer);
-                            await loadFullCustomerData(customer.customerId);
-                            setIsUpdateModalOpen(true);
-                        }}
-                        onDelete={(customer) => {
-                            setSelectedCustomer(customer);
-                            setIsDeleteModalOpen(true);
-                        }}
+                        onViewDetails={handleViewDetails}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
                     />
                 </DashboardCard>
 
-                {/* Modals */}
-                <CustomerCreateModal
-                    isOpen={isCreateModalOpen}
-                    onClose={() => setIsCreateModalOpen(false)}
-                    onSubmit={handleCreateCustomer}
-                    currentUserId={getCurrentUserId()}
-                />
-
-                {selectedCustomerFull && (
-                    <CustomerUpdateModal
-                        isOpen={isUpdateModalOpen}
-                        onClose={() => {
-                            setIsUpdateModalOpen(false);
-                            setSelectedCustomerFull(null);
+                {/* Pagination Controls - Bottom */}
+                {searchResults && searchResults.totalElements > 0 && (
+                    <EnhancedPaginationControls
+                        paginationData={{
+                            currentPage: searchResults.currentPage,
+                            totalPages: searchResults.totalPages,
+                            totalElements: searchResults.totalElements,
+                            pageSize: searchResults.pageSize,
+                            numberOfElements: searchResults.numberOfElements
                         }}
-                        onSubmit={handleUpdateCustomer}
-                        customer={selectedCustomerFull}
+                        onPageChange={handlePageChange}
+                        onPageSizeChange={handlePageSizeChange}
+                        className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                     />
                 )}
-
-                <ConfirmDeleteModal
-                    isOpen={isDeleteModalOpen}
-                    onClose={() => setIsDeleteModalOpen(false)}
-                    onConfirm={handleDeleteCustomer}
-                    entityName="πελάτη"
-                    entityDisplayName={selectedCustomer ? `${selectedCustomer.firstname} ${selectedCustomer.lastname}` : ''}
-                    warningMessage="Αυτή η ενέργεια θα κάνει soft delete τον πελάτη αν έχει συσχετισμένες πωλήσεις, ή θα τον διαγράψει οριστικά αν δεν έχει."
-                />
-
-                {customerDetails && (
-                    <CustomerDetailModal
-                        isOpen={isDetailsModalOpen}
-                        onClose={() => {
-                            setIsDetailsModalOpen(false);
-                            setCustomerDetails(null);
-                        }}
-                        customer={customerDetails}
-                        loading={detailsLoading}
-                    />
-                )}
-
-                <SuccessModal
-                    isOpen={isSuccessModalOpen}
-                    onClose={() => setIsSuccessModalOpen(false)}
-                    title={successMessage.title}
-                    message={successMessage.message}
-                />
             </div>
+
+            {/* Modals */}
+            <CustomerCreateModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onSubmit={handleCreateCustomer}
+                currentUserId={getCurrentUserId()}
+            />
+
+            <CustomerUpdateModal
+                isOpen={isUpdateModalOpen}
+                onClose={() => setIsUpdateModalOpen(false)}
+                onSubmit={handleUpdateCustomer}
+                customer={selectedCustomer}
+            />
+
+            <CustomerDetailModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                customer={customerDetails}
+                loading={detailsLoading}
+            />
+
+            <ConfirmDeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteCustomer}
+                title="Διαγραφή Πελάτη"
+                message={selectedCustomer ?
+                    `Είστε σίγουροι ότι θέλετε να διαγράψετε τον πελάτη "${selectedCustomer.firstname} ${selectedCustomer.lastname}";`
+                    : ''
+                }
+                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Ο πελάτης θα διαγραφεί οριστικά ή θα απενεργοποιηθεί εάν έχει ιστορικό πωλήσεων."
+            />
+
+            <SuccessModal
+                isOpen={isSuccessModalOpen}
+                onClose={() => setIsSuccessModalOpen(false)}
+                title={successMessage.title}
+                message={successMessage.message}
+            />
         </div>
     );
 };

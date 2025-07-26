@@ -1,23 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { User, Phone, CreditCard } from 'lucide-react';
 import { BaseFormModal, Input } from '../../index';
-import { GenderType, GenderTypeLabels, CustomerListItemDTO } from '../../../../types/api/customerInterface';
+import { GenderType, GenderTypeLabels, CustomerListItemDTO, CustomerUpdateDTO } from '../../../../types/api/customerInterface';
+import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 
 interface CustomerUpdateModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: CustomerFormData) => Promise<void>;
-    customer: CustomerListItemDTO;
-}
-
-interface CustomerFormData {
-    firstname: string;
-    lastname: string;
-    gender: GenderType;
-    phoneNumber: string;
-    address: string;
-    email: string;
-    tin: string;
+    onSubmit: (data: CustomerUpdateDTO) => Promise<void>;
+    customer: CustomerListItemDTO | null;
 }
 
 const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
@@ -26,7 +17,7 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                                                                      onSubmit,
                                                                      customer
                                                                  }) => {
-    const [formData, setFormData] = useState<CustomerFormData>({
+    const [formData, setFormData] = useState<Omit<CustomerUpdateDTO, 'customerId' | 'updaterUserId'>>({
         firstname: '',
         lastname: '',
         gender: GenderType.OTHER,
@@ -35,7 +26,22 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
         email: '',
         tin: ''
     });
-    const [errors, setErrors] = useState<Partial<CustomerFormData>>({});
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Use the reusable error handler hook
+    const {
+        fieldErrors,
+        generalError,
+        handleApiError,
+        clearErrors,
+        clearFieldError
+    } = useFormErrorHandler({
+        businessErrorToFieldMap: {
+            'CUSTOMER_EMAIL_EXISTS': 'email',
+            'CUSTOMER_TIN_EXISTS': 'tin'
+        }
+    });
 
     // Initialize form data when customer changes
     useEffect(() => {
@@ -43,7 +49,7 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
             setFormData({
                 firstname: customer.firstname || '',
                 lastname: customer.lastname || '',
-                gender: GenderType.OTHER, // Default since it's not in CustomerListItemDTO
+                gender: GenderType.OTHER, // Default since gender is not in CustomerListItemDTO
                 phoneNumber: customer.phoneNumber || '',
                 address: customer.address || '',
                 email: customer.email || '',
@@ -53,77 +59,69 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
     }, [customer]);
 
     const validateForm = (): boolean => {
-        const newErrors: Partial<CustomerFormData> = {};
-
-        if (!formData.firstname.trim()) {
-            newErrors.firstname = 'Το όνομα είναι υποχρεωτικό';
-        }
-
-        if (!formData.lastname.trim()) {
-            newErrors.lastname = 'Το επώνυμο είναι υποχρεωτικό';
-        }
-
-        if (!formData.phoneNumber.trim()) {
-            newErrors.phoneNumber = 'Το τηλέφωνο είναι υποχρεωτικό';
-        } else if (!/^\d{10}$/.test(formData.phoneNumber.replace(/[\s-]/g, ''))) {
-            newErrors.phoneNumber = 'Το τηλέφωνο πρέπει να έχει 10 ψηφία';
-        }
-
-        if (!formData.address.trim()) {
-            newErrors.address = 'Η διεύθυνση είναι υποχρεωτική';
-        }
-
-        if (!formData.email.trim()) {
-            newErrors.email = 'Το email είναι υποχρεωτικό';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Μη έγκυρο email';
-        }
-
-        if (formData.tin && !/^\d{9}$/.test(formData.tin)) {
-            newErrors.tin = 'Το ΑΦΜ πρέπει να έχει 9 ψηφία';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
-        await onSubmit(formData);
-        handleClose();
+        return formData.firstname.trim().length > 0 && formData.lastname.trim().length > 0;
     };
 
     const handleClose = () => {
-        setErrors({});
+        clearErrors();
         onClose();
     };
 
-    const handleInputChange = (field: keyof CustomerFormData, value: string | GenderType) => {
+    const handleInputChange = (field: keyof Omit<CustomerUpdateDTO, 'customerId' | 'updaterUserId'>, value: string | GenderType) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: undefined }));
+
+        if (fieldErrors[field]) {
+            clearFieldError(field);
+        }
+
+        if (generalError) {
+            clearErrors();
         }
     };
 
-    const isValid = !!(
-        formData.firstname.trim() &&
-        formData.lastname.trim() &&
-        formData.phoneNumber.trim() &&
-        formData.address.trim() &&
-        formData.email.trim() &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
-        /^\d{10}$/.test(formData.phoneNumber.replace(/[\s-]/g, '')) &&
-        (!formData.tin || /^\d{9}$/.test(formData.tin))
-    );
+    const handleSubmit = async () => {
+        if (!validateForm() || !customer) return;
 
+        setIsSubmitting(true);
+        clearErrors();
+
+        try {
+            const dataToSubmit: CustomerUpdateDTO = {
+                customerId: customer.customerId,
+                updaterUserId: 1, // You'd get this from auth context
+                firstname: formData.firstname.trim(),
+                lastname: formData.lastname.trim(),
+                gender: formData.gender,
+                phoneNumber: formData.phoneNumber.trim(),
+                address: formData.address.trim(),
+                email: formData.email.trim(),
+                tin: formData.tin.trim()
+            };
+
+            await onSubmit(dataToSubmit);
+            handleClose();
+        } catch (error) {
+            await handleApiError(error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const isFormValid = formData.firstname.trim().length > 0 &&
+        formData.lastname.trim().length > 0 &&
+        !isSubmitting;
+
+    // Check if there are any changes from the original customer data
     const hasChanges = customer ? (
-        formData.firstname.trim() !== customer.firstname ||
-        formData.lastname.trim() !== customer.lastname ||
-        formData.phoneNumber.trim() !== customer.phoneNumber ||
-        formData.address.trim() !== customer.address ||
-        formData.email.trim() !== customer.email ||
-        formData.tin.trim() !== (customer.tin || '')
-    ) : true;
+        formData.firstname !== customer.firstname ||
+        formData.lastname !== customer.lastname ||
+        formData.phoneNumber !== customer.phoneNumber ||
+        formData.address !== customer.address ||
+        formData.email !== customer.email ||
+        formData.tin !== customer.tin
+    ) : false;
+
+    if (!customer) return null;
 
     return (
         <BaseFormModal
@@ -131,19 +129,24 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
             onClose={handleClose}
             title="Επεξεργασία Πελάτη"
             onSubmit={handleSubmit}
-            submitText="Ενημέρωση"
+            submitText={isSubmitting ? "Ενημέρωση..." : "Ενημέρωση Πελάτη"}
             cancelText="Ακύρωση"
-            isValid={isValid && hasChanges}
+            isValid={isFormValid && hasChanges}
         >
             <div className="space-y-6">
-                {/* Customer Info */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Στοιχεία Πελάτη</h4>
-                    <div className="text-sm text-gray-600 space-y-1">
-                        <p><strong>ID:</strong> {customer?.customerId}</p>
-                        <p><strong>Τρέχον Email:</strong> {customer?.email}</p>
-                        <p><strong>Τρέχον Τηλέφωνο:</strong> {customer?.phoneNumber}</p>
+                {/* General Error Display */}
+                {generalError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm text-red-800">{generalError}</p>
                     </div>
+                )}
+
+                {/* Customer Info Header */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-900">
+                        Επεξεργασία στοιχείων για: {customer.firstname} {customer.lastname}
+                    </h4>
+                    <p className="text-sm text-gray-500">ID: {customer.customerId}</p>
                 </div>
 
                 {/* Personal Information */}
@@ -158,16 +161,18 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                             label="Όνομα *"
                             value={formData.firstname}
                             onChange={(e) => handleInputChange('firstname', e.target.value)}
-                            error={errors.firstname}
                             placeholder="π.χ. Γιάννης"
+                            error={fieldErrors.firstname}
+                            disabled={isSubmitting}
                         />
 
                         <Input
                             label="Επώνυμο *"
                             value={formData.lastname}
                             onChange={(e) => handleInputChange('lastname', e.target.value)}
-                            error={errors.lastname}
                             placeholder="π.χ. Παπαδόπουλος"
+                            error={fieldErrors.lastname}
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -178,11 +183,12 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                         <select
                             value={formData.gender}
                             onChange={(e) => handleInputChange('gender', e.target.value as GenderType)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            disabled={isSubmitting}
                         >
-                            {Object.values(GenderType).map(gender => (
-                                <option key={gender} value={gender}>
-                                    {GenderTypeLabels[gender]}
+                            {Object.entries(GenderTypeLabels).map(([key, label]) => (
+                                <option key={key} value={key}>
+                                    {label}
                                 </option>
                             ))}
                         </select>
@@ -197,28 +203,31 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                     </h3>
 
                     <Input
-                        label="Τηλέφωνο *"
+                        label="Τηλέφωνο"
                         value={formData.phoneNumber}
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                        error={errors.phoneNumber}
                         placeholder="π.χ. 6901234567"
+                        error={fieldErrors.phoneNumber}
+                        disabled={isSubmitting}
                     />
 
                     <Input
-                        label="Email *"
+                        label="Email"
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        error={errors.email}
                         placeholder="π.χ. customer@example.com"
+                        error={fieldErrors.email}
+                        disabled={isSubmitting}
                     />
 
                     <Input
-                        label="Διεύθυνση *"
+                        label="Διεύθυνση"
                         value={formData.address}
                         onChange={(e) => handleInputChange('address', e.target.value)}
-                        error={errors.address}
                         placeholder="π.χ. Πατησίων 123, Αθήνα"
+                        error={fieldErrors.address}
+                        disabled={isSubmitting}
                     />
                 </div>
 
@@ -230,22 +239,28 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                     </h3>
 
                     <Input
-                        label="ΑΦΜ (Προαιρετικό)"
+                        label="ΑΦΜ"
                         value={formData.tin}
                         onChange={(e) => handleInputChange('tin', e.target.value)}
-                        error={errors.tin}
                         placeholder="π.χ. 123456789"
+                        error={fieldErrors.tin}
+                        disabled={isSubmitting}
                     />
-                    <p className="text-sm text-gray-500">
-                        Το ΑΦΜ είναι υποχρεωτικό για χονδρικούς πελάτες
-                    </p>
                 </div>
 
-                {/* Change indicator */}
-                {!hasChanges && isValid && (
+                {/* Change Status */}
+                {!hasChanges && isFormValid && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                         <p className="text-sm text-yellow-800">
                             ℹ️ Δεν έχουν γίνει αλλαγές στα στοιχεία του πελάτη.
+                        </p>
+                    </div>
+                )}
+
+                {hasChanges && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-sm text-blue-800">
+                            ✏️ Έχουν γίνει αλλαγές που θα αποθηκευτούν.
                         </p>
                     </div>
                 )}
