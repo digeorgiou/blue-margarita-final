@@ -333,14 +333,8 @@ const ExpenseManagementPage = () => {
 
                     {/* Search and Results */}
                     <DashboardCard
-                        title="Αναζήτηση και Αποτελέσματα"
+                        title="Αναζήτηση και Διαχείριση Εξόδων"
                     >
-                        <div className="mb-4 text-sm text-gray-600">
-                            {searchResults
-                                ? `Εμφάνιση ${searchResults.numberOfElements} από ${searchResults.totalElements} έξοδα`
-                                : 'Φόρτωση...'
-                            }
-                        </div>
                         <ExpenseSearchBar
                             searchTerm={searchTerm}
                             onSearchTermChange={setSearchTerm}
@@ -358,46 +352,76 @@ const ExpenseManagementPage = () => {
                             onViewDetails={handleViewDetails}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
-                        />
-                    </DashboardCard>
-
-                    {/* Summary Card */}
-                    {searchResults?.summary && (
-                        <DashboardCard
-                            title="Σύνοψη Αποτελεσμάτων"
                         >
-                            <div className="mb-4 text-sm text-gray-600">
-                                Συγκεντρωτικά στοιχεία για τα φιλτραρισμένα έξοδα
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-blue-50 rounded-lg p-4">
-                                    <div className="text-sm text-blue-600 font-medium">Συνολικά Έξοδα</div>
-                                    <div className="text-2xl font-bold text-blue-900">
-                                        {formatCurrency(searchResults.summary.totalAmount)}
+                            {/* Summary Card as children - positioned between filters and results */}
+                            {searchResults && (
+                                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <DollarSign className="w-5 h-5 text-blue-600" />
+                                        <h3 className="text-lg font-semibold text-gray-900">
+                                            Σύνοψη Αποτελεσμάτων
+                                        </h3>
                                     </div>
-                                    <div className="text-xs text-blue-600">
-                                        {formatNumber(searchResults.summary.totalCount)} καταχωρήσεις
-                                    </div>
-                                </div>
 
-                                <div className="bg-green-50 rounded-lg p-4">
-                                    <div className="text-sm text-green-600 font-medium">Μέσος Όρος</div>
-                                    <div className="text-2xl font-bold text-green-900">
-                                        {formatCurrency(searchResults.summary.averageAmount)}
-                                    </div>
-                                    <div className="text-xs text-green-600">ανά έξοδο</div>
-                                </div>
+                                    {searchResults.summary ? (
+                                        <>
+                                            <div className="mb-4 text-sm text-gray-600">
+                                                Συγκεντρωτικά στοιχεία για τα φιλτραρισμένα έξοδα
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="bg-blue-50 rounded-lg p-4">
+                                                    <div className="text-sm text-blue-600 font-medium">Συνολικά Έξοδα</div>
+                                                    <div className="text-2xl font-bold text-blue-900">
+                                                        {formatCurrency(searchResults.summary.totalAmount)}
+                                                    </div>
+                                                    <div className="text-xs text-blue-600">
+                                                        {formatNumber(searchResults.summary.totalCount)} καταχωρήσεις
+                                                    </div>
+                                                </div>
 
-                                <div className="bg-orange-50 rounded-lg p-4">
-                                    <div className="text-sm text-orange-600 font-medium">Πλήθος Εγγραφών</div>
-                                    <div className="text-2xl font-bold text-orange-900">
-                                        {formatNumber(searchResults.summary.totalCount)}
-                                    </div>
-                                    <div className="text-xs text-orange-600">στα φιλτραρισμένα αποτελέσματα</div>
+                                                <div className="bg-green-50 rounded-lg p-4">
+                                                    <div className="text-sm text-green-600 font-medium">Μέσος Όρος</div>
+                                                    <div className="text-2xl font-bold text-green-900">
+                                                        {formatCurrency(searchResults.summary.averageAmount)}
+                                                    </div>
+                                                    <div className="text-xs text-green-600">ανά έξοδο</div>
+                                                </div>
+
+                                                <div className="bg-orange-50 rounded-lg p-4">
+                                                    <div className="text-sm text-orange-600 font-medium">Πλήθος Εγγραφών</div>
+                                                    <div className="text-2xl font-bold text-orange-900">
+                                                        {formatNumber(searchResults.summary.totalCount)}
+                                                    </div>
+                                                    <div className="text-xs text-orange-600">στα φιλτραρισμένα αποτελέσματα</div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-shrink-0">
+                                                    <svg className="w-8 h-8 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="text-lg font-medium text-yellow-800 mb-2">
+                                                        Περισσότερα από 100 αποτελέσματα
+                                                    </h4>
+                                                    <p className="text-yellow-700 mb-3">
+                                                        Η σύνοψη δεν είναι διαθέσιμη για λόγους απόδοσης όταν τα αποτελέσματα ξεπερνούν τις 100 εγγραφές.
+                                                    </p>
+                                                    <p className="text-sm text-yellow-600">
+                                                        💡 <strong>Συμβουλή:</strong> Περιορίστε τα φίλτρα σας (π.χ. ημερομηνίες, τύπος εξόδου) για να δείτε τη σύνοψη.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        </DashboardCard>
-                    )}
+                            )}
+                        </ExpenseSearchBar>
+                    </DashboardCard>
 
                     {/* Pagination Controls */}
                     {searchResults && searchResults.totalElements > 0 && (

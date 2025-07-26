@@ -20,6 +20,7 @@ interface ExpenseSearchBarProps {
     onViewDetails: (expense: ExpenseReadOnlyDTO) => void;
     onEdit: (expense: ExpenseReadOnlyDTO) => void;
     onDelete: (expense: ExpenseReadOnlyDTO) => void;
+    children?: React.ReactNode;
 }
 
 const ExpenseSearchBar: React.FC<ExpenseSearchBarProps> = ({
@@ -38,7 +39,9 @@ const ExpenseSearchBar: React.FC<ExpenseSearchBarProps> = ({
                                                                loading,
                                                                onViewDetails,
                                                                onEdit,
-                                                               onDelete
+                                                               onDelete,
+                                                                children
+
                                                            }) => {
 
     const formatCurrency = (amount: number): string => {
@@ -102,7 +105,6 @@ const ExpenseSearchBar: React.FC<ExpenseSearchBarProps> = ({
                                 onChange={(e) => onDateFromFilterChange(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
-                            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
                     </div>
 
@@ -118,14 +120,13 @@ const ExpenseSearchBar: React.FC<ExpenseSearchBarProps> = ({
                                 onChange={(e) => onDateToFilterChange(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
-                            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
                     </div>
 
                     {/* Purchase Filter */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Συνδεδεμένα με Αγορές
+                            Σύνδεση με Αγορά
                         </label>
                         <select
                             value={isPurchaseFilter === null ? '' : isPurchaseFilter.toString()}
@@ -140,15 +141,39 @@ const ExpenseSearchBar: React.FC<ExpenseSearchBarProps> = ({
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                             <option value="">Όλα τα έξοδα</option>
-                            <option value="true">Συνδεδεμένα με αγορές</option>
-                            <option value="false">Μόνο χειροκίνητα</option>
+                            <option value="true">Με σύνδεση αγοράς</option>
+                            <option value="false">Χωρίς σύνδεση αγοράς</option>
                         </select>
+                    </div>
+
+                    {/* Clear Filters Button */}
+                    <div className="flex items-end">
+                        <Button
+                            onClick={() => {
+                                onSearchTermChange('');
+                                onExpenseTypeFilterChange('');
+                                onDateFromFilterChange('');
+                                onDateToFilterChange('');
+                                onIsPurchaseFilterChange(null);
+                            }}
+                            variant="outline-secondary"
+                            className="w-full"
+                        >
+                            Καθαρισμός Φίλτρων
+                        </Button>
                     </div>
                 </div>
             </div>
 
+            {/* Children section - Summary Card will be rendered here */}
+            {children && (
+                <div>
+                    {children}
+                </div>
+            )}
+
             {/* Results Section */}
-            <div>
+            <div className="bg-white rounded-lg border border-gray-200">
                 {loading ? (
                     <div className="flex items-center justify-center py-8">
                         <LoadingSpinner />
@@ -160,91 +185,93 @@ const ExpenseSearchBar: React.FC<ExpenseSearchBarProps> = ({
                         <p>Δεν βρέθηκαν έξοδα με τα τρέχοντα κριτήρια αναζήτησης</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {searchResults.map((expense) => (
-                            <div
-                                key={expense.id}
-                                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                            >
-                                <div className="space-y-3">
-                                    {/* Header Row */}
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold text-gray-900 mb-1">
-                                                {expense.description}
-                                            </h3>
-                                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                <Calendar className="w-4 h-4" />
-                                                <span>{formatDate(expense.expenseDate)}</span>
+                    <div className="p-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {searchResults.map((expense) => (
+                                <div
+                                    key={expense.id}
+                                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                >
+                                    <div className="space-y-3">
+                                        {/* Header Row */}
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-gray-900 mb-1">
+                                                    {expense.description}
+                                                </h3>
+                                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <Calendar className="w-4 h-4" />
+                                                    <span>{formatDate(expense.expenseDate)}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-xl font-bold text-gray-900">
-                                                {formatCurrency(expense.amount)}
-                                            </div>
-                                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                                                expense.purchaseId
-                                                    ? 'bg-blue-100 text-blue-800'
-                                                    : 'bg-gray-100 text-gray-800'
-                                            }`}>
-                                                {expense.expenseType}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Purchase Link Info */}
-                                    {expense.purchaseId && expense.purchaseDescription && (
-                                        <div className="bg-blue-50 rounded-lg p-3">
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Package className="w-4 h-4 text-blue-600" />
-                                                <span className="text-blue-600 font-medium">
-                                                    Συνδεδεμένο με αγορά:
-                                                </span>
-                                                <span className="text-blue-900">
-                                                    {expense.purchaseDescription}
+                                            <div className="text-right">
+                                                <div className="text-xl font-bold text-gray-900">
+                                                    {formatCurrency(expense.amount)}
+                                                </div>
+                                                <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                                    expense.purchaseId
+                                                        ? 'bg-blue-100 text-blue-800'
+                                                        : 'bg-gray-100 text-gray-800'
+                                                }`}>
+                                                    {expense.expenseType}
                                                 </span>
                                             </div>
                                         </div>
-                                    )}
 
-                                    {/* Metadata */}
-                                    <div className="text-xs text-gray-500 border-t pt-2">
-                                        Δημιουργήθηκε: {formatDate(expense.createdAt)} από {expense.createdBy}
-                                    </div>
+                                        {/* Purchase Link Info */}
+                                        {expense.purchaseId && expense.purchaseDescription && (
+                                            <div className="bg-blue-50 rounded-lg p-3">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Package className="w-4 h-4 text-blue-600" />
+                                                    <span className="text-blue-600 font-medium">
+                                                        Συνδεδεμένο με αγορά:
+                                                    </span>
+                                                    <span className="text-blue-900">
+                                                        {expense.purchaseDescription}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                    {/* Action Buttons */}
-                                    <div className="flex gap-2 pt-2">
-                                        <Button
-                                            onClick={() => onViewDetails(expense)}
-                                            variant="outline-primary"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                            Προβολή
-                                        </Button>
-                                        <Button
-                                            onClick={() => onEdit(expense)}
-                                            variant="outline-secondary"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                            Επεξεργασία
-                                        </Button>
-                                        <Button
-                                            onClick={() => onDelete(expense)}
-                                            variant="danger"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                            Διαγραφή
-                                        </Button>
+                                        {/* Metadata */}
+                                        <div className="text-xs text-gray-500 border-t pt-2">
+                                            Δημιουργήθηκε: {formatDate(expense.createdAt)} από {expense.createdBy}
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex gap-2 pt-2">
+                                            <Button
+                                                onClick={() => onViewDetails(expense)}
+                                                variant="outline-primary"
+                                                size="sm"
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                                Προβολή
+                                            </Button>
+                                            <Button
+                                                onClick={() => onEdit(expense)}
+                                                variant="outline-secondary"
+                                                size="sm"
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                                Επεξεργασία
+                                            </Button>
+                                            <Button
+                                                onClick={() => onDelete(expense)}
+                                                variant="danger"
+                                                size="sm"
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                Διαγραφή
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>

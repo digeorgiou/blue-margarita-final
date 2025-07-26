@@ -12,4 +12,12 @@ public class PaginatedFilteredExpensesWithSummary extends Paginated<ExpenseReadO
         super(page);
         this.summary = summary;
     }
+
+    public ExpenseSummaryDTO getSummary() {
+        return summary;
+    }
+
+    public void setSummary(ExpenseSummaryDTO summary) {
+        this.summary = summary;
+    }
 }

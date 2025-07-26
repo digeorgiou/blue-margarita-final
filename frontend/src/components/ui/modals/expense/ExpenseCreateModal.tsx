@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Calendar, FileText, Tag, Package } from 'lucide-react';
+import React, { useState } from 'react';
+import { DollarSign, FileText, Calendar, Tag, Package, AlertTriangle } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../index';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import type { ExpenseInsertDTO, ExpenseTypeDTO } from '../../../../types/api/expenseInterface';
@@ -17,40 +17,34 @@ const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
                                                                    onSubmit,
                                                                    expenseTypes
                                                                }) => {
-    // Form state
     const [description, setDescription] = useState('');
     const [amount, setAmount] = useState('');
     const [expenseDate, setExpenseDate] = useState('');
     const [expenseType, setExpenseType] = useState('');
     const [purchaseId, setPurchaseId] = useState('');
-
-    // UI state
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Error handling
     const { fieldErrors, generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
 
-    // Initialize form when modal opens
-    useEffect(() => {
-        if (isOpen) {
-            // Set today's date as default
-            const today = new Date().toISOString().split('T')[0];
-            setExpenseDate(today);
-            clearErrors();
-        }
-    }, [isOpen, clearErrors]);
+    // Filter out PURCHASE_MATERIALS type from available options
+    const availableExpenseTypes = expenseTypes.filter(type =>
+        type.value !== 'PURCHASE_MATERIALS' && type.displayName !== 'Αγορά Υλικών'
+    );
 
-    // Reset form when modal closes
-    useEffect(() => {
-        if (!isOpen) {
-            setDescription('');
-            setAmount('');
-            setExpenseDate('');
-            setExpenseType('');
-            setPurchaseId('');
-            clearErrors();
-        }
-    }, [isOpen, clearErrors]);
+    const resetForm = () => {
+        setDescription('');
+        setAmount('');
+        setExpenseDate('');
+        setExpenseType('');
+        setPurchaseId('');
+        clearErrors();
+    };
+
+    const handleClose = () => {
+        resetForm();
+        onClose();
+    };
 
     const handleInputChange = (field: string) => {
         // Clear field error when user starts typing
@@ -84,21 +78,16 @@ const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
                 amount: parseFloat(amount),
                 expenseDate: expenseDate,
                 expenseType: expenseType,
-                purchaseId: purchaseId ? parseInt(purchaseId) : undefined
+                purchaseId: purchaseId ? parseInt(purchaseId) : undefined,
+                creatorUserId: 1 // You'd get this from auth context
             };
 
             await onSubmit(expenseData);
-            // Modal will be closed by parent component on success
+            handleClose();
         } catch (error) {
-            handleApiError(error);
+            await handleApiError(error);
         } finally {
             setIsSubmitting(false);
-        }
-    };
-
-    const handleClose = () => {
-        if (!isSubmitting) {
-            onClose();
         }
     };
 
@@ -106,29 +95,32 @@ const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-t-2xl">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                            <DollarSign className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-semibold">Νέο Έξοδο</h2>
-                            <p className="text-green-100 text-sm">Δημιουργία νέας καταχώρησης εξόδου</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleClose}
-                        disabled={isSubmitting}
-                        className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg disabled:opacity-50"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+                <div className="p-6 border-b border-gray-200">
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <DollarSign className="w-6 h-6 text-green-600" />
+                        Δημιουργία Νέου Εξόδου
+                    </h2>
+                    <p className="text-gray-600 mt-1">
+                        Καταχωρήστε ένα νέο έξοδο στο σύστημα
+                    </p>
                 </div>
 
-                {/* Form */}
+                {/* Body */}
                 <form onSubmit={handleSubmit} className="p-6">
+                    {/* Purchase Notice */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle className="w-4 h-4 text-blue-600" />
+                            <span className="text-blue-800 font-medium">Σημείωση για Αγορές</span>
+                        </div>
+                        <p className="text-sm text-blue-700">
+                            Τα έξοδα αγοράς υλικών δημιουργούνται αυτόματα όταν καταχωρείτε μια αγορά.
+                            Δεν μπορείτε να δημιουργήσετε χειροκίνητα έξοδο τύπου "Αγορά Υλικών".
+                        </p>
+                    </div>
+
                     <div className="space-y-6">
                         {/* Description */}
                         <div>
@@ -143,7 +135,7 @@ const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
                                     setDescription(e.target.value);
                                     handleInputChange('description');
                                 }}
-                                placeholder="π.χ. Αγορά υλικών, Λογαριασμός ρεύματος..."
+                                placeholder="π.χ. Λογαριασμός ρεύματος, Καύσιμα, Συντήρηση εξοπλισμού..."
                                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
                                     fieldErrors.description ? 'border-red-500' : 'border-gray-300'
                                 }`}
@@ -203,7 +195,7 @@ const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
                             )}
                         </div>
 
-                        {/* Expense Type */}
+                        {/* Expense Type - Filtered to exclude PURCHASE_MATERIALS */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <Tag className="w-4 h-4 inline mr-2" />
@@ -221,7 +213,7 @@ const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
                                 disabled={isSubmitting}
                             >
                                 <option value="">Επιλέξτε τύπο εξόδου</option>
-                                {Array.isArray(expenseTypes) && expenseTypes.map((type) => (
+                                {Array.isArray(availableExpenseTypes) && availableExpenseTypes.map((type) => (
                                     <option key={type.value} value={type.value}>
                                         {type.displayName}
                                     </option>
@@ -230,6 +222,9 @@ const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
                             {fieldErrors.expenseType && (
                                 <p className="text-red-600 text-sm mt-1">{fieldErrors.expenseType}</p>
                             )}
+                            <p className="text-xs text-gray-500 mt-1">
+                                Το "Αγορά Υλικών" δεν είναι διαθέσιμο - δημιουργείται αυτόματα με τις αγορές
+                            </p>
                         </div>
 
                         {/* Purchase ID (optional) */}
