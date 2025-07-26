@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
+import { Button, Alert, ProductUsageModal } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
@@ -17,7 +17,7 @@ import type { Paginated } from '../types/api/dashboardInterface';
 
 // We'll need to create these components following the customer pattern
 import MaterialSearchBar from '../components/ui/searchBars/MaterialSearchBar';
-import MaterialDetailModal from '../components/ui/modals/material/MaterialDetailModal';
+import MaterialDetailModal from "../components/ui/modals/material/MaterialDetailModal.tsx";
 import MaterialUpdateModal from '../components/ui/modals/material/MaterialUpdateModal';
 import MaterialCreateModal from '../components/ui/modals/material/MaterialCreateModal';
 
@@ -39,6 +39,7 @@ const MaterialManagementPage = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+    const [isProductUsageModalOpen, setIsProductUsageModalOpen] = useState(false);
 
     // Selected material and details
     const [selectedMaterial, setSelectedMaterial] = useState<MaterialReadOnlyDTO | null>(null);
@@ -109,18 +110,39 @@ const MaterialManagementPage = () => {
 
     // Modal handlers
     const handleViewDetails = async (material: MaterialReadOnlyDTO) => {
+        console.log('🔍 Starting handleViewDetails for material:', material);
+
         setSelectedMaterial(material);
         setDetailsLoading(true);
         setIsDetailsModalOpen(true);
 
         try {
+            console.log('📡 Calling API with materialId:', material.materialId);
+
             const details = await materialService.getMaterialDetailedView(material.materialId);
+
+            console.log('✅ API Response received:', details);
+            console.log('📋 Details structure:', Object.keys(details || {}));
+            console.log('🔍 Checking key properties:');
+            console.log('  - details.id:', details?.id);
+            console.log('  - details.name:', details?.name);
+            console.log('  - details.unit:', details?.unit);
+            console.log('  - details.isActive:', details?.isActive);
+            console.log('  - details.categoryDistribution:', details?.categoryDistribution);
+            console.log('  - details.topProductsUsage:', details?.topProductsUsage);
+
             setMaterialDetails(details);
         } catch (err) {
+            console.error('❌ Error in handleViewDetails:', err);
             await handleApiError(err);
         } finally {
             setDetailsLoading(false);
         }
+    };
+
+    const handleViewProducts = (material: MaterialReadOnlyDTO) => {
+        setSelectedMaterial(material);
+        setIsProductUsageModalOpen(true);
     };
 
     const handleEdit = (material: MaterialReadOnlyDTO) => {
@@ -233,6 +255,7 @@ const MaterialManagementPage = () => {
                         onViewDetails={handleViewDetails}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onViewProducts={handleViewProducts}
                     />
                 </DashboardCard>
 
@@ -292,6 +315,13 @@ const MaterialManagementPage = () => {
                 onClose={() => setIsSuccessModalOpen(false)}
                 title={successMessage.title}
                 message={successMessage.message}
+            />
+
+            <ProductUsageModal
+                isOpen={isProductUsageModalOpen}
+                onClose={() => setIsProductUsageModalOpen(false)}
+                entity={selectedMaterial}
+                entityType="material"
             />
         </div>
     );

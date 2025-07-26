@@ -40,3 +40,8 @@ export { default as CustomerDetailModal } from './modals/customer/CustomerDetail
 export { default as CustomerSearchBar } from './searchBars/CustomerSearchBar.tsx'
 
 
+export { default as MaterialProductUsageModal } from './modals/material/MaterialProductUsageModal'
+
+export { default as ProcedureProductUsageModal } from './modals/procedure/ProcedureProductUsageModal'
+
+export { default as ProductUsageModal } from './modals/common/ProductUsageModal.tsx'

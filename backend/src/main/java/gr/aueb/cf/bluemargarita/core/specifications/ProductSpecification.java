@@ -90,7 +90,7 @@ public class ProductSpecification {
             }
 
             // Join Product -> ProcedureProduct -> Procedure
-            Join<Product, ProductProcedure> procedureProductJoin = root.join("procedureProducts", JoinType.INNER);
+            Join<Product, ProductProcedure> procedureProductJoin = root.join("productProcedures", JoinType.INNER);
             Join<ProductProcedure, Procedure> procedureJoin = procedureProductJoin.join("procedure", JoinType.INNER);
 
             return criteriaBuilder.equal(procedureJoin.get("id"), procedureId);

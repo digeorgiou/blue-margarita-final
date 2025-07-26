@@ -187,6 +187,15 @@ public class ExpenseService implements IExpenseService {
         return new PaginatedFilteredExpensesWithSummary(filtered, summary);
     }
 
+    @Override
+    @Transactional
+    public List<ExpenseTypeDTO> getAllAvailableExpenseTypes() {
+        return Arrays.stream(ExpenseType.values())
+                .map(type -> new ExpenseTypeDTO(type, type.getDisplayName()))
+                .collect(Collectors.toList());
+    }
+
+
 
     // =============================================================================
     // EXPENSE ANALYTICS METHODS

@@ -13,6 +13,7 @@ interface MaterialSearchBarProps {
     onViewDetails: (material: MaterialReadOnlyDTO) => void;
     onEdit: (material: MaterialReadOnlyDTO) => void;
     onDelete: (material: MaterialReadOnlyDTO) => void;
+    onViewProducts: (material: MaterialReadOnlyDTO) => void;
 }
 
 const MaterialSearchBar: React.FC<MaterialSearchBarProps> = ({
@@ -24,7 +25,8 @@ const MaterialSearchBar: React.FC<MaterialSearchBarProps> = ({
                                                                  loading,
                                                                  onViewDetails,
                                                                  onEdit,
-                                                                 onDelete
+                                                                 onDelete,
+                                                                 onViewProducts
                                                              }) => {
     // Helper function to format dates
     const formatDate = (dateString: string) => {
@@ -186,6 +188,16 @@ const MaterialSearchBar: React.FC<MaterialSearchBarProps> = ({
                                         >
                                             <Eye className="w-4 h-4" />
                                             Προβολή
+                                        </Button>
+                                        <Button
+                                            onClick={() => onViewProducts(material)}
+                                            variant="outline-primary"
+                                            size="sm"
+                                            className="flex items-center gap-2"
+                                            title="Δείτε όλα τα προϊόντα που χρησιμοποιούν αυτό το υλικό"
+                                        >
+                                            <Package className="w-4 h-4" />
+                                            Προϊόντα
                                         </Button>
                                         <Button
                                             onClick={() => onEdit(material)}

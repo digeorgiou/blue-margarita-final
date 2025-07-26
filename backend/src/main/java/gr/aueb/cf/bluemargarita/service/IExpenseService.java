@@ -77,6 +77,12 @@ public interface IExpenseService {
      */
     PaginatedFilteredExpensesWithSummary searchExpensesWithSummary(ExpenseFilters filters);
 
+    /**
+     * Returns all available expense types
+     * @return a list of dtos containing ExpenseType and display name for each type of expense
+     */
+    List<ExpenseTypeDTO> getAllAvailableExpenseTypes();
+
 
     // =============================================================================
     // EXPENSE ANALYTICS METHODS

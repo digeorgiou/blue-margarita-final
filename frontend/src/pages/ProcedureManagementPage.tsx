@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
+import { Button, Alert, ProductUsageModal } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
@@ -39,6 +39,7 @@ const ProcedureManagementPage = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+    const [isProductUsageModalOpen, setIsProductUsageModalOpen] = useState(false);
 
     // Selected procedure and details
     const [selectedProcedure, setSelectedProcedure] = useState<ProcedureReadOnlyDTO | null>(null);
@@ -121,6 +122,11 @@ const ProcedureManagementPage = () => {
         } finally {
             setDetailsLoading(false);
         }
+    };
+
+    const handleViewProducts = (procedure: ProcedureReadOnlyDTO) => {
+        setSelectedProcedure(procedure);
+        setIsProductUsageModalOpen(true);
     };
 
     const handleEdit = (procedure: ProcedureReadOnlyDTO) => {
@@ -233,6 +239,7 @@ const ProcedureManagementPage = () => {
                         onViewDetails={handleViewDetails}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onViewProducts={handleViewProducts}
                     />
                 </DashboardCard>
 
@@ -292,6 +299,13 @@ const ProcedureManagementPage = () => {
                 onClose={() => setIsSuccessModalOpen(false)}
                 title={successMessage.title}
                 message={successMessage.message}
+            />
+
+            <ProductUsageModal
+                isOpen={isProductUsageModalOpen}
+                onClose={() => setIsProductUsageModalOpen(false)}
+                entity={selectedProcedure}
+                entityType="procedure"
             />
         </div>
     );

@@ -9,7 +9,7 @@ import {
     TrendingUp,
     Package,
     ShoppingCart,
-    DollarSign,
+    Euro,
     X
 } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../index';
@@ -43,221 +43,236 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
         return new Date(dateString).toLocaleDateString('el-GR');
     };
 
+    const formatNumber = (num: number) => {
+        return new Intl.NumberFormat('el-GR').format(num);
+    };
+
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                {/* Backdrop */}
-                <div
-                    className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-                    onClick={onClose}
-                />
-
-                {/* Modal */}
-                <div className="inline-block w-full max-w-4xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-purple-100 rounded-lg">
-                                <Building2 className="w-6 h-6 text-purple-600" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-semibold text-gray-900">
-                                    Στοιχεία Προμηθευτή
-                                </h3>
-                                <p className="text-sm text-gray-500">
-                                    Λεπτομερής προβολή και στατιστικά
-                                </p>
-                            </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-t-2xl">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-6 h-6" />
                         </div>
-                        <Button
-                            onClick={onClose}
-                            variant="ghost-primary"
-                            size="sm"
-                            className="p-2"
-                        >
-                            <X className="w-5 h-5" />
-                        </Button>
+                        <div>
+                            <h2 className="text-xl font-semibold">Στοιχεία Προμηθευτή</h2>
+                            <p className="text-teal-100 text-sm">Λεπτομερής προβολή και στατιστικά συνεργασίας</p>
+                        </div>
                     </div>
+                    <button
+                        onClick={onClose}
+                        className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
 
-                    {/* Content */}
-                    {loading ? (
-                        <div className="py-12 text-center">
+                {/* Content */}
+                {loading ? (
+                    <div className="flex justify-center items-center py-12">
+                        <div className="text-center">
                             <LoadingSpinner/>
                             <p className="mt-4 text-gray-600">Φόρτωση στοιχείων προμηθευτή...</p>
                         </div>
-                    ) : !supplier ? (
-                        <div className="py-12 text-center">
-                            <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600">Δεν βρέθηκαν στοιχεία προμηθευτή</p>
+                    </div>
+                ) : !supplier ? (
+                    <div className="flex justify-center items-center py-12">
+                        <div className="text-center">
+                            <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                Δεν βρέθηκαν στοιχεία προμηθευτή
+                            </h3>
+                            <p className="text-gray-500">
+                                Τα στοιχεία του προμηθευτή δεν είναι διαθέσιμα αυτή τη στιγμή.
+                            </p>
                         </div>
-                    ) : (
-                        <div className="space-y-6">
-                            {/* Basic Information */}
-                            <div className="bg-gray-50 rounded-lg p-6">
-                                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Building2 className="w-5 h-5" />
-                                    Βασικά Στοιχεία
-                                </h4>
+                    </div>
+                ) : (
+                    <div className="p-6 space-y-6">
+                        {/* Basic Information */}
+                        <div className="bg-gray-50 rounded-xl p-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                <Building2 className="w-5 h-5 mr-2 text-teal-600" />
+                                Βασικά Στοιχεία
+                            </h3>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Left Column */}
-                                    <div className="space-y-4">
-                                        <div>
-                                            <h5 className="text-2xl font-bold text-gray-900">
-                                                {supplier.name}
-                                            </h5>
-                                            <p className="text-gray-500">ID: {supplier.supplierId}</p>
-                                            {!supplier.isActive && (
-                                                <span className="inline-block px-2 py-1 mt-2 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                                                    Ανενεργός
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {supplier.email && (
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <Mail className="w-4 h-4" />
-                                                <span>{supplier.email}</span>
-                                            </div>
-                                        )}
-
-                                        {supplier.phoneNumber && (
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <Phone className="w-4 h-4" />
-                                                <span>{supplier.phoneNumber}</span>
-                                            </div>
-                                        )}
-
-                                        {supplier.address && (
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <MapPin className="w-4 h-4" />
-                                                <span>{supplier.address}</span>
-                                            </div>
-                                        )}
-
-                                        {supplier.tin && (
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <CreditCard className="w-4 h-4" />
-                                                <span>ΑΦΜ: {supplier.tin}</span>
-                                            </div>
-                                        )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Left Column - Company Info */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <h4 className="text-2xl font-bold text-gray-900">
+                                            {supplier.name}
+                                        </h4>
+                                        <p className="text-gray-500">ID: {supplier.supplierId}</p>
+                                        <span className={`inline-block px-2 py-1 mt-2 text-xs font-medium rounded-full ${
+                                            supplier.isActive
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-red-100 text-red-800'
+                                        }`}>
+                                            {supplier.isActive ? 'Ενεργός' : 'Ανενεργός'}
+                                        </span>
                                     </div>
 
-                                    {/* Right Column - Audit Info */}
-                                    <div className="space-y-4 text-sm text-gray-600">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" />
-                                            <span>Δημιουργήθηκε: {formatDate(supplier.createdAt)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" />
-                                            <span>Ενημερώθηκε: {formatDate(supplier.updatedAt)}</span>
-                                        </div>
-                                        <div>
-                                            <span>Δημιουργός: {supplier.createdBy}</span>
-                                        </div>
-                                        <div>
-                                            <span>Τελευταία ενημέρωση από: {supplier.lastUpdatedBy}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Purchase Statistics */}
-                            <div className="bg-blue-50 rounded-lg p-6">
-                                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                    <TrendingUp className="w-5 h-5" />
-                                    Στατιστικά Αγορών
-                                </h4>
-
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div className="text-center">
-                                        <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-2">
-                                            <ShoppingCart className="w-6 h-6 text-blue-600" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-gray-900">
-                                            {supplier.totalPurchases}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Συνολικές Αγορές</div>
-                                    </div>
-
-                                    <div className="text-center">
-                                        <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-2">
-                                            <DollarSign className="w-6 h-6 text-green-600" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-gray-900">
-                                            {formatCurrency(supplier.totalCostPaid)}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Συνολικό Κόστος</div>
-                                    </div>
-
-                                    <div className="text-center">
-                                        <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mx-auto mb-2">
-                                            <TrendingUp className="w-6 h-6 text-yellow-600" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-gray-900">
-                                            {formatCurrency(supplier.averagePurchaseValue)}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Μέση Αξία Αγοράς</div>
-                                    </div>
-
-                                    <div className="text-center">
-                                        <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-2">
-                                            <Calendar className="w-6 h-6 text-purple-600" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-gray-900">
-                                            {formatDate(supplier.lastPurchaseDate)}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Τελευταία Αγορά</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Top Materials */}
-                            {supplier.topMaterials && supplier.topMaterials.length > 0 && (
-                                <div className="bg-green-50 rounded-lg p-6">
-                                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                        <Package className="w-5 h-5" />
-                                        Κορυφαία Υλικά
-                                    </h4>
-
+                                    {/* Contact Information */}
                                     <div className="space-y-3">
-                                        {supplier.topMaterials.map((material) => (
-                                            <div
-                                                key={material.materialId}
-                                                className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200"
-                                            >
-                                                <div className="flex-1">
-                                                    <h5 className="font-medium text-gray-900">
-                                                        {material.materialName}
-                                                    </h5>
-                                                    <p className="text-sm text-gray-600">
-                                                        Ποσότητα: {material.totalQuantityPurchased} |
-                                                        Τελευταία αγορά: {formatDate(material.lastPurchaseDate)}
-                                                    </p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="font-semibold text-gray-900">
-                                                        {formatCurrency(material.totalCostPaid)}
-                                                    </div>
-                                                    <div className="text-sm text-gray-600">
-                                                        Συνολικό κόστος
-                                                    </div>
-                                                </div>
+                                        {supplier.phoneNumber && (
+                                            <div className="flex items-center gap-2">
+                                                <Phone className="w-4 h-4 text-gray-400" />
+                                                <span className="text-gray-900">{supplier.phoneNumber}</span>
                                             </div>
-                                        ))}
+                                        )}
+                                        {supplier.email && (
+                                            <div className="flex items-center gap-2">
+                                                <Mail className="w-4 h-4 text-gray-400" />
+                                                <span className="text-gray-900">{supplier.email}</span>
+                                            </div>
+                                        )}
+                                        {supplier.address && (
+                                            <div className="flex items-start gap-2">
+                                                <MapPin className="w-4 h-4 text-gray-400 mt-1" />
+                                                <span className="text-gray-900">{supplier.address}</span>
+                                            </div>
+                                        )}
+                                        {supplier.tin && (
+                                            <div className="flex items-center gap-2">
+                                                <CreditCard className="w-4 h-4 text-gray-400" />
+                                                <span className="text-gray-900">ΑΦΜ: {supplier.tin}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    )}
 
-                    {/* Footer */}
-                    <div className="mt-6 flex justify-end">
+                                {/* Right Column - Metadata */}
+                                <div className="space-y-3">
+                                    <div>
+                                        <span className="font-medium text-gray-500">Δημιουργήθηκε:</span>
+                                        <p className="text-gray-900">{formatDate(supplier.createdAt)}</p>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-gray-500">Τελευταία Ενημέρωση:</span>
+                                        <p className="text-gray-900">{formatDate(supplier.updatedAt)}</p>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-gray-500">Δημιουργήθηκε από:</span>
+                                        <p className="text-gray-900">{supplier.createdBy}</p>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-gray-500">Τελευταία ενημέρωση από:</span>
+                                        <p className="text-gray-900">{supplier.lastUpdatedBy}</p>
+                                    </div>
+                                    {supplier.deletedAt && (
+                                        <div>
+                                            <span className="font-medium text-red-500">Διαγράφηκε:</span>
+                                            <p className="text-red-700">{formatDate(supplier.deletedAt)}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Purchase Statistics */}
+                        <div className="bg-blue-50 rounded-xl p-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                <ShoppingCart className="w-5 h-5 mr-2 text-blue-600" />
+                                Στατιστικά Αγορών
+                            </h3>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="text-center">
+                                    <div className="w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                        <ShoppingCart className="w-6 h-6 text-blue-600" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-900">
+                                        {formatNumber(supplier.totalPurchases)}
+                                    </div>
+                                    <div className="text-sm text-gray-600">Συνολικές Αγορές</div>
+                                </div>
+
+                                <div className="text-center">
+                                    <div className="w-12 h-12 bg-green-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                        <Euro className="w-6 h-6 text-green-600" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-900">
+                                        {formatCurrency(supplier.totalCostPaid)}
+                                    </div>
+                                    <div className="text-sm text-gray-600">Συνολικό Κόστος</div>
+                                </div>
+
+                                <div className="text-center">
+                                    <div className="w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                        <TrendingUp className="w-6 h-6 text-purple-600" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-900">
+                                        {formatCurrency(supplier.averagePurchaseValue)}
+                                    </div>
+                                    <div className="text-sm text-gray-600">Μέση Αξία Αγοράς</div>
+                                </div>
+
+                                <div className="text-center">
+                                    <div className="w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                        <Calendar className="w-6 h-6 text-orange-600" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-900">
+                                        {formatDate(supplier.lastPurchaseDate)}
+                                    </div>
+                                    <div className="text-sm text-gray-600">Τελευταία Αγορά</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Top Materials */}
+                        {supplier.topMaterials && supplier.topMaterials.length > 0 && (
+                            <div className="bg-teal-50 rounded-xl p-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                    <Package className="w-5 h-5 mr-2 text-teal-600" />
+                                    Κορυφαία Υλικά που Προμηθεύει
+                                </h3>
+
+                                <div className="space-y-3">
+                                    {supplier.topMaterials.map((material) => (
+                                        <div
+                                            key={material.materialId}
+                                            className="flex items-center justify-between p-4 bg-white rounded-lg border border-teal-200"
+                                        >
+                                            <div className="flex-1">
+                                                <h4 className="font-medium text-gray-900">
+                                                    {material.materialName}
+                                                </h4>
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <Package className="w-4 h-4" />
+                                                        Ποσότητα: {formatNumber(material.totalQuantityPurchased)}
+                                                    </span>
+                                                    <span className="ml-4 inline-flex items-center gap-2">
+                                                        <Calendar className="w-4 h-4" />
+                                                        Τελευταία αγορά: {formatDate(material.lastPurchaseDate)}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div className="text-right ml-4">
+                                                <div className="font-semibold text-gray-900">
+                                                    {formatCurrency(material.totalCostPaid)}
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    Συνολικό κόστος
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Footer */}
+                <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 rounded-b-2xl">
+                    <div className="flex justify-end">
                         <Button
                             onClick={onClose}
-                            variant="primary"
-                            className="px-6"
+                            variant="outline-secondary"
                         >
                             Κλείσιμο
                         </Button>

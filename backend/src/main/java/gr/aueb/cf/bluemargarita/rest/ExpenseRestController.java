@@ -1,6 +1,5 @@
 package gr.aueb.cf.bluemargarita.rest;
 
-import gr.aueb.cf.bluemargarita.core.enums.ExpenseType;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotAuthorizedException;
@@ -26,11 +25,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/expense-management")
@@ -61,16 +57,14 @@ public class ExpenseRestController {
     )
     @GetMapping("/init")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Map<String, Object>> getExpenseManagementPageData() {
-        Map<String, Object> pageData = new HashMap<>();
+    public ResponseEntity<ExpensesOverviewDTO> getExpenseManagementPageData() {
 
-        // Form dropdown data
-        pageData.put("expenseTypes", getExpenseTypesMap());
+        List<ExpenseTypeDTO> expenseTypes = expenseService.getAllAvailableExpenseTypes();
+        List<ExpenseReadOnlyDTO> recentExpenses = expenseService.getRecentExpenses(10);
 
-        // Recent expenses for quick overview
-        pageData.put("recentExpenses", expenseService.getRecentExpenses(10));
+        ExpensesOverviewDTO overview = new ExpensesOverviewDTO(expenseTypes, recentExpenses);
 
-        return new ResponseEntity<>(pageData, HttpStatus.OK);
+        return new ResponseEntity<>(overview, HttpStatus.OK);
     }
 
     // =============================================================================
@@ -273,40 +267,5 @@ public class ExpenseRestController {
         return new ResponseEntity<>(breakdown, HttpStatus.OK);
     }
 
-    // =============================================================================
-    // FORM HELPER ENDPOINTS
-    // =============================================================================
 
-    @Operation(
-            summary = "Get available expense types",
-            description = "Returns all available expense types for dropdown selection. Converts enum values to user-friendly display names.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Map of expense types with display names",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = Map.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/expense-types")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Map<String, String>> getExpenseTypes() {
-        Map<String, String> expenseTypes = getExpenseTypesMap();
-        return new ResponseEntity<>(expenseTypes, HttpStatus.OK);
-    }
-
-    // =============================================================================
-    // PRIVATE HELPER METHODS
-    // =============================================================================
-
-    private Map<String, String> getExpenseTypesMap() {
-        return Arrays.stream(ExpenseType.values())
-                .collect(Collectors.toMap(
-                        Enum::name,
-                        ExpenseType::getDisplayName
-                ));
-    }
 }

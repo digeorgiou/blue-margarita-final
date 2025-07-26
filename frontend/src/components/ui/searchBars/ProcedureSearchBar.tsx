@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Eye, Edit, Trash2, Cog, Calendar, User } from 'lucide-react';
+import { Search, Eye, Edit, Trash2, Cog, Calendar, User, Package } from 'lucide-react';
 import { Button, LoadingSpinner } from './../index';
 import type { ProcedureReadOnlyDTO } from '../../../types/api/procedureInterface';
 
@@ -13,6 +13,7 @@ interface ProcedureSearchBarProps {
     onViewDetails: (procedure: ProcedureReadOnlyDTO) => void;
     onEdit: (procedure: ProcedureReadOnlyDTO) => void;
     onDelete: (procedure: ProcedureReadOnlyDTO) => void;
+    onViewProducts: (procedure: ProcedureReadOnlyDTO) => void;
 }
 
 const ProcedureSearchBar: React.FC<ProcedureSearchBarProps> = ({
@@ -24,7 +25,8 @@ const ProcedureSearchBar: React.FC<ProcedureSearchBarProps> = ({
                                                                    loading,
                                                                    onViewDetails,
                                                                    onEdit,
-                                                                   onDelete
+                                                                   onDelete,
+                                                                   onViewProducts
                                                                }) => {
     // Helper function to format dates
     const formatDate = (dateString: string) => {
@@ -169,6 +171,16 @@ const ProcedureSearchBar: React.FC<ProcedureSearchBarProps> = ({
                                         >
                                             <Eye className="w-4 h-4" />
                                             Προβολή
+                                        </Button>
+                                        <Button
+                                            onClick={() => onViewProducts(procedure)}
+                                            variant="outline-secondary"
+                                            size="sm"
+                                            className="flex items-center gap-2"
+                                            title="Δείτε όλα τα προϊόντα που χρησιμοποιούν αυτή τη διαδικασία"
+                                        >
+                                            <Package className="w-4 h-4" />
+                                            Προϊόντα
                                         </Button>
                                         <Button
                                             onClick={() => onEdit(procedure)}
