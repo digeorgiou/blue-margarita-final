@@ -12,4 +12,5 @@ public interface ProcedureRepository extends JpaRepository<Procedure, Long>,
         JpaSpecificationExecutor<Procedure> {
     boolean existsByName(String name);
     List<Procedure> findByIsActiveTrue();
+    List<Procedure> findByNameContainingIgnoreCaseAndIsActiveTrue(String name);
 }

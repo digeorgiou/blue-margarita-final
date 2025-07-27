@@ -307,6 +307,31 @@ public class MaterialRestController {
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
+
+    @Operation(
+            summary = "Search materials for autocomplete",
+            description = "Searches materials for autocomplete functionality when adding materials to purchase. Returns materials matching name for easy selection.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of materials matching search term",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = MaterialSearchResultDTO.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<List<MaterialSearchResultDTO>> searchMaterials(
+            @Parameter(description = "Search term (material name)", required = true)
+            @RequestParam String searchTerm) {
+
+        List<MaterialSearchResultDTO> materials = materialService.searchMaterialsForAutocomplete(searchTerm);
+        return new ResponseEntity<>(materials, HttpStatus.OK);
+    }
+
     // =============================================================================
     // BULK OPERATIONS - PRICE RECALCULATION
     // =============================================================================

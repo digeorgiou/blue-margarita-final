@@ -6,6 +6,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
+import gr.aueb.cf.bluemargarita.dto.material.MaterialSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.*;
 import gr.aueb.cf.bluemargarita.dto.product.PriceRecalculationResultDTO;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
@@ -243,6 +244,30 @@ public class ProcedureRestController {
     public ResponseEntity<ProcedureDetailedViewDTO> getProcedureDetailedView(@PathVariable Long id) throws EntityNotFoundException {
         ProcedureDetailedViewDTO procedureDetails = procedureService.getProcedureDetailedById(id);
         return new ResponseEntity<>(procedureDetails, HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Search procedures for autocomplete",
+            description = "Searches procedures for autocomplete functionality when creating products. Returns procedures matching name for easy selection.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of procedures matching search term",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ProcedureForDropdownDTO.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<List<ProcedureForDropdownDTO>> searchMaterials(
+            @Parameter(description = "Search term (procedure name)", required = true)
+            @RequestParam String searchTerm) {
+
+        List<ProcedureForDropdownDTO> procedures = procedureService.searchProcedureForAutocomplete(searchTerm);
+        return new ResponseEntity<>(procedures, HttpStatus.OK);
     }
 
     // =============================================================================

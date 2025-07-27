@@ -18,6 +18,8 @@ import ProcedureManagementPage from "./pages/ProcedureManagementPage.tsx";
 import MaterialManagementPage from "./pages/MaterialManagementPage.tsx";
 import ExpenseManagementPage from "./pages/ExpenseManagementPage.tsx";
 
+import CreateProductPage from "./pages/CreateProductPage.tsx";
+
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -49,7 +51,7 @@ const App: React.FC = () => {
             case 'manage-sales':
                 return <div className="p-4"><h1 className="text-2xl text-white">Manage Sales - Coming Soon</h1></div>;
             case 'manage-products':
-                return <div className="p-4"><h1 className="text-2xl text-white">Manage Products - Coming Soon</h1></div>;
+                return <CreateProductPage onNavigate={handleNavigation}/>;
             case 'customers':
                 return <CustomerManagementPage/>;
             case 'materials':

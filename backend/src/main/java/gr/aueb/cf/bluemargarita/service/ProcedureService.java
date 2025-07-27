@@ -235,6 +235,22 @@ public class ProcedureService implements IProcedureService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProcedureForDropdownDTO> searchProcedureForAutocomplete(String searchTerm){
+        if (searchTerm == null || searchTerm.trim().length() < 2) {
+            return Collections.emptyList();
+        }
+        return procedureRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(searchTerm.trim())
+                .stream()
+                .limit(10)
+                .map(procedure -> new ProcedureForDropdownDTO(
+                        procedure.getId(),
+                        procedure.getName()
+                ))
+                .collect(Collectors.toList());
+    }
+
     // =============================================================================
     // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================

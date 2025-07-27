@@ -10,6 +10,7 @@ import { Button, LoadingSpinner, Input, Alert } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
 import { ShoppingCart, User, Package, Calendar, Plus, Minus, Trash2 } from 'lucide-react';
 import { PurchaseSuccessModal } from '../components/ui/modals/PurchaseSuccessModal';
+import {materialService} from "../services/materialService.ts";
 
 interface RecordPurchasePageProps {
     onNavigate: (page: string) => void;
@@ -76,7 +77,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
         }
 
         try {
-            const results = await recordPurchaseService.searchMaterials(term);
+            const results = await materialService.searchMaterialsForAutocomplete(term);
             setMaterialSearchResults(results);
         } catch (err) {
             console.error('Material search error:', err);

@@ -142,4 +142,11 @@ public interface IProcedureService {
      */
     List<ProcedureForDropdownDTO> getActiveProceduresForDropdown();
 
+    /**
+     * Retrieves active procedures matching search term for autocomplete
+     *
+     * @param searchTerm Procedure name search term
+     * @return List of procedures with basic info for selection
+     */
+    List<ProcedureForDropdownDTO> searchProcedureForAutocomplete(String searchTerm);
 }

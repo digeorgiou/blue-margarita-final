@@ -7,6 +7,7 @@ import {
     ProcedureInsertDTO,
     ProcedureUpdateDTO,
     ProcedureDetailedViewDTO,
+    ProcedureForDropdownDTO
 } from "../types/api/procedureInterface.ts";
 import { ProductUsageDTO} from "../types/api/materialInterface.ts";
 import { Paginated } from "../types/api/dashboardInterface.ts";
@@ -175,7 +176,40 @@ class ProcedureService {
             throw error;
         }
     }
+
+    async getActiveProceduresForDropdown(): Promise<ProcedureForDropdownDTO[]> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/dropdown`, {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Get procedures for dropdown error:', error);
+            throw error;
+        }
+    }
+
+    async searchProceduresForAutocomplete(searchTerm: string): Promise<ProcedureForDropdownDTO[]> {
+        try {
+            const queryParams = new URLSearchParams();
+            queryParams.append('searchTerm', searchTerm);
+
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/search?${queryParams}`, {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Search procedures for autocomplete error:', error);
+            throw error;
+        }
+    }
 }
+
+
 
 // Export a singleton instance
 export const procedureService = new ProcedureService();
