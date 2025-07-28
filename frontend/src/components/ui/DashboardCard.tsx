@@ -19,7 +19,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
     };
 
     return (
-        <div className={`bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6 ${height ? heightClasses[height] : ''} flex flex-col ${className}`}>
+        <div className={`bg-gradient-to-br from-white/90 via-blue-50/50 to-purple-50/30 border border-blue-100/30 rounded-xl p-6 ${height ? heightClasses[height] : ''} flex flex-col ${className}`}>
             {/* Header */}
             {title && icon && (
                 <div className="flex items-center justify-between mb-4 flex-shrink-0">

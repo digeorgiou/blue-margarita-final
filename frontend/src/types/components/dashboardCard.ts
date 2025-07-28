@@ -1,5 +1,5 @@
 export type DashboardCardProps = {
-    title?: string;
+    title?: string | React.ReactNode;
     icon?: string | React.JSX.Element;
     children: React.ReactNode;
     footer?: React.ReactNode;

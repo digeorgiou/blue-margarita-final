@@ -10,26 +10,22 @@ import {
 } from "../types/api/recordSaleInterface.ts";
 import { SaleSuccessModal } from '../components/ui/modals/SaleSuccessModal';
 import { CustomerSearchResultDTO } from "../types/api/customerInterface.ts";
-import { Button, LoadingSpinner, Alert } from '../components/ui';
+import { Button, LoadingSpinner, Input, Alert, CustomerSearchDropdown, ProductSearchDropdown } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
 import CartSummary from '../components/ui/CartSummary';
 import CartItem from '../components/ui/CartItem';
-import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator, Mail, X, Calendar } from 'lucide-react';
-import SearchDropdown from '../components/ui/searchDropdowns/SearchDropdown.tsx'
-import { StyledNumberInput, StyledSelect, StyledRadioGroup, StyledDateInput } from '../components/ui/StyledInput';
+import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator } from 'lucide-react';
 
 interface RecordSalePageProps {
     onNavigate: (page: string) => void;
 }
 
-const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
+const OldRecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
     // Page data and loading states
     const [pageData, setPageData] = useState<RecordPageDataDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
-    const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
     // Form states
     const [selectedCustomer, setSelectedCustomer] = useState<CustomerSearchResultDTO | null>(null);
@@ -60,27 +56,6 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
     const formatMoney = (amount: number): string => {
         return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
-
-    const transformedCustomerResults = customerSearchResults.map(customer => ({
-        id: customer.id,
-        name: customer.fullName,
-        subtitle: customer.email || 'No email',
-        additionalInfo: 'Customer'
-    }));
-
-    const transformedProductResults = productSearchResults.map(product => ({
-        id: product.id,
-        name: product.name,
-        subtitle: `Code: ${product.code}`,
-        additionalInfo: product.categoryName
-    }));
-
-    const transformedCustomerForDisplay = selectedCustomer ? {
-        id: selectedCustomer.id,
-        name: selectedCustomer.fullName,
-        subtitle: selectedCustomer.email || 'No email',
-        additionalInfo: 'Customer'
-    } : null;
 
     // Load page data on mount
     useEffect(() => {
@@ -133,39 +108,31 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
         }
     };
 
-    const searchCustomers = async (searchTerm: string): Promise<void> => {
+    const searchCustomers = async (searchTerm: string) => {
         if (searchTerm.length < 2) {
             setCustomerSearchResults([]);
             return;
         }
 
-        setIsLoadingCustomers(true);
         try {
             const results = await recordSaleService.searchCustomers(searchTerm);
             setCustomerSearchResults(results);
         } catch (err) {
             console.error('Customer search error:', err);
-            setCustomerSearchResults([]);
-        } finally {
-            setIsLoadingCustomers(false);
         }
     };
 
-    const searchProducts = async (searchTerm: string): Promise<void> => {
+    const searchProducts = async (searchTerm: string) => {
         if (searchTerm.length < 2) {
             setProductSearchResults([]);
             return;
         }
 
-        setIsLoadingProducts(true);
         try {
             const results = await recordSaleService.searchProducts(searchTerm);
             setProductSearchResults(results);
         } catch (err) {
             console.error('Product search error:', err);
-            setProductSearchResults([]);
-        } finally {
-            setIsLoadingProducts(false);
         }
     };
 
@@ -363,106 +330,104 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2">
                             <DashboardCard
-                                height="md"
+                                height="sm"
                             >
-                                <div className="space-y-4 pl-2">
+                                <div className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 <Package className="w-4 h-4 inline mr-1" />
                                                 Προϊόντα
                                             </label>
-                                            <SearchDropdown
+                                            <ProductSearchDropdown
                                                 searchTerm={productSearchTerm}
-                                                onSearchTermChange={(term: string) => {
+                                                onSearchChange={(term) => {
                                                     setProductSearchTerm(term);
                                                     searchProducts(term);
                                                 }}
-                                                searchResults={transformedProductResults}
-                                                onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
-                                                    const product = productSearchResults.find(p => p.id === item.id);
-                                                    if (product) {
-                                                        addProductToCart(product);
-                                                        setProductSearchTerm('');
-                                                        setProductSearchResults([]);
-                                                    }
-                                                }}
+                                                searchResults={productSearchResults}
+                                                onSelectProduct={(product) => addProductToCart(product)}
                                                 placeholder="Αναζήτηση προϊόντων..."
-                                                entityType="product"
-                                                isLoading={isLoadingProducts}
-                                                emptyMessage="No products found"
-                                                emptySubMessage="Try searching by name or code"
-                                                renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="flex-1">
-                                                        <div className="font-medium text-gray-900 group-hover:text-green-700 transition-colors">
-                                                            {item.name}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 mt-0.5">
-                                                            {item.subtitle}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                                                        <Package className="w-3 h-3 inline mr-1" />
-                                                        {item.additionalInfo}
-                                                    </div>
-                                                )}
                                             />
                                         </div>
 
                                         {/* Sale Date */}
-                                        <StyledDateInput
-                                            label="Sale Date"
+                                        <Input
+                                            label="Ημερομηνία"
+                                            type="date"
                                             value={saleDate}
-                                            onChange={setSaleDate}
-                                            icon={<Calendar className="w-5 h-5 text-purple-500" />}
+                                            onChange={(e) => setSaleDate(e.target.value)}
                                         />
 
-                                        <StyledNumberInput
-                                            label="Κόστος Συσκευασίας (€)"
-                                            value={packagingCost}
-                                            onChange={setPackagingCost}
-                                            placeholder="0.00"
-                                            icon={<Package className="w-5 h-5 text-orange-500" />}
-                                            step={0.5}
-                                            min={0}
-                                        />
-
-
+                                        {/* Wholesale Toggle */}
+                                        <div className="flex flex-col justify-end">
+                                            <div className="flex items-center h-10">
+                                                <input
+                                                    type="checkbox"
+                                                    id="wholesale"
+                                                    checked={isWholesale}
+                                                    onChange={(e) => handleWholesaleChange(e.target.checked)}
+                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                />
+                                                <label htmlFor="wholesale" className="ml-2 block text-sm text-gray-700">
+                                                    Πώληση Χονδρικής
+                                                    <span className="block text-xs text-gray-500">
+                                                        {isWholesale ? 'Τιμές Χονδρικής' : 'Τιμές Λιανικής'}
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <StyledSelect
-                                                label="Τοποθεσία"
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                <MapPin className="w-4 h-4 inline mr-1" />
+                                                Τοποθεσία
+                                            </label>
+                                            <select
                                                 value={selectedLocation || ''}
-                                                onChange={(value) => setSelectedLocation(Number(value))}
-                                                options={pageData.locations.map(location => ({
-                                                    value: location.id,
-                                                    label: location.name
-                                                }))}
-                                                placeholder="Select location..."
-                                                icon={<MapPin className="w-5 h-5 text-blue-500" />}
-                                                required
-                                            />
+                                                onChange={(e) => setSelectedLocation(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                            >
+                                                <option value="">Select location</option>
+                                                {pageData?.locations.map((location) => (
+                                                    <option key={location.id} value={location.id}>
+                                                        {location.name}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
 
                                         {/* Payment Method */}
                                         <div>
-                                            <StyledSelect
-                                                label="Payment Method"
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                <CreditCard className="w-4 h-4 inline mr-1" />
+                                                Τρόπος Πληρωμής
+                                            </label>
+                                            <select
                                                 value={selectedPaymentMethod}
-                                                onChange={(value) => setSelectedPaymentMethod(String(value))}
-                                                options={pageData.paymentMethods.map(method => ({
-                                                    value: method.value,
-                                                    label: method.displayName
-                                                }))}
-                                                placeholder="Select payment method..."
-                                                icon={<CreditCard className="w-5 h-5 text-green-500" />}
-                                                required
-                                            />
+                                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                            >
+                                                <option value="">Select payment method</option>
+                                                {pageData?.paymentMethods.map((method) => (
+                                                    <option key={method.value} value={method.value}>
+                                                        {method.displayName}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
+
+                                        <Input
+                                            label="Κόστος Συσκευασίας (€)"
+                                            type="number"
+                                            step="0.5"
+                                            min="0"
+                                            value={packagingCost}
+                                            onChange={(e) => setPackagingCost(Number(e.target.value) || 0)}
+                                            placeholder="1"
+                                        />
 
                                         {/* Customer Search */}
                                         <div>
@@ -470,85 +435,23 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                                 <User className="w-4 h-4 inline mr-1" />
                                                 Πελάτης (Προαιρετικό)
                                             </label>
-                                            <SearchDropdown
+                                            <CustomerSearchDropdown
                                                 searchTerm={customerSearchTerm}
-                                                onSearchTermChange={(term: string) => {
+                                                onSearchChange={(term) => {
                                                     setCustomerSearchTerm(term);
                                                     searchCustomers(term);
                                                 }}
-                                                searchResults={transformedCustomerResults}
-                                                onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
-                                                    const customer = customerSearchResults.find(c => c.id === item.id);
-                                                    if (customer) {
-                                                        setSelectedCustomer(customer);
-                                                        setCustomerSearchTerm('');
-                                                        setCustomerSearchResults([]);
-                                                    }
+                                                searchResults={customerSearchResults}
+                                                selectedCustomer={selectedCustomer}
+                                                onSelectCustomer={(customer) => {
+                                                    setSelectedCustomer(customer);
+                                                    setCustomerSearchTerm('');
+                                                    setCustomerSearchResults([]);
                                                 }}
-                                                placeholder="Αναζήτηση πελάτη..."
-                                                entityType="customer"
-                                                isLoading={isLoadingCustomers}
-                                                emptyMessage="No customers found"
-                                                emptySubMessage="Try searching by name or email"
-                                                selectedItem={transformedCustomerForDisplay}
                                                 onClearSelection={() => setSelectedCustomer(null)}
-                                                renderSelectedItem={(item, onClear) => (
-                                                    <div className="mt-3 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center space-x-3">
-                                                                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                                    <User className="w-4 h-4 text-indigo-600" />
-                                                                </div>
-                                                                <div>
-                                                                    <p className="font-medium text-indigo-900">{item.name}</p>
-                                                                    <p className="text-sm text-indigo-700 flex items-center">
-                                                                        <Mail className="w-3 h-3 mr-1" />
-                                                                        {item.subtitle}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <button
-                                                                onClick={onClear}
-                                                                className="text-indigo-600 hover:text-indigo-800 transition-colors p-1 hover:bg-indigo-100 rounded"
-                                                                title="Clear selection"
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="flex-1">
-                                                        <div className="font-medium text-gray-900 group-hover:text-indigo-700 transition-colors">
-                                                            {item.name}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 mt-0.5 flex items-center space-x-1">
-                                                            <Mail className="w-3 h-3" />
-                                                            <span>{item.subtitle}</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
-                                                        <User className="w-3 h-3 inline mr-1" />
-                                                        {item.additionalInfo}
-                                                    </div>
-                                                )}
+                                                placeholder="Αναζήτηση πελάτη..."
                                             />
                                         </div>
-
-                                        {/* Wholesale Toggle */}
-                                        <div className="flex flex-col justify-end">
-                                            <StyledRadioGroup
-                                                value={isWholesale ? 'wholesale' : 'retail'}
-                                                onChange={(value) => handleWholesaleChange(value === 'wholesale')}
-                                                options={[
-                                                    { value: 'retail', label: 'Λιανική' },
-                                                    { value: 'wholesale', label: 'Χονδρική' }
-                                                ]}
-                                            />
-                                        </div>
-
                                     </div>
                                 </div>
                             </DashboardCard>
@@ -559,7 +462,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                             <DashboardCard
                                 title={`Καλάθι (${cart.length})`}
                                 icon={<ShoppingCart className="w-5 h-5" />}
-                                height="md"
+                                height="sm"
                             >
                                 <div className="h-full overflow-y-auto">
                                     {cart.length === 0 ? (
@@ -655,4 +558,4 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
     );
 };
 
-export default RecordSalePage;
+export default OldRecordSalePage;

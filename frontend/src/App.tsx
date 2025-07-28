@@ -17,9 +17,9 @@ import SupplierManagementPage from "./pages/SupplierManagementPage.tsx";
 import ProcedureManagementPage from "./pages/ProcedureManagementPage.tsx";
 import MaterialManagementPage from "./pages/MaterialManagementPage.tsx";
 import ExpenseManagementPage from "./pages/ExpenseManagementPage.tsx";
+import OldRecordSalePage from "./pages/OldRecordSalePage";
 
 import CreateProductPage from "./pages/CreateProductPage.tsx";
-import UpdateProductPage from "./pages/ProductUpdatePage.tsx"
 
 
 type AppState = 'loading' | 'login' | 'dashboard';
@@ -50,7 +50,7 @@ const App: React.FC = () => {
             case 'all-tasks':
                 return <AllTasksPage onNavigate={handleNavigation} />;
             case 'manage-sales':
-                return <UpdateProductPage productId={1} onNavigate={handleNavigation}/>;
+                return <OldRecordSalePage onNavigate={handleNavigation}/>;
             case 'manage-products':
                 return <CreateProductPage onNavigate={handleNavigation}/>;
             case 'customers':

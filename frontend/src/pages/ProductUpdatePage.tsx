@@ -5,11 +5,23 @@ import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
 import { Button, LoadingSpinner, Input, Alert } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
-import { Package, Plus, Minus, Trash2, Search, Calculator, ArrowLeft, Save, Edit } from 'lucide-react';
+import SearchDropdown from '../components/ui/searchDropdowns/SearchDropdown';
+import {
+    Package,
+    Plus,
+    Minus,
+    Trash2,
+    Settings,
+    ArrowLeft,
+    Save,
+    Euro,
+    Ruler,
+    Clock,
+    RefreshCw
+} from 'lucide-react';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import type {
     ProductUpdateDTO,
-    ProductDetailedViewDTO,
     ProductMaterialDetailDTO,
     ProductProcedureDetailDTO
 } from '../types/api/productInterface';
@@ -43,9 +55,6 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
     const [submitting, setSubmitting] = useState(false);
     const { fieldErrors, generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
 
-    // Product data
-    const [product, setProduct] = useState<ProductDetailedViewDTO | null>(null);
-
     // Form fields - using correct field names from ProductDetailedViewDTO
     const [name, setName] = useState('');
     const [code, setCode] = useState('');
@@ -62,14 +71,21 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
 
     // Dropdown data
     const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
-    const [procedures, setProcedures] = useState<ProcedureForDropdownDTO[]>([]);
 
-    // Search and filtering
+    // Search states for materials
     const [materialSearchTerm, setMaterialSearchTerm] = useState('');
     const [materialSearchResults, setMaterialSearchResults] = useState<MaterialSearchResultDTO[]>([]);
+    const [isLoadingMaterials, setIsLoadingMaterials] = useState(false);
+
+    // Search states for procedures
     const [procedureSearchTerm, setProcedureSearchTerm] = useState('');
     const [filteredProcedures, setFilteredProcedures] = useState<ProcedureForDropdownDTO[]>([]);
-    const [showProcedureDropdown, setShowProcedureDropdown] = useState(false);
+    const [isLoadingProcedures, setIsLoadingProcedures] = useState(false);
+
+    // Track if there are unsaved changes
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [originalMaterials, setOriginalMaterials] = useState<ProductMaterialDetailDTO[]>([]);
+    const [originalProcedures, setOriginalProcedures] = useState<ProductProcedureDetailDTO[]>([]);
 
     // Price calculation
     const [priceCalculation, setPriceCalculation] = useState<PriceCalculation>({
@@ -86,11 +102,32 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         return 1; // Replace with actual user ID logic
     };
 
-    // Load initial data
+    // Load initial data and refresh when productId changes
     useEffect(() => {
         loadProductData();
         loadDropdownData();
     }, [productId]);
+
+    // Reset form when component mounts or productId changes
+    useEffect(() => {
+        // Reset all search states
+        setMaterialSearchTerm('');
+        setMaterialSearchResults([]);
+        setProcedureSearchTerm('');
+        setFilteredProcedures([]);
+        setIsLoadingMaterials(false);
+        setIsLoadingProcedures(false);
+
+        // Clear any errors
+        clearErrors();
+    }, [productId]);
+
+    // Check for unsaved changes
+    useEffect(() => {
+        const materialsChanged = JSON.stringify(selectedMaterials) !== JSON.stringify(originalMaterials);
+        const proceduresChanged = JSON.stringify(selectedProcedures) !== JSON.stringify(originalProcedures);
+        setHasUnsavedChanges(materialsChanged || proceduresChanged);
+    }, [selectedMaterials, selectedProcedures, originalMaterials, originalProcedures]);
 
     // Recalculate prices whenever materials, procedures, or minutesToMake change
     useEffect(() => {
@@ -101,9 +138,8 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         try {
             setLoading(true);
             const productData = await productService.getProductDetails(productId);
-            setProduct(productData);
 
-            // Populate form fields using correct field names
+            // Always refresh form fields from database - don't preserve local changes
             setName(productData.name);
             setCode(productData.code);
             setCategoryId(productData.categoryId);
@@ -113,9 +149,22 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
             setCurrentStock(productData.currentStock || 0);
             setLowStockAlert(productData.lowStockAlert || 0);
 
-            // Set materials and procedures
-            setSelectedMaterials(productData.materials || []);
-            setSelectedProcedures(productData.procedures || []);
+            // Always refresh materials and procedures from database
+            const materials = productData.materials || [];
+            const procedures = productData.procedures || [];
+
+            setSelectedMaterials(materials);
+            setSelectedProcedures(procedures);
+
+            // Store original values for comparison
+            setOriginalMaterials(materials);
+            setOriginalProcedures(procedures);
+            setHasUnsavedChanges(false);
+
+            console.log('Product data refreshed from database:', {
+                materials: materials.length,
+                procedures: procedures.length
+            });
         } catch (err) {
             await handleApiError(err);
         } finally {
@@ -125,13 +174,8 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
 
     const loadDropdownData = async () => {
         try {
-            const [categoriesData, proceduresData] = await Promise.all([
-                categoryService.getCategoriesForDropdown(),
-                procedureService.getActiveProceduresForDropdown()
-            ]);
+            const categoriesData = await categoryService.getCategoriesForDropdown();
             setCategories(categoriesData);
-            setProcedures(proceduresData);
-            setFilteredProcedures(proceduresData);
         } catch (err) {
             console.error('Error loading dropdown data:', err);
         }
@@ -171,711 +215,684 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
     };
 
     // Material search
-    const searchMaterials = async (term: string) => {
+    const searchMaterials = async (term: string): Promise<void> => {
         if (term.length < 2) {
             setMaterialSearchResults([]);
             return;
         }
 
+        setIsLoadingMaterials(true);
         try {
             const results = await materialService.searchMaterialsForAutocomplete(term);
             setMaterialSearchResults(results);
         } catch (err) {
             console.error('Material search error:', err);
             setMaterialSearchResults([]);
+        } finally {
+            setIsLoadingMaterials(false);
         }
     };
 
     // Procedure search
-    const searchProcedures = async (term: string) => {
+    const searchProcedures = async (term: string): Promise<void> => {
         if (term.length < 2) {
-            setFilteredProcedures(procedures);
-            setShowProcedureDropdown(false);
+            setFilteredProcedures([]);
             return;
         }
 
+        setIsLoadingProcedures(true);
         try {
             const results = await procedureService.searchProceduresForAutocomplete(term);
             setFilteredProcedures(results);
-            setShowProcedureDropdown(true);
         } catch (err) {
             console.error('Procedure search error:', err);
             setFilteredProcedures([]);
+        } finally {
+            setIsLoadingProcedures(false);
         }
     };
 
-    // Material management using productService methods with updaterUserId
-    const addMaterial = async (material: MaterialSearchResultDTO) => {
-        try {
-            // Check if material is already selected
-            if (selectedMaterials.some(m => m.materialId === material.materialId)) {
-                return;
-            }
+    // Material management - LOCAL ONLY (no immediate API calls)
+    const addMaterial = (material: MaterialSearchResultDTO): void => {
+        console.log('Adding material locally:', material);
 
-            // Use productService with updaterUserId
-            await productService.addMaterialToProduct(productId, material.materialId, 1, getCurrentUserId());
-
-            // Update local state
-            const newMaterial: ProductMaterialDetailDTO = {
-                materialId: material.materialId,
-                materialName: material.materialName,
-                quantity: 1,
-                unitOfMeasure: material.unitOfMeasure,
-                unitCost: material.currentUnitCost,
-                totalCost: material.currentUnitCost
-            };
-
-            setSelectedMaterials(prev => [...prev, newMaterial]);
-            setMaterialSearchTerm('');
-            setMaterialSearchResults([]);
-        } catch (err) {
-            await handleApiError(err);
+        // Check if material is already selected
+        if (selectedMaterials.some(m => m.materialId === material.materialId)) {
+            console.log('Material already selected:', material.materialId);
+            return;
         }
+
+        // Update local state only - no API call
+        const newMaterial: ProductMaterialDetailDTO = {
+            materialId: material.materialId,
+            materialName: material.materialName,
+            quantity: 1,
+            unitOfMeasure: material.unitOfMeasure,
+            unitCost: material.currentUnitCost,
+            totalCost: material.currentUnitCost
+        };
+
+        setSelectedMaterials(prev => {
+            const updated = [...prev, newMaterial];
+            console.log('Updated materials list (local only):', updated);
+            return updated;
+        });
+
+        // Clear search state
+        setMaterialSearchTerm('');
+        setMaterialSearchResults([]);
     };
 
-    const updateMaterialQuantity = async (materialId: number, newQuantity: number) => {
-        try {
-            if (newQuantity <= 0) {
-                await removeMaterial(materialId);
-                return;
-            }
-
-            // Use productService to update quantity (backend replaces existing)
-            await productService.addMaterialToProduct(productId, materialId, newQuantity, getCurrentUserId());
-
-            // Update local state
-            setSelectedMaterials(prev =>
-                prev.map(material =>
-                    material.materialId === materialId
-                        ? {
-                            ...material,
-                            quantity: newQuantity,
-                            totalCost: material.unitCost * newQuantity
-                        }
-                        : material
-                )
-            );
-        } catch (err) {
-            await handleApiError(err);
+    const updateMaterialQuantity = (materialId: number, newQuantity: number): void => {
+        if (newQuantity <= 0) {
+            removeMaterial(materialId);
+            return;
         }
+
+        // Update local state only - no API call
+        setSelectedMaterials(prev =>
+            prev.map(material =>
+                material.materialId === materialId
+                    ? {
+                        ...material,
+                        quantity: newQuantity,
+                        totalCost: material.unitCost * newQuantity
+                    }
+                    : material
+            )
+        );
     };
 
-    const removeMaterial = async (materialId: number) => {
-        try {
-            // Use productService with updaterUserId
-            await productService.removeMaterialFromProduct(productId, materialId, getCurrentUserId());
-
-            // Update local state
-            setSelectedMaterials(prev => prev.filter(m => m.materialId !== materialId));
-        } catch (err) {
-            await handleApiError(err);
-        }
+    const removeMaterial = (materialId: number): void => {
+        // Update local state only - no API call
+        setSelectedMaterials(prev => prev.filter(m => m.materialId !== materialId));
     };
 
-    // Procedure management using productService methods with updaterUserId
-    const addProcedure = async (procedure: ProcedureForDropdownDTO) => {
-        try {
-            // Check if procedure is already selected
-            if (selectedProcedures.some(p => p.procedureId === procedure.id)) {
-                return;
-            }
+    // Procedure management - LOCAL ONLY (no immediate API calls)
+    const addProcedure = (procedure: ProcedureForDropdownDTO): void => {
+        console.log('Adding procedure locally:', procedure);
 
-            // Use productService with updaterUserId
-            await productService.addProcedureToProduct(productId, procedure.id, 0.01, getCurrentUserId());
-
-            // Update local state
-            const newProcedure: ProductProcedureDetailDTO = {
-                procedureId: procedure.id,
-                procedureName: procedure.name,
-                cost: 0.01 // Start with minimum cost
-            };
-
-            setSelectedProcedures(prev => [...prev, newProcedure]);
-            setProcedureSearchTerm('');
-            setFilteredProcedures(procedures);
-            setShowProcedureDropdown(false);
-        } catch (err) {
-            await handleApiError(err);
+        // Check if procedure is already selected
+        if (selectedProcedures.some(p => p.procedureId === procedure.id)) {
+            console.log('Procedure already selected:', procedure.id);
+            return;
         }
+
+        // Update local state only - no API call
+        const newProcedure: ProductProcedureDetailDTO = {
+            procedureId: procedure.id,
+            procedureName: procedure.name,
+            cost: 0 // User will set the cost
+        };
+
+        setSelectedProcedures(prev => {
+            const updated = [...prev, newProcedure];
+            console.log('Updated procedures list (local only):', updated);
+            return updated;
+        });
+
+        // Clear search state
+        setProcedureSearchTerm('');
+        setFilteredProcedures([]);
     };
 
-    const updateProcedureCost = async (procedureId: number, newCost: number) => {
-        try {
-            // Ensure minimum cost of 0.01
-            const cost = Math.max(0.01, newCost);
-
-            // Use productService to update cost (backend replaces existing)
-            await productService.addProcedureToProduct(productId, procedureId, cost, getCurrentUserId());
-
-            // Update local state
-            setSelectedProcedures(prev =>
-                prev.map(procedure =>
-                    procedure.procedureId === procedureId
-                        ? { ...procedure, cost }
-                        : procedure
-                )
-            );
-        } catch (err) {
-            await handleApiError(err);
-        }
+    const updateProcedureCost = (procedureId: number, newCost: number): void => {
+        // Update local state only - no API call
+        setSelectedProcedures(prev =>
+            prev.map(procedure =>
+                procedure.procedureId === procedureId
+                    ? { ...procedure, cost: Math.max(0, newCost) }
+                    : procedure
+            )
+        );
     };
 
-    const removeProcedure = async (procedureId: number) => {
-        try {
-            // Use productService with updaterUserId
-            await productService.removeProcedureFromProduct(productId, procedureId, getCurrentUserId());
-
-            // Update local state
-            setSelectedProcedures(prev => prev.filter(p => p.procedureId !== procedureId));
-        } catch (err) {
-            await handleApiError(err);
-        }
+    const removeProcedure = (procedureId: number): void => {
+        // Update local state only - no API call
+        setSelectedProcedures(prev => prev.filter(p => p.procedureId !== procedureId));
     };
 
-    // Form submission
+    // Handle form submission - Save all changes at once
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!name.trim() || !code.trim() || !categoryId) {
+            return;
+        }
+
+        setSubmitting(true);
         clearErrors();
 
         try {
-            setSubmitting(true);
+            console.log('Starting product update with all changes...');
 
-            // Using correct field names from ProductUpdateDTO interface
-            const updateData: ProductUpdateDTO = {
+            // 1. Update basic product information
+            const productData: ProductUpdateDTO = {
                 productId: productId,
-                name,
-                code,
-                categoryId: categoryId!,
+                name: name.trim(),
+                code: code.trim(),
+                categoryId: categoryId,
                 finalSellingPriceRetail: finalRetailPrice,
                 finalSellingPriceWholesale: finalWholesalePrice,
-                minutesToMake,
+                minutesToMake: minutesToMake,
                 stock: currentStock,
                 lowStockAlert: lowStockAlert,
                 updaterUserId: getCurrentUserId()
             };
 
-            await productService.updateProduct(productId, updateData);
-            onNavigate('products'); // Navigate back to products list
+            await productService.updateProduct(productId,productData);
+            console.log('Basic product info updated');
+
+            // 2. Get current materials/procedures from database to compare
+            const currentProduct = await productService.getProductDetails(productId);
+            const currentMaterials = currentProduct.materials || [];
+            const currentProcedures = currentProduct.procedures || [];
+
+            // 3. Update materials
+            console.log('Updating materials...');
+
+            // Remove materials that are no longer in the selection
+            for (const currentMaterial of currentMaterials) {
+                if (!selectedMaterials.some(m => m.materialId === currentMaterial.materialId)) {
+                    console.log('Removing material:', currentMaterial.materialId);
+                    await productService.removeMaterialFromProduct(productId, currentMaterial.materialId, getCurrentUserId());
+                }
+            }
+
+            // Add or update materials
+            for (const selectedMaterial of selectedMaterials) {
+                const existingMaterial = currentMaterials.find(m => m.materialId === selectedMaterial.materialId);
+                if (!existingMaterial || existingMaterial.quantity !== selectedMaterial.quantity) {
+                    console.log('Adding/updating material:', selectedMaterial.materialId, 'quantity:', selectedMaterial.quantity);
+                    await productService.addMaterialToProduct(productId, selectedMaterial.materialId, selectedMaterial.quantity, getCurrentUserId());
+                }
+            }
+
+            // 4. Update procedures
+            console.log('Updating procedures...');
+
+            // Remove procedures that are no longer in the selection
+            for (const currentProcedure of currentProcedures) {
+                if (!selectedProcedures.some(p => p.procedureId === currentProcedure.procedureId)) {
+                    console.log('Removing procedure:', currentProcedure.procedureId);
+                    await productService.removeProcedureFromProduct(productId, currentProcedure.procedureId, getCurrentUserId());
+                }
+            }
+
+            // Add or update procedures
+            for (const selectedProcedure of selectedProcedures) {
+                const existingProcedure = currentProcedures.find(p => p.procedureId === selectedProcedure.procedureId);
+                if (!existingProcedure || existingProcedure.cost !== selectedProcedure.cost) {
+                    console.log('Adding/updating procedure:', selectedProcedure.procedureId, 'cost:', selectedProcedure.cost);
+                    await productService.addProcedureToProduct(productId, selectedProcedure.procedureId, selectedProcedure.cost, getCurrentUserId());
+                }
+            }
+
+            console.log('All changes saved successfully');
+            onNavigate('manage-products');
         } catch (err) {
+            console.error('Error saving changes:', err);
             await handleApiError(err);
         } finally {
             setSubmitting(false);
         }
     };
 
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
+    // Transform search results for the dropdown components
+    const transformedMaterialResults = materialSearchResults.map(material => ({
+        id: material.materialId,
+        name: material.materialName,
+        subtitle: material.unitOfMeasure,
+        additionalInfo: `€${material.currentUnitCost.toFixed(2)}`
+    }));
+
+    const transformedProcedureResults = filteredProcedures.map(procedure => ({
+        id: procedure.id,
+        name: procedure.name,
+        subtitle: "Manufacturing Process"
+    }));
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <LoadingSpinner/>
-            </div>
-        );
-    }
-
-    if (!product) {
-        return (
-            <div className="p-6">
-                <Alert
-                    variant="error"
-                    title="Product Not Found"
-                />
-                <Button
-                    onClick={() => onNavigate('products')}
-                    className="mt-4"
-                >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Products
-                </Button>
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+                <div className="text-center">
+                    <LoadingSpinner/>
+                    <p className="text-gray-600">Loading product details...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-4">
-                    <Button
-                        variant="ghost-primary"
-                        onClick={() => onNavigate('products')}
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
-                    </Button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                            <Edit className="w-6 h-6 mr-3 text-blue-600" />
-                            Update Product: {product.name}
-                        </h1>
-                        <p className="text-gray-600 mt-1">
-                            Modify product details, materials, and procedures with automatic price calculations
-                        </p>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+            <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center space-x-4">
+                        <Button
+                            onClick={() => onNavigate('manage-products')}
+                            variant="outline-secondary"
+                            className="flex items-center"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Products
+                        </Button>
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">
+                                Update Product
+                                {hasUnsavedChanges && (
+                                    <span className="ml-3 text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                                        Unsaved changes
+                                    </span>
+                                )}
+                            </h1>
+                            <p className="text-gray-600 mt-1">Edit product details and pricing</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                        <Button
+                            type="button"
+                            onClick={() => {
+                                console.log('Refreshing product data...');
+                                loadProductData();
+                            }}
+                            variant="outline-secondary"
+                            className="flex items-center"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <LoadingSpinner/>
+                            ) : (
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                            )}
+                            Refresh
+                        </Button>
                     </div>
                 </div>
-            </div>
 
-            {/* Error Alert */}
-            {generalError && (
-                <Alert
-                    variant="error"
-                    title="Error"
-                    className="mb-6"
-                />
-            )}
+                {/* Error Display */}
+                {generalError && (
+                    <Alert variant="error" className="mb-6">
+                        {generalError}
+                    </Alert>
+                )}
 
-            <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left Column - Product Details */}
-                    <div className="space-y-6">
-                        {/* Basic Information */}
-                        <DashboardCard
-                            title="Basic Information"
-                            icon={<Package className="w-5 h-5" />}
-                        >
-                            <div className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        {/* Left Column - Basic Info */}
+                        <div className="xl:col-span-1 space-y-6">
+                            {/* Basic Product Information */}
+                            <DashboardCard title="Basic Information" className="space-y-4">
                                 <Input
-                                    label="Product Name"
+                                    label="Product Name *"
                                     type="text"
                                     value={name}
                                     onChange={(e) => {
                                         setName(e.target.value);
                                         clearFieldError('name');
                                     }}
+                                    placeholder="Enter product name..."
                                     error={fieldErrors.name}
-                                    placeholder="Enter product name"
                                     required
                                 />
+
                                 <Input
-                                    label="Product Code"
+                                    label="Product Code *"
                                     type="text"
                                     value={code}
                                     onChange={(e) => {
                                         setCode(e.target.value);
                                         clearFieldError('code');
                                     }}
+                                    placeholder="Enter unique product code..."
                                     error={fieldErrors.code}
-                                    placeholder="Enter unique product code"
                                     required
                                 />
+
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Category
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Category *
                                     </label>
                                     <select
                                         value={categoryId || ''}
                                         onChange={(e) => {
-                                            setCategoryId(Number(e.target.value) || null);
+                                            setCategoryId(e.target.value ? Number(e.target.value) : null);
                                             clearFieldError('categoryId');
                                         }}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         required
                                     >
-                                        <option value="">Select category</option>
-                                        {categories.map(category => (
+                                        <option value="">Select a category...</option>
+                                        {categories.map((category) => (
                                             <option key={category.id} value={category.id}>
                                                 {category.name}
                                             </option>
                                         ))}
                                     </select>
                                     {fieldErrors.categoryId && (
-                                        <p className="mt-1 text-sm text-red-600">{fieldErrors.categoryId}</p>
+                                        <p className="text-red-500 text-sm mt-1">{fieldErrors.categoryId}</p>
                                     )}
                                 </div>
-                                <Input
-                                    label="Minutes to Make"
-                                    type="number"
-                                    min="0"
-                                    value={minutesToMake}
-                                    onChange={(e) => setMinutesToMake(Number(e.target.value) || 0)}
-                                    placeholder="0"
-                                />
+                            </DashboardCard>
+
+                            {/* Inventory Information */}
+                            <DashboardCard title="Inventory" className="space-y-4">
                                 <Input
                                     label="Current Stock"
                                     type="number"
-                                    min="0"
                                     value={currentStock}
-                                    onChange={(e) => setCurrentStock(Number(e.target.value) || 0)}
+                                    onChange={(e) => setCurrentStock(Number(e.target.value))}
                                     placeholder="0"
-                                />
-                                <Input
-                                    label="Low Stock Alert Level"
-                                    type="number"
                                     min="0"
+                                />
+
+                                <Input
+                                    label="Low Stock Alert"
+                                    type="number"
                                     value={lowStockAlert}
-                                    onChange={(e) => setLowStockAlert(Number(e.target.value) || 0)}
+                                    onChange={(e) => setLowStockAlert(Number(e.target.value))}
+                                    placeholder="5"
+                                    min="0"
+                                />
+
+                                <Input
+                                    label="Minutes to Make"
+                                    type="number"
+                                    value={minutesToMake}
+                                    onChange={(e) => setMinutesToMake(Number(e.target.value))}
                                     placeholder="0"
-                                />
-                            </div>
-                        </DashboardCard>
-
-                        {/* Materials */}
-                        <DashboardCard title="Materials" className="max-h-96 overflow-y-auto">
-                            <div className="space-y-4">
-                                {/* Material Search */}
-                                <div className="relative">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            value={materialSearchTerm}
-                                            onChange={(e) => {
-                                                setMaterialSearchTerm(e.target.value);
-                                                searchMaterials(e.target.value);
-                                            }}
-                                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Search materials..."
-                                        />
-                                    </div>
-
-                                    {/* Search Results */}
-                                    {materialSearchResults.length > 0 && (
-                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                                            {materialSearchResults.map(material => (
-                                                <button
-                                                    key={material.materialId}
-                                                    type="button"
-                                                    onClick={() => addMaterial(material)}
-                                                    className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-                                                >
-                                                    <div className="flex justify-between">
-                                                        <span className="font-medium">{material.materialName}</span>
-                                                        <span className="text-sm text-gray-500">
-                                                            {formatCurrency(material.currentUnitCost)}/{material.unitOfMeasure}
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Selected Materials */}
-                                <div className="space-y-2">
-                                    {selectedMaterials.map(material => (
-                                        <div key={material.materialId} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                                            <div className="flex-1">
-                                                <div className="font-medium">{material.materialName}</div>
-                                                <div className="text-sm text-gray-500">
-                                                    {formatCurrency(material.unitCost)} per {material.unitOfMeasure}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => updateMaterialQuantity(material.materialId, material.quantity - 1)}
-                                                    className="p-1 text-gray-400 hover:text-gray-600"
-                                                >
-                                                    <Minus className="w-4 h-4" />
-                                                </button>
-                                                <input
-                                                    type="number"
-                                                    value={material.quantity}
-                                                    onChange={(e) => updateMaterialQuantity(material.materialId, Number(e.target.value) || 0)}
-                                                    className="w-16 px-2 py-1 text-center border border-gray-300 rounded"
-                                                    min="0"
-                                                    step="0.01"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => updateMaterialQuantity(material.materialId, material.quantity + 1)}
-                                                    className="p-1 text-gray-400 hover:text-gray-600"
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeMaterial(material.materialId)}
-                                                    className="p-1 text-red-400 hover:text-red-600"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-medium">
-                                                    {formatCurrency(material.totalCost)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </DashboardCard>
-
-                        {/* Procedures */}
-                        <DashboardCard title="Procedures" className="max-h-96 overflow-y-auto">
-                            <div className="space-y-4">
-                                {/* Procedure Search */}
-                                <div className="relative">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            value={procedureSearchTerm}
-                                            onChange={(e) => {
-                                                setProcedureSearchTerm(e.target.value);
-                                                searchProcedures(e.target.value);
-                                            }}
-                                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Search procedures..."
-                                        />
-                                    </div>
-
-                                    {/* Search Results */}
-                                    {showProcedureDropdown && filteredProcedures.length > 0 && (
-                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                                            {filteredProcedures.map(procedure => (
-                                                <button
-                                                    key={procedure.id}
-                                                    type="button"
-                                                    onClick={() => addProcedure(procedure)}
-                                                    className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-                                                >
-                                                    {procedure.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Selected Procedures */}
-                                <div className="space-y-2">
-                                    {selectedProcedures.map(procedure => (
-                                        <div key={procedure.procedureId} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                                            <div className="flex-1">
-                                                <div className="font-medium">{procedure.procedureName}</div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <input
-                                                    type="number"
-                                                    value={procedure.cost}
-                                                    onChange={(e) => updateProcedureCost(procedure.procedureId, Number(e.target.value) || 0)}
-                                                    className="w-24 px-2 py-1 text-center border border-gray-300 rounded"
-                                                    min="0"
-                                                    step="0.01"
-                                                    placeholder="Cost"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeProcedure(procedure.procedureId)}
-                                                    className="p-1 text-red-400 hover:text-red-600"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </DashboardCard>
-
-                        {/* Final Prices */}
-                        <DashboardCard title="Final Selling Prices">
-                            <div className="space-y-4">
-                                <Input
-                                    label="Final Retail Price (€)"
-                                    type="number"
                                     min="0"
-                                    step="0.01"
-                                    value={finalRetailPrice}
-                                    onChange={(e) => setFinalRetailPrice(Number(e.target.value) || 0)}
-                                    placeholder="0.00"
+                                    icon={<Clock className="w-4 h-4" />}
                                 />
-                                <Input
-                                    label="Final Wholesale Price (€)"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={finalWholesalePrice}
-                                    onChange={(e) => setFinalWholesalePrice(Number(e.target.value) || 0)}
-                                    placeholder="0.00"
-                                />
-                            </div>
-                        </DashboardCard>
-                    </div>
+                            </DashboardCard>
+                        </div>
 
-                    {/* Right Column - Price Calculation */}
-                    <div className="space-y-6">
-                        <DashboardCard
-                            title="Cost Calculation"
-                            icon={<Calculator className="w-5 h-5" />}
-                            className="shadow-lg sticky top-6"
-                        >
-                            <div className="space-y-4">
-                                {/* Cost Breakdown */}
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Material Cost:</span>
-                                        <span className="font-medium">{formatCurrency(priceCalculation.materialCost)}</span>
+                        {/* Middle Column - Materials and Procedures */}
+                        <div className="xl:col-span-1 space-y-6">
+                            {/* Materials */}
+                            <DashboardCard
+                                title={
+                                    <div className="flex items-center justify-between">
+                                        <span>Materials</span>
+                                        {hasUnsavedChanges && JSON.stringify(selectedMaterials) !== JSON.stringify(originalMaterials) && (
+                                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                                Modified
+                                            </span>
+                                        )}
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Labor Cost:</span>
-                                        <span className="font-medium">{formatCurrency(priceCalculation.laborCost)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Procedure Cost:</span>
-                                        <span className="font-medium">{formatCurrency(priceCalculation.procedureCost)}</span>
-                                    </div>
-                                    <hr className="border-gray-200" />
-                                    <div className="flex justify-between font-medium">
-                                        <span className="text-gray-900">Total Cost:</span>
-                                        <span className="text-blue-600">{formatCurrency(priceCalculation.totalCost)}</span>
-                                    </div>
-                                </div>
-
-                                {/* Suggested Prices */}
-                                <div className="pt-4 border-t border-gray-200">
-                                    <h4 className="font-medium text-gray-900 mb-3">Suggested Prices</h4>
-                                    <div className="space-y-3">
-                                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-sm font-medium text-blue-800">Wholesale:</span>
-                                                <span className="font-bold text-blue-900">
-                                                    {formatCurrency(priceCalculation.suggestedWholesalePrice)}
+                                }
+                                className="space-y-4"
+                            >
+                                <SearchDropdown
+                                    searchTerm={materialSearchTerm}
+                                    onSearchTermChange={(term: string) => {
+                                        setMaterialSearchTerm(term);
+                                        searchMaterials(term);
+                                    }}
+                                    searchResults={transformedMaterialResults}
+                                    onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
+                                        const material = materialSearchResults.find(m => m.materialId === item.id);
+                                        if (material) {
+                                            addMaterial(material);
+                                            setMaterialSearchTerm('');
+                                            setMaterialSearchResults([]);
+                                        }
+                                    }}
+                                    placeholder="Search materials..."
+                                    label="Add Materials"
+                                    icon={<Package className="w-5 h-5 text-blue-500" />}
+                                    isLoading={isLoadingMaterials}
+                                    emptyMessage="No materials found"
+                                    emptySubMessage="Try searching with different keywords"
+                                    renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
+                                        <div className="flex-1">
+                                            <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
+                                                {item.name}
+                                            </div>
+                                            <div className="text-sm text-gray-500 mt-0.5 flex items-center space-x-2">
+                                                <span className="flex items-center">
+                                                    <Ruler className="w-3 h-3 mr-1" />
+                                                    {item.subtitle}
                                                 </span>
                                             </div>
-                                            <div className="text-xs text-blue-600 mt-1">
-                                                Cost × 1.86
+                                        </div>
+                                    )}
+                                    renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
+                                        <div className="flex flex-col items-end space-y-1">
+                                            <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-md">
+                                                {item.additionalInfo}
                                             </div>
+                                            <div className="text-xs text-gray-400">per unit</div>
+                                        </div>
+                                    )}
+                                />
+
+                                {/* Selected Materials */}
+                                {selectedMaterials.length > 0 && (
+                                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                                        <h4 className="text-sm font-semibold text-gray-700">Selected Materials</h4>
+                                        {selectedMaterials.map((material) => (
+                                            <div key={material.materialId} className="p-3 bg-gray-50 rounded-lg">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="font-medium text-gray-900">{material.materialName}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeMaterial(material.materialId)}
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateMaterialQuantity(material.materialId, material.quantity - 1)}
+                                                        className="p-1 text-gray-500 hover:text-gray-700"
+                                                    >
+                                                        <Minus className="w-4 h-4" />
+                                                    </button>
+                                                    <span className="px-3 py-1 bg-white rounded border text-center min-w-[3rem]">
+                                                        {material.quantity} {material.unitOfMeasure}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateMaterialQuantity(material.materialId, material.quantity + 1)}
+                                                        className="p-1 text-gray-500 hover:text-gray-700"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                    </button>
+                                                    <span className="ml-auto text-sm text-gray-600">
+                                                        €{material.totalCost.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </DashboardCard>
+
+                            {/* Procedures */}
+                            <DashboardCard
+                                title={
+                                    <div className="flex items-center justify-between">
+                                        <span>Procedures</span>
+                                        {hasUnsavedChanges && JSON.stringify(selectedProcedures) !== JSON.stringify(originalProcedures) && (
+                                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                                                Modified
+                                            </span>
+                                        )}
+                                    </div>
+                                }
+                                className="space-y-4"
+                            >
+                                <SearchDropdown
+                                    searchTerm={procedureSearchTerm}
+                                    onSearchTermChange={(term: string) => {
+                                        setProcedureSearchTerm(term);
+                                        searchProcedures(term);
+                                    }}
+                                    searchResults={transformedProcedureResults}
+                                    onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
+                                        const procedure = filteredProcedures.find(p => p.id === item.id);
+                                        if (procedure) {
+                                            addProcedure(procedure);
+                                            setProcedureSearchTerm('');
+                                            setFilteredProcedures([]);
+                                        }
+                                    }}
+                                    placeholder="Search procedures..."
+                                    label="Add Procedures"
+                                    icon={<Settings className="w-5 h-5 text-purple-500" />}
+                                    isLoading={isLoadingProcedures}
+                                    emptyMessage="No procedures found"
+                                    emptySubMessage="Try searching with different keywords"
+                                    renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
+                                        <div className="flex-1">
+                                            <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">
+                                                {item.name}
+                                            </div>
+                                            <div className="text-sm text-gray-500 mt-0.5">
+                                                {item.subtitle}
+                                            </div>
+                                        </div>
+                                    )}
+                                    renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
+                                        <div className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-md">
+                                            {item.additionalInfo}
+                                        </div>
+                                    )}
+                                />
+
+                                {/* Selected Procedures */}
+                                {selectedProcedures.length > 0 && (
+                                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                                        <h4 className="text-sm font-semibold text-gray-700">Selected Procedures</h4>
+                                        {selectedProcedures.map((procedure) => (
+                                            <div key={procedure.procedureId} className="p-3 bg-gray-50 rounded-lg">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="font-medium text-gray-900">{procedure.procedureName}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeProcedure(procedure.procedureId)}
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Euro className="w-4 h-4 text-gray-400" />
+                                                    <input
+                                                        type="number"
+                                                        value={procedure.cost}
+                                                        onChange={(e) => updateProcedureCost(procedure.procedureId, Number(e.target.value))}
+                                                        placeholder="Enter cost..."
+                                                        className="flex-1 p-2 border border-gray-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                        min="0"
+                                                        step="0.01"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </DashboardCard>
+                        </div>
+
+                        {/* Right Column - Pricing */}
+                        <div className="xl:col-span-1 space-y-6">
+                            {/* Price Calculation */}
+                            <DashboardCard title="Price Calculation" className="space-y-4">
+                                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                                    <div className="flex justify-between text-sm">
+                                        <span>Material Cost:</span>
+                                        <span className="font-medium">€{priceCalculation.materialCost.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span>Labor Cost:</span>
+                                        <span className="font-medium">€{priceCalculation.laborCost.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span>Procedure Cost:</span>
+                                        <span className="font-medium">€{priceCalculation.procedureCost.toFixed(2)}</span>
+                                    </div>
+                                    <div className="border-t pt-2">
+                                        <div className="flex justify-between font-semibold">
+                                            <span>Total Cost:</span>
+                                            <span>€{priceCalculation.totalCost.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Price Comparison */}
-                                {(finalRetailPrice > 0 || finalWholesalePrice > 0) && (
-                                    <div className="pt-4 border-t border-gray-200">
-                                        <h4 className="font-medium text-gray-900 mb-3">Price Comparison</h4>
-                                        <div className="space-y-2">
-                                            {finalRetailPrice > 0 && (
-                                                <div className="flex justify-between items-center text-sm">
-                                                    <span className="text-gray-600">Retail Difference:</span>
-                                                    <span className={`font-medium ${
-                                                        finalRetailPrice > priceCalculation.suggestedRetailPrice
-                                                            ? 'text-green-600'
-                                                            : 'text-red-600'
-                                                    }`}>
-                                                        {finalRetailPrice > priceCalculation.suggestedRetailPrice ? '+' : ''}
-                                                        {formatCurrency(finalRetailPrice - priceCalculation.suggestedRetailPrice)}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {finalWholesalePrice > 0 && (
-                                                <div className="flex justify-between items-center text-sm">
-                                                    <span className="text-gray-600">Wholesale Difference:</span>
-                                                    <span className={`font-medium ${
-                                                        finalWholesalePrice > priceCalculation.suggestedWholesalePrice
-                                                            ? 'text-green-600'
-                                                            : 'text-red-600'
-                                                    }`}>
-                                                        {finalWholesalePrice > priceCalculation.suggestedWholesalePrice ? '+' : ''}
-                                                        {formatCurrency(finalWholesalePrice - priceCalculation.suggestedWholesalePrice)}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Labor Cost Breakdown */}
-                                {minutesToMake > 0 && (
-                                    <div className="pt-4 border-t border-gray-200">
-                                        <h4 className="font-medium text-gray-900 mb-2">Labor</h4>
-                                        <div className="text-sm text-gray-600 space-y-1">
-                                            <div>{minutesToMake} minutes = {(minutesToMake / 60).toFixed(2)} hours</div>
-                                            <div>{(minutesToMake / 60).toFixed(2)} × {formatCurrency(HOURLY_LABOR_RATE)}/hour</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </DashboardCard>
-
-                        {/* Current vs Suggested Prices Card */}
-                        {product && (
-                            <DashboardCard title="Current Prices" className="bg-gray-50">
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-600">Current Retail:</span>
-                                        <span className="font-medium">{formatCurrency(product.finalRetailPrice || 0)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-600">Suggested Retail:</span>
-                                        <span className="font-medium">{formatCurrency(product.suggestedRetailPrice || 0)}</span>
-                                    </div>
-                                    <hr className="border-gray-200" />
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-600">Current Wholesale:</span>
-                                        <span className="font-medium">{formatCurrency(product.finalWholesalePrice || 0)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-600">Suggested Wholesale:</span>
-                                        <span className="font-medium">{formatCurrency(product.suggestedWholesalePrice || 0)}</span>
+                                <div className="bg-green-50 p-4 rounded-lg space-y-3">
+                                    <h4 className="font-semibold text-green-800">Suggested Prices</h4>
+                                    <div className="flex justify-between text-sm">
+                                        <span>Suggested Retail:</span>
+                                        <span className="font-medium text-green-700">€{priceCalculation.suggestedWholesalePrice.toFixed(2)}</span>
                                     </div>
                                 </div>
                             </DashboardCard>
-                        )}
 
-                        {/* Update Actions */}
-                        <DashboardCard title="Actions">
-                            <div className="space-y-4">
-                                <Button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="w-full"
-                                >
-                                    {submitting ? (
-                                        <>
-                                            <LoadingSpinner/>
-                                            Updating Product...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Save className="w-4 h-4 mr-2" />
-                                            Update Product
-                                        </>
-                                    )}
-                                </Button>
+                            {/* Final Pricing */}
+                            <DashboardCard title="Final Pricing" className="space-y-4">
+                                <Input
+                                    label="Final Retail Price"
+                                    type="number"
+                                    value={finalRetailPrice}
+                                    onChange={(e) => setFinalRetailPrice(Number(e.target.value))}
+                                    placeholder={priceCalculation.suggestedRetailPrice.toFixed(2)}
+                                    min="0"
+                                    step="0.01"
+                                    icon={<Euro className="w-4 h-4" />}
+                                />
 
-                                <Button
-                                    type="button"
-                                    variant="outline-primary"
-                                    onClick={() => setFinalRetailPrice(priceCalculation.suggestedRetailPrice)}
-                                    className="w-full"
-                                >
-                                    Use Suggested Retail Price
-                                </Button>
+                                <Input
+                                    label="Final Wholesale Price"
+                                    type="number"
+                                    value={finalWholesalePrice}
+                                    onChange={(e) => setFinalWholesalePrice(Number(e.target.value))}
+                                    placeholder={priceCalculation.suggestedWholesalePrice.toFixed(2)}
+                                    min="0"
+                                    step="0.01"
+                                    icon={<Euro className="w-4 h-4" />}
+                                />
+                            </DashboardCard>
 
-                                <Button
-                                    type="button"
-                                    variant="outline-primary"
-                                    onClick={() => setFinalWholesalePrice(priceCalculation.suggestedWholesalePrice)}
-                                    className="w-full"
-                                >
-                                    Use Suggested Wholesale Price
-                                </Button>
-
-                                <Button
-                                    type="button"
-                                    variant="outline-primary"
-                                    onClick={() => {
-                                        setFinalRetailPrice(priceCalculation.suggestedRetailPrice);
-                                        setFinalWholesalePrice(priceCalculation.suggestedWholesalePrice);
-                                    }}
-                                    className="w-full"
-                                >
-                                    Use All Suggested Prices
-                                </Button>
-                            </div>
-                        </DashboardCard>
+                            {/* Submit Button */}
+                            <DashboardCard className="text-center">
+                                <div className="space-y-3">
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        className={`w-full ${hasUnsavedChanges ? 'bg-orange-600 hover:bg-orange-700' : ''}`}
+                                        disabled={submitting}
+                                    >
+                                        {submitting ? (
+                                            <>
+                                                <LoadingSpinner />
+                                                <span className="ml-2">Saving Changes...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save className="w-4 h-4 mr-2" />
+                                                {hasUnsavedChanges ? 'Save All Changes' : 'Update Product'}
+                                            </>
+                                        )}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        onClick={() => onNavigate('manage-products')}
+                                        variant="outline-secondary"
+                                        className="w-full"
+                                        disabled={submitting}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </DashboardCard>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     );
 };
