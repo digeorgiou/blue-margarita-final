@@ -173,17 +173,13 @@ class ProductService {
     // MATERIAL RELATIONSHIP MANAGEMENT
     // =============================================================================
 
-    async addMaterialToProduct(productId: number, materialId: number, quantity: number): Promise<ProductDetailedViewDTO> {
+    async addMaterialToProduct(productId: number, materialId: number, quantity: number, updaterUserId: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/materials/${materialId}`,
+                `${API_BASE_URL}/${productId}/materials/${materialId}?quantity=${quantity}&updaterUserId=${updaterUserId}`,
                 {
                     method: 'POST',
-                    headers: {
-                        ...this.getAuthHeaders(),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ quantity })
+                    headers: this.getAuthHeaders()
                 }
             );
 
@@ -194,10 +190,10 @@ class ProductService {
         }
     }
 
-    async removeMaterialFromProduct(productId: number, materialId: number): Promise<ProductDetailedViewDTO> {
+    async removeMaterialFromProduct(productId: number, materialId: number, updaterUserId: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/materials/${materialId}`,
+                `${API_BASE_URL}/${productId}/materials/${materialId}?updaterUserId=${updaterUserId}`,
                 {
                     method: 'DELETE',
                     headers: this.getAuthHeaders()
@@ -211,42 +207,17 @@ class ProductService {
         }
     }
 
-    async updateProductMaterialQuantity(productId: number, materialId: number, newQuantity: number): Promise<ProductDetailedViewDTO> {
-        try {
-            const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/materials/${materialId}`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        ...this.getAuthHeaders(),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ quantity: newQuantity })
-                }
-            );
-
-            return await response.json();
-        } catch (error) {
-            console.error('Update product material quantity error:', error);
-            throw error;
-        }
-    }
-
     // =============================================================================
     // PROCEDURE RELATIONSHIP MANAGEMENT
     // =============================================================================
 
-    async addProcedureToProduct(productId: number, procedureId: number, cost: number): Promise<ProductDetailedViewDTO> {
+    async addProcedureToProduct(productId: number, procedureId: number, cost: number, updaterUserId: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/procedures/${procedureId}`,
+                `${API_BASE_URL}/${productId}/procedures/${procedureId}?cost=${cost}&updaterUserId=${updaterUserId}`,
                 {
                     method: 'POST',
-                    headers: {
-                        ...this.getAuthHeaders(),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ cost })
+                    headers: this.getAuthHeaders()
                 }
             );
 
@@ -257,10 +228,10 @@ class ProductService {
         }
     }
 
-    async removeProcedureFromProduct(productId: number, procedureId: number): Promise<ProductDetailedViewDTO> {
+    async removeProcedureFromProduct(productId: number, procedureId: number, updaterUserId: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/procedures/${procedureId}`,
+                `${API_BASE_URL}/${productId}/procedures/${procedureId}?updaterUserId=${updaterUserId}`,
                 {
                     method: 'DELETE',
                     headers: this.getAuthHeaders()
