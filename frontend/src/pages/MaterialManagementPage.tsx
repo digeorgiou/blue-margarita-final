@@ -6,7 +6,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
 import { materialService } from '../services/materialService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Plus, Boxes } from 'lucide-react';
+import { Plus, Boxes, Search } from 'lucide-react';
 import type {
     MaterialReadOnlyDTO,
     MaterialDetailedViewDTO,
@@ -24,7 +24,6 @@ import MaterialCreateModal from '../components/ui/modals/material/MaterialCreate
 const MaterialManagementPage = () => {
     // Search and pagination state - simplified (following customer pattern)
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeOnlyFilter, setActiveOnlyFilter] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(12);
     const [searchResults, setSearchResults] = useState<Paginated<MaterialReadOnlyDTO> | null>(null);
@@ -39,7 +38,6 @@ const MaterialManagementPage = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-    const [isProductUsageModalOpen, setIsProductUsageModalOpen] = useState(false);
 
     // Selected material and details
     const [selectedMaterial, setSelectedMaterial] = useState<MaterialReadOnlyDTO | null>(null);
@@ -52,6 +50,8 @@ const MaterialManagementPage = () => {
         message: ''
     });
 
+    const [isProductUsageModalOpen, setIsProductUsageModalOpen] = useState(false);
+
     // Get current user ID (following customer pattern)
     const getCurrentUserId = (): number => {
         // This should match how you get current user ID in CustomerManagementPage
@@ -60,26 +60,34 @@ const MaterialManagementPage = () => {
 
     // Search function
     const searchMaterials = async (page: number = currentPage, size: number = pageSize) => {
-        setLoading(true);
-        clearErrors();
 
         try {
+            setLoading(true);
+            clearErrors();
+
+            if (searchTerm.length > 0 && searchTerm.length < 2) {
+                setLoading(false);
+                return;
+            }
+
             const filters = {
+                name: searchTerm.trim() || undefined,
+                isActive: true,
                 page,
                 pageSize: size,
                 sortBy: 'name',
                 sortDirection: 'ASC'
             };
 
-            const results = await materialService.getMaterialsFilteredPaginated(filters);
-            setSearchResults(results);
+            const data = await materialService.getMaterialsFilteredPaginated(filters);
+            setSearchResults(data);
         } catch (err) {
             await handleApiError(err);
+            setSearchResults(null);
         } finally {
             setLoading(false);
         }
     };
-
     // Load initial data
     useEffect(() => {
         searchMaterials();
@@ -94,46 +102,31 @@ const MaterialManagementPage = () => {
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, activeOnlyFilter]);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        searchMaterials();
+    }, [currentPage, pageSize]);
 
     // Simple pagination handlers
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-        searchMaterials(page, pageSize);
+    const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage);
     };
 
     const handlePageSizeChange = (newPageSize: number) => {
         setPageSize(newPageSize);
-        setCurrentPage(0); // Reset to first page
-        searchMaterials(0, newPageSize);
+        setCurrentPage(0);
     };
 
     // Modal handlers
     const handleViewDetails = async (material: MaterialReadOnlyDTO) => {
-        console.log('🔍 Starting handleViewDetails for material:', material);
-
-        setSelectedMaterial(material);
-        setDetailsLoading(true);
-        setIsDetailsModalOpen(true);
-
         try {
-            console.log('📡 Calling API with materialId:', material.materialId);
-
+            setSelectedMaterial(material);
+            setIsDetailsModalOpen(true);
+            setDetailsLoading(true);
             const details = await materialService.getMaterialDetailedView(material.materialId);
-
-            console.log('✅ API Response received:', details);
-            console.log('📋 Details structure:', Object.keys(details || {}));
-            console.log('🔍 Checking key properties:');
-            console.log('  - details.id:', details?.id);
-            console.log('  - details.name:', details?.name);
-            console.log('  - details.unit:', details?.unit);
-            console.log('  - details.isActive:', details?.isActive);
-            console.log('  - details.categoryDistribution:', details?.categoryDistribution);
-            console.log('  - details.topProductsUsage:', details?.topProductsUsage);
-
             setMaterialDetails(details);
         } catch (err) {
-            console.error('❌ Error in handleViewDetails:', err);
             await handleApiError(err);
         } finally {
             setDetailsLoading(false);
@@ -157,8 +150,6 @@ const MaterialManagementPage = () => {
 
     // CRUD operations
     const handleCreateMaterial = async (data: MaterialInsertDTO) => {
-        // DON'T catch errors here - let them bubble up to the modal!
-        // The modal's useFormErrorHandler will handle them and show backend messages
         await materialService.createMaterial(data);
         await searchMaterials(); // Refresh results
         setSuccessMessage({
@@ -169,7 +160,6 @@ const MaterialManagementPage = () => {
     };
 
     const handleUpdateMaterial = async (data: MaterialUpdateDTO) => {
-        // DON'T catch errors here - let them bubble up to the modal!
         await materialService.updateMaterial(data.materialId, data);
         await searchMaterials(); // Refresh results
         setSuccessMessage({
@@ -198,32 +188,45 @@ const MaterialManagementPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+        <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Page Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-purple-600 rounded-xl shadow-lg">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                             <Boxes className="w-8 h-8 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white">Διαχείριση Υλικών</h1>
-                            <p className="text-purple-200 mt-1">
-                                Διαχειριστείτε τα υλικά που χρησιμοποιείτε στην παραγωγή
-                            </p>
+                            <h1 className="text-2xl font-bold text-white">Διαχείριση Υλικών</h1>
                         </div>
                     </div>
 
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
-                        variant="primary"
-                        size="lg"
-                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                        variant="create"
                     >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="w-4 h-4 mr-2" />
                         Νέο Υλικό
                     </Button>
                 </div>
+
+                {/* Pagination Controls - Bottom */}
+                {searchResults && searchResults.totalElements > 0 && (
+                    <DashboardCard className="shadow-lg">
+                        <EnhancedPaginationControls
+                            paginationData={{
+                                currentPage: searchResults.currentPage,
+                                totalPages: searchResults.totalPages,
+                                totalElements: searchResults.totalElements,
+                                pageSize: searchResults.pageSize,
+                                numberOfElements: searchResults.numberOfElements
+                            }}
+                            onPageChange={handlePageChange}
+                            onPageSizeChange={handlePageSizeChange}
+                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                        />
+                    </DashboardCard>
+                )}
 
                 {/* General Error Display */}
                 {generalError && (
@@ -233,47 +236,22 @@ const MaterialManagementPage = () => {
                 )}
 
                 {/* Search and Results Card */}
-                <DashboardCard
-                    title="Αναζήτηση Υλικών"
-                    className="bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl"
-                >
-                    <div className="mb-4">
-                        <p className="text-gray-600">
-                            {searchResults ?
-                                `Εμφάνιση ${searchResults.numberOfElements} από ${searchResults.totalElements} υλικά` :
-                                'Φόρτωση...'
-                            }
-                        </p>
-                    </div>
-                    <MaterialSearchBar
-                        searchTerm={searchTerm}
-                        onSearchTermChange={setSearchTerm}
-                        activeOnlyFilter={activeOnlyFilter}
-                        onActiveOnlyFilterChange={setActiveOnlyFilter}
-                        searchResults={searchResults?.data ? searchResults.data : []}
-                        loading={loading}
-                        onViewDetails={handleViewDetails}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onViewProducts={handleViewProducts}
-                    />
+                    <DashboardCard
+                    title="Αναζήτηση Υλικού"
+                    icon={<Search className="w-5 h-5" />}
+                    className="shadow-lg"
+                    >
+                        <MaterialSearchBar
+                            searchTerm={searchTerm}
+                            onSearchTermChange={setSearchTerm}
+                            searchResults={searchResults ? searchResults.data : []}
+                            loading={loading}
+                            onViewDetails={handleViewDetails}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onViewProducts={handleViewProducts}
+                        />
                 </DashboardCard>
-
-                {/* Pagination Controls - Bottom */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <EnhancedPaginationControls
-                        paginationData={{
-                            currentPage: searchResults.currentPage,
-                            totalPages: searchResults.totalPages,
-                            totalElements: searchResults.totalElements,
-                            pageSize: searchResults.pageSize,
-                            numberOfElements: searchResults.numberOfElements
-                        }}
-                        onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                    />
-                )}
             </div>
 
             {/* Modals */}
@@ -307,7 +285,7 @@ const MaterialManagementPage = () => {
                     `Είστε σίγουροι ότι θέλετε να διαγράψετε το υλικό "${selectedMaterial.name}";`
                     : ''
                 }
-                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Το υλικό θα διαγραφεί οριστικά ή θα απενεργοποιηθεί εάν χρησιμοποιείται σε προϊόντα."
+                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
             />
 
             <SuccessModal

@@ -154,7 +154,7 @@ const CustomerSearchBar: React.FC<CustomerSearchBarProps> = ({
                                     <div className="flex gap-2">
                                         <Button
                                             onClick={() => onViewDetails(customer)}
-                                            variant="outline-primary"
+                                            variant="info"
                                             size="sm"
                                             className="flex items-center gap-2"
                                         >
@@ -163,7 +163,7 @@ const CustomerSearchBar: React.FC<CustomerSearchBarProps> = ({
                                         </Button>
                                         <Button
                                             onClick={() => onEdit(customer)}
-                                            variant="outline-secondary"
+                                            variant="teal"
                                             size="sm"
                                             className="flex items-center gap-2"
                                         >

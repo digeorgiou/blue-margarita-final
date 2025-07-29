@@ -106,7 +106,6 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                         <h4 className="text-2xl font-bold text-gray-900">
                                             {material.name}
                                         </h4>
-                                        <p className="text-gray-500">ID: {material.id}</p>
                                         <span className={`inline-block px-2 py-1 mt-2 text-xs font-medium rounded-full ${
                                             material.isActive
                                                 ? 'bg-green-100 text-green-800'
@@ -119,7 +118,7 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
                                             <Ruler className="w-4 h-4 text-gray-400" />
-                                            <span className="text-gray-900">Μονάδα: {material.unit}</span>
+                                            <span className="text-gray-900">Μονάδα μέτρησης: {material.unit}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Euro className="w-4 h-4 text-gray-400" />
@@ -127,7 +126,7 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Package className="w-4 h-4 text-gray-400" />
-                                            <span className="text-gray-900">Προϊόντα που χρησιμοποιούν: {material.totalProductsUsing}</span>
+                                            <span className="text-gray-900">Προϊόντα που το χρησιμοποιούν: {material.totalProductsUsing}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -141,14 +140,6 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                     <div>
                                         <span className="font-medium text-gray-500">Τελευταία Ενημέρωση:</span>
                                         <p className="text-gray-900">{formatDate(material.updatedAt)}</p>
-                                    </div>
-                                    <div>
-                                        <span className="font-medium text-gray-500">Δημιουργήθηκε από:</span>
-                                        <p className="text-gray-900">{material.createdBy}</p>
-                                    </div>
-                                    <div>
-                                        <span className="font-medium text-gray-500">Τελευταία ενημέρωση από:</span>
-                                        <p className="text-gray-900">{material.lastUpdatedBy}</p>
                                     </div>
                                 </div>
                             </div>
@@ -179,7 +170,7 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                     <div className="text-2xl font-bold text-gray-900">
                                         {formatQuantity(material.recentPurchaseQuantity, material.unit)}
                                     </div>
-                                    <div className="text-sm text-gray-600">Πρόσφατες Αγορές (30 ημέρες)</div>
+                                    <div className="text-sm text-gray-600">Αγορές τις τελευταίες 30 ημέρες</div>
                                 </div>
 
                                 <div className="text-center">
@@ -229,7 +220,7 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                         <div className="bg-indigo-50 rounded-xl p-6">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                 <Activity className="w-5 h-5 mr-2 text-indigo-600" />
-                                Επιδόσεις Πωλήσεων
+                                Επιδόσεις Πωλήσεων Προϊόντων που το Χρησιμοποιούν
                             </h3>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -340,7 +331,7 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                                     {formatCurrency(product.costImpact)}
                                                 </div>
                                                 <div className="text-sm text-gray-600">
-                                                    Επίδραση κόστους
+                                                    Επίδραση στο κόστος του προϊόντος
                                                 </div>
                                             </div>
                                         </div>

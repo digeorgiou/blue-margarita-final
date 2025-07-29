@@ -123,7 +123,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder="π.χ. Χρυσός 18Κ, Ασήμι 925, Διαμάντι"
+                        placeholder="π.χ. Χρυσό Σύρμα, Ασημένιο Κούμπωμα"
                         error={fieldErrors.name}
                         required
                         maxLength={100}
@@ -166,7 +166,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                             type="text"
                             value={formData.unitOfMeasure}
                             onChange={(e) => handleInputChange('unitOfMeasure', e.target.value)}
-                            placeholder="π.χ. γραμμάρια, τεμάχια, μέτρα"
+                            placeholder="π.χ. γραμμάρια, τμχ"
                             error={fieldErrors.unitOfMeasure}
                             required
                             maxLength={50}
@@ -177,20 +177,6 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                     </div>
                 </div>
 
-                {/* Info box */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                        <Package className="w-5 h-5 text-blue-600 mt-0.5" />
-                        <div className="text-sm text-blue-800">
-                            <p className="font-medium mb-1">Σχετικά με τα υλικά:</p>
-                            <ul className="space-y-1 text-blue-700">
-                                <li>• Τα υλικά χρησιμοποιούνται στην παραγωγή προϊόντων</li>
-                                <li>• Το κόστος βοηθά στον υπολογισμό της τιμής των προϊόντων</li>
-                                <li>• Μπορείτε να παρακολουθείτε τις αγορές και το στοκ</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </div>
         </BaseFormModal>
     );

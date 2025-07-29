@@ -127,11 +127,7 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                         <h4 className="text-sm font-medium text-gray-900">
                             Επεξεργασία στοιχείων για: {material.name}
                         </h4>
-                        <p className="text-sm text-gray-500">ID: {material.materialId}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                            <span>Κατάσταση: {material.isActive ? 'Ενεργό' : 'Ανενεργό'}</span>
-                            <span>Τρέχον κόστος: {formatCurrency(material.currentUnitCost)}</span>
-                        </div>
+                        <span className="text-xs">Τρέχον κόστος: {formatCurrency(material.currentUnitCost)}</span>
                     </div>
                 )}
 
@@ -202,7 +198,7 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                 {/* Audit Information */}
                 {material && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h5 className="text-sm font-medium text-blue-900 mb-2">Πληροφορίες Υλικού</h5>
+                        <h5 className="text-sm font-medium text-blue-900 mb-2">Πληροφορίες Δημιουργίας Υλικού</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-800">
                             <div>
                                 <span className="font-medium">Δημιουργήθηκε:</span>
@@ -211,14 +207,6 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                             <div>
                                 <span className="font-medium">Ενημερώθηκε:</span>
                                 <p>{new Date(material.updatedAt).toLocaleDateString('el-GR')}</p>
-                            </div>
-                            <div>
-                                <span className="font-medium">Δημιουργός:</span>
-                                <p>{material.createdBy}</p>
-                            </div>
-                            <div>
-                                <span className="font-medium">Τελευταία ενημέρωση:</span>
-                                <p>{material.lastUpdatedBy}</p>
                             </div>
                         </div>
                     </div>

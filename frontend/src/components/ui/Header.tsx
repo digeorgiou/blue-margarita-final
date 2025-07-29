@@ -55,9 +55,9 @@ const Header: React.FC<HeaderProps> = ({
                 description: 'Διαχειριστείτε τους πελάτες σας και παρακολουθήστε τα στατιστικά ανα πελάτη'
             },
             'materials': {
-                title: 'Materials',
+                title: 'Υλικό',
                 icon: <Layers className="w-9 h-9" />,
-                description: 'Raw materials and inventory'
+                description: 'Διαχειριστείτε τα υλικά που χρησιμοποιείτε στην παραγωγή και δείτε στατιστικά ανα υλικό'
             },
             'categories': {
                 title:'Κατηγορίες',
