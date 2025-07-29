@@ -50,9 +50,9 @@ const Header: React.FC<HeaderProps> = ({
                 description: 'Manage your product catalog'
             },
             'customers': {
-                title: 'Customers',
+                title: 'Πελάτες',
                 icon: <Users className="w-9 h-9" />,
-                description: 'Customer information and relationships'
+                description: 'Διαχειριστείτε τους πελάτες σας και παρακολουθήστε τα στατιστικά ανα πελάτη'
             },
             'materials': {
                 title: 'Materials',

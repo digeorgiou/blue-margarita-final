@@ -49,7 +49,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                         </div>
                         <div>
                             <h2 className="text-xl font-semibold">Λεπτομέρειες Πελάτη</h2>
-                            <p className="text-indigo-100 text-sm">Προβολή πλήρων στοιχείων και στατιστικών</p>
+                            <p className="text-indigo-100 text-sm">Προβολή στοιχείων και στατιστικών</p>
                         </div>
                     </div>
                     <button
@@ -229,14 +229,6 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                                 <div>
                                     <span className="font-medium text-gray-500">Τελευταία Ενημέρωση:</span>
                                     <p className="text-gray-900">{formatDate(customer.updatedAt)}</p>
-                                </div>
-                                <div>
-                                    <span className="font-medium text-gray-500">Δημιουργήθηκε από:</span>
-                                    <p className="text-gray-900">{customer.createdBy}</p>
-                                </div>
-                                <div>
-                                    <span className="font-medium text-gray-500">Τελευταία ενημέρωση από:</span>
-                                    <p className="text-gray-900">{customer.lastUpdatedBy}</p>
                                 </div>
                                 {customer.deletedAt && (
                                     <div className="col-span-2">

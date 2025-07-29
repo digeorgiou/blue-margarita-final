@@ -1,5 +1,7 @@
 package gr.aueb.cf.bluemargarita.dto.customer;
 
+import gr.aueb.cf.bluemargarita.core.enums.GenderType;
+
 public record CustomerListItemDTO(
         Long customerId,
         String firstname,
@@ -7,5 +9,6 @@ public record CustomerListItemDTO(
         String phoneNumber,
         String address,
         String email,
-        String tin
+        String tin,
+        GenderType gender
 ) {}

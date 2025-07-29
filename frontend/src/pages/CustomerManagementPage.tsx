@@ -175,7 +175,7 @@ const CustomerManagementPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
+        <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -184,13 +184,12 @@ const CustomerManagementPage = () => {
                             <Users className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Διαχείριση Πελατών</h1>
-                            <p className="text-gray-600">Αναζήτηση και διαχείριση πελατών</p>
+                            <h1 className="text-2xl font-bold text-white">Διαχείριση Πελατών</h1>
                         </div>
                     </div>
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
+                        variant="create"
                     >
                         <UserPlus className="w-4 h-4 mr-2" />
                         Νέος Πελάτης
@@ -206,25 +205,27 @@ const CustomerManagementPage = () => {
 
                 {/* Pagination Controls - Top */}
                 {searchResults && searchResults.totalElements > 0 && (
-                    <EnhancedPaginationControls
-                        paginationData={{
-                            currentPage: searchResults.currentPage,
-                            totalPages: searchResults.totalPages,
-                            totalElements: searchResults.totalElements,
-                            pageSize: searchResults.pageSize,
-                            numberOfElements: searchResults.numberOfElements
-                        }}
-                        onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                    />
+                    <DashboardCard className="shadow-lg">
+                        <EnhancedPaginationControls
+                            paginationData={{
+                                currentPage: searchResults.currentPage,
+                                totalPages: searchResults.totalPages,
+                                totalElements: searchResults.totalElements,
+                                pageSize: searchResults.pageSize,
+                                numberOfElements: searchResults.numberOfElements
+                            }}
+                            onPageChange={handlePageChange}
+                            onPageSizeChange={handlePageSizeChange}
+                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                        />
+                    </DashboardCard>
                 )}
 
                 {/* Search Section */}
                 <DashboardCard
-                    title="Αναζήτηση Πελατών"
+                    title="Αναζήτηση Πελάτη"
                     icon={<Search className="w-5 h-5" />}
-                    className="shadow-lg border-white/20"
+                    className="shadow-lg"
                 >
                     <CustomerSearchBar
                         searchTerm={searchTerm}
@@ -239,21 +240,6 @@ const CustomerManagementPage = () => {
                     />
                 </DashboardCard>
 
-                {/* Pagination Controls - Bottom */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <EnhancedPaginationControls
-                        paginationData={{
-                            currentPage: searchResults.currentPage,
-                            totalPages: searchResults.totalPages,
-                            totalElements: searchResults.totalElements,
-                            pageSize: searchResults.pageSize,
-                            numberOfElements: searchResults.numberOfElements
-                        }}
-                        onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                    />
-                )}
             </div>
 
             {/* Modals */}
@@ -287,7 +273,7 @@ const CustomerManagementPage = () => {
                     `Είστε σίγουροι ότι θέλετε να διαγράψετε τον πελάτη "${selectedCustomer.firstname} ${selectedCustomer.lastname}";`
                     : ''
                 }
-                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Ο πελάτης θα διαγραφεί οριστικά ή θα απενεργοποιηθεί εάν έχει ιστορικό πωλήσεων."
+                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
             />
 
             <SuccessModal

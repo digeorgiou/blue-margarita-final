@@ -8,6 +8,7 @@ export interface CustomerListItemDTO {
     address: string;
     email: string;
     tin: string;
+    gender: GenderType;
 }
 
 export interface CustomerInsertDTO {

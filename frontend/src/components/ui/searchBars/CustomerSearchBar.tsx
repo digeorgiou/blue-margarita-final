@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Eye, Edit, Trash2, Users, Phone, Mail, MapPin, CreditCard } from 'lucide-react';
 import { Button, LoadingSpinner } from './../index';
 import type { CustomerListItemDTO } from '../../../types/api/customerInterface';
+import { CustomTextInput, CustomToggleOption } from "../inputs";
 
 interface CustomerSearchBarProps {
     searchTerm: string;
@@ -42,32 +43,24 @@ const CustomerSearchBar: React.FC<CustomerSearchBarProps> = ({
             <div className="flex flex-col lg:flex-row gap-4">
                 {/* Search Input */}
                 <div className="flex-1">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => onSearchTermChange(e.target.value)}
-                            placeholder="Αναζήτηση πελάτη (όνομα, email, τηλέφωνο, ΑΦΜ)..."
-                            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                        />
-                    </div>
-
+                    <CustomTextInput
+                        label=""
+                        value={searchTerm}
+                        onChange={onSearchTermChange}
+                        placeholder="Αναζήτηση με όνομα, email, τηλέφωνο ή ΑΦΜ..."
+                        icon={<Search className="w-5 h-5 text-gray-400" />}
+                        className="w-full"
+                    />
                 </div>
 
                 {/* TIN Filter */}
-                <div className="lg:w-64">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={tinOnlyFilter}
-                            onChange={(e) => onTinOnlyFilterChange(e.target.checked)}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm font-medium text-gray-700">
-                            Μόνο πελάτες Χονδρικής
-                        </span>
-                    </label>
+                <div className="lg:w-64 flex items-end">
+                    <CustomToggleOption
+                        value={tinOnlyFilter}
+                        onChange={onTinOnlyFilterChange}
+                        optionLabel="Μόνο πελάτες Χονδρικής"
+                        className="pb-2"
+                    />
                 </div>
             </div>
 
@@ -124,7 +117,7 @@ const CustomerSearchBar: React.FC<CustomerSearchBarProps> = ({
                                             </h3>
                                             {customerHasTin(customer) && (
                                                 <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                                                    Έχει ΑΦΜ
+                                                    Χονδρικής
                                                 </span>
                                             )}
                                         </div>

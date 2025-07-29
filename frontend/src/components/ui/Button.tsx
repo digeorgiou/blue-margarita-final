@@ -20,6 +20,12 @@ const Button = ({children, onClick, variant = 'primary', size = 'md', disabled, 
             "before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:to-transparent " +
             "before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700",
 
+        // Create Button
+        create: "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 " +
+            "text-white shadow-lg hover:shadow-xl focus:ring-purple-300 " +
+            "before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:to-transparent " +
+            "before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700",
+
         // Success Greens
         success: "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 " +
             "text-white shadow-lg hover:shadow-xl focus:ring-green-300 " +

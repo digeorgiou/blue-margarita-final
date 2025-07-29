@@ -131,7 +131,8 @@ public class Mapper {
                 customer.getPhoneNumber(),
                 customer.getAddress(),
                 customer.getEmail(),
-                customer.getTin()
+                customer.getTin(),
+                customer.getGender()
         );
     }
 

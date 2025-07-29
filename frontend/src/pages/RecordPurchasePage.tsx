@@ -11,8 +11,7 @@ import DashboardCard from '../components/ui/DashboardCard';
 import { ShoppingCart, Package, Calendar, Plus, Minus, Trash2, Building2, Mail, X } from 'lucide-react';
 import { PurchaseSuccessModal } from '../components/ui/modals/PurchaseSuccessModal';
 import { materialService } from "../services/materialService.ts";
-import SearchDropdown from '../components/ui/searchDropdowns/SearchDropdown.tsx';
-import { CustomNumberInput, CustomDateInput } from "../components/ui/inputs";
+import { CustomNumberInput, CustomDateInput, CustomSearchDropdown  } from "../components/ui/inputs";
 
 interface RecordPurchasePageProps {
     onNavigate: (page: string) => void;
@@ -253,11 +252,8 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
 
                                         {/* Material Search */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                <Package className="w-4 h-4 inline mr-1" />
-                                                Υλικά
-                                            </label>
-                                            <SearchDropdown
+                                            <CustomSearchDropdown
+                                                label="Υλικό"
                                                 searchTerm={materialSearchTerm}
                                                 onSearchTermChange={(term: string) => {
                                                     setMaterialSearchTerm(term);
@@ -267,25 +263,16 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                 onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
                                                     const material = materialSearchResults.find(m => m.materialId === item.id);
                                                     if (material) {
-                                                        addMaterialToCart(material);
+                                                        addMaterialToCart(material, 1);
                                                     }
                                                 }}
-                                                placeholder="Αναζήτηση υλικών..."
+                                                placeholder="Αναζήτηση υλικού..."
                                                 entityType="material"
                                                 isLoading={isLoadingMaterials}
                                                 emptyMessage="No materials found"
                                                 emptySubMessage="Try searching by name"
+                                                icon={<Package className="w-4 h-4 text-emerald-500" />}
                                                 renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="flex-1">
-                                                        <div className="font-medium text-gray-900 group-hover:text-emerald-700 transition-colors">
-                                                            {item.name}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 mt-0.5">
-                                                            {item.subtitle}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
                                                     <div className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
                                                         <Package className="w-3 h-3 inline mr-1" />
                                                         {item.additionalInfo}
@@ -296,11 +283,8 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
 
                                         {/* Supplier Search */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                <Building2 className="w-4 h-4 inline mr-1" />
-                                                Προμηθευτής
-                                            </label>
-                                            <SearchDropdown
+                                            <CustomSearchDropdown
+                                                label="Προμηθευτής"
                                                 searchTerm={supplierSearchTerm}
                                                 onSearchTermChange={(term: string) => {
                                                     setSupplierSearchTerm(term);
@@ -320,19 +304,9 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                 isLoading={isLoadingSuppliers}
                                                 emptyMessage="No suppliers found"
                                                 emptySubMessage="Try searching by name or email"
+                                                icon={<Building2 className="w-4 h-4 text-orange-500" />}
                                                 renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="flex-1">
-                                                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
-                                                            {item.name}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 mt-0.5 flex items-center space-x-1">
-                                                            <Mail className="w-3 h-3" />
-                                                            <span>{item.subtitle}</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                                                    <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-md">
                                                         <Building2 className="w-3 h-3 inline mr-1" />
                                                         {item.additionalInfo}
                                                     </div>

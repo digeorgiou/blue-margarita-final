@@ -5,6 +5,7 @@ export type ButtonProps = {
     // Standard solid buttons
         | 'primary'
         | 'secondary'
+        | 'create'
         | 'success'
         | 'danger'
         | 'warning'

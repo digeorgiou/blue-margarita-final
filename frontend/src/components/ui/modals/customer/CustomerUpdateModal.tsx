@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, CreditCard } from 'lucide-react';
+import { User, Phone } from 'lucide-react';
 import { BaseFormModal, Input } from '../../index';
 import { GenderType, GenderTypeLabels, CustomerListItemDTO, CustomerUpdateDTO } from '../../../../types/api/customerInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
@@ -20,7 +20,7 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
     const [formData, setFormData] = useState<Omit<CustomerUpdateDTO, 'customerId' | 'updaterUserId'>>({
         firstname: '',
         lastname: '',
-        gender: GenderType.OTHER,
+        gender: customer?.gender,
         phoneNumber: '',
         address: '',
         email: '',
@@ -49,7 +49,7 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
             setFormData({
                 firstname: customer.firstname || '',
                 lastname: customer.lastname || '',
-                gender: GenderType.OTHER, // Default since gender is not in CustomerListItemDTO
+                gender: customer.gender, // Default since gender is not in CustomerListItemDTO
                 phoneNumber: customer.phoneNumber || '',
                 address: customer.address || '',
                 email: customer.email || '',
@@ -113,12 +113,19 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
 
     // Check if there are any changes from the original customer data
     const hasChanges = customer ? (
-        formData.firstname !== customer.firstname ||
-        formData.lastname !== customer.lastname ||
-        formData.phoneNumber !== customer.phoneNumber ||
-        formData.address !== customer.address ||
-        formData.email !== customer.email ||
-        formData.tin !== customer.tin
+
+        // Always check required fields (firstname, lastname)
+        formData.firstname !== (customer.firstname || '') ||
+        formData.lastname !== (customer.lastname || '') ||
+
+
+        // For optional fields, only check if the current form value is not empty
+        (formData.phoneNumber.trim() !== '' && formData.phoneNumber !== (customer.phoneNumber || '')) ||
+        (formData.address.trim() !== '' && formData.address !== (customer.address || '')) ||
+        (formData.email.trim() !== '' && formData.email !== (customer.email || '')) ||
+        (formData.tin.trim() !== '' && formData.tin !== (customer.tin || '')) ||
+        (formData.gender !== customer.gender)
+
     ) : false;
 
     if (!customer) return null;
@@ -193,6 +200,15 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                             ))}
                         </select>
                     </div>
+
+                    <Input
+                        label="ΑΦΜ"
+                        value={formData.tin}
+                        onChange={(e) => handleInputChange('tin', e.target.value)}
+                        placeholder="π.χ. 123456789"
+                        error={fieldErrors.tin}
+                        disabled={isSubmitting}
+                    />
                 </div>
 
                 {/* Contact Information */}
@@ -227,23 +243,6 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                         onChange={(e) => handleInputChange('address', e.target.value)}
                         placeholder="π.χ. Πατησίων 123, Αθήνα"
                         error={fieldErrors.address}
-                        disabled={isSubmitting}
-                    />
-                </div>
-
-                {/* Business Information */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <CreditCard className="w-5 h-5 mr-2 text-purple-600" />
-                        Επιχειρηματικά Στοιχεία
-                    </h3>
-
-                    <Input
-                        label="ΑΦΜ"
-                        value={formData.tin}
-                        onChange={(e) => handleInputChange('tin', e.target.value)}
-                        placeholder="π.χ. 123456789"
-                        error={fieldErrors.tin}
                         disabled={isSubmitting}
                     />
                 </div>

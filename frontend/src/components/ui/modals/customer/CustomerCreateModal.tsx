@@ -1,7 +1,7 @@
 // CustomerCreateModal.tsx using the useFormErrorHandler hook
 
 import React, { useState } from 'react';
-import { User, Phone, CreditCard } from 'lucide-react';
+import { User, Phone } from 'lucide-react';
 import { BaseFormModal, Input } from '../../index';
 import { CustomerInsertDTO, GenderType, GenderTypeLabels } from '../../../../types/api/customerInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
@@ -191,6 +191,16 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                             <p className="mt-1 text-sm text-red-600">{fieldErrors.gender}</p>
                         )}
                     </div>
+
+                    <Input
+                        label="ΑΦΜ (Για πελάτες χονδρικής)"
+                        value={formData.tin || ''}
+                        onChange={(e) => handleInputChange('tin', e.target.value)}
+                        placeholder="π.χ. 123456789"
+                        error={fieldErrors.tin}
+                        disabled={isSubmitting}
+                    />
+
                 </div>
 
                 {/* Contact Information */}
@@ -227,32 +237,6 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                         error={fieldErrors.address}
                         disabled={isSubmitting}
                     />
-                </div>
-
-                {/* Business Information */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <CreditCard className="w-5 h-5 mr-2 text-purple-600" />
-                        Επιχειρηματικά Στοιχεία
-                    </h3>
-
-                    <Input
-                        label="ΑΦΜ (Προαιρετικό)"
-                        value={formData.tin || ''}
-                        onChange={(e) => handleInputChange('tin', e.target.value)}
-                        placeholder="π.χ. 123456789"
-                        error={fieldErrors.tin}
-                        disabled={isSubmitting}
-                    />
-                    <p className="text-sm text-gray-500">
-                        Το ΑΦΜ είναι υποχρεωτικό για χονδρικούς πελάτες
-                    </p>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                        💡 <strong>Συμβουλή:</strong> Βεβαιωθείτε ότι τα στοιχεία επικοινωνίας είναι σωστά για την καλύτερη εξυπηρέτηση του πελάτη.
-                    </p>
                 </div>
             </div>
         </BaseFormModal>

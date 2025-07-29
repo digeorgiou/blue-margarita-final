@@ -14,6 +14,24 @@ export type CustomNumberInputProps = {
     className?: string;
 }
 
+export type CustomTextInputProps = {
+    label: string | React.ReactNode;
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+    icon?: React.ReactNode;
+    type?: 'text' | 'email' | 'password' | 'tel' | 'url';
+    required?: boolean;
+    disabled?: boolean;
+    className?: string;
+    maxLength?: number;
+    minLength?: number;
+    autoComplete?: string;
+    onFocus?: () => void;
+    onBlur?: () => void;
+    onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+}
+
 export type CustomSelectProps = {
     label: string;
     value: string | number;
@@ -23,6 +41,14 @@ export type CustomSelectProps = {
     icon?: React.ReactNode;
     required?: boolean;
     disabled?: boolean;
+    className?: string;
+}
+
+export type CustomToggleOptionProps = {
+    label?: string;
+    value: boolean;
+    onChange: (value: boolean) => void;
+    optionLabel: string;
     className?: string;
 }
 
