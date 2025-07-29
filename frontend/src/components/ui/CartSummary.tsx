@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {Percent, ShoppingCart, Euro} from 'lucide-react';
 import { Button, LoadingSpinner } from './index';
 import { PriceCalculationResponseDTO } from '../../types/api/recordSaleInterface';
-import { StyledNumberInput } from './StyledInput';
+import { CustomNumberInput } from "./inputs";
 
 interface CartSummaryProps {
     pricing: PriceCalculationResponseDTO;
@@ -101,7 +101,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({
 
                     {/* Discount Percentage Input - Using StyledNumberInput */}
                     <div>
-                        <StyledNumberInput
+                        <CustomNumberInput
                             label={
                                 <span className="flex items-center">
                         Ποσοστό Έκπτωσης
@@ -119,7 +119,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({
 
                     {/* Final Price Input - Using StyledNumberInput */}
                     <div>
-                        <StyledNumberInput
+                        <CustomNumberInput
                             label={
                                 <span className="flex items-center">
                         Τελική Τιμή (€)

@@ -15,7 +15,8 @@ import DashboardCard from '../components/ui/DashboardCard';
 import CartSummary from '../components/ui/CartSummary';
 import CartItem from '../components/ui/CartItem';
 import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator, Mail, X, Calendar } from 'lucide-react';
-import { StyledNumberInput, StyledSelect, StyledRadioGroup, StyledDateInput, StyledSearchDropdown } from '../components/ui/StyledInput';
+
+import { CustomNumberInput, CustomDateInput, CustomRadioGroup, CustomSelect, CustomSearchDropdown } from "../components/ui/inputs";
 
 
 interface RecordSalePageProps {
@@ -320,7 +321,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
         return true;
     };
 
-    if (loading) {
+    if (loading || !pageData) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <LoadingSpinner/>
@@ -361,7 +362,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                 <div className="space-y-4 pl-2">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <StyledSearchDropdown
+                                            <CustomSearchDropdown
                                                 label = "Προϊόντα"
                                                 searchTerm={productSearchTerm}
                                                 onSearchTermChange={(term: string) => {
@@ -402,14 +403,14 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                         </div>
 
                                         {/* Sale Date */}
-                                        <StyledDateInput
+                                        <CustomDateInput
                                             label="Ημερομηνία"
                                             value={saleDate}
                                             onChange={setSaleDate}
                                             icon={<Calendar className="w-5 h-5 text-purple-500" />}
                                         />
                                         <div className="pr-2">
-                                            <StyledNumberInput
+                                            <CustomNumberInput
                                                 label="Κόστος Συσκευασίας (€)"
                                                 value={packagingCost}
                                                 onChange={setPackagingCost}
@@ -425,7 +426,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <StyledSelect
+                                            <CustomSelect
                                                 label="Τοποθεσία"
                                                 value={selectedLocation || ''}
                                                 onChange={(value) => setSelectedLocation(Number(value))}
@@ -440,7 +441,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
 
                                         {/* Payment Method */}
                                         <div>
-                                            <StyledSelect
+                                            <CustomSelect
                                                 label="Μέθοδος Πληρωμής"
                                                 value={selectedPaymentMethod}
                                                 onChange={(value) => setSelectedPaymentMethod(String(value))}
@@ -455,7 +456,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
 
                                         {/* Customer Search */}
                                         <div className="pr-2">
-                                            <StyledSearchDropdown
+                                            <CustomSearchDropdown
                                                 label = "Πελάτης (Προαιρετικό)"
                                                 searchTerm={customerSearchTerm}
                                                 onSearchTermChange={(term: string) => {
@@ -500,7 +501,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                                         {/* Wholesale Toggle */}
                                         <div className="h-[72px] flex flex-col justify-start">
-                                            <StyledRadioGroup
+                                            <CustomRadioGroup
                                                 value={isWholesale ? 'wholesale' : 'retail'}
                                                 onChange={(value) => handleWholesaleChange(value === 'wholesale')}
                                                 options={[

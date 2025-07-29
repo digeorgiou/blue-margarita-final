@@ -1,5 +1,3 @@
-// Updated RecordPurchasePage.tsx - Replace your current implementation
-
 import React, { useState } from 'react';
 import { recordPurchaseService } from '../services/recordPurchaseService';
 import {
@@ -14,7 +12,7 @@ import { ShoppingCart, Package, Calendar, Plus, Minus, Trash2, Building2, Mail, 
 import { PurchaseSuccessModal } from '../components/ui/modals/PurchaseSuccessModal';
 import { materialService } from "../services/materialService.ts";
 import SearchDropdown from '../components/ui/searchDropdowns/SearchDropdown.tsx';
-import { StyledNumberInput, StyledDateInput } from '../components/ui/StyledInput';
+import { CustomNumberInput, CustomDateInput } from "../components/ui/inputs";
 
 interface RecordPurchasePageProps {
     onNavigate: (page: string) => void;
@@ -351,7 +349,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
 
                                         {/* Purchase Date */}
                                         <div>
-                                            <StyledDateInput
+                                            <CustomDateInput
                                                 label={
                                                     <span className="flex items-center">
                                                         <Calendar className="w-4 h-4 mr-1" />
@@ -452,7 +450,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                         </div>
 
                                                         <div>
-                                                            <StyledNumberInput
+                                                            <CustomNumberInput
                                                                 label = "Τιμή (€)"
                                                                 value={item.pricePerUnit}
                                                                 onChange={(value) => updateCartItemPrice(item.materialId, value)}
