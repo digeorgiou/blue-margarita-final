@@ -15,8 +15,8 @@ import DashboardCard from '../components/ui/DashboardCard';
 import CartSummary from '../components/ui/CartSummary';
 import CartItem from '../components/ui/CartItem';
 import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator, Mail, X, Calendar } from 'lucide-react';
-import SearchDropdown from '../components/ui/searchDropdowns/SearchDropdown.tsx'
-import { StyledNumberInput, StyledSelect, StyledRadioGroup, StyledDateInput } from '../components/ui/StyledInput';
+import { StyledNumberInput, StyledSelect, StyledRadioGroup, StyledDateInput, StyledSearchDropdown } from '../components/ui/StyledInput';
+
 
 interface RecordSalePageProps {
     onNavigate: (page: string) => void;
@@ -74,13 +74,6 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
         subtitle: `Code: ${product.code}`,
         additionalInfo: product.categoryName
     }));
-
-    const transformedCustomerForDisplay = selectedCustomer ? {
-        id: selectedCustomer.id,
-        name: selectedCustomer.fullName,
-        subtitle: selectedCustomer.email || 'No email',
-        additionalInfo: 'Customer'
-    } : null;
 
     // Load page data on mount
     useEffect(() => {
@@ -368,11 +361,8 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                 <div className="space-y-4 pl-2">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                <Package className="w-4 h-4 inline mr-1" />
-                                                Προϊόντα
-                                            </label>
-                                            <SearchDropdown
+                                            <StyledSearchDropdown
+                                                label = "Προϊόντα"
                                                 searchTerm={productSearchTerm}
                                                 onSearchTermChange={(term: string) => {
                                                     setProductSearchTerm(term);
@@ -413,21 +403,22 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
 
                                         {/* Sale Date */}
                                         <StyledDateInput
-                                            label="Sale Date"
+                                            label="Ημερομηνία"
                                             value={saleDate}
                                             onChange={setSaleDate}
                                             icon={<Calendar className="w-5 h-5 text-purple-500" />}
                                         />
-
-                                        <StyledNumberInput
-                                            label="Κόστος Συσκευασίας (€)"
-                                            value={packagingCost}
-                                            onChange={setPackagingCost}
-                                            placeholder="0.00"
-                                            icon={<Package className="w-5 h-5 text-orange-500" />}
-                                            step={0.5}
-                                            min={0}
-                                        />
+                                        <div className="pr-2">
+                                            <StyledNumberInput
+                                                label="Κόστος Συσκευασίας (€)"
+                                                value={packagingCost}
+                                                onChange={setPackagingCost}
+                                                placeholder="0.00"
+                                                icon={<Package className="w-5 h-5 text-orange-500" />}
+                                                step={0.5}
+                                                min={0}
+                                            />
+                                        </div>
 
 
                                     </div>
@@ -444,14 +435,13 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                                 }))}
                                                 placeholder="Select location..."
                                                 icon={<MapPin className="w-5 h-5 text-blue-500" />}
-                                                required
                                             />
                                         </div>
 
                                         {/* Payment Method */}
                                         <div>
                                             <StyledSelect
-                                                label="Payment Method"
+                                                label="Μέθοδος Πληρωμής"
                                                 value={selectedPaymentMethod}
                                                 onChange={(value) => setSelectedPaymentMethod(String(value))}
                                                 options={pageData.paymentMethods.map(method => ({
@@ -460,17 +450,13 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                                 }))}
                                                 placeholder="Select payment method..."
                                                 icon={<CreditCard className="w-5 h-5 text-green-500" />}
-                                                required
                                             />
                                         </div>
 
                                         {/* Customer Search */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                <User className="w-4 h-4 inline mr-1" />
-                                                Πελάτης (Προαιρετικό)
-                                            </label>
-                                            <SearchDropdown
+                                        <div className="pr-2">
+                                            <StyledSearchDropdown
+                                                label = "Πελάτης (Προαιρετικό)"
                                                 searchTerm={customerSearchTerm}
                                                 onSearchTermChange={(term: string) => {
                                                     setCustomerSearchTerm(term);
@@ -490,33 +476,6 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                                 isLoading={isLoadingCustomers}
                                                 emptyMessage="No customers found"
                                                 emptySubMessage="Try searching by name or email"
-                                                selectedItem={transformedCustomerForDisplay}
-                                                onClearSelection={() => setSelectedCustomer(null)}
-                                                renderSelectedItem={(item, onClear) => (
-                                                    <div className="mt-3 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center space-x-3">
-                                                                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                                    <User className="w-4 h-4 text-indigo-600" />
-                                                                </div>
-                                                                <div>
-                                                                    <p className="font-medium text-indigo-900">{item.name}</p>
-                                                                    <p className="text-sm text-indigo-700 flex items-center">
-                                                                        <Mail className="w-3 h-3 mr-1" />
-                                                                        {item.subtitle}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <button
-                                                                onClick={onClear}
-                                                                className="text-indigo-600 hover:text-indigo-800 transition-colors p-1 hover:bg-indigo-100 rounded"
-                                                                title="Clear selection"
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
                                                 renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
                                                     <div className="flex-1">
                                                         <div className="font-medium text-gray-900 group-hover:text-indigo-700 transition-colors">
@@ -536,9 +495,11 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                                 )}
                                             />
                                         </div>
+                                    </div>
 
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                                         {/* Wholesale Toggle */}
-                                        <div className="flex flex-col justify-end">
+                                        <div className="h-[72px] flex flex-col justify-start">
                                             <StyledRadioGroup
                                                 value={isWholesale ? 'wholesale' : 'retail'}
                                                 onChange={(value) => handleWholesaleChange(value === 'wholesale')}
@@ -547,6 +508,34 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                                     { value: 'wholesale', label: 'Χονδρική' }
                                                 ]}
                                             />
+                                        </div>
+
+                                        <div className="h-[72px]">
+                                            {/* Intentionally empty for spacing */}
+                                        </div>
+
+                                        <div className="h-[72px] flex items-start pr-2 pb-2">
+                                            {selectedCustomer ? (
+                                                <div className="w-full p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-3">
+                                                            <button
+                                                                onClick={() => setSelectedCustomer(null)}
+                                                                className="text-indigo-600 hover:text-indigo-800 transition-colors p-1 hover:bg-indigo-100 rounded"
+                                                                title="Clear selection"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                            <div>
+                                                                <p className="font-medium text-indigo-900 text-sm">{selectedCustomer.fullName}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                // Empty placeholder to maintain grid structure
+                                                <div className="w-full h-full"></div>
+                                            )}
                                         </div>
 
                                     </div>

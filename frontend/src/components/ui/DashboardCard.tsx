@@ -13,7 +13,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                                      }) => {
     const heightClasses = {
         sm: 'h-64',   // 256px
-        md: 'h-80',   // 320px
+        md: 'h-82',   // 320px
         lg: 'h-96',   // 384px
         xl: 'h-[28rem]' // 448px
     };

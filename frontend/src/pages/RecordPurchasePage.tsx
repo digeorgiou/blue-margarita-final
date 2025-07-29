@@ -1,3 +1,5 @@
+// Updated RecordPurchasePage.tsx - Replace your current implementation
+
 import React, { useState } from 'react';
 import { recordPurchaseService } from '../services/recordPurchaseService';
 import {
@@ -6,11 +8,13 @@ import {
 import { PurchaseDetailedViewDTO } from "../types/api/purchaseInterface";
 import { SupplierSearchResultDTO } from "../types/api/supplierInterface";
 import { MaterialSearchResultDTO } from "../types/api/materialInterface";
-import { Button, LoadingSpinner, Input, Alert } from '../components/ui';
+import { Button, LoadingSpinner, Alert } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
-import { ShoppingCart, User, Package, Calendar, Plus, Minus, Trash2 } from 'lucide-react';
+import { ShoppingCart, Package, Calendar, Plus, Minus, Trash2, Building2, Mail, X } from 'lucide-react';
 import { PurchaseSuccessModal } from '../components/ui/modals/PurchaseSuccessModal';
-import {materialService} from "../services/materialService.ts";
+import { materialService } from "../services/materialService.ts";
+import SearchDropdown from '../components/ui/searchDropdowns/SearchDropdown.tsx';
+import { StyledNumberInput, StyledDateInput } from '../components/ui/StyledInput';
 
 interface RecordPurchasePageProps {
     onNavigate: (page: string) => void;
@@ -30,6 +34,8 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
     // Loading states
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
+    const [isLoadingMaterials, setIsLoadingMaterials] = useState(false);
 
     // Form states
     const [selectedSupplier, setSelectedSupplier] = useState<SupplierSearchResultDTO | null>(null);
@@ -48,93 +54,113 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [recordedPurchaseDetails, setRecordedPurchaseDetails] = useState<PurchaseDetailedViewDTO | null>(null);
 
-    // Format money helper
-    const formatMoney = (amount: number): string => {
-        return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
+    // Transform data for SearchDropdown components
+    const transformedSupplierResults = supplierSearchResults.map(supplier => ({
+        id: supplier.supplierId,
+        name: supplier.supplierName,
+        subtitle: supplier.email || 'No email',
+        additionalInfo: supplier.phoneNumber || 'No phone'
+    }));
 
-    // Search suppliers
-    const searchSuppliers = async (term: string) => {
-        if (term.length < 2) {
+    const transformedMaterialResults = materialSearchResults.map(material => ({
+        id: material.materialId,
+        name: material.materialName,
+        subtitle: `${material.currentUnitCost}€/${material.unitOfMeasure}`,
+        additionalInfo: material.unitOfMeasure
+    }));
+
+    // Search functions
+    const searchSuppliers = async (searchTerm: string): Promise<void> => {
+        if (searchTerm.length < 2) {
             setSupplierSearchResults([]);
             return;
         }
 
+        setIsLoadingSuppliers(true);
         try {
-            const results = await recordPurchaseService.searchSuppliers(term);
+            const results = await recordPurchaseService.searchSuppliers(searchTerm);
             setSupplierSearchResults(results);
         } catch (err) {
             console.error('Supplier search error:', err);
             setSupplierSearchResults([]);
+        } finally {
+            setIsLoadingSuppliers(false);
         }
     };
 
-    // Search materials
-    const searchMaterials = async (term: string) => {
-        if (term.length < 2) {
+    const searchMaterials = async (searchTerm: string): Promise<void> => {
+        if (searchTerm.length < 2) {
             setMaterialSearchResults([]);
             return;
         }
 
+        setIsLoadingMaterials(true);
         try {
-            const results = await materialService.searchMaterialsForAutocomplete(term);
+            const results = await materialService.searchMaterialsForAutocomplete(searchTerm);
             setMaterialSearchResults(results);
         } catch (err) {
             console.error('Material search error:', err);
             setMaterialSearchResults([]);
+        } finally {
+            setIsLoadingMaterials(false);
         }
     };
 
-    // Add material to cart
-    const addMaterialToCart = (material: MaterialSearchResultDTO) => {
-        const existingItem = cart.find(item => item.materialId === material.materialId);
+    // Cart management functions
+    const addMaterialToCart = (material: MaterialSearchResultDTO, quantity: number = 1, pricePerUnit?: number) => {
+        const effectivePrice = pricePerUnit || material.currentUnitCost;
 
-        if (existingItem) {
-            updateMaterialQuantity(material.materialId, existingItem.quantity + 1);
+        const existingIndex = cart.findIndex(item => item.materialId === material.materialId);
+        if (existingIndex >= 0) {
+            // Update existing item
+            const updatedCart = [...cart];
+            updatedCart[existingIndex] = {
+                ...updatedCart[existingIndex],
+                quantity: updatedCart[existingIndex].quantity + quantity,
+                lineTotal: (updatedCart[existingIndex].quantity + quantity) * updatedCart[existingIndex].pricePerUnit
+            };
+            setCart(updatedCart);
         } else {
+            // Add new item
             const newItem: MaterialCartItem = {
                 materialId: material.materialId,
                 materialName: material.materialName,
                 unitOfMeasure: material.unitOfMeasure,
                 currentUnitCost: material.currentUnitCost,
-                quantity: 1,
-                pricePerUnit: material.currentUnitCost,
-                lineTotal: material.currentUnitCost
+                quantity,
+                pricePerUnit: effectivePrice,
+                lineTotal: quantity * effectivePrice
             };
             setCart([...cart, newItem]);
         }
 
+        // Clear search
         setMaterialSearchTerm('');
         setMaterialSearchResults([]);
     };
 
-    // Update material quantity
-    const updateMaterialQuantity = (materialId: number, newQuantity: number) => {
+    const updateCartItemQuantity = (materialId: number, newQuantity: number) => {
         if (newQuantity <= 0) {
-            removeMaterialFromCart(materialId);
+            removeFromCart(materialId);
             return;
         }
 
         setCart(cart.map(item =>
             item.materialId === materialId
-                ? { ...item, quantity: newQuantity, lineTotal: item.pricePerUnit * newQuantity }
+                ? { ...item, quantity: newQuantity, lineTotal: newQuantity * item.pricePerUnit }
                 : item
         ));
     };
 
-    // Update material price per unit
-    const updateMaterialPrice = (materialId: number, newPrice: number) => {
-        if (newPrice < 0) return;
-
+    const updateCartItemPrice = (materialId: number, newPrice: number) => {
         setCart(cart.map(item =>
             item.materialId === materialId
-                ? { ...item, pricePerUnit: newPrice, lineTotal: newPrice * item.quantity }
+                ? { ...item, pricePerUnit: newPrice, lineTotal: item.quantity * newPrice }
                 : item
         ));
     };
 
-    // Remove material from cart
-    const removeMaterialFromCart = (materialId: number) => {
+    const removeFromCart = (materialId: number) => {
         setCart(cart.filter(item => item.materialId !== materialId));
     };
 
@@ -142,13 +168,12 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
     const calculateTotals = () => {
         const totalCost = cart.reduce((sum, item) => sum + item.lineTotal, 0);
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
         return { totalCost, totalItems };
     };
 
-    // Validate form
-    const isFormValid = (): boolean => {
-        return !!(selectedSupplier && cart.length > 0 && purchaseDate);
+    // Validation
+    const isFormValid = () => {
+        return selectedSupplier && cart.length > 0 && purchaseDate;
     };
 
     // Handle form submission
@@ -211,329 +236,333 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
     const { totalCost, totalItems } = calculateTotals();
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Top Row: Filters + Summary Sidebar */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    {/* Filters Card */}
-                    <DashboardCard height="sm">
-                        <div className="space-y-4">
-                            {/* First row: Materials + Date */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Material Search */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <Package className="w-4 h-4 inline mr-1" />
-                                        Υλικά
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={materialSearchTerm}
-                                            onChange={(e) => {
-                                                setMaterialSearchTerm(e.target.value);
-                                                searchMaterials(e.target.value);
-                                            }}
-                                            placeholder="Αναζήτηση υλικών..."
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
+        <div className="min-h-screen p-4">
+            <div className="max-w-7xl mx-auto">
+                {error && (
+                    <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+                        {error}
+                    </Alert>
+                )}
 
-                                        {/* Material Search Results */}
-                                        {materialSearchTerm && materialSearchResults.length > 0 && (
-                                            <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
-                                                {materialSearchResults.map((material) => (
-                                                    <button
-                                                        key={material.materialId}
-                                                        onClick={() => addMaterialToCart(material)}
-                                                        className="w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-colors"
-                                                    >
-                                                        <div className="flex items-center">
-                                                            <Package className="w-4 h-4 text-gray-400 mr-3" />
-                                                            <div className="flex-1">
-                                                                <div className="font-medium text-gray-900">
-                                                                    {material.materialName}
-                                                                </div>
-                                                                <div className="text-sm text-gray-600">
-                                                                    {formatMoney(material.currentUnitCost)}/{material.unitOfMeasure}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                            <DashboardCard height="md">
+                                <div className="space-y-4 pl-2 pr-2 pb-2">
 
-                                {/* Purchase Date */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <Calendar className="w-4 h-4 inline mr-1" />
-                                        Ημερομηνία Αγοράς
-                                    </label>
-                                    <Input
-                                        type="date"
-                                        value={purchaseDate}
-                                        onChange={(e) => setPurchaseDate(e.target.value)}
-                                        className="w-full"
-                                    />
-                                </div>
-                            </div>
+                                    {/* Row 1: Material Search, Purchase Date */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
-                            {/* Second row: Supplier Search + Selected Supplier */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Supplier Search */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <User className="w-4 h-4 inline mr-1" />
-                                        Προμηθευτής
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={selectedSupplier ? selectedSupplier.supplierName : supplierSearchTerm}
-                                            onChange={(e) => {
-                                                if (selectedSupplier) {
-                                                    setSelectedSupplier(null);
-                                                }
-                                                setSupplierSearchTerm(e.target.value);
-                                                searchSuppliers(e.target.value);
-                                            }}
-                                            placeholder="Αναζήτηση προμηθευτή..."
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-
-                                        {/* Supplier Search Results */}
-                                        {supplierSearchTerm && !selectedSupplier && supplierSearchResults.length > 0 && (
-                                            <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
-                                                {supplierSearchResults.map((supplier) => (
-                                                    <button
-                                                        key={supplier.supplierId}
-                                                        onClick={() => {
-                                                            setSelectedSupplier(supplier);
-                                                            setSupplierSearchTerm('');
-                                                            setSupplierSearchResults([]);
-                                                        }}
-                                                        className="w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-colors"
-                                                    >
-                                                        <div className="flex items-center">
-                                                            <User className="w-4 h-4 text-gray-400 mr-3" />
-                                                            <div>
-                                                                <div className="font-medium text-gray-900">
-                                                                    {supplier.supplierName}
-                                                                </div>
-                                                                {supplier.email && (
-                                                                    <div className="text-sm text-gray-600">
-                                                                        {supplier.email}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Selected Supplier Display */}
-                                <div>
-                                    {selectedSupplier ? (
+                                        {/* Material Search */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Επιλεγμένος Προμηθευτής
+                                                <Package className="w-4 h-4 inline mr-1" />
+                                                Υλικά
                                             </label>
-                                            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center">
-                                                        <User className="w-4 h-4 text-blue-600 mr-2" />
-                                                        <div>
-                                                            <div className="text-sm font-medium text-blue-900">
-                                                                {selectedSupplier.supplierName}
-                                                            </div>
-                                                            {selectedSupplier.email && (
-                                                                <div className="text-xs text-blue-700">
-                                                                    {selectedSupplier.email}
-                                                                </div>
-                                                            )}
+                                            <SearchDropdown
+                                                searchTerm={materialSearchTerm}
+                                                onSearchTermChange={(term: string) => {
+                                                    setMaterialSearchTerm(term);
+                                                    searchMaterials(term);
+                                                }}
+                                                searchResults={transformedMaterialResults}
+                                                onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
+                                                    const material = materialSearchResults.find(m => m.materialId === item.id);
+                                                    if (material) {
+                                                        addMaterialToCart(material);
+                                                    }
+                                                }}
+                                                placeholder="Αναζήτηση υλικών..."
+                                                entityType="material"
+                                                isLoading={isLoadingMaterials}
+                                                emptyMessage="No materials found"
+                                                emptySubMessage="Try searching by name"
+                                                renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-gray-900 group-hover:text-emerald-700 transition-colors">
+                                                            {item.name}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500 mt-0.5">
+                                                            {item.subtitle}
                                                         </div>
                                                     </div>
-                                                    <button
-                                                        onClick={() => setSelectedSupplier(null)}
-                                                        className="text-blue-600 hover:text-blue-800 text-sm"
-                                                    >
-                                                        Αλλαγή
-                                                    </button>
+                                                )}
+                                                renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
+                                                    <div className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                                                        <Package className="w-3 h-3 inline mr-1" />
+                                                        {item.additionalInfo}
+                                                    </div>
+                                                )}
+                                            />
+                                        </div>
+
+                                        {/* Supplier Search */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                <Building2 className="w-4 h-4 inline mr-1" />
+                                                Προμηθευτής
+                                            </label>
+                                            <SearchDropdown
+                                                searchTerm={supplierSearchTerm}
+                                                onSearchTermChange={(term: string) => {
+                                                    setSupplierSearchTerm(term);
+                                                    searchSuppliers(term);
+                                                }}
+                                                searchResults={transformedSupplierResults}
+                                                onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
+                                                    const supplier = supplierSearchResults.find(s => s.supplierId === item.id);
+                                                    if (supplier) {
+                                                        setSelectedSupplier(supplier);
+                                                        setSupplierSearchTerm('');
+                                                        setSupplierSearchResults([]);
+                                                    }
+                                                }}
+                                                placeholder="Αναζήτηση προμηθευτή..."
+                                                entityType="supplier"
+                                                isLoading={isLoadingSuppliers}
+                                                emptyMessage="No suppliers found"
+                                                emptySubMessage="Try searching by name or email"
+                                                renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
+                                                            {item.name}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500 mt-0.5 flex items-center space-x-1">
+                                                            <Mail className="w-3 h-3" />
+                                                            <span>{item.subtitle}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
+                                                    <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                                                        <Building2 className="w-3 h-3 inline mr-1" />
+                                                        {item.additionalInfo}
+                                                    </div>
+                                                )}
+                                            />
+                                        </div>
+
+
+                                    </div>
+
+                                    {/* Row 2: Supplier Search, Selected Supplier Display */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+
+                                        {/* Purchase Date */}
+                                        <div>
+                                            <StyledDateInput
+                                                label={
+                                                    <span className="flex items-center">
+                                                        <Calendar className="w-4 h-4 mr-1" />
+                                                        Ημερομηνία Αγοράς
+                                                    </span>
+                                                }
+                                                value={purchaseDate}
+                                                onChange={setPurchaseDate}
+                                                icon={<Calendar className="w-5 h-5 text-purple-500" />}
+                                            />
+                                        </div>
+
+                                        {/* Selected Supplier Display */}
+                                        <div className="h-[72px] flex items-start mt-7">
+                                            {selectedSupplier ? (
+                                                <div className="w-full p-3 pr-5 bg-blue-50 rounded-lg border border-blue-200">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                                <Building2 className="w-3 h-3 text-blue-600" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="font-medium text-blue-900 text-xs truncate">{selectedSupplier.supplierName}</p>
+                                                                <p className="text-xs text-blue-700 flex items-center truncate">
+                                                                    <Mail className="w-2 h-2 mr-1 flex-shrink-0" />
+                                                                    <span className="truncate">{selectedSupplier.email || 'No email'}</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => setSelectedSupplier(null)}
+                                                            className="text-blue-600 hover:text-blue-800 transition-colors p-1 hover:bg-blue-100 rounded flex-shrink-0 ml-2"
+                                                            title="Clear selection"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            ) : (
+                                                <div className="w-full h-full"></div>
+                                            )}
                                         </div>
-                                    ) : (
-                                        <div className="flex items-end h-full">
-                                            <div className="text-sm text-gray-500 italic">
-                                                Επιλέξτε προμηθευτή από την αναζήτηση
-                                            </div>
-                                        </div>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
+                            </DashboardCard>
                         </div>
-                    </DashboardCard>
-                </div>
 
-                {/* Summary Sidebar - Same row as filters */}
-                <div>
-                    <DashboardCard title="Σύνοψη Αγοράς" height="sm">
-                        <div className="space-y-4">
-                            <div className="border-b border-gray-200 pb-4">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm text-gray-600">Συνολικά Υλικά:</span>
-                                    <span className="font-medium">{totalItems}</span>
-                                </div>
-
-                                <div className="flex justify-between items-center text-lg font-semibold">
-                                    <span>Συνολικό Κόστος:</span>
-                                    <span className="text-blue-600">{formatMoney(totalCost)}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 flex items-end">
-                                <Button
-                                    onClick={handleSubmit}
-                                    size="lg"
-                                    disabled={!isFormValid() || submitting}
-                                    className="w-full"
-                                    variant="success"
-                                >
-                                    {submitting ? (
-                                        <>
-                                            <LoadingSpinner/>
-                                            Καταχώρηση...
-                                        </>
+                        {/* Cart Items Card */}
+                        <div className="lg:col-span-1">
+                            <DashboardCard
+                                title={`Καλάθι Υλικών (${cart.length})`}
+                                icon={<ShoppingCart className="w-5 h-5" />}
+                                height="md"
+                            >
+                                <div className="h-full overflow-y-auto pr-2 pb-2">
+                                    {cart.length === 0 ? (
+                                        <div className="text-center text-gray-500 py-6">
+                                            <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                                            <p className="text-sm">Άδειο καλάθι</p>
+                                            <p className="text-xs">Προσθέστε υλικά στο καλάθι</p>
+                                        </div>
                                     ) : (
-                                        <>
-                                            <ShoppingCart className="w-4 h-4 mr-2" />
-                                            Καταχώρηση Αγοράς
-                                        </>
+                                        <div className="space-y-3">
+                                            {cart.map((item) => (
+                                                <div key={item.materialId} className="bg-gray-50 rounded-lg p-3 border">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex-1 min-w-0">
+                                                            <h4 className="font-medium text-gray-900 truncate">{item.materialName}</h4>
+                                                            <p className="text-xs text-gray-500">Μονάδα Μέτρησης: {item.unitOfMeasure}</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => removeFromCart(item.materialId)}
+                                                            className="text-red-500 hover:text-red-700 p-1"
+                                                            title="Remove item"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-2 mb-2">
+                                                        <div>
+                                                            <label className="text-xs text-gray-600">Ποσότητα</label>
+                                                            <div className="flex items-center space-x-1 mt-4">
+                                                                <button
+                                                                    onClick={() => updateCartItemQuantity(item.materialId, item.quantity - 1)}
+                                                                    className="p-1 rounded bg-gray-200 hover:bg-gray-300"
+                                                                >
+                                                                    <Minus className="w-3 h-3" />
+                                                                </button>
+                                                                <span className="px-2 py-1 min-w-[40px] text-center text-sm">{item.quantity}</span>
+                                                                <button
+                                                                    onClick={() => updateCartItemQuantity(item.materialId, item.quantity + 1)}
+                                                                    className="p-1 rounded bg-gray-200 hover:bg-gray-300"
+                                                                >
+                                                                    <Plus className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <StyledNumberInput
+                                                                label = "Τιμή (€)"
+                                                                value={item.pricePerUnit}
+                                                                onChange={(value) => updateCartItemPrice(item.materialId, value)}
+                                                                min={0}
+                                                                step={0.01}
+                                                                className="text-sm"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="text-right">
+                                                        <span className="text-sm font-semibold text-gray-900">
+                                                            Σύνολο: €{item.lineTotal.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
-                                </Button>
-                            </div>
+                                </div>
+                            </DashboardCard>
+                        </div>
+                    </div>
+
+                    {/* Purchase Summary Card */}
+                    <DashboardCard
+                        title="Σύνοψη Αγοράς"
+                        icon={<Package className="w-5 h-5" />}
+                        height="lg"
+                    >
+                        <div className="space-y-6 p-6">
+                            {cart.length > 0 ? (
+                                <>
+                                    {/* Totals Display */}
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="text-center">
+                                                <p className="text-2xl font-bold text-gray-900">{totalItems}</p>
+                                                <p className="text-sm text-gray-600">Συνολικά Αντικείμενα</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-2xl font-bold text-green-600">€{totalCost.toFixed(2)}</p>
+                                                <p className="text-sm text-gray-600">Συνολικό Κόστος</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Purchase Details */}
+                                    <div className="space-y-3">
+                                        <h4 className="font-semibold text-gray-800">Λεπτομέρειες Αγοράς:</h4>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Προμηθευτής:</span>
+                                                <span className="font-medium">{selectedSupplier?.supplierName || 'Δεν επιλέχθηκε'}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Ημερομηνία:</span>
+                                                <span className="font-medium">{purchaseDate}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Αριθμός διαφορερικών υλικών:</span>
+                                                <span className="font-medium">{cart.length} υλικά</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Record Purchase Button */}
+                                    <div className="pt-4 border-t border-gray-200">
+                                        <Button
+                                            onClick={handleSubmit}
+                                            disabled={submitting || !isFormValid()}
+                                            variant="success"
+                                            size="lg"
+                                            className="w-full h-16 text-lg font-bold"
+                                        >
+                                            {submitting ? (
+                                                <>
+                                                    <LoadingSpinner />
+                                                    <span>Recording Purchase...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Package className="w-6 h-6 mr-2" />
+                                                    Καταγραφή Αγοράς
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex items-center justify-center h-full py-12">
+                                    <div className="text-center text-gray-500">
+                                        <Package className="w-24 h-24 mx-auto mb-4 opacity-30" />
+                                        <p className="text-xl font-semibold mb-2">Δεν έχουν προστεθεί υλικά</p>
+                                        <p className="text-lg">Προσθέστε υλικά για να συνεχίσετε</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </DashboardCard>
                 </div>
             </div>
 
-            {/* Bottom Row: Material Cart - Always visible */}
-            <DashboardCard title="Υλικά Αγοράς" height="sm">
-                <div className="space-y-3">
-                    {cart.length === 0 ? (
-                        <div className="text-center text-gray-500 py-6">
-                            <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                            <p className="text-base font-medium">Δεν έχουν προστεθεί υλικά</p>
-                            <p className="text-sm">Αναζητήστε και προσθέστε υλικά στην αγορά σας</p>
-                        </div>
-                    ) : (
-                        cart.map((item) => (
-                            <div key={item.materialId} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div className="flex items-start justify-between mb-2">
-                                    <div className="flex-1">
-                                        <div className="font-medium text-gray-900 mb-1">{item.materialName}</div>
-                                        <div className="text-sm text-gray-600">
-                                            Τρέχουσα τιμή: {formatMoney(item.currentUnitCost)}/{item.unitOfMeasure}
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => removeMaterialFromCart(item.materialId)}
-                                        className="p-1 text-red-500 hover:text-red-700 rounded ml-2"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-3 items-center">
-                                    {/* Quantity Controls */}
-                                    <div className="justify-self-start">
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                                            Ποσότητα
-                                        </label>
-                                        <div className="flex items-center space-x-2">
-                                            <button
-                                                onClick={() => updateMaterialQuantity(item.materialId, item.quantity - 1)}
-                                                className="p-1 text-gray-500 hover:text-gray-700 rounded border border-gray-300"
-                                            >
-                                                <Minus className="w-4 h-4" />
-                                            </button>
-
-                                            <input
-                                                type="number"
-                                                value={item.quantity}
-                                                onChange={(e) => updateMaterialQuantity(item.materialId, parseFloat(e.target.value) || 0)}
-                                                className="w-20 px-2 py-1 text-center border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                min="0.01"
-                                                step="0.01"
-                                            />
-
-                                            <button
-                                                onClick={() => updateMaterialQuantity(item.materialId, item.quantity + 1)}
-                                                className="p-1 text-gray-500 hover:text-gray-700 rounded border border-gray-300"
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Price Per Unit */}
-                                    <div className="justify-self-center">
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                                            Τιμή/{item.unitOfMeasure}
-                                        </label>
-                                        <div className="relative">
-                                            <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">€</span>
-                                            <input
-                                                type="number"
-                                                value={item.pricePerUnit}
-                                                onChange={(e) => updateMaterialPrice(item.materialId, parseFloat(e.target.value) || 0)}
-                                                className="w-full pl-6 pr-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                min="0.01"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                        {item.pricePerUnit !== item.currentUnitCost && (
-                                            <div className={`text-xs mt-1 ${item.pricePerUnit > item.currentUnitCost ? 'text-red-600' : 'text-green-600'}`}>
-                                                {item.pricePerUnit > item.currentUnitCost ? '+' : ''}{formatMoney(item.pricePerUnit - item.currentUnitCost)} διαφορά
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Line Total */}
-                                    <div className="justify-self-end">
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                                            Σύνολο Γραμμής
-                                        </label>
-                                        <div className="font-bold text-lg text-gray-900 py-1">
-                                            {formatMoney(item.lineTotal)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </DashboardCard>
-
-            {/* Error Alert */}
-            {error && (
-                <Alert variant="error" onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            )}
-
-            {/* Success Modal */}
             {showSuccessModal && recordedPurchaseDetails && (
                 <PurchaseSuccessModal
                     purchase={recordedPurchaseDetails}
-                    onClose={resetForm}
+                    onClose={() => {
+                        setShowSuccessModal(false);
+                        resetForm();
+                    }}
                 />
             )}
         </div>

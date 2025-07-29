@@ -87,7 +87,7 @@ export const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purc
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Οικονομική Σύνοψη</h3>
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Συνολικά Υλικά:</span>
+                                    <span className="text-gray-600">Συνολικά Αντικείμενα:</span>
                                     <span className="font-medium">{purchase.totalItemCount}</span>
                                 </div>
 
@@ -120,7 +120,7 @@ export const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purc
                                                         <span className="font-medium">{formatMoney(material.priceAtTheTime)}/{material.unitOfMeasure}</span>
                                                     </div>
                                                     <div className="flex justify-between">
-                                                        <span className="text-gray-500">Τρέχουσα τιμή:</span>
+                                                        <span className="text-gray-500">Αποθηκευμένη τιμή:</span>
                                                         <span className="font-medium">{formatMoney(material.currentUnitCost)}/{material.unitOfMeasure}</span>
                                                     </div>
                                                     {material.costDifference !== 0 && (
@@ -138,7 +138,7 @@ export const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purc
                                                     {formatMoney(material.lineTotal)}
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                                    Σύνολο γραμμής
+                                                    Σύνολο υλικού
                                                 </div>
                                             </div>
                                         </div>
@@ -146,14 +146,6 @@ export const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purc
                                 ))}
                             </div>
                         </div>
-
-                        {/* Notes (if any) */}
-                        {purchase.notes && (
-                            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                                <h3 className="text-sm font-medium text-yellow-700 mb-2">Σημειώσεις</h3>
-                                <p className="text-sm text-yellow-800">{purchase.notes}</p>
-                            </div>
-                        )}
 
                         {/* Action Buttons */}
                         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">

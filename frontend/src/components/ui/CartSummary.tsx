@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Percent, DollarSign, ShoppingCart } from 'lucide-react';
-import { Input, Button, LoadingSpinner } from './index';
+import {Percent, ShoppingCart, Euro} from 'lucide-react';
+import { Button, LoadingSpinner } from './index';
 import { PriceCalculationResponseDTO } from '../../types/api/recordSaleInterface';
+import { StyledNumberInput } from './StyledInput';
 
 interface CartSummaryProps {
     pricing: PriceCalculationResponseDTO;
@@ -40,9 +41,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({
         }
     }, [cartItemsCount, suggestedTotal]);
 
-    const handleFinalPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = Number(e.target.value) || 0;
-
+    const handleFinalPriceChange = (value: number) => {
         // Prevent infinite loop if we're already updating from discount
         if (isUpdatingFromDiscount) return;
 
@@ -60,9 +59,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({
         setIsUpdatingFromPrice(false);
     };
 
-    const handleDiscountPercentageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = Number(e.target.value) || 0;
-
+    const handleDiscountPercentageChange = (value: number) => {
         // Prevent infinite loop if we're already updating from price
         if (isUpdatingFromPrice) return;
 
@@ -101,40 +98,39 @@ const CartSummary: React.FC<CartSummaryProps> = ({
             <div className="bg-gray-50 p-6 rounded-lg">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">Εκπτώσεις</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Discount Percentage Input */}
+
+                    {/* Discount Percentage Input - Using StyledNumberInput */}
                     <div>
-                        <Input
+                        <StyledNumberInput
                             label={
                                 <span className="flex items-center">
-                                    <Percent className="w-4 h-4 mr-2" />
-                                    Ποσοστό Έκπτωσης
-                                </span>
+                        Ποσοστό Έκπτωσης
+                    </span>
                             }
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.1"
                             value={userDiscountPercentage}
                             onChange={handleDiscountPercentageChange}
                             placeholder="0"
+                            icon={<Percent className="w-5 h-5 text-purple-500" />}
+                            min={0}
+                            max={100}
+                            step={0.1}
                         />
                     </div>
 
-                    {/* Final Price Input */}
+                    {/* Final Price Input - Using StyledNumberInput */}
                     <div>
-                        <Input
+                        <StyledNumberInput
                             label={
                                 <span className="flex items-center">
-                                    <DollarSign className="w-4 h-4 mr-2" />
-                                    Τελική Τιμή (€)
-                                </span>
+                        Τελική Τιμή (€)
+                    </span>
                             }
-                            type="number"
-                            min="0"
-                            step="0.01"
                             value={userFinalPrice}
                             onChange={handleFinalPriceChange}
                             placeholder="0.00"
+                            icon={<Euro className="w-5 h-5 text-green-500" />}
+                            min={0}
+                            step={0.01}
                         />
                     </div>
                 </div>

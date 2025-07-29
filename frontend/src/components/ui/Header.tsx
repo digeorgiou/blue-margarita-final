@@ -29,6 +29,16 @@ const Header: React.FC<HeaderProps> = ({
                 icon: <Home className="w-9 h-9" />,
                 description: 'Βασικά στοιχεία για την απόδοση της επιχείρησης'
             },
+            'record-sale' : {
+                title: 'Καταγραφή Πώλησης',
+                icon: <ShoppingCart className="w-9 h-9" />,
+                description: 'Καταγράψτε όλες τις λεπτομέρειες κάθε σας πώλησης'
+            },
+            'record-purchase' : {
+                title: 'Καταγραφή Αγοράς',
+                icon: <ShoppingCart className="w-9 h-9" />,
+                description: 'Καταγράψτε όλες τις λεπτομέρειες κάθε σας αγοράς'
+            },
             'manage-sales': {
                 title: 'Sales Management',
                 icon: <ShoppingCart className="w-9 h-9" />,

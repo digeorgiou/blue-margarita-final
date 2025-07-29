@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Package, Settings, User, Building2, ShoppingCart } from 'lucide-react';
+import { X, Package, Settings, User, Building2 } from 'lucide-react';
+import { GiDiamondRing } from "react-icons/gi";
 
 interface SearchResult {
     id: number;
@@ -36,10 +37,6 @@ interface SearchDropdownProps<T extends SearchResult> {
     // Entity type for default styling/icons
     entityType?: 'material' | 'procedure' | 'product' | 'customer' | 'supplier';
 
-    // Selected item display
-    selectedItem?: T | null;
-    onClearSelection?: () => void;
-    renderSelectedItem?: (item: T, onClear: () => void) => React.ReactNode;
 }
 
 function SearchDropdown<T extends SearchResult>({
@@ -59,10 +56,7 @@ function SearchDropdown<T extends SearchResult>({
                                                              renderItem,
                                                              renderAdditionalInfo,
                                                              isLoading = false,
-                                                             entityType = 'material',
-                                                             selectedItem = null,
-                                                             onClearSelection,
-                                                             renderSelectedItem
+                                                             entityType = 'material'
                                                          }: SearchDropdownProps<T>) {
     const [isOpen, setIsOpen] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -86,8 +80,8 @@ function SearchDropdown<T extends SearchResult>({
         },
         product: {
             color: 'green',
-            defaultIcon: <ShoppingCart className="w-5 h-5 text-green-500" />,
-            emptyIcon: <ShoppingCart className="w-6 h-6 text-gray-400" />
+            defaultIcon: <GiDiamondRing className="w-5 h-5 text-green-500" />,
+            emptyIcon: <GiDiamondRing className="w-6 h-6 text-gray-400" />
         },
         customer: {
             color: 'indigo',
@@ -245,25 +239,6 @@ function SearchDropdown<T extends SearchResult>({
         ) : null
     );
 
-    const defaultRenderSelectedItem = (item: T, onClear: () => void) => (
-        <div className={`mt-3 p-3 ${colors.bg} rounded-lg`}>
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className={`font-medium ${colors.text}`}>{item.name}</p>
-                    {item.subtitle && (
-                        <p className={`text-sm ${colors.text} opacity-80`}>{item.subtitle}</p>
-                    )}
-                </div>
-                <button
-                    onClick={onClear}
-                    className={`${colors.text} hover:opacity-80 transition-opacity`}
-                >
-                    <X className="w-4 h-4" />
-                </button>
-            </div>
-        </div>
-    );
-
     return (
         <div className={`relative ${className}`}>
             {label && (
@@ -320,16 +295,6 @@ function SearchDropdown<T extends SearchResult>({
                     </div>
                 )}
             </div>
-
-            {/* Selected Item Display */}
-            {selectedItem && onClearSelection && (
-                <div>
-                    {renderSelectedItem ?
-                        renderSelectedItem(selectedItem, onClearSelection) :
-                        defaultRenderSelectedItem(selectedItem, onClearSelection)
-                    }
-                </div>
-            )}
 
             {/* Dropdown */}
             {shouldShowDropdown && (
