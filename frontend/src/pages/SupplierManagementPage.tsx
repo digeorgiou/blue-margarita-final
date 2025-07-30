@@ -6,7 +6,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
 import { supplierService } from '../services/supplierService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { UserPlus, Building2 } from 'lucide-react';
+import { Building2, UserPlus, Search } from 'lucide-react';
 import type {
     SupplierReadOnlyDTO,
     SupplierDetailedViewDTO,
@@ -15,7 +15,7 @@ import type {
 } from '../types/api/supplierInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 
-// We'll need to create these components following the customer pattern
+// Import supplier-specific components following the customer pattern
 import SupplierSearchBar from '../components/ui/searchBars/SupplierSearchBar';
 import SupplierDetailModal from '../components/ui/modals/supplier/SupplierDetailModal';
 import SupplierUpdateModal from '../components/ui/modals/supplier/SupplierUpdateModal';
@@ -24,7 +24,6 @@ import SupplierCreateModal from '../components/ui/modals/supplier/SupplierCreate
 const SupplierManagementPage = () => {
     // Search and pagination state - simplified (following customer pattern)
     const [searchTerm, setSearchTerm] = useState('');
-    const [tinOnlyFilter, setTinOnlyFilter] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(12);
     const [searchResults, setSearchResults] = useState<Paginated<SupplierReadOnlyDTO> | null>(null);
@@ -40,40 +39,43 @@ const SupplierManagementPage = () => {
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-    // Selected supplier and details
+    // Selected supplier states
     const [selectedSupplier, setSelectedSupplier] = useState<SupplierReadOnlyDTO | null>(null);
     const [supplierDetails, setSupplierDetails] = useState<SupplierDetailedViewDTO | null>(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
 
     // Success message state
-    const [successMessage, setSuccessMessage] = useState({
-        title: '',
-        message: ''
-    });
+    const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
-    // Get current user ID (following customer pattern)
-    const getCurrentUserId = (): number => {
-        // This should match how you get current user ID in CustomerManagementPage
-        return 1; // Replace with actual user ID logic
-    };
+    // Get current user ID (you'd get this from auth context)
+    const getCurrentUserId = () => 1; // Placeholder
 
-    // Search function
+    // Simple search function
     const searchSuppliers = async (page: number = currentPage, size: number = pageSize) => {
-        setLoading(true);
-        clearErrors();
-
         try {
+            setLoading(true);
+            clearErrors();
+
+            // If search term is less than 2 characters and not empty, don't search
+            if (searchTerm.length > 0 && searchTerm.length < 2) {
+                setLoading(false);
+                return;
+            }
+
             const filters = {
+                name: searchTerm.trim() || undefined,
+                isActive: true,
                 page,
                 pageSize: size,
                 sortBy: 'name',
                 sortDirection: 'ASC'
             };
 
-            const results = await supplierService.getSuppliersFilteredPaginated(filters);
-            setSearchResults(results);
+            const data = await supplierService.getSuppliersFilteredPaginated(filters);
+            setSearchResults(data);
         } catch (err) {
             await handleApiError(err);
+            setSearchResults(null);
         } finally {
             setLoading(false);
         }
@@ -93,7 +95,7 @@ const SupplierManagementPage = () => {
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, tinOnlyFilter]);
+    }, [searchTerm]);
 
     // Simple pagination handlers
     const handlePageChange = (page: number) => {
@@ -148,6 +150,7 @@ const SupplierManagementPage = () => {
 
     const handleUpdateSupplier = async (data: SupplierUpdateDTO) => {
         // DON'T catch errors here - let them bubble up to the modal!
+        // The modal's useFormErrorHandler will handle them and show backend messages
         await supplierService.updateSupplier(data.supplierId, data);
         await searchSuppliers(); // Refresh results
         setSuccessMessage({
@@ -171,63 +174,65 @@ const SupplierManagementPage = () => {
         } catch (err) {
             await handleApiError(err);
         }
-        setIsDeleteModalOpen(false);
-        setSelectedSupplier(null);
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+        <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-6">
-                {/* Page Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-purple-600 rounded-xl shadow-lg">
-                            <Building2 className="w-8 h-8 text-white" />
+
+                {/* Header Section - Matching CustomerManagementPage exactly */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white">Διαχείριση Προμηθευτών</h1>
-                            <p className="text-purple-200 mt-1">
-                                Διαχειριστείτε την βάση δεδομένων των προμηθευτών σας
-                            </p>
+                            <h1 className="text-2xl font-bold text-white">Διαχείριση Προμηθευτών</h1>
                         </div>
                     </div>
-
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
-                        variant="primary"
-                        size="lg"
-                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                        variant="create"
                     >
-                        <UserPlus className="w-5 h-5" />
+                        <UserPlus className="w-4 h-4 mr-2" />
                         Νέος Προμηθευτής
                     </Button>
                 </div>
 
-                {/* General Error Display */}
+                {/* Error Display */}
                 {generalError && (
-                    <Alert variant="error" className="mb-6">
+                    <Alert variant="error" className="shadow-sm" onClose={clearErrors}>
                         {generalError}
                     </Alert>
                 )}
 
-                {/* Search and Results Card */}
+                {/* Pagination Controls - Top */}
+                {searchResults && searchResults.totalElements > 0 && (
+                    <DashboardCard className="shadow-lg">
+                        <EnhancedPaginationControls
+                            paginationData={{
+                                currentPage: searchResults.currentPage,
+                                totalPages: searchResults.totalPages,
+                                totalElements: searchResults.totalElements,
+                                pageSize: searchResults.pageSize,
+                                numberOfElements: searchResults.numberOfElements
+                            }}
+                            onPageChange={handlePageChange}
+                            onPageSizeChange={handlePageSizeChange}
+                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                        />
+                    </DashboardCard>
+                )}
+
+                {/* Search Section */}
                 <DashboardCard
-                    title="Αναζήτηση Προμηθευτών"
-                    className="bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl"
+                    title="Αναζήτηση Προμηθευτή"
+                    icon={<Search className="w-5 h-5" />}
+                    className="shadow-lg"
                 >
-                    <div className="mb-4">
-                        <p className="text-gray-600">
-                            {searchResults ?
-                                `Εμφάνιση ${searchResults.numberOfElements} από ${searchResults.totalElements} προμηθευτές` :
-                                'Φόρτωση...'
-                            }
-                        </p>
-                    </div>
                     <SupplierSearchBar
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
-                        tinOnlyFilter={tinOnlyFilter}
-                        onTinOnlyFilterChange={setTinOnlyFilter}
                         searchResults={searchResults?.data ? searchResults.data : []}
                         loading={loading}
                         onViewDetails={handleViewDetails}
@@ -235,22 +240,6 @@ const SupplierManagementPage = () => {
                         onDelete={handleDelete}
                     />
                 </DashboardCard>
-
-                {/* Pagination Controls - Bottom */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <EnhancedPaginationControls
-                        paginationData={{
-                            currentPage: searchResults.currentPage,
-                            totalPages: searchResults.totalPages,
-                            totalElements: searchResults.totalElements,
-                            pageSize: searchResults.pageSize,
-                            numberOfElements: searchResults.numberOfElements
-                        }}
-                        onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                    />
-                )}
             </div>
 
             {/* Modals */}
@@ -284,7 +273,7 @@ const SupplierManagementPage = () => {
                     `Είστε σίγουροι ότι θέλετε να διαγράψετε τον προμηθευτή "${selectedSupplier.name}";`
                     : ''
                 }
-                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Ο προμηθευτής θα διαγραφεί οριστικά ή θα απενεργοποιηθεί εάν έχει ιστορικό αγορών."
+                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
             />
 
             <SuccessModal

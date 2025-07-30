@@ -88,19 +88,6 @@ const CustomerSearchBar: React.FC<CustomerSearchBarProps> = ({
                         </p>
                     </div>
                 )}
-
-                {!loading && filteredResults.length > 0 && (
-                    <div className="space-y-2 mb-4">
-                        {/* Results Summary */}
-                        <p className="text-sm text-gray-600">
-                            {tinOnlyFilter && searchResults.length !== filteredResults.length
-                                ? `Εμφάνιση ${filteredResults.length} από ${searchResults.length} πελάτες (μόνο με ΑΦΜ)`
-                                : `Εμφάνιση ${filteredResults.length} πελατών`
-                            }
-                        </p>
-                    </div>
-                )}
-
                 {!loading && filteredResults.length > 0 && (
                     <div className="grid gap-4">
                         {filteredResults.map((customer) => (

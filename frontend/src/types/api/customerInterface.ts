@@ -27,7 +27,7 @@ export interface CustomerUpdateDTO {
     updaterUserId: number;
     firstname: string;
     lastname: string;
-    gender: GenderType;
+    gender: GenderType | undefined;
     phoneNumber: string;
     address: string;
     email: string;
