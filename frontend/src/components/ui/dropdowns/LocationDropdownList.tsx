@@ -1,14 +1,7 @@
-import { LocationForDropdownDTO } from "../../../../types/api/locationInterface.ts";
-import { LoadingSpinner, Button } from "../../index.ts";
+import { LocationDropdownListProps } from "../../../types/components/dropdown-types.ts";
+import { LoadingSpinner, Button } from "../index.ts";
 import {Package, Eye, Trash2, Edit, MapPin} from 'lucide-react';
 
-interface LocationDropdownListProps {
-    locations: LocationForDropdownDTO[];
-    loading: boolean;
-    onEdit: (location: LocationForDropdownDTO) => void;
-    onDelete: (location: LocationForDropdownDTO) => void;
-    onViewDetails: (location: LocationForDropdownDTO) => void;
-}
 
 const LocationDropdownList: React.FC<LocationDropdownListProps> = ({
                                                                            locations,

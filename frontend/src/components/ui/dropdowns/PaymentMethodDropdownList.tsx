@@ -1,6 +1,6 @@
-import { PaymentMethodDTO } from "../../../../types/api/recordSaleInterface.ts";
+import { PaymentMethodDTO } from "../../../types/api/recordSaleInterface.ts";
 import { Package, Eye, Trash2, Edit } from 'lucide-react';
-import { Button, LoadingSpinner} from "../../index.ts";
+import { Button, LoadingSpinner} from "../index.ts";
 
 
 interface PaymentMethodManagementListProps {

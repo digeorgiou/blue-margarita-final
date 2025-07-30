@@ -1,20 +1,8 @@
 import React from 'react';
-import { Button, LoadingSpinner} from "../../index.ts";
+import { Button, LoadingSpinner} from "../index.ts";
 import { Package, Edit, Trash2, Eye } from 'lucide-react';
-import type {
-    CategoryForDropdownDTO,
+import type { CategoryDropdownListProps} from "../../../types/components/dropdown-types.ts";
 
-} from '../../../../types/api/categoryInterface';
-
-
-
-interface CategoryDropdownListProps {
-    categories: CategoryForDropdownDTO[];
-    loading: boolean;
-    onEdit: (category: CategoryForDropdownDTO) => void;
-    onDelete: (category: CategoryForDropdownDTO) => void;
-    onViewDetails: (category: CategoryForDropdownDTO) => void;
-}
 
 const CategoryDropdownList: React.FC<CategoryDropdownListProps> = ({
                                                                            categories,
@@ -66,24 +54,26 @@ const CategoryDropdownList: React.FC<CategoryDropdownListProps> = ({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center space-x-2 transition-opacity">
                             <Button
                                 size="sm"
-                                variant="ghost-primary"
+                                variant="info"
                                 onClick={() => onViewDetails(category)}
                                 title="Προβολή Λεπτομερειών"
                                 className="hover:bg-blue-50"
                             >
                                 <Eye className="w-4 h-4" />
+                                Λεπτομέρειες
                             </Button>
                             <Button
                                 size="sm"
-                                variant="ghost-primary"
+                                variant="teal"
                                 onClick={() => onEdit(category)}
                                 title="Επεξεργασία"
                                 className="hover:bg-green-50 hover:text-green-600"
                             >
                                 <Edit className="w-4 h-4" />
+                                Επεξεργασία
                             </Button>
                             <Button
                                 size="sm"
@@ -93,6 +83,7 @@ const CategoryDropdownList: React.FC<CategoryDropdownListProps> = ({
                                 className="hover:bg-red-50"
                             >
                                 <Trash2 className="w-4 h-4" />
+                                Διαγραφή
                             </Button>
                         </div>
                     </div>
