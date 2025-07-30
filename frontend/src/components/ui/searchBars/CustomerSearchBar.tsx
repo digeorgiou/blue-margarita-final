@@ -65,7 +65,7 @@ const CustomerSearchBar: React.FC<CustomerSearchBarProps> = ({
             </div>
 
             {/* Results */}
-            <div className="mt-6">
+            <div className="border-t pt-6">
                 {loading && (
                     <div className="flex justify-center py-12">
                         <LoadingSpinner />

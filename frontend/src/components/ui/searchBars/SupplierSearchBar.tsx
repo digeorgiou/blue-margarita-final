@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Eye, Edit, Trash2, Building2, Phone, Mail, MapPin, CreditCard } from 'lucide-react';
+import { Search, Eye, Edit, Trash2, Building2, Phone, Mail, MapPin, ReceiptText } from 'lucide-react';
 import { Button, LoadingSpinner } from './../index';
 import type { SupplierReadOnlyDTO } from '../../../types/api/supplierInterface';
 import { CustomTextInput } from "../inputs";
@@ -109,7 +109,7 @@ const SupplierSearchBar: React.FC<SupplierSearchBarProps> = ({
                                                     {/* TIN */}
                                                     {supplier.tin && (
                                                         <div className="flex items-center gap-2">
-                                                            <CreditCard className="w-4 h-4 text-gray-400" />
+                                                            <ReceiptText className="w-4 h-4 text-gray-400" />
                                                             <span>ΑΦΜ: {supplier.tin}</span>
                                                         </div>
                                                     )}
@@ -117,7 +117,7 @@ const SupplierSearchBar: React.FC<SupplierSearchBarProps> = ({
                                             </div>
 
                                             {/* Action Buttons */}
-                                            <div className="flex flex-col gap-2 ml-4">
+                                            <div className="flex gap-2">
                                                 <Button
                                                     onClick={() => onViewDetails(supplier)}
                                                     variant= "info"

@@ -6,7 +6,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
 import { supplierService } from '../services/supplierService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Building2, UserPlus, Search } from 'lucide-react';
+import { Truck, UserPlus, Search } from 'lucide-react';
 import type {
     SupplierReadOnlyDTO,
     SupplierDetailedViewDTO,
@@ -184,7 +184,7 @@ const SupplierManagementPage = () => {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center space-x-3 mb-4 md:mb-0">
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Building2 className="w-6 h-6 text-white" />
+                            <Truck className="w-6 h-6 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">Διαχείριση Προμηθευτών</h1>
