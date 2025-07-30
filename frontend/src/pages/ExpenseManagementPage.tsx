@@ -5,7 +5,7 @@ import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { expenseService } from '../services/expenseService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Plus, DollarSign, BarChart3, Calendar, Filter } from 'lucide-react';
+import { Plus, DollarSign, BarChart3, Calendar, Filter, Search } from 'lucide-react';
 import type {
     ExpenseReadOnlyDTO,
     ExpenseInsertDTO,
@@ -15,7 +15,9 @@ import type {
     ExpenseTypeDTO
 } from '../types/api/expenseInterface';
 
+// Import custom components
 import ExpenseSearchBar from '../components/ui/searchBars/ExpenseSearchBar';
+import { CustomDateInput } from '../components/ui/inputs';
 import ExpenseDetailModal from '../components/ui/modals/expense/ExpenseDetailModal';
 import ExpenseUpdateModal from '../components/ui/modals/expense/ExpenseUpdateModal';
 import ExpenseCreateModal from '../components/ui/modals/expense/ExpenseCreateModal';
@@ -31,20 +33,11 @@ const ExpenseManagementPage = () => {
     const [expenseTypeFilter, setExpenseTypeFilter] = useState('');
     const [dateFromFilter, setDateFromFilter] = useState('');
     const [dateToFilter, setDateToFilter] = useState('');
-    const [isPurchaseFilter, setIsPurchaseFilter] = useState<boolean | null>(null);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(12);
     const [searchResults, setSearchResults] = useState<PaginatedFilteredExpensesWithSummary | null>(null);
     const [loading, setLoading] = useState(false);
 
-    // ANALYTICS PAGE STATE
-    // Date filters for expense breakdown
-    const [analyticsDateFrom, setAnalyticsDateFrom] = useState('');
-    const [analyticsDateTo, setAnalyticsDateTo] = useState('');
-    const [breakdownData, setBreakdownData] = useState<ExpenseTypeBreakdownDTO[]>([]);
-    const [analyticsLoading, setAnalyticsLoading] = useState(false);
-
-    // SHARED STATE
     // Dropdown data
     const [expenseTypes, setExpenseTypes] = useState<ExpenseTypeDTO[]>([]);
 
@@ -57,69 +50,66 @@ const ExpenseManagementPage = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
 
-    // Selected items for modals
+    // Selected expense state
     const [selectedExpense, setSelectedExpense] = useState<ExpenseReadOnlyDTO | null>(null);
     const [expenseDetails, setExpenseDetails] = useState<ExpenseReadOnlyDTO | null>(null);
+    const [successMessage, setSuccessMessage] = useState('');
 
-    // Get current user ID (you'll need to implement this based on your auth system)
-    const getCurrentUserId = (): number => {
-        // This should get the current user ID from your auth context/service
-        return 1; // Placeholder
-    };
+    // ANALYTICS VIEW STATE
+    const [analyticsDateFrom, setAnalyticsDateFrom] = useState('');
+    const [analyticsDateTo, setAnalyticsDateTo] = useState('');
+    const [expenseBreakdown, setExpenseBreakdown] = useState<ExpenseTypeBreakdownDTO[]>([]);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
     // =============================================================================
-    // INITIALIZATION
+    // LIFECYCLE METHODS
     // =============================================================================
 
     useEffect(() => {
-        loadInitialData();
-    }, []);
+        loadExpenseTypes();
+        loadExpenses();
+    }, [currentPage, pageSize]);
 
-    const loadInitialData = async () => {
+    useEffect(() => {
+        if (currentView === 'main') {
+            loadExpenses();
+        } else {
+            loadAnalytics();
+        }
+    }, [currentView, searchTerm, expenseTypeFilter, dateFromFilter, dateToFilter]);
+
+    // =============================================================================
+    // DATA LOADING METHODS
+    // =============================================================================
+
+    const loadExpenseTypes = async () => {
         try {
-            const expenseTypes = await expenseService.getExpenseTypes();
-            setExpenseTypes(expenseTypes);
+            const types = await expenseService.getExpenseTypes();
+            setExpenseTypes(types);
         } catch (error) {
-            console.error('Error loading expense types:', error); // Debug log
             handleApiError(error);
         }
     };
 
-    // =============================================================================
-    // MAIN PAGE METHODS
-    // =============================================================================
-
-    // Load expenses with current filters
-    useEffect(() => {
-        if (currentView === 'main') {
-            loadExpenses();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentView, searchTerm, expenseTypeFilter, dateFromFilter, dateToFilter, isPurchaseFilter, currentPage, pageSize]);
-
     const loadExpenses = async () => {
-        if (currentView !== 'main') return;
-
-        setLoading(true);
-        clearErrors();
-
         try {
+            setLoading(true);
+            clearErrors();
+
             const filters = {
                 description: searchTerm || undefined,
                 expenseType: expenseTypeFilter || undefined,
                 expenseDateFrom: dateFromFilter || undefined,
                 expenseDateTo: dateToFilter || undefined,
-                isPurchase: isPurchaseFilter ?? undefined,
                 page: currentPage,
                 pageSize: pageSize,
                 sortBy: 'expenseDate',
                 sortDirection: 'DESC' as const
             };
 
-            const results = await expenseService.searchExpensesWithSummary(filters);
-            setSearchResults(results);
+            const result = await expenseService.searchExpensesWithSummary(filters);
+            setSearchResults(result);
         } catch (error) {
             handleApiError(error);
         } finally {
@@ -127,49 +117,18 @@ const ExpenseManagementPage = () => {
         }
     };
 
-    // Pagination handlers
-    const handlePageChange = (newPage: number) => {
-        setCurrentPage(newPage);
-    };
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize);
-        setCurrentPage(0);
-    };
-
-    // Filter reset
-    const handleResetFilters = () => {
-        setSearchTerm('');
-        setExpenseTypeFilter('');
-        setDateFromFilter('');
-        setDateToFilter('');
-        setIsPurchaseFilter(null);
-        setCurrentPage(0);
-    };
-
-    // =============================================================================
-    // ANALYTICS PAGE METHODS
-    // =============================================================================
-
-    useEffect(() => {
-        if (currentView === 'analytics') {
-            loadExpenseBreakdown();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentView, analyticsDateFrom, analyticsDateTo]);
-
-    const loadExpenseBreakdown = async () => {
-        if (currentView !== 'analytics') return;
-
-        setAnalyticsLoading(true);
+    const loadAnalytics = async () => {
         try {
+            setAnalyticsLoading(true);
+            clearErrors();
+
             const filters = {
                 dateFrom: analyticsDateFrom || undefined,
                 dateTo: analyticsDateTo || undefined
             };
 
-            const data = await expenseService.getExpenseBreakdownByType(filters);
-            setBreakdownData(data);
+            const breakdown = await expenseService.getExpenseBreakdownByType(filters);
+            setExpenseBreakdown(breakdown);
         } catch (error) {
             handleApiError(error);
         } finally {
@@ -178,7 +137,33 @@ const ExpenseManagementPage = () => {
     };
 
     // =============================================================================
-    // CRUD HANDLERS
+    // EVENT HANDLERS
+    // =============================================================================
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handlePageSizeChange = (size: number) => {
+        setPageSize(size);
+        setCurrentPage(0);
+    };
+
+    const getCurrentUserId = (): number => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                return user.id;
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+            }
+        }
+        return 1;
+    };
+
+    // =============================================================================
+    // CRUD OPERATIONS
     // =============================================================================
 
     const handleCreateExpense = async (expenseData: ExpenseInsertDTO) => {
@@ -256,351 +241,324 @@ const ExpenseManagementPage = () => {
     // =============================================================================
 
     return (
-        <div className="space-y-6">
-            {/* Header with Toggle */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        <DollarSign className="w-8 h-8 text-blue-600" />
-                        Διαχείριση Εξόδων
-                    </h1>
-                    <p className="text-gray-600 mt-1">
-                        {currentView === 'main'
-                            ? 'Διαχείριση και παρακολούθηση όλων των εξόδων της επιχείρησης'
-                            : 'Ανάλυση εξόδων ανά τύπο και χρονική περίοδο'
-                        }
-                    </p>
-                </div>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+            <div className="p-6 space-y-6">
+                {/* Header with Toggle - Following the same pattern as other management pages */}
+                <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl shadow-xl p-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                <DollarSign className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-white">Διαχείριση Εξόδων</h1>
+                                <p className="text-blue-100 text-sm">
+                                    {currentView === 'main'
+                                        ? 'Διαχείριση και παρακολούθηση όλων των εξόδων της επιχείρησης'
+                                        : 'Ανάλυση εξόδων ανά τύπο και χρονική περίοδο'
+                                    }
+                                </p>
+                            </div>
+                        </div>
 
-                {/* View Toggle Buttons */}
-                <div className="flex bg-gray-100 rounded-lg p-1">
-                    <button
-                        onClick={() => setCurrentView('main')}
-                        className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${
-                            currentView === 'main'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                    >
-                        <DollarSign className="w-4 h-4" />
-                        Διαχείριση
-                    </button>
-                    <button
-                        onClick={() => setCurrentView('analytics')}
-                        className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${
-                            currentView === 'analytics'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                    >
-                        <BarChart3 className="w-4 h-4" />
-                        Ανάλυση
-                    </button>
-                </div>
-            </div>
+                        <div className="flex items-center gap-4">
+                            {/* View Toggle Buttons */}
+                            <div className="flex bg-white/20 rounded-lg p-1">
+                                <button
+                                    onClick={() => setCurrentView('main')}
+                                    className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${
+                                        currentView === 'main'
+                                            ? 'bg-white text-blue-600 shadow-sm'
+                                            : 'text-white hover:text-blue-100'
+                                    }`}
+                                >
+                                    <DollarSign className="w-4 h-4" />
+                                    Διαχείριση
+                                </button>
+                                <button
+                                    onClick={() => setCurrentView('analytics')}
+                                    className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${
+                                        currentView === 'analytics'
+                                            ? 'bg-white text-blue-600 shadow-sm'
+                                            : 'text-white hover:text-blue-100'
+                                    }`}
+                                >
+                                    <BarChart3 className="w-4 h-4" />
+                                    Ανάλυση
+                                </button>
+                            </div>
 
-            {/* Error Display */}
-            {generalError && (
-                <Alert variant="error" className="mb-4">
-                    {generalError}
-                </Alert>
-            )}
-
-            {/* MAIN VIEW - Expense Management */}
-            {currentView === 'main' && (
-                <>
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-                        <Button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="flex items-center gap-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Νέο Έξοδο
-                        </Button>
-
-                        <div className="flex flex-wrap gap-2">
-                            <Button
-                                onClick={handleResetFilters}
-                                variant="outline-primary"
-                                className="flex items-center gap-2"
-                            >
-                                <Filter className="w-4 h-4" />
-                                Καθαρισμός Φίλτρων
-                            </Button>
+                            {/* Create Button - Only show in main view */}
+                            {currentView === 'main' && (
+                                <Button
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                    variant="create"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Νέο Έξοδο
+                                </Button>
+                            )}
                         </div>
                     </div>
+                </div>
 
-                    {/* Search and Results */}
-                    <DashboardCard
-                        title="Αναζήτηση και Διαχείριση Εξόδων"
-                    >
-                        <ExpenseSearchBar
-                            searchTerm={searchTerm}
-                            onSearchTermChange={setSearchTerm}
-                            expenseTypeFilter={expenseTypeFilter}
-                            onExpenseTypeFilterChange={setExpenseTypeFilter}
-                            dateFromFilter={dateFromFilter}
-                            onDateFromFilterChange={setDateFromFilter}
-                            dateToFilter={dateToFilter}
-                            onDateToFilterChange={setDateToFilter}
-                            isPurchaseFilter={isPurchaseFilter}
-                            onIsPurchaseFilterChange={setIsPurchaseFilter}
-                            expenseTypes={expenseTypes || []}
-                            searchResults={searchResults?.data || []}
-                            loading={loading}
-                            onViewDetails={handleViewDetails}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
+                {/* Error Display */}
+                {generalError && (
+                    <Alert variant="error" className="shadow-sm" onClose={clearErrors}>
+                        {generalError}
+                    </Alert>
+                )}
+
+                {/* MAIN VIEW - Expense Management */}
+                {currentView === 'main' && (
+                    <>
+                        {/* Pagination Controls - Top */}
+                        {searchResults && searchResults.totalElements > 0 && (
+                            <DashboardCard className="shadow-lg">
+                                <EnhancedPaginationControls
+                                    paginationData={{
+                                        currentPage: searchResults.currentPage,
+                                        totalPages: searchResults.totalPages,
+                                        totalElements: searchResults.totalElements,
+                                        pageSize: searchResults.pageSize,
+                                        numberOfElements: searchResults.numberOfElements
+                                    }}
+                                    onPageChange={handlePageChange}
+                                    onPageSizeChange={handlePageSizeChange}
+                                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                                />
+                            </DashboardCard>
+                        )}
+
+                        {/* Search and Filter Section */}
+                        <DashboardCard
+                            title="Αναζήτηση Εξόδου"
+                            icon={<Search className="w-5 h-5" />}
+                            className="shadow-lg"
                         >
-                            {/* Summary Card as children - positioned between filters and results */}
-                            {searchResults && (
-                                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <DollarSign className="w-5 h-5 text-blue-600" />
-                                        <h3 className="text-lg font-semibold text-gray-900">
+                            <ExpenseSearchBar
+                                searchTerm={searchTerm}
+                                onSearchTermChange={setSearchTerm}
+                                expenseTypeFilter={expenseTypeFilter}
+                                onExpenseTypeFilterChange={setExpenseTypeFilter}
+                                dateFromFilter={dateFromFilter}
+                                onDateFromFilterChange={setDateFromFilter}
+                                dateToFilter={dateToFilter}
+                                onDateToFilterChange={setDateToFilter}
+                                expenseTypes={expenseTypes}
+                                searchResults={searchResults?.data || []}
+                                loading={loading}
+                                onViewDetails={handleViewDetails}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                            >
+                                {/* Summary Card */}
+                                {searchResults?.summary && (
+                                    <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
+                                        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                            <Calendar className="w-4 h-4 mr-2 text-green-600" />
                                             Σύνοψη Αποτελεσμάτων
-                                        </h3>
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="text-center">
+                                                <div className="text-2xl font-bold text-green-600">
+                                                    {formatNumber(searchResults.summary.totalCount)}
+                                                </div>
+                                                <div className="text-sm text-gray-600">Συνολικά Έξοδα</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-2xl font-bold text-blue-600">
+                                                    {formatCurrency(searchResults.summary.totalAmount)}
+                                                </div>
+                                                <div className="text-sm text-gray-600">Συνολικό Ποσό</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-2xl font-bold text-purple-600">
+                                                    {formatCurrency(searchResults.summary.averageAmount)}
+                                                </div>
+                                                <div className="text-sm text-gray-600">Μέσος Όρος</div>
+                                            </div>
+                                        </div>
                                     </div>
+                                )}
 
-                                    {searchResults.summary ? (
-                                        <>
-                                            <div className="mb-4 text-sm text-gray-600">
-                                                Συγκεντρωτικά στοιχεία για τα φιλτραρισμένα έξοδα
+                                {/* No Summary Warning */}
+                                {searchResults && !searchResults.summary && searchResults.totalElements > 100 && (
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+                                        <div className="flex">
+                                            <div className="ml-3">
+                                                <p className="text-sm text-yellow-700">
+                                                    <strong>Πάρα πολλά αποτελέσματα για σύνοψη:</strong> Βρέθηκαν {formatNumber(searchResults.totalElements)} έξοδα.
+                                                    Η σύνοψη εμφανίζεται μόνο για ≤100 αποτελέσματα για λόγους απόδοσης.
+                                                </p>
+                                                <p className="text-sm text-yellow-600">
+                                                    💡 <strong>Συμβουλή:</strong> Περιορίστε τα φίλτρα σας (π.χ. ημερομηνίες, τύπος εξόδου) για να δείτε τη σύνοψη.
+                                                </p>
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div className="bg-blue-50 rounded-lg p-4">
-                                                    <div className="text-sm text-blue-600 font-medium">Συνολικά Έξοδα</div>
-                                                    <div className="text-2xl font-bold text-blue-900">
-                                                        {formatCurrency(searchResults.summary.totalAmount)}
-                                                    </div>
-                                                    <div className="text-xs text-blue-600">
-                                                        {formatNumber(searchResults.summary.totalCount)} καταχωρήσεις
-                                                    </div>
-                                                </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </ExpenseSearchBar>
+                        </DashboardCard>
 
-                                                <div className="bg-green-50 rounded-lg p-4">
-                                                    <div className="text-sm text-green-600 font-medium">Μέσος Όρος</div>
-                                                    <div className="text-2xl font-bold text-green-900">
-                                                        {formatCurrency(searchResults.summary.averageAmount)}
-                                                    </div>
-                                                    <div className="text-xs text-green-600">ανά έξοδο</div>
-                                                </div>
+                        {/* Pagination Controls - Bottom */}
+                        {searchResults && searchResults.totalElements > 0 && (
+                            <DashboardCard className="shadow-lg">
+                                <EnhancedPaginationControls
+                                    paginationData={{
+                                        currentPage: searchResults.currentPage,
+                                        totalPages: searchResults.totalPages,
+                                        totalElements: searchResults.totalElements,
+                                        pageSize: searchResults.pageSize,
+                                        numberOfElements: searchResults.numberOfElements
+                                    }}
+                                    onPageChange={handlePageChange}
+                                    onPageSizeChange={handlePageSizeChange}
+                                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                                />
+                            </DashboardCard>
+                        )}
+                    </>
+                )}
 
-                                                <div className="bg-orange-50 rounded-lg p-4">
-                                                    <div className="text-sm text-orange-600 font-medium">Πλήθος Εγγραφών</div>
-                                                    <div className="text-2xl font-bold text-orange-900">
-                                                        {formatNumber(searchResults.summary.totalCount)}
-                                                    </div>
-                                                    <div className="text-xs text-orange-600">στα φιλτραρισμένα αποτελέσματα</div>
-                                                </div>
+                {/* ANALYTICS VIEW - Expense Breakdown */}
+                {currentView === 'analytics' && (
+                    <DashboardCard
+                        title="Ανάλυση Εξόδων"
+                        icon={<BarChart3 className="w-5 h-5" />}
+                        className="shadow-lg"
+                    >
+                        <div className="space-y-6">
+                            {/* Analytics Filters */}
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <CustomDateInput
+                                        label="Από Ημερομηνία"
+                                        value={analyticsDateFrom}
+                                        onChange={setAnalyticsDateFrom}
+                                        icon={<Calendar className="w-5 h-5 text-blue-500" />}
+                                    />
+                                    <CustomDateInput
+                                        label="Έως Ημερομηνία"
+                                        value={analyticsDateTo}
+                                        onChange={setAnalyticsDateTo}
+                                        icon={<Calendar className="w-5 h-5 text-blue-500" />}
+                                    />
+                                    <div className="flex items-end">
+                                        <Button
+                                            onClick={() => {
+                                                setAnalyticsDateFrom('');
+                                                setAnalyticsDateTo('');
+                                            }}
+                                            variant="outline-secondary"
+                                            className="w-full"
+                                        >
+                                            <Filter className="w-4 h-4 mr-2" />
+                                            Καθαρισμός Φίλτρων
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Analytics Results */}
+                            {analyticsLoading ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    <span className="ml-2 text-gray-600">Φόρτωση ανάλυσης...</span>
+                                </div>
+                            ) : expenseBreakdown.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">Δεν βρέθηκαν δεδομένα</h3>
+                                    <p className="text-gray-600">Δοκιμάστε να αλλάξετε το εύρος ημερομηνιών</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {expenseBreakdown.map((breakdown, index) => (
+                                        <div key={index} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h4 className="text-sm font-medium text-gray-900">{breakdown.expenseType}</h4>
+                                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                                    {breakdown.percentage.toFixed(1)}%
+                                                </span>
                                             </div>
-                                        </>
-                                    ) : (
-                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex-shrink-0">
-                                                    <svg className="w-8 h-8 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                    </svg>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs text-gray-600">Συνολικό Ποσό</span>
+                                                    <span className="text-sm font-semibold text-gray-900">
+                                                        {formatCurrency(breakdown.totalAmount)}
+                                                    </span>
                                                 </div>
-                                                <div className="flex-1">
-                                                    <h4 className="text-lg font-medium text-yellow-800 mb-2">
-                                                        Περισσότερα από 100 αποτελέσματα
-                                                    </h4>
-                                                    <p className="text-yellow-700 mb-3">
-                                                        Η σύνοψη δεν είναι διαθέσιμη για λόγους απόδοσης όταν τα αποτελέσματα ξεπερνούν τις 100 εγγραφές.
-                                                    </p>
-                                                    <p className="text-sm text-yellow-600">
-                                                        💡 <strong>Συμβουλή:</strong> Περιορίστε τα φίλτρα σας (π.χ. ημερομηνίες, τύπος εξόδου) για να δείτε τη σύνοψη.
-                                                    </p>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs text-gray-600">Αριθμός Εξόδων</span>
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {formatNumber(breakdown.count)}
+                                                    </span>
+                                                </div>
+                                                {/* Progress bar */}
+                                                <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+                                                    <div
+                                                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                        style={{ width: `${breakdown.percentage}%` }}
+                                                    ></div>
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
+                                    ))}
                                 </div>
                             )}
-                        </ExpenseSearchBar>
-                    </DashboardCard>
-
-                    {/* Pagination Controls */}
-                    {searchResults && searchResults.totalElements > 0 && (
-                        <EnhancedPaginationControls
-                            paginationData={{
-                                currentPage: searchResults.currentPage,
-                                totalPages: searchResults.totalPages,
-                                totalElements: searchResults.totalElements,
-                                pageSize: searchResults.pageSize,
-                                numberOfElements: searchResults.numberOfElements
-                            }}
-                            onPageChange={handlePageChange}
-                            onPageSizeChange={handlePageSizeChange}
-                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                        />
-                    )}
-                </>
-            )}
-
-            {/* ANALYTICS VIEW - Expense Breakdown */}
-            {currentView === 'analytics' && (
-                <>
-                    {/* Date Filters */}
-                    <DashboardCard
-                        title="Φίλτρα Ανάλυσης"
-                    >
-                        <div className="mb-4 text-sm text-gray-600">
-                            Επιλέξτε χρονική περίοδο για ανάλυση εξόδων
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Από Ημερομηνία
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="date"
-                                        value={analyticsDateFrom}
-                                        onChange={(e) => setAnalyticsDateFrom(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Έως Ημερομηνία
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="date"
-                                        value={analyticsDateTo}
-                                        onChange={(e) => setAnalyticsDateTo(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                </div>
-                            </div>
                         </div>
                     </DashboardCard>
+                )}
 
-                    {/* Expense Type Breakdown */}
-                    <DashboardCard
-                        title="Ανάλυση Εξόδων ανά Τύπο"
-                    >
-                        <div className="mb-4 text-sm text-gray-600">
-                            Κατανομή εξόδων και ποσοστά για την επιλεγμένη περίοδο
-                        </div>
-                        {analyticsLoading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <div className="text-gray-500">Φόρτωση ανάλυσης...</div>
-                            </div>
-                        ) : breakdownData.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                                Δεν βρέθηκαν δεδομένα για την επιλεγμένη περίοδο
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {breakdownData.map((item) => (
-                                    <div key={item.expenseType} className="bg-gray-50 rounded-lg p-4">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-gray-900 mb-1">
-                                                    {item.expenseTypeDisplayName}
-                                                </h3>
-                                                <div className="text-sm text-gray-600">
-                                                    {formatNumber(item.count)} καταχωρήσεις
-                                                </div>
-                                            </div>
+                {/* Modals */}
+                {isCreateModalOpen && (
+                    <ExpenseCreateModal
+                        isOpen={isCreateModalOpen}
+                        onClose={() => setIsCreateModalOpen(false)}
+                        onSubmit={handleCreateExpense}
+                        expenseTypes={expenseTypes}
+                    />
+                )}
 
-                                            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-                                                <div className="text-right">
-                                                    <div className="text-xl font-bold text-gray-900">
-                                                        {formatCurrency(item.totalAmount)}
-                                                    </div>
-                                                    <div className="text-sm text-gray-600">
-                                                        {item.percentage.toFixed(1)}% του συνόλου
-                                                    </div>
-                                                </div>
+                {isUpdateModalOpen && selectedExpense && (
+                    <ExpenseUpdateModal
+                        isOpen={isUpdateModalOpen}
+                        onClose={() => setIsUpdateModalOpen(false)}
+                        onSubmit={handleUpdateExpense}
+                        expense={selectedExpense}
+                        expenseTypes={expenseTypes}
+                    />
+                )}
 
-                                                <div className="w-full sm:w-32">
-                                                    <div className="bg-gray-200 rounded-full h-2">
-                                                        <div
-                                                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                                            style={{ width: `${Math.min(item.percentage, 100)}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                {isDeleteModalOpen && selectedExpense && (
+                    <ConfirmDeleteModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={() => setIsDeleteModalOpen(false)}
+                        onConfirm={handleDeleteExpense}
+                        title="Διαγραφή Εξόδου"
+                        message={`Είστε σίγουροι ότι θέλετε να διαγράψετε το έξοδο "${selectedExpense.description}"?`}
+                    />
+                )}
 
-                                {/* Total Summary */}
-                                <div className="border-t pt-4 mt-6">
-                                    <div className="bg-blue-50 rounded-lg p-4">
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <h3 className="font-semibold text-blue-900">Σύνολο Περιόδου</h3>
-                                                <div className="text-sm text-blue-600">
-                                                    {formatNumber(breakdownData.reduce((sum, item) => sum + item.count, 0))} συνολικές καταχωρήσεις
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-2xl font-bold text-blue-900">
-                                                    {formatCurrency(breakdownData.reduce((sum, item) => sum + item.totalAmount, 0))}
-                                                </div>
-                                                <div className="text-sm text-blue-600">100% του συνόλου</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </DashboardCard>
-                </>
-            )}
+                {isDetailsModalOpen && expenseDetails && (
+                    <ExpenseDetailModal
+                        isOpen={isDetailsModalOpen}
+                        onClose={() => setIsDetailsModalOpen(false)}
+                        expense={expenseDetails}
+                        loading={loading}
+                    />
+                )}
 
-            {/* MODALS */}
-            <ExpenseCreateModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                onSubmit={handleCreateExpense}
-                expenseTypes={expenseTypes || []}
-            />
-
-            <ExpenseUpdateModal
-                isOpen={isUpdateModalOpen}
-                onClose={() => setIsUpdateModalOpen(false)}
-                onSubmit={handleUpdateExpense}
-                expense={selectedExpense}
-                expenseTypes={expenseTypes || []}
-            />
-
-            <ExpenseDetailModal
-                isOpen={isDetailsModalOpen}
-                onClose={() => setIsDetailsModalOpen(false)}
-                expense={expenseDetails}
-                loading={false}
-            />
-
-            <ConfirmDeleteModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={handleDeleteExpense}
-                title="Διαγραφή Εξόδου"
-                message={selectedExpense ?
-                    `Είστε βέβαιοι ότι θέλετε να διαγράψετε το έξοδο "${selectedExpense.description}"?` :
-                    'Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτό το έξοδο;'
-                }
-            />
-
-            <SuccessModal
-                isOpen={isSuccessModalOpen}
-                onClose={() => setIsSuccessModalOpen(false)}
-                title="Επιτυχία"
-                message={successMessage}
-            />
+                {isSuccessModalOpen && (
+                    <SuccessModal
+                        title={successMessage}
+                        isOpen={isSuccessModalOpen}
+                        onClose={() => setIsSuccessModalOpen(false)}
+                        message={successMessage}
+                    />
+                )}
+            </div>
         </div>
     );
 };
