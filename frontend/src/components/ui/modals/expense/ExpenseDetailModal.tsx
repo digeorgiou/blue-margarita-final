@@ -1,21 +1,30 @@
 import React from 'react';
-import { X, DollarSign, Calendar, FileText, Tag, Package, User, Clock } from 'lucide-react';
+import { X, Calendar, FileText, Tag, Package, User, Clock } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../index';
-import type { ExpenseReadOnlyDTO } from '../../../../types/api/expenseInterface';
+import type { ExpenseReadOnlyDTO, ExpenseTypeDTO } from '../../../../types/api/expenseInterface';
+import { FaEuroSign } from "react-icons/fa6";
 
 interface ExpenseDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     expense: ExpenseReadOnlyDTO | null;
     loading: boolean;
+    expenseTypes: ExpenseTypeDTO[];
 }
 
 const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                                                                    isOpen,
                                                                    onClose,
                                                                    expense,
-                                                                   loading
+                                                                   loading,
+                                                                   expenseTypes
                                                                }) => {
+
+    // Helper function to get display name from expense type value
+    const getExpenseTypeDisplayName = (expenseTypeValue: string): string => {
+        const expenseType = expenseTypes.find(type => type.value === expenseTypeValue);
+        return expenseType ? expenseType.displayName : expenseTypeValue;
+    };
 
     const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('el-GR', {
@@ -52,12 +61,12 @@ const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-t-2xl">
                     <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                            <DollarSign className="w-6 h-6" />
+                            <FaEuroSign className="w-6 h-6" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold">Λεπτομέρειες Εξόδου</h2>
+                            <h2 className="text-xl font-semibold">{`Λεπτομέρειες Εξόδου ${expense?.description}`}</h2>
                             <p className="text-purple-100 text-sm">
-                                {expense ? `Έξοδο #${expense.id}` : 'Φόρτωση...'}
+                                {expense ? `` : 'Φόρτωση...'}
                             </p>
                         </div>
                     </div>
@@ -98,7 +107,7 @@ const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                                     {/* Amount */}
                                     <div className="bg-green-50 rounded-lg p-4">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <DollarSign className="w-5 h-5 text-green-600" />
+                                            <FaEuroSign className="w-5 h-5 text-green-600" />
                                             <span className="font-medium text-green-700">Ποσό</span>
                                         </div>
                                         <p className="text-green-900 text-2xl font-bold">
@@ -114,7 +123,11 @@ const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                                         </div>
                                         <p className="text-blue-900 text-lg">{formatDate(expense.expenseDate)}</p>
                                     </div>
+                                </div>
 
+                                {/* Right Column - Metadata and Links */}
+                                <div className="space-y-4">
+                                    {/* Purchase Information */}
                                     {/* Expense Type */}
                                     <div className="bg-orange-50 rounded-lg p-4">
                                         <div className="flex items-center gap-2 mb-2">
@@ -122,14 +135,10 @@ const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                                             <span className="font-medium text-orange-700">Τύπος Εξόδου</span>
                                         </div>
                                         <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-orange-200 text-orange-800">
-                                            {expense.expenseType}
-                                        </span>
+                                            {getExpenseTypeDisplayName(expense.expenseType)}
+                                                </span>
                                     </div>
-                                </div>
 
-                                {/* Right Column - Metadata and Links */}
-                                <div className="space-y-4">
-                                    {/* Purchase Information */}
                                     {expense.purchaseId && expense.purchaseDescription ? (
                                         <div className="bg-purple-50 rounded-lg p-4">
                                             <div className="flex items-center gap-2 mb-3">
@@ -164,10 +173,6 @@ const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                                             <span className="font-medium text-gray-700">Δημιουργήθηκε</span>
                                         </div>
                                         <div className="space-y-2">
-                                            <div>
-                                                <span className="text-sm text-gray-600">Από:</span>
-                                                <p className="text-gray-900 font-medium">{expense.createdBy}</p>
-                                            </div>
                                             <div className="flex items-center gap-2">
                                                 <Clock className="w-4 h-4 text-gray-500" />
                                                 <span className="text-sm text-gray-600">
@@ -176,51 +181,9 @@ const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* System Information */}
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Tag className="w-5 h-5 text-gray-600" />
-                                            <span className="font-medium text-gray-700">Στοιχεία Συστήματος</span>
-                                        </div>
-                                        <div className="space-y-2 text-sm text-gray-600">
-                                            <div className="flex justify-between">
-                                                <span>ID Εξόδου:</span>
-                                                <span className="font-mono text-gray-900">#{expense.id}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Τύπος:</span>
-                                                <span className={`font-medium ${
-                                                    expense.purchaseId ? 'text-blue-600' : 'text-gray-600'
-                                                }`}>
-                                                    {expense.purchaseId ? 'Συνδεδεμένο' : 'Χειροκίνητο'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
-                            {/* Additional Information */}
-                            <div className="border-t pt-6">
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <h3 className="font-medium text-blue-900 mb-2">Σημειώσεις</h3>
-                                    <ul className="text-sm text-blue-800 space-y-1">
-                                        {expense.purchaseId ? (
-                                            <>
-                                                <li>• Αυτό το έξοδο είναι συνδεδεμένο με αγορά και δημιουργήθηκε αυτόματα</li>
-                                                <li>• Οποιαδήποτε αλλαγή στην αγορά θα επηρεάσει αυτό το έξοδο</li>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <li>• Αυτό το έξοδο δημιουργήθηκε χειροκίνητα</li>
-                                                <li>• Μπορείτε να το επεξεργαστείτε ή να το συνδέσετε με αγορά</li>
-                                            </>
-                                        )}
-                                        <li>• Για οποιεσδήποτε αλλαγές, χρησιμοποιήστε το κουμπί επεξεργασίας</li>
-                                    </ul>
-                                </div>
-                            </div>
                         </div>
                     )}
                 </div>

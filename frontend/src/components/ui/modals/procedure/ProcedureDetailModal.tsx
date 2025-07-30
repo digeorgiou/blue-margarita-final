@@ -151,7 +151,7 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                         <div className="bg-indigo-50 rounded-xl p-6">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                 <Activity className="w-5 h-5 mr-2 text-indigo-600" />
-                                Επιδόσεις Πωλήσεων Προϊόντων που την Χρησιμοποιούν
+                                {`Επιδόσεις Πωλήσεων Προϊόντων που Χρησιμοποιούν ${procedure.name}`}
                             </h3>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

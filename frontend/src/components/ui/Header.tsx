@@ -17,6 +17,7 @@ import {
     Gem, Wrench,
     Truck
 } from 'lucide-react';
+import { FaEuroSign } from "react-icons/fa6";
 import {HeaderProps} from "../../types/components/header.ts";
 
 const Header: React.FC<HeaderProps> = ({
@@ -99,6 +100,11 @@ const Header: React.FC<HeaderProps> = ({
                 title: 'Προμηθευτές',
                 icon: <Truck className="w-9 h-9" />,
                 description: 'Διαχειριστείτε τους προμηθευτές σας και παρακολουθήστε τα στατιστικά ανα προμηθευτή'
+            },
+            'expenses' : {
+                title: "Έξοδα",
+                icon: < FaEuroSign className="w-9 h-9" />,
+                description: "Διαχειριστείτε τα έξοδα σας και παρακολουθείστε τα στατιστικά τους"
             }
         };
         return pageInfo[currentPage || 'dashboard'] || {

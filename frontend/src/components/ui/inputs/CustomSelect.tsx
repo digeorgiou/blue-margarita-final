@@ -41,8 +41,11 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
                     cursor-pointer
                     `}
                 >
-                    {/* Only show placeholder if no value is selected */}
-                    {!value && <option value="">{placeholder}</option>}
+                    {/* Show placeholder only if value is empty AND there's no option with empty value */}
+                    {!value && !options.some(option => option.value === '') && (
+                        <option value="">{placeholder}</option>
+                    )}
+
                     {options.map((option) => (
                         <option key={option.value} value={option.value}>
                             {option.label}

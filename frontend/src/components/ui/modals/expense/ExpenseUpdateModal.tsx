@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Tag, Package, Lock } from 'lucide-react';
+import { Tag, Package, Lock } from 'lucide-react';
 import { BaseFormModal, Input } from '../../index';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import type { ExpenseReadOnlyDTO, ExpenseUpdateDTO, ExpenseTypeDTO } from '../../../../types/api/expenseInterface';
+import { FaEuroSign } from "react-icons/fa6";
 
 interface ExpenseUpdateModalProps {
     isOpen: boolean;
@@ -126,7 +127,7 @@ const ExpenseUpdateModal: React.FC<ExpenseUpdateModalProps> = ({
         <BaseFormModal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Επεξεργασία Εξόδου"
+            title={`Επεξεργασία Εξόδου ${expense.description}`}
             onSubmit={handleSubmit}
             submitText={isSubmitting ? "Ενημέρωση..." : "Ενημέρωση Εξόδου"}
             cancelText="Ακύρωση"
@@ -178,7 +179,7 @@ const ExpenseUpdateModal: React.FC<ExpenseUpdateModalProps> = ({
                 {/* Expense Information */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <DollarSign className="w-5 h-5 mr-2 text-blue-600" />
+                        <FaEuroSign className="w-5 h-5 mr-2 text-blue-600" />
                         Στοιχεία Εξόδου
                     </h3>
 
