@@ -46,7 +46,7 @@ const MaterialSearchBar: React.FC<MaterialSearchBarProps> = ({
                 <div className="flex-1">
                     <CustomTextInput
                         label=""
-                        placeholder="Αναζήτηση υλικών (όνομα, περιγραφή)..."
+                        placeholder="Αναζήτηση με όνομα υλικού..."
                         value={searchTerm}
                         onChange={onSearchTermChange}
                         icon={<Search className="w-5 h-5" />}

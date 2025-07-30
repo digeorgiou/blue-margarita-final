@@ -114,7 +114,7 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
                                             <Package className="w-4 h-4 text-gray-400" />
-                                            <span className="text-gray-900">Προϊόντα που χρησιμοποιούν: {procedure.totalProductsUsing}</span>
+                                            <span className="text-gray-900">Προϊόντα που την χρησιμοποιούν: {procedure.totalProductsUsing}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Euro className="w-4 h-4 text-gray-400" />
@@ -122,7 +122,7 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <TrendingUp className="w-4 h-4 text-gray-400" />
-                                            <span className="text-gray-900">Μέση τιμή πώλησης (λιανική): {formatCurrency(procedure.averageProductSellingPriceRetail)}</span>
+                                            <span className="text-gray-900">Μέση τιμή πώλησης προϊόντων (λιανική): {formatCurrency(procedure.averageProductSellingPriceRetail)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -136,14 +136,6 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                     <div>
                                         <span className="font-medium text-gray-500">Τελευταία Ενημέρωση:</span>
                                         <p className="text-gray-900">{formatDate(procedure.updatedAt)}</p>
-                                    </div>
-                                    <div>
-                                        <span className="font-medium text-gray-500">Δημιουργήθηκε από:</span>
-                                        <p className="text-gray-900">{procedure.createdBy}</p>
-                                    </div>
-                                    <div>
-                                        <span className="font-medium text-gray-500">Τελευταία ενημέρωση από:</span>
-                                        <p className="text-gray-900">{procedure.lastUpdatedBy}</p>
                                     </div>
                                     {procedure.deletedAt && (
                                         <div>
@@ -159,7 +151,7 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                         <div className="bg-indigo-50 rounded-xl p-6">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                 <Activity className="w-5 h-5 mr-2 text-indigo-600" />
-                                Επιδόσεις Πωλήσεων
+                                Επιδόσεις Πωλήσεων Προϊόντων που την Χρησιμοποιούν
                             </h3>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -279,7 +271,6 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                                 <p className="text-sm text-gray-600">
                                                     Κωδικός: {product.productCode} |
                                                     Κατηγορία: {product.categoryName} |
-                                                    Ποσότητα χρήσης: {formatNumber(product.usageQuantity)}
                                                 </p>
                                             </div>
                                             <div className="text-right">
@@ -287,7 +278,7 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                                     {formatCurrency(product.costImpact)}
                                                 </div>
                                                 <div className="text-sm text-gray-600">
-                                                    Επίδραση κόστους
+                                                    Επίδραση στο κόστος
                                                 </div>
                                             </div>
                                         </div>

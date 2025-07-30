@@ -14,7 +14,7 @@ import {
     CheckSquare,
     AlertTriangle,
     DollarSign,
-    Gem
+    Gem, Wrench
 } from 'lucide-react';
 import {HeaderProps} from "../../types/components/header.ts";
 
@@ -72,7 +72,7 @@ const Header: React.FC<HeaderProps> = ({
             'locations': {
                 title: 'Τοποθεσίες',
                 icon: <MapPin className="w-9 h-9" />,
-                description: 'Διαχειριστείτε τις τοποθεσίες πώλησεις σας και παρακολουθήστε τα στατιστικά ανα τοποθεσία'
+                description: 'Διαχειριστείτε τις τοποθεσίες πώλησης σας και παρακολουθήστε τα στατιστικά ανα τοποθεσία'
             },
             'all-tasks': {
                 title: 'Tasks',
@@ -88,6 +88,11 @@ const Header: React.FC<HeaderProps> = ({
                 title: 'Mispriced Products',
                 icon: <DollarSign className="w-9 h-9" />,
                 description: 'Products with pricing issues'
+            },
+            'procedures' : {
+                title: 'Διαδικασίες',
+                icon: <Wrench className="w-9 h-9"/>,
+                description: "Διαχειριστείτε τις διαδικασίες και τα πάγια έξοδα παραγωγής των προϊόντων σας"
             }
         };
         return pageInfo[currentPage || 'dashboard'] || {

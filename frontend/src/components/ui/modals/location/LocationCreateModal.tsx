@@ -1,221 +1,147 @@
 import React, { useState } from 'react';
-import { User, Phone, CreditCard } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { BaseFormModal, Input } from '../../index';
-import { GenderType, GenderTypeLabels } from '../../../../types/api/customerInterface';
+import { LocationInsertDTO } from '../../../../types/api/locationInterface';
+import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 
-interface CustomerCreateModalProps {
+interface LocationCreateModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: CustomerFormData) => Promise<void>;
+    onSubmit: (data: LocationInsertDTO) => Promise<void>;
 }
 
-interface CustomerFormData {
-    firstname: string;
-    lastname: string;
-    gender: GenderType;
-    phoneNumber: string;
-    address: string;
-    email: string;
-    tin: string;
-}
-
-const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
+const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
                                                                      isOpen,
                                                                      onClose,
                                                                      onSubmit
                                                                  }) => {
-    const [formData, setFormData] = useState<CustomerFormData>({
-        firstname: '',
-        lastname: '',
-        gender: GenderType.FEMALE,
-        phoneNumber: '',
-        address: '',
-        email: '',
-        tin: ''
+    const [formData, setFormData] = useState<{ name: string }>({
+        name: ''
     });
 
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    // Use the reusable error handler hook
+    const {
+        fieldErrors,
+        generalError,
+        handleApiError,
+        clearErrors,
+        clearFieldError
+    } = useFormErrorHandler({
+        // Map specific business errors to field errors
+        businessErrorToFieldMap: {
+            'LOCATION_NAME_EXISTS': 'name'
+        }
+    });
 
+    // Minimal client-side validation - let backend handle all the real validation
     const validateForm = (): boolean => {
-        const newErrors: { [key: string]: string } = {};
-
-        // Required fields validation (only firstname and lastname)
-        if (!formData.firstname.trim()) {
-            newErrors.firstname = 'Το όνομα είναι υποχρεωτικό';
-        } else if (formData.firstname.trim().length < 2) {
-            newErrors.firstname = 'Το όνομα πρέπει να έχει τουλάχιστον 2 χαρακτήρες';
+        // Only check if required fields are present (basic UX check)
+        if (!formData.name.trim()) {
+            return false;
         }
-
-        if (!formData.lastname.trim()) {
-            newErrors.lastname = 'Το επώνυμο είναι υποχρεωτικό';
-        } else if (formData.lastname.trim().length < 2) {
-            newErrors.lastname = 'Το επώνυμο πρέπει να έχει τουλάχιστον 2 χαρακτήρες';
-        }
-
-        if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-            newErrors.email = 'Μη έγκυρη διεύθυνση email';
-        }
-
-        if (formData.address.trim() && formData.address.trim().length < 5) {
-            newErrors.address = 'Η διεύθυνση πρέπει να έχει τουλάχιστον 5 χαρακτήρες';
-        }
-
-        // Optional TIN validation
-        if (formData.tin.trim() && !/^\d{9}$/.test(formData.tin.trim())) {
-            newErrors.tin = 'Το ΑΦΜ πρέπει να έχει 9 ψηφία';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
-        await onSubmit(formData);
-        handleClose();
+        return true;
     };
 
     const handleClose = () => {
         setFormData({
-            firstname: '',
-            lastname: '',
-            gender: GenderType.FEMALE, // Consistent with initial state
-            phoneNumber: '',
-            address: '',
-            email: '',
-            tin: ''
+            name: ''
         });
-        setErrors({}); // Clear errors on close
+        clearErrors();
         onClose();
     };
 
-    const handleInputChange = (field: keyof CustomerFormData, value: string | GenderType) => {
+    const handleInputChange = (field: keyof typeof formData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
         // Clear field error when user starts typing
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }));
+        if (fieldErrors[field]) {
+            clearFieldError(field);
+        }
+
+        // Clear general error when user makes changes
+        if (generalError) {
+            clearErrors();
         }
     };
 
-    // Check if form is valid (for submit button state)
-    const isFormValid = formData.firstname.trim().length >= 2 &&
-        formData.lastname.trim().length >= 2;
+    const handleSubmit = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        clearErrors();
+
+        try {
+            // Create the proper LocationInsertDTO with the required structure
+            const locationData: LocationInsertDTO = {
+                name: formData.name.trim(),
+                creatorUserId: 1 // TODO: Get from auth context or pass as prop
+            };
+
+            await onSubmit(locationData);
+            handleClose(); // Close modal on success
+        } catch (error) {
+            // The hook will handle displaying the error
+            await handleApiError(error);
+        }
+    };
 
     return (
         <BaseFormModal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Δημιουργία Νέου Πελάτη"
             onSubmit={handleSubmit}
-            submitText="Δημιουργία Πελάτη"
-            cancelText="Ακύρωση"
-            isValid={isFormValid}
+            title="Δημιουργία Νέας Τοποθεσίας"
+            submitText="Δημιουργία"
+            isValid={validateForm()}
         >
             <div className="space-y-6">
-                {/* Personal Information */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <User className="w-5 h-5 mr-2 text-blue-600" />
-                        Προσωπικά Στοιχεία
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                            label="Όνομα *"
-                            value={formData.firstname}
-                            onChange={(e) => handleInputChange('firstname', e.target.value)}
-                            placeholder="π.χ. Γιάννης"
-                            error={errors.firstname}
-                        />
-
-                        <Input
-                            label="Επώνυμο *"
-                            value={formData.lastname}
-                            onChange={(e) => handleInputChange('lastname', e.target.value)}
-                            placeholder="π.χ. Παπαδόπουλος"
-                            error={errors.lastname}
-                        />
+                {/* General Error Display */}
+                {generalError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm text-red-800">
+                            {generalError}
+                        </p>
                     </div>
+                )}
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Φύλο
-                        </label>
-                        <select
-                            value={formData.gender}
-                            onChange={(e) => handleInputChange('gender', e.target.value as GenderType)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            {Object.values(GenderType).map(gender => (
-                                <option key={gender} value={gender}>
-                                    {GenderTypeLabels[gender]}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                {/* Contact Information */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <Phone className="w-5 h-5 mr-2 text-green-600" />
-                        Στοιχεία Επικοινωνίας
-                    </h3>
-
+                {/* Name - Required */}
+                <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        <MapPin className="w-4 h-4" />
+                        Όνομα Τοποθεσίας *
+                    </label>
                     <Input
-                        label="Τηλέφωνο"
-                        value={formData.phoneNumber}
-                        onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                        placeholder="π.χ. 6901234567"
-                        error={errors.phoneNumber}
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        placeholder="π.χ. Φυσικό Κατάστημα, Website"
+                        error={fieldErrors.name}
+                        required
+                        maxLength={100}
                     />
-
-                    <Input
-                        label="Email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        placeholder="π.χ. customer@example.com"
-                        error={errors.email}
-                    />
-
-                    <Input
-                        label="Διεύθυνση"
-                        value={formData.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
-                        placeholder="π.χ. Πατησίων 123, Αθήνα"
-                        error={errors.address}
-                    />
-                </div>
-
-                {/* Business Information */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <CreditCard className="w-5 h-5 mr-2 text-purple-600" />
-                        Επιχειρηματικά Στοιχεία
-                    </h3>
-
-                    <Input
-                        label="ΑΦΜ (Προαιρετικό)"
-                        value={formData.tin}
-                        onChange={(e) => handleInputChange('tin', e.target.value)}
-                        placeholder="π.χ. 123456789"
-                        error={errors.tin}
-                    />
-                    <p className="text-sm text-gray-500">
-                        Το ΑΦΜ είναι υποχρεωτικό για χονδρικούς πελάτες
+                    <p className="text-xs text-gray-500 mt-1">
+                        Δώστε ένα περιγραφικό όνομα για την τοποθεσία πώλησης
                     </p>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                        💡 <strong>Συμβουλή:</strong> Βεβαιωθείτε ότι τα στοιχεία επικοινωνίας είναι σωστά για την καλύτερη εξυπηρέτηση του πελάτη.
-                    </p>
+                {/* Info box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                        <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div className="text-sm text-blue-800">
+                            <p className="font-medium mb-1">Σχετικά με τις τοποθεσίες:</p>
+                            <ul className="space-y-1 text-blue-700">
+                                <li>• Οι τοποθεσίες αντιπροσωπεύουν τα σημεία πώλησης</li>
+                                <li>• Χρησιμοποιούνται για την παρακολούθηση των πωλήσεων ανά τοποθεσία</li>
+                                <li>• Κάθε πώληση συνδέεται με μια συγκεκριμένη τοποθεσία</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </BaseFormModal>
     );
 };
 
-export default CustomerCreateModal;
+export default LocationCreateModal;

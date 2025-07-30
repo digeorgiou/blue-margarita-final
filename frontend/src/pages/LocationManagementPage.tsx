@@ -4,7 +4,7 @@ import DashboardCard from '../components/ui/DashboardCard';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { locationService } from '../services/locationService';
-import { MapPin, Plus, ChevronDown } from 'lucide-react';
+import { MapPin, Plus } from 'lucide-react';
 import type {
     LocationForDropdownDTO,
     LocationReadOnlyDTO,
@@ -129,65 +129,23 @@ const LocationManagementPage = () => {
         <div className="min-h-screen p-4">
             <div className="max-w-5xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mr-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                             <MapPin className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white mb-2">Διαχείριση Τοποθεσιών</h1>
-                            <p className="text-blue-200">Διαχειριστείτε τις τοποθεσίες πώλησης του καταστήματός σας</p>
+                            <h1 className="text-2xl font-bold text-white mb-2">Διαχείριση Τοποθεσιών</h1>
                         </div>
                     </div>
 
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
-                        variant="primary"
-                        size="lg"
-                        className="shadow-lg hover:shadow-xl transition-shadow"
+                        variant="create"
                     >
-                        <Plus className="w-5 h-5 mr-2" />
+                        <Plus className="w-4 h-4 mr-2" />
                         Νέα Τοποθεσία
                     </Button>
-                </div>
-
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-blue-600 text-sm font-medium">Συνολικές Τοποθεσίες</p>
-                                <p className="text-2xl font-bold text-blue-900">{locations.length}</p>
-                            </div>
-                            <div className="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
-                                <MapPin className="w-6 h-6 text-blue-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-green-600 text-sm font-medium">Ενεργές Τοποθεσίες</p>
-                                <p className="text-2xl font-bold text-green-900">{locations.length}</p>
-                            </div>
-                            <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
-                                <ChevronDown className="w-6 h-6 text-green-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-purple-600 text-sm font-medium">Σημεία Πώλησης</p>
-                                <p className="text-2xl font-bold text-purple-900">{locations.length}</p>
-                            </div>
-                            <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
-                                <MapPin className="w-6 h-6 text-purple-600" />
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Error Alert */}
@@ -200,8 +158,7 @@ const LocationManagementPage = () => {
                 {/* Locations List */}
                 <div className="mt-8">
                     <DashboardCard
-                        title="Λίστα Τοποθεσιών"
-                        icon={<MapPin className="w-5 h-5" />}
+                        title="Τοποθεσίες"
                         className="bg-white/10 backdrop-blur-sm border-white/20"
                     >
                         <LocationDropdownList
@@ -247,9 +204,12 @@ const LocationManagementPage = () => {
                     isOpen={isDeleteModalOpen}
                     onClose={() => setIsDeleteModalOpen(false)}
                     onConfirm={handleDeleteLocation}
-                    entityName="τοποθεσία"
-                    entityDisplayName={selectedLocation?.name || ''}
-                    warningMessage="Αυτή η ενέργεια θα κάνει soft delete την τοποθεσία αν έχει συσχετισμένες πωλήσεις, ή θα την διαγράψει οριστικά αν δεν έχει."
+                    title="Διαγραφή Τοποθεσίας"
+                    message={selectedLocation ?
+                        `Είστε σίγουροι ότι θέλετε να διαγράψετε την τοποθεσία "${selectedLocation.name}";`
+                        : ''
+                    }
+                    warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
                 />
 
                 {/* Details Modal */}

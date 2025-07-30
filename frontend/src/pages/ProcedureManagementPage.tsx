@@ -6,7 +6,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
 import { procedureService } from '../services/procedureService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Plus, Cog } from 'lucide-react';
+import { Plus, Cog, Search } from 'lucide-react';
 import type {
     ProcedureReadOnlyDTO,
     ProcedureDetailedViewDTO,
@@ -15,16 +15,15 @@ import type {
 } from '../types/api/procedureInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 
-// We'll need to create these components following the customer pattern
+// Updated components following the material pattern
 import ProcedureSearchBar from '../components/ui/searchBars/ProcedureSearchBar';
 import ProcedureDetailModal from '../components/ui/modals/procedure/ProcedureDetailModal';
 import ProcedureUpdateModal from '../components/ui/modals/procedure/ProcedureUpdateModal';
 import ProcedureCreateModal from '../components/ui/modals/procedure/ProcedureCreateModal';
 
 const ProcedureManagementPage = () => {
-    // Search and pagination state - simplified (following customer pattern)
+    // Search and pagination state - simplified (following material pattern)
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeOnlyFilter, setActiveOnlyFilter] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(12);
     const [searchResults, setSearchResults] = useState<Paginated<ProcedureReadOnlyDTO> | null>(null);
@@ -36,51 +35,53 @@ const ProcedureManagementPage = () => {
     // Modal states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [isProductUsageModalOpen, setIsProductUsageModalOpen] = useState(false);
 
-    // Selected procedure and details
+    // Selected items
     const [selectedProcedure, setSelectedProcedure] = useState<ProcedureReadOnlyDTO | null>(null);
     const [procedureDetails, setProcedureDetails] = useState<ProcedureDetailedViewDTO | null>(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
 
-    // Success message state
-    const [successMessage, setSuccessMessage] = useState({
-        title: '',
-        message: ''
-    });
+    // Success message
+    const [successMessage, setSuccessMessage] = useState<{
+        title: string;
+        message: string;
+    } | null>(null);
 
-    // Get current user ID (following customer pattern)
+    // Helper to get current user ID
     const getCurrentUserId = (): number => {
-        // This should match how you get current user ID in CustomerManagementPage
-        return 1; // Replace with actual user ID logic
+        // TODO: Get from auth context or service
+        return 1; // Placeholder
     };
 
     // Search function
-    const searchProcedures = async (page: number = currentPage, size: number = pageSize) => {
-        setLoading(true);
-        clearErrors();
-
+    const searchProcedures = async (page = currentPage, size = pageSize) => {
         try {
-            const filters = {
+            setLoading(true);
+            clearErrors();
+
+            const response = await procedureService.getProceduresFilteredPaginated({
+                name: searchTerm.trim() || undefined,
+                isActive: undefined, // Show all procedures (active and inactive)
                 page,
                 pageSize: size,
                 sortBy: 'name',
                 sortDirection: 'ASC'
-            };
+            });
 
-            const results = await procedureService.getProceduresFilteredPaginated(filters);
-            setSearchResults(results);
+            setSearchResults(response);
         } catch (err) {
             await handleApiError(err);
+            setSearchResults(null);
         } finally {
             setLoading(false);
         }
     };
 
-    // Load initial data
+    // Initial load
     useEffect(() => {
         searchProcedures();
     }, []);
@@ -94,7 +95,7 @@ const ProcedureManagementPage = () => {
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, activeOnlyFilter]);
+    }, [searchTerm]);
 
     // Simple pagination handlers
     const handlePageChange = (page: number) => {
@@ -177,63 +178,65 @@ const ProcedureManagementPage = () => {
         } catch (err) {
             await handleApiError(err);
         }
-        setIsDeleteModalOpen(false);
-        setSelectedProcedure(null);
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+        <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Page Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-purple-600 rounded-xl shadow-lg">
-                            <Cog className="w-8 h-8 text-white" />
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <Cog className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white">Διαχείριση Διαδικασιών</h1>
-                            <p className="text-purple-200 mt-1">
-                                Διαχειριστείτε τις διαδικασίες παραγωγής των προϊόντων σας
-                            </p>
+                            <h1 className="text-2xl font-bold text-white">Διαχείριση Διαδικασιών</h1>
                         </div>
                     </div>
 
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
-                        variant="primary"
-                        size="lg"
-                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                        variant="create"
                     >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="w-4 h-4 mr-2" />
                         Νέα Διαδικασία
                     </Button>
                 </div>
 
                 {/* General Error Display */}
                 {generalError && (
-                    <Alert variant="error" className="mb-6">
+                    <Alert variant="error" className="shadow-sm" onClose={clearErrors}>
                         {generalError}
                     </Alert>
                 )}
 
+                {/* Pagination Controls - Top */}
+                {searchResults && searchResults.totalElements > 0 && (
+                    <DashboardCard className="shadow-lg">
+                        <EnhancedPaginationControls
+                            paginationData={{
+                                currentPage: searchResults.currentPage,
+                                totalPages: searchResults.totalPages,
+                                totalElements: searchResults.totalElements,
+                                pageSize: searchResults.pageSize,
+                                numberOfElements: searchResults.numberOfElements
+                            }}
+                            onPageChange={handlePageChange}
+                            onPageSizeChange={handlePageSizeChange}
+                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                        />
+                    </DashboardCard>
+                )}
+
                 {/* Search and Results Card */}
                 <DashboardCard
-                    title="Αναζήτηση Διαδικασιών"
-                    className="bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl"
+                    title="Αναζήτηση Διαδικασίας"
+                    icon={<Search className="w-5 h-5" />}
+                    className="shadow-lg"
                 >
-                    <div className="mb-4">
-                        <p className="text-gray-600">
-                            {searchResults ?
-                                `Εμφάνιση ${searchResults.numberOfElements} από ${searchResults.totalElements} διαδικασίες` :
-                                'Φόρτωση...'
-                            }
-                        </p>
-                    </div>
                     <ProcedureSearchBar
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
-                        activeOnlyFilter={activeOnlyFilter}
-                        onActiveOnlyFilterChange={setActiveOnlyFilter}
                         searchResults={searchResults?.data ? searchResults.data : []}
                         loading={loading}
                         onViewDetails={handleViewDetails}
@@ -243,70 +246,53 @@ const ProcedureManagementPage = () => {
                     />
                 </DashboardCard>
 
-                {/* Pagination Controls - Bottom */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <EnhancedPaginationControls
-                        paginationData={{
-                            currentPage: searchResults.currentPage,
-                            totalPages: searchResults.totalPages,
-                            totalElements: searchResults.totalElements,
-                            pageSize: searchResults.pageSize,
-                            numberOfElements: searchResults.numberOfElements
-                        }}
-                        onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                    />
-                )}
+                {/* Modals */}
+                <ProcedureCreateModal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    onSubmit={handleCreateProcedure}
+                    currentUserId={getCurrentUserId()}
+                />
+
+                <ProcedureUpdateModal
+                    isOpen={isUpdateModalOpen}
+                    onClose={() => setIsUpdateModalOpen(false)}
+                    onSubmit={handleUpdateProcedure}
+                    procedure={selectedProcedure}
+                />
+
+                <ProcedureDetailModal
+                    isOpen={isDetailsModalOpen}
+                    onClose={() => setIsDetailsModalOpen(false)}
+                    procedure={procedureDetails}
+                    loading={detailsLoading}
+                />
+
+                <ConfirmDeleteModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={handleDeleteProcedure}
+                    title="Διαγραφή Διαδικασίας"
+                    message={selectedProcedure
+                        ? `Είστε σίγουρος ότι θέλετε να διαγράψετε τη διαδικασία "${selectedProcedure.name}";`
+                        : ''
+                    }
+                />
+
+                <SuccessModal
+                    isOpen={isSuccessModalOpen}
+                    onClose={() => setIsSuccessModalOpen(false)}
+                    title={successMessage?.title || ''}
+                    message={successMessage?.message || ''}
+                />
+
+                <ProductUsageModal
+                    isOpen={isProductUsageModalOpen}
+                    onClose={() => setIsProductUsageModalOpen(false)}
+                    entityType="procedure"
+                    entity={selectedProcedure}
+                />
             </div>
-
-            {/* Modals */}
-            <ProcedureCreateModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                onSubmit={handleCreateProcedure}
-                currentUserId={getCurrentUserId()}
-            />
-
-            <ProcedureUpdateModal
-                isOpen={isUpdateModalOpen}
-                onClose={() => setIsUpdateModalOpen(false)}
-                onSubmit={handleUpdateProcedure}
-                procedure={selectedProcedure}
-            />
-
-            <ProcedureDetailModal
-                isOpen={isDetailsModalOpen}
-                onClose={() => setIsDetailsModalOpen(false)}
-                procedure={procedureDetails}
-                loading={detailsLoading}
-            />
-
-            <ConfirmDeleteModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={handleDeleteProcedure}
-                title="Διαγραφή Διαδικασίας"
-                message={selectedProcedure ?
-                    `Είστε σίγουροι ότι θέλετε να διαγράψετε τη διαδικασία "${selectedProcedure.name}";`
-                    : ''
-                }
-                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Η διαδικασία θα διαγραφεί οριστικά ή θα απενεργοποιηθεί εάν χρησιμοποιείται σε προϊόντα."
-            />
-
-            <SuccessModal
-                isOpen={isSuccessModalOpen}
-                onClose={() => setIsSuccessModalOpen(false)}
-                title={successMessage.title}
-                message={successMessage.message}
-            />
-
-            <ProductUsageModal
-                isOpen={isProductUsageModalOpen}
-                onClose={() => setIsProductUsageModalOpen(false)}
-                entity={selectedProcedure}
-                entityType="procedure"
-            />
         </div>
     );
 };

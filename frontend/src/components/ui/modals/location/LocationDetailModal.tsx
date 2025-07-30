@@ -73,14 +73,6 @@ const LocationDetailModal: React.FC<LocationDetailModalProps> = ({
                                 <span className="font-medium text-gray-700">Τελευταία ενημέρωση:</span>
                                 <p className="text-gray-900">{formatDate(location.updatedAt)}</p>
                             </div>
-                            <div>
-                                <span className="font-medium text-gray-700">Δημιουργός:</span>
-                                <p className="text-gray-900">{location.createdBy}</p>
-                            </div>
-                            <div>
-                                <span className="font-medium text-gray-700">Τελευταίος επεξεργαστής:</span>
-                                <p className="text-gray-900">{location.lastUpdatedBy}</p>
-                            </div>
                         </div>
                     </div>
 
@@ -113,7 +105,7 @@ const LocationDetailModal: React.FC<LocationDetailModalProps> = ({
                         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-purple-600 text-xs font-medium uppercase tracking-wide">Μέσος Όρος Παραγγελίας</p>
+                                    <p className="text-purple-600 text-xs font-medium uppercase tracking-wide">Μέσος Όρος Αξίας Πώλησης</p>
                                     <p className="text-2xl font-bold text-purple-900">{formatMoney(location.averageOrderValue)}</p>
                                 </div>
                                 <div className="w-10 h-10 bg-purple-200 rounded-lg flex items-center justify-center">
@@ -140,7 +132,7 @@ const LocationDetailModal: React.FC<LocationDetailModalProps> = ({
                         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
                             <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                                 <Calendar className="w-5 h-5 mr-2 text-blue-600" />
-                                Πρόσφατη Απόδοση (30 ημέρες)
+                                Απόδοση τελευταίων 30 ημερών
                             </h4>
                             <div className="space-y-2">
                                 <div className="flex justify-between">

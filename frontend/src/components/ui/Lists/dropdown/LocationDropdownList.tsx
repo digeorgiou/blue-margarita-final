@@ -1,6 +1,6 @@
 import { LocationForDropdownDTO } from "../../../../types/api/locationInterface.ts";
 import { LoadingSpinner, Button } from "../../index.ts";
-import { Package, Eye, Trash2, Edit } from 'lucide-react';
+import {Package, Eye, Trash2, Edit, MapPin} from 'lucide-react';
 
 interface LocationDropdownListProps {
     locations: LocationForDropdownDTO[];
@@ -48,7 +48,7 @@ const LocationDropdownList: React.FC<LocationDropdownListProps> = ({
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                                <Package className="w-5 h-5 text-green-600" />
+                                <MapPin className="w-5 h-5 text-green-600" />
                             </div>
                             <div>
                                 <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
@@ -58,24 +58,26 @@ const LocationDropdownList: React.FC<LocationDropdownListProps> = ({
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center space-x-2 transition-opacity">
                             <Button
                                 size="sm"
-                                variant="ghost-primary"
+                                variant="info"
                                 onClick={() => onViewDetails(location)}
                                 title="Προβολή Λεπτομερειών"
                                 className="hover:bg-blue-50"
                             >
                                 <Eye className="w-4 h-4" />
+                                Λεπτομέρειες
                             </Button>
                             <Button
                                 size="sm"
-                                variant="ghost-primary"
+                                variant="teal"
                                 onClick={() => onEdit(location)}
                                 title="Επεξεργασία"
                                 className="hover:bg-green-50 hover:text-green-600"
                             >
                                 <Edit className="w-4 h-4" />
+                                Επεξεργασία
                             </Button>
                             <Button
                                 size="sm"
@@ -85,6 +87,7 @@ const LocationDropdownList: React.FC<LocationDropdownListProps> = ({
                                 className="hover:bg-red-50"
                             >
                                 <Trash2 className="w-4 h-4" />
+                                Διαγραφή
                             </Button>
                         </div>
                     </div>

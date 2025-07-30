@@ -1,13 +1,12 @@
 import React from 'react';
-import { Search, Eye, Edit, Trash2, Cog, Calendar, User, Package } from 'lucide-react';
+import { Search, Eye, Edit, Trash2, Package, Cog, Wrench } from 'lucide-react';
 import { Button, LoadingSpinner } from './../index';
 import type { ProcedureReadOnlyDTO } from '../../../types/api/procedureInterface';
+import { CustomTextInput } from "../inputs";
 
 interface ProcedureSearchBarProps {
     searchTerm: string;
     onSearchTermChange: (term: string) => void;
-    activeOnlyFilter: boolean;
-    onActiveOnlyFilterChange: (activeOnly: boolean) => void;
     searchResults: ProcedureReadOnlyDTO[];
     loading: boolean;
     onViewDetails: (procedure: ProcedureReadOnlyDTO) => void;
@@ -19,8 +18,6 @@ interface ProcedureSearchBarProps {
 const ProcedureSearchBar: React.FC<ProcedureSearchBarProps> = ({
                                                                    searchTerm,
                                                                    onSearchTermChange,
-                                                                   activeOnlyFilter,
-                                                                   onActiveOnlyFilterChange,
                                                                    searchResults,
                                                                    loading,
                                                                    onViewDetails,
@@ -28,45 +25,24 @@ const ProcedureSearchBar: React.FC<ProcedureSearchBarProps> = ({
                                                                    onDelete,
                                                                    onViewProducts
                                                                }) => {
-    // Helper function to format dates
-    const formatDate = (dateString: string) => {
-        if (!dateString) return 'Δεν υπάρχει';
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
 
-    // Filter results based on active only filter
-    const filteredResults = activeOnlyFilter
-        ? searchResults.filter(procedure => procedure.isActive)
-        : searchResults;
+    // Show all procedures (active and inactive)
+    const filteredResults = searchResults;
 
     return (
         <div className="space-y-6">
             {/* Search Controls */}
             <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
                 {/* Search Input */}
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                        type="text"
-                        placeholder="Αναζήτηση διαδικασιών (όνομα)..."
+                <div className="flex-1">
+                    <CustomTextInput
+                        label=""
+                        placeholder="Αναζήτηση με όνομα διαδικασίας..."
                         value={searchTerm}
-                        onChange={(e) => onSearchTermChange(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        onChange={onSearchTermChange}
+                        icon={<Search className="w-5 h-5" />}
+                        className="w-full"
                     />
-                </div>
-
-                {/* Active Only Filter Checkbox */}
-                <div className="flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-lg">
-                    <input
-                        type="checkbox"
-                        id="activeOnlyFilter"
-                        checked={activeOnlyFilter}
-                        onChange={(e) => onActiveOnlyFilterChange(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
-                    />
-                    <label htmlFor="activeOnlyFilter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                        Μόνο ενεργές
-                    </label>
                 </div>
             </div>
 
@@ -84,43 +60,25 @@ const ProcedureSearchBar: React.FC<ProcedureSearchBarProps> = ({
                             Δεν βρέθηκαν διαδικασίες
                         </h3>
                         <p className="text-gray-600">
-                            {searchTerm.trim() || activeOnlyFilter
-                                ? 'Δοκιμάστε διαφορετικούς όρους αναζήτησης ή αλλάξτε τα φίλτρα.'
+                            {searchTerm.trim() ? 'Δοκιμάστε διαφορετικούς όρους αναζήτησης ή αλλάξτε τα φίλτρα.'
                                 : 'Ξεκινήστε αναζήτηση ή δημιουργήστε μια νέα διαδικασία.'
                             }
                         </p>
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-200">
-                        {/* Results Header */}
-                        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Cog className="w-5 h-5 text-purple-600" />
-                                    <span className="font-medium text-gray-900">
-                                        {filteredResults.length} διαδικασίες
-                                    </span>
-                                </div>
-                                {activeOnlyFilter && (
-                                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                                        Μόνο ενεργές
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
                         {/* Procedure List */}
                         {filteredResults.map((procedure) => (
                             <div
                                 key={procedure.procedureId}
-                                className="p-6 hover:bg-gray-50 transition-colors duration-150"
+                                className="p-6 hover:bg-blue-100 transition-colors duration-150"
                             >
-                                <div className="flex items-start justify-between">
+                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         {/* Procedure Header */}
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                                <Cog className="w-5 h-5 text-purple-600" />
+                                                <Wrench className="w-5 h-5 text-purple-600" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="text-lg font-semibold text-gray-900 truncate">
@@ -136,45 +94,22 @@ const ProcedureSearchBar: React.FC<ProcedureSearchBarProps> = ({
                                                 </p>
                                             </div>
                                         </div>
-
-                                        {/* Procedure Details Grid */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                                            {/* Created Date */}
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <Calendar className="w-4 h-4 text-gray-400" />
-                                                <span>Δημιουργήθηκε: {formatDate(procedure.createdAt)}</span>
-                                            </div>
-
-                                            {/* Updated Date */}
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <Calendar className="w-4 h-4 text-gray-400" />
-                                                <span>Ενημερώθηκε: {formatDate(procedure.updatedAt)}</span>
-                                            </div>
-
-                                            {/* Created By */}
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <User className="w-4 h-4 text-gray-400" />
-                                                <span className="truncate" title={procedure.createdBy}>
-                                                    Από: {procedure.createdBy}
-                                                </span>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center gap-2 ml-4">
+                                    <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:ml-4">
                                         <Button
                                             onClick={() => onViewDetails(procedure)}
-                                            variant="outline-primary"
+                                            variant="info"
                                             size="sm"
                                             className="flex items-center gap-2"
                                         >
                                             <Eye className="w-4 h-4" />
-                                            Προβολή
+                                            Λεπτομέρειες
                                         </Button>
                                         <Button
                                             onClick={() => onViewProducts(procedure)}
-                                            variant="outline-secondary"
+                                            variant="orange"
                                             size="sm"
                                             className="flex items-center gap-2"
                                             title="Δείτε όλα τα προϊόντα που χρησιμοποιούν αυτή τη διαδικασία"
@@ -184,7 +119,7 @@ const ProcedureSearchBar: React.FC<ProcedureSearchBarProps> = ({
                                         </Button>
                                         <Button
                                             onClick={() => onEdit(procedure)}
-                                            variant="outline-secondary"
+                                            variant="teal"
                                             size="sm"
                                             className="flex items-center gap-2"
                                         >

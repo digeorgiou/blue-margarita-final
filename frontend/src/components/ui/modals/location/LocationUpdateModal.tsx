@@ -76,13 +76,6 @@ const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
                         <p><strong>ID:</strong> {location?.locationId}</p>
                         <p><strong>Δημιουργήθηκε:</strong> {location ? new Date(location.createdAt).toLocaleString('el-GR') : ''}</p>
                         <p><strong>Τελευταία ενημέρωση:</strong> {location ? new Date(location.updatedAt).toLocaleString('el-GR') : ''}</p>
-                        <p><strong>Κατάσταση:</strong>
-                            <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
-                                location?.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                                {location?.isActive ? 'Ενεργή' : 'Ανενεργή'}
-                            </span>
-                        </p>
                     </div>
                 </div>
 

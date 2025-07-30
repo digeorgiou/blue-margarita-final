@@ -113,10 +113,6 @@ const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
                         <h4 className="text-sm font-medium text-gray-900">
                             Επεξεργασία στοιχείων για: {procedure.name}
                         </h4>
-                        <p className="text-sm text-gray-500">ID: {procedure.procedureId}</p>
-                        <p className="text-sm text-gray-500">
-                            Κατάσταση: {procedure.isActive ? 'Ενεργή' : 'Ανενεργή'}
-                        </p>
                     </div>
                 )}
 
@@ -130,7 +126,7 @@ const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder="π.χ. Σφυρηλάτηση, Λούστρο, Επιχρύσωση"
+                        placeholder="π.χ. Γυάλισμα, Επιχρύσωση"
                         error={fieldErrors.name}
                         required
                         maxLength={100}
@@ -152,14 +148,6 @@ const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
                             <div>
                                 <span className="font-medium">Ενημερώθηκε:</span>
                                 <p>{new Date(procedure.updatedAt).toLocaleDateString('el-GR')}</p>
-                            </div>
-                            <div>
-                                <span className="font-medium">Δημιουργός:</span>
-                                <p>{procedure.createdBy}</p>
-                            </div>
-                            <div>
-                                <span className="font-medium">Τελευταία ενημέρωση:</span>
-                                <p>{procedure.lastUpdatedBy}</p>
                             </div>
                         </div>
                     </div>

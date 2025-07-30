@@ -113,7 +113,7 @@ const ProcedureCreateModal: React.FC<ProcedureCreateModalProps> = ({
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder="π.χ. Σφυρηλάτηση, Λούστρο, Επιχρύσωση"
+                        placeholder="π.χ. Γυάλισμα, Επιχρύσωση"
                         error={fieldErrors.name}
                         required
                         maxLength={100}
@@ -130,7 +130,7 @@ const ProcedureCreateModal: React.FC<ProcedureCreateModalProps> = ({
                         <div className="text-sm text-blue-800">
                             <p className="font-medium mb-1">Σχετικά με τις διαδικασίες:</p>
                             <ul className="space-y-1 text-blue-700">
-                                <li>• Οι διαδικασίες αντιπροσωπεύουν τα βήματα παραγωγής των προϊόντων</li>
+                                <li>• Οι διαδικασίες αντιπροσωπεύουν τα βήματα παραγωγής των προϊόντων / πάγια έξοδα</li>
                                 <li>• Κάθε προϊόν μπορεί να χρησιμοποιεί πολλές διαδικασίες</li>
                                 <li>• Βοηθούν στην οργάνωση και καταγραφή της παραγωγικής διαδικασίας</li>
                             </ul>
