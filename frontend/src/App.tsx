@@ -18,8 +18,8 @@ import ProcedureManagementPage from "./pages/ProcedureManagementPage.tsx";
 import MaterialManagementPage from "./pages/MaterialManagementPage.tsx";
 import ExpenseManagementPage from "./pages/ExpenseManagementPage.tsx";
 import OldRecordSalePage from "./pages/OldRecordSalePage";
-
-import CreateProductPage from "./pages/CreateProductPage.tsx";
+import ProductManagementPage from "./pages/ProductManagementPage.tsx";
+import CreateProductPage from "./pages/CreateProductPage";
 
 
 type AppState = 'loading' | 'login' | 'dashboard';
@@ -43,16 +43,14 @@ const App: React.FC = () => {
                 return <Dashboard onNavigate={handleNavigation} />;
             case 'low-stock-products':
                 return <LowStockProductsPage onNavigate={handleNavigation} />;
-
             case 'mispriced-products':
                 return <MispricedProductsPage onNavigate={handleNavigation} />;
-
             case 'all-tasks':
                 return <AllTasksPage onNavigate={handleNavigation} />;
             case 'manage-sales':
                 return <OldRecordSalePage onNavigate={handleNavigation}/>;
             case 'manage-products':
-                return <CreateProductPage onNavigate={handleNavigation}/>;
+                return <ProductManagementPage onNavigate={handleNavigation} />;
             case 'customers':
                 return <CustomerManagementPage/>;
             case 'materials':
@@ -74,7 +72,9 @@ const App: React.FC = () => {
             case 'stock-management':
                 return <div className="p-4"><h1 className="text-2xl text-white">Stock Management - Coming Soon</h1></div>;
             case 'expenses' :
-                return <ExpenseManagementPage/>
+                return <ExpenseManagementPage/>;
+            case 'create-product' :
+                return <CreateProductPage onNavigate={handleNavigation} />;
             default:
                 return <Dashboard onNavigate={handleNavigation} />;
         }

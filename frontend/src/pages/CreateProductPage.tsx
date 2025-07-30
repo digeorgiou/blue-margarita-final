@@ -403,42 +403,8 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                 </div>
                             </DashboardCard>
 
-                            {/* Inventory Information */}
-                            <DashboardCard title="Inventory" className="space-y-4">
-                                <Input
-                                    label="Initial Stock"
-                                    type="number"
-                                    value={stock}
-                                    onChange={(e) => setStock(Number(e.target.value))}
-                                    placeholder="0"
-                                    min="0"
-                                />
-
-                                <Input
-                                    label="Low Stock Alert"
-                                    type="number"
-                                    value={lowStockAlert}
-                                    onChange={(e) => setLowStockAlert(Number(e.target.value))}
-                                    placeholder="5"
-                                    min="0"
-                                />
-
-                                <Input
-                                    label="Minutes to Make"
-                                    type="number"
-                                    value={minutesToMake}
-                                    onChange={(e) => setMinutesToMake(Number(e.target.value))}
-                                    placeholder="0"
-                                    min="0"
-                                    icon={<Clock className="w-4 h-4" />}
-                                />
-                            </DashboardCard>
-                        </div>
-
-                        {/* Middle Column - Materials and Procedures */}
-                        <div className="xl:col-span-1 space-y-6">
                             {/* Materials */}
-                            <DashboardCard title="Materials" className="space-y-4">
+                            <DashboardCard title="Materials" className="space-y-4" height="md">
                                 <SearchDropdown
                                     searchTerm={materialSearchTerm}
                                     onSearchTermChange={(term : string) => {
@@ -527,8 +493,46 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                 )}
                             </DashboardCard>
 
+
+                        </div>
+
+                        {/* Middle Column - Materials and Procedures */}
+                        <div className="xl:col-span-1 space-y-6">
+
+                            {/* Inventory Information */}
+                            <DashboardCard title="Inventory" className="space-y-4">
+                                <Input
+                                    label="Initial Stock"
+                                    type="number"
+                                    value={stock}
+                                    onChange={(e) => setStock(Number(e.target.value))}
+                                    placeholder="0"
+                                    min="0"
+                                />
+
+                                <Input
+                                    label="Low Stock Alert"
+                                    type="number"
+                                    value={lowStockAlert}
+                                    onChange={(e) => setLowStockAlert(Number(e.target.value))}
+                                    placeholder="5"
+                                    min="0"
+                                />
+
+                                <Input
+                                    label="Minutes to Make"
+                                    type="number"
+                                    value={minutesToMake}
+                                    onChange={(e) => setMinutesToMake(Number(e.target.value))}
+                                    placeholder="0"
+                                    min="0"
+                                    icon={<Clock className="w-4 h-4" />}
+                                />
+                            </DashboardCard>
+
+
                             {/* Procedures */}
-                            <DashboardCard title="Procedures" className="space-y-4">
+                            <DashboardCard title="Procedures" className="space-y-4" height="md">
                                 <SearchDropdown
                                     searchTerm={procedureSearchTerm}
                                     onSearchTermChange={(term : string) => {

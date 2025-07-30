@@ -48,7 +48,7 @@ export type CustomToggleOptionProps = {
     label?: string;
     value: boolean;
     onChange: (value: boolean) => void;
-    optionLabel: string;
+    optionLabel?: string;
     className?: string;
 }
 

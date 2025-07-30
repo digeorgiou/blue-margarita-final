@@ -1,9 +1,12 @@
-// ProductSearchBar.tsx - Following MaterialSearchBar pattern with all product filters
-
 import React from 'react';
-import { Search, Package, Edit, Trash2, Eye } from 'lucide-react';
+import { Search, Package, Edit, Trash2, Eye, Filter } from 'lucide-react';
 import { Button, LoadingSpinner } from '../index';
+import { CustomTextInput, CustomSelect, CustomSearchDropdown, CustomToggleOption, CustomNumberInput } from '../inputs';
 import type { ProductListItemDTO } from '../../../types/api/productInterface';
+import type { CategoryForDropdownDTO } from '../../../types/api/categoryInterface';
+import type { ProcedureForDropdownDTO } from '../../../types/api/procedureInterface';
+import type { MaterialSearchResultDTO } from '../../../types/api/materialInterface';
+import type { SearchResult } from '../../../types/components/input-types';
 
 interface ProductSearchBarProps {
     // Basic search
@@ -13,30 +16,37 @@ interface ProductSearchBarProps {
     // Category filter
     selectedCategoryId: number | undefined;
     onCategoryIdChange: (value: number | undefined) => void;
-    categories: { id: number; name: string }[];
+    categories: CategoryForDropdownDTO[];
 
     // Material filter
-    materialName: string;
-    onMaterialNameChange: (value: string) => void;
+    materialSearchTerm: string;
+    onMaterialSearchTermChange: (value: string) => void;
+    materialSearchResults: MaterialSearchResultDTO[];
+    selectedMaterial: MaterialSearchResultDTO | null;
+    onMaterialSelect: (material: MaterialSearchResultDTO | null) => void;
+    loadingMaterials: boolean;
 
     // Procedure filter
-    selectedProcedureId: number | undefined;
-    onProcedureIdChange: (value: number | undefined) => void;
-    procedures: { id: number; name: string }[];
-
-    // Price filters
-    minPrice: string;
-    onMinPriceChange: (value: string) => void;
-    maxPrice: string;
-    onMaxPriceChange: (value: string) => void;
+    procedureSearchTerm: string;
+    onProcedureSearchTermChange: (value: string) => void;
+    procedureSearchResults: ProcedureForDropdownDTO[];
+    selectedProcedure: ProcedureForDropdownDTO | null;
+    onProcedureSelect: (procedure: ProcedureForDropdownDTO | null) => void;
+    loadingProcedures: boolean;
 
     // Stock filters
-    stockStatus: string;
-    onStockStatusChange: (value: string) => void;
+    lowStockOnly: boolean;
+    onLowStockOnlyChange: (value: boolean) => void;
+    minStock: number;
+    onMinStockChange: (value: number) => void;
+    maxStock: number;
+    onMaxStockChange: (value: number) => void;
 
-    // Active filter
-    activeOnlyFilter: boolean;
-    onActiveOnlyFilterChange: (value: boolean) => void;
+    // Price filters
+    minPrice: number;
+    onMinPriceChange: (value: number) => void;
+    maxPrice: number;
+    onMaxPriceChange: (value: number) => void;
 
     // Results and actions
     searchResults: ProductListItemDTO[];
@@ -44,6 +54,7 @@ interface ProductSearchBarProps {
     onViewDetails: (product: ProductListItemDTO) => void;
     onEdit: (product: ProductListItemDTO) => void;
     onDelete: (product: ProductListItemDTO) => void;
+    children?: React.ReactNode;
 }
 
 const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
@@ -52,313 +63,380 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                                                                selectedCategoryId,
                                                                onCategoryIdChange,
                                                                categories,
-                                                               materialName,
-                                                               onMaterialNameChange,
-                                                               selectedProcedureId,
-                                                               onProcedureIdChange,
-                                                               procedures,
+                                                               materialSearchTerm,
+                                                               onMaterialSearchTermChange,
+                                                               materialSearchResults,
+                                                               selectedMaterial,
+                                                               onMaterialSelect,
+                                                               loadingMaterials,
+                                                               procedureSearchTerm,
+                                                               onProcedureSearchTermChange,
+                                                               procedureSearchResults,
+                                                               selectedProcedure,
+                                                               onProcedureSelect,
+                                                               loadingProcedures,
+                                                               lowStockOnly,
+                                                               onLowStockOnlyChange,
+                                                               minStock,
+                                                               onMinStockChange,
+                                                               maxStock,
+                                                               onMaxStockChange,
                                                                minPrice,
                                                                onMinPriceChange,
                                                                maxPrice,
                                                                onMaxPriceChange,
-                                                               stockStatus,
-                                                               onStockStatusChange,
-                                                               activeOnlyFilter,
-                                                               onActiveOnlyFilterChange,
                                                                searchResults,
                                                                loading,
                                                                onViewDetails,
                                                                onEdit,
-                                                               onDelete
+                                                               onDelete,
+                                                               children
                                                            }) => {
-    // Filter results based on current filters (client-side filtering for display)
-    const filteredResults = activeOnlyFilter
-        ? searchResults.filter(product => product.isActive)
-        : searchResults;
 
-    // Stock status options
-    const stockStatusOptions = [
-        { value: '', label: 'Όλα τα προϊόντα' },
-        { value: 'low_stock', label: 'Χαμηλό απόθεμα' },
-        { value: 'in_stock', label: 'Σε απόθεμα' },
-        { value: 'out_of_stock', label: 'Εξαντλημένα' }
-    ];
+    const clearFilters = () => {
+        onSearchTermChange('');
+        onCategoryIdChange(undefined);
+        onMaterialSearchTermChange('');
+        onMaterialSelect(null);
+        onProcedureSearchTermChange('');
+        onProcedureSelect(null);
+        onLowStockOnlyChange(false);
+        onMinStockChange(0);
+        onMaxStockChange(0);
+        onMinPriceChange(0);
+        onMaxPriceChange(0);
+    };
 
-    const formatPrice = (price: number) => {
+    const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('el-GR', {
             style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(price);
+            currency: 'EUR'
+        }).format(amount);
     };
 
-    const getStockStatusBadge = (product: ProductListItemDTO) => {
-        if (product.currentStock <= 0) {
-            return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">Εξαντλημένο</span>;
-        } else if (product.isLowStock) {
-            return <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">Χαμηλό απόθεμα</span>;
-        } else {
-            return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Σε απόθεμα</span>;
-        }
+    const getStockStatusColor = (product: ProductListItemDTO) => {
+        if (product.isLowStock) return 'text-red-600 bg-red-50';
+        if (product.currentStock === 0) return 'text-gray-600 bg-gray-50';
+        return 'text-green-600 bg-green-50';
     };
 
-    const getPriceDifferenceBadge = (percentageDifference: number) => {
-        if (Math.abs(percentageDifference) < 5) {
-            return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Σωστή τιμή</span>;
-        } else if (percentageDifference > 0) {
-            return <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">+{percentageDifference.toFixed(1)}%</span>;
-        } else {
-            return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">{percentageDifference.toFixed(1)}%</span>;
-        }
+    const getPriceDifferenceColor = (percentage: number) => {
+        if (percentage < -10) return 'text-red-600';
+        if (percentage < 0) return 'text-yellow-600';
+        return 'text-green-600';
     };
+
+    // Transform data for SearchDropdown components (following RecordPurchasePage pattern)
+    const transformedMaterialResults = materialSearchResults.map(material => ({
+        id: material.materialId,
+        name: material.materialName,
+        subtitle: `${material.currentUnitCost}€/${material.unitOfMeasure}`,
+        additionalInfo: material.unitOfMeasure
+    }));
+
+    const transformedProcedureResults = procedureSearchResults.map(procedure => ({
+        id: procedure.id,
+        name: procedure.name,
+        subtitle: 'Διαδικασία',
+        additionalInfo: undefined
+    }));
 
     return (
         <div className="space-y-6">
-            {/* Search Controls */}
+            {/* Search and Filter Controls */}
             <div className="space-y-4">
-                {/* Primary Search Row */}
-                <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
-                    {/* Main Search Input */}
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="Αναζήτηση προϊόντων (όνομα, κωδικός)..."
+                {/* Row 1: Product Name (3/4) + Category (1/4) */}
+                <div className="grid grid-cols-4 gap-4">
+                    <div className="col-span-3">
+                        <CustomTextInput
+                            label="Αναζήτηση κατά όνομα ή κωδικό"
                             value={searchTerm}
-                            onChange={(e) => onSearchTermChange(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                            onChange={onSearchTermChange}
+                            placeholder="Αναζήτηση προϊόντων..."
+                            icon={<Search className="w-5 h-5" />}
+                            className="w-full"
                         />
                     </div>
-
-                    {/* Category Dropdown */}
-                    <div className="min-w-0 lg:w-48">
-                        <select
+                    <div className="col-span-1">
+                        <CustomSelect
+                            label="Κατηγορία"
                             value={selectedCategoryId || ''}
-                            onChange={(e) => onCategoryIdChange(e.target.value ? Number(e.target.value) : undefined)}
-                            className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                        >
-                            <option value="">Όλες οι κατηγορίες</option>
-                            {categories.map(category => (
-                                <option key={category.id} value={category.id}>
-                                    {category.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Stock Status Dropdown */}
-                    <div className="min-w-0 lg:w-48">
-                        <select
-                            value={stockStatus}
-                            onChange={(e) => onStockStatusChange(e.target.value)}
-                            className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                        >
-                            {stockStatusOptions.map(option => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(value) => onCategoryIdChange(value ? Number(value) : undefined)}
+                            options={[
+                                { value: '', label: 'Όλες οι κατηγορίες' },
+                                ...categories.map(cat => ({ value: cat.id, label: cat.name }))
+                            ]}
+                            placeholder=""
+                        />
                     </div>
                 </div>
 
-                {/* Secondary Filters Row */}
-                <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
-                    {/* Material Name Search */}
-                    <div className="relative flex-1">
-                        <input
-                            type="text"
-                            placeholder="Φίλτρο υλικού..."
-                            value={materialName}
-                            onChange={(e) => onMaterialNameChange(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                {/* Row 2: Stock Filters + Price Filters + Low Stock Toggle (1/5 each) */}
+                <div className="grid grid-cols-5 gap-4">
+                    <div className="col-span-1">
+                        <CustomNumberInput
+                            label="Ελάχιστο Απόθεμα"
+                            value={minStock}
+                            onChange={onMinStockChange}
+                            placeholder="0"
+                            min={0}
                         />
                     </div>
-
-                    {/* Procedure Dropdown */}
-                    <div className="min-w-0 lg:w-48">
-                        <select
-                            value={selectedProcedureId || ''}
-                            onChange={(e) => onProcedureIdChange(e.target.value ? Number(e.target.value) : undefined)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                        >
-                            <option value="">Όλες οι διαδικασίες</option>
-                            {procedures.map(procedure => (
-                                <option key={procedure.id} value={procedure.id}>
-                                    {procedure.name}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="col-span-1">
+                        <CustomNumberInput
+                            label="Μέγιστο Απόθεμα"
+                            value={maxStock}
+                            onChange={onMaxStockChange}
+                            placeholder="∞"
+                            min={0}
+                        />
                     </div>
-
-                    {/* Price Range */}
-                    <div className="flex gap-2 items-center">
-                        <input
-                            type="number"
-                            placeholder="Από €"
+                    <div className="col-span-1">
+                        <CustomNumberInput
+                            label="Ελάχιστη Τιμή (€)"
                             value={minPrice}
-                            onChange={(e) => onMinPriceChange(e.target.value)}
-                            className="w-24 px-2 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                            min="0"
-                            step="0.01"
+                            onChange={onMinPriceChange}
+                            placeholder="0.00"
+                            min={0}
+                            step={0.01}
                         />
-                        <span className="text-gray-500 text-sm">-</span>
-                        <input
-                            type="number"
-                            placeholder="Έως €"
+                    </div>
+                    <div className="col-span-1">
+                        <CustomNumberInput
+                            label="Μέγιστη Τιμή (€)"
                             value={maxPrice}
-                            onChange={(e) => onMaxPriceChange(e.target.value)}
-                            className="w-24 px-2 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                            min="0"
-                            step="0.01"
+                            onChange={onMaxPriceChange}
+                            placeholder="∞"
+                            min={0}
+                            step={0.01}
+                        />
+                    </div>
+                    <div className="col-span-1 flex items-center justify-center">
+                        <CustomToggleOption
+                            label="Με Χαμηλό Απόθεμα"
+                            value={lowStockOnly}
+                            onChange={onLowStockOnlyChange}
+                        />
+                    </div>
+                </div>
+
+                {/* Row 3: Material Search + Selected Material + Procedure Search + Selected Procedure (1/4 each) */}
+                <div className="grid grid-cols-4 gap-4">
+                    <div className="col-span-1">
+                        <CustomSearchDropdown
+                            label="Υλικό"
+                            searchTerm={materialSearchTerm}
+                            onSearchTermChange={onMaterialSearchTermChange}
+                            searchResults={transformedMaterialResults}
+                            onSelect={(item: SearchResult) => {
+                                // Find the original MaterialSearchResultDTO from the transformed result
+                                const originalMaterial = materialSearchResults.find(m => m.materialId === item.id);
+                                onMaterialSelect(originalMaterial || null);
+                                if (originalMaterial) {
+                                    onMaterialSearchTermChange(originalMaterial.materialName);
+                                }
+                            }}
+                            placeholder="Αναζήτηση υλικού..."
+                            entityType="material"
+                            isLoading={loadingMaterials}
+                            selectedItem={null}
+                            onClearSelection={undefined}
+                            emptyMessage="Δεν βρέθηκαν υλικά"
+                            emptySubMessage="Δοκιμάστε διαφορετικό όρο αναζήτησης"
                         />
                     </div>
 
-                    {/* Active Only Filter */}
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                        <input
-                            type="checkbox"
-                            id="activeOnlyFilter"
-                            checked={activeOnlyFilter}
-                            onChange={(e) => onActiveOnlyFilterChange(e.target.checked)}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="activeOnlyFilter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                            Μόνο ενεργά
-                        </label>
+                    <div className="col-span-1">
+                        {/* Selected Material Display */}
+                        {selectedMaterial ? (
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Επιλεγμένο Υλικό
+                                </label>
+                                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                            <Package className="w-4 h-4 text-emerald-600" />
+                                            <div>
+                                                <div className="text-sm font-medium text-emerald-900">
+                                                    {selectedMaterial.materialName}
+                                                </div>
+                                                <div className="text-xs text-emerald-600">
+                                                    {selectedMaterial.currentUnitCost}€/{selectedMaterial.unitOfMeasure}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                            </div>
+                        )}
                     </div>
+
+                    <div className="col-span-1">
+                        <CustomSearchDropdown
+                            label="Διαδικασία"
+                            searchTerm={procedureSearchTerm}
+                            onSearchTermChange={onProcedureSearchTermChange}
+                            searchResults={transformedProcedureResults}
+                            onSelect={(item: SearchResult) => {
+                                // Find the original ProcedureForDropdownDTO from the transformed result
+                                const originalProcedure = procedureSearchResults.find(p => p.id === item.id);
+                                onProcedureSelect(originalProcedure || null);
+                                if (originalProcedure) {
+                                    onProcedureSearchTermChange(originalProcedure.name);
+                                }
+                            }}
+                            placeholder="Αναζήτηση διαδικασίας..."
+                            entityType="procedure"
+                            isLoading={loadingProcedures}
+                            selectedItem={null}
+                            onClearSelection={undefined}
+                            emptyMessage="Δεν βρέθηκαν διαδικασίες"
+                            emptySubMessage="Δοκιμάστε διαφορετικό όρο αναζήτησης"
+                        />
+                    </div>
+
+                    <div className="col-span-1">
+                        {/* Selected Procedure Display */}
+                        {selectedProcedure ? (
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Επιλεγμένη Διαδικασία
+                                </label>
+                                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                            <Package className="w-4 h-4 text-purple-600" />
+                                            <div>
+                                                <div className="text-sm font-medium text-purple-900">
+                                                    {selectedProcedure.name}
+                                                </div>
+                                                <div className="text-xs text-purple-600">
+                                                    Διαδικασία
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Clear Filters Button */}
+                <div className="flex justify-end">
+                    <Button
+                        onClick={clearFilters}
+                        variant="pink"
+                        className="flex items-center gap-2"
+                    >
+                        <Filter className="w-5 h-5 mr-2" />
+                        Καθαρισμός Φίλτρων
+                    </Button>
                 </div>
             </div>
 
-            {/* Results */}
+            {/* Children section - Summary Card will be rendered here */}
+            {children && (
+                <div>
+                    {children}
+                </div>
+            )}
+
+            {/* Results Section */}
             <div className="bg-white rounded-lg border border-gray-200">
                 {loading ? (
                     <div className="p-8 text-center">
                         <LoadingSpinner />
-                        <p className="mt-4 text-gray-600">Αναζήτηση προϊόντων...</p>
+                        <span className="mt-4 text-gray-600">Φόρτωση προϊόντων...</span>
                     </div>
-                ) : filteredResults.length === 0 ? (
-                    <div className="p-8 text-center">
-                        <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            Δεν βρέθηκαν προϊόντα
-                        </h3>
+                ) : searchResults.length === 0 ? (
+                    <div className="text-center py-12">
+                        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Δεν βρέθηκαν προϊόντα</h3>
                         <p className="text-gray-600">
-                            {searchTerm.trim() || selectedCategoryId || materialName.trim() || selectedProcedureId || stockStatus || minPrice || maxPrice || activeOnlyFilter
-                                ? 'Δοκιμάστε διαφορετικούς όρους αναζήτησης ή αλλάξτε τα φίλτρα.'
-                                : 'Ξεκινήστε αναζήτηση ή δημιουργήστε ένα νέο προϊόν.'
+                            {searchTerm.trim() ? 'Δεν βρέθηκαν προϊόντα που να ταιριάζουν με τα κριτήρια αναζήτησης. Δοκιμάστε να αλλάξετε φίλτρα.'
+                                : 'Δεν υπάρχουν αποθηκευμένα προϊόντα.'
                             }
                         </p>
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-200">
-                        {/* Results Header */}
-                        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Package className="w-5 h-5 text-blue-600" />
-                                    <span className="font-medium text-gray-900">
-                                        {filteredResults.length} προϊόντα
-                                    </span>
-                                </div>
-                                <div className="flex gap-2">
-                                    {activeOnlyFilter && (
-                                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                                            Μόνο ενεργά
-                                        </span>
-                                    )}
-                                    {stockStatus && (
-                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                            {stockStatusOptions.find(opt => opt.value === stockStatus)?.label}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Product List */}
-                        {filteredResults.map((product) => (
-                            <div
-                                key={product.id}
-                                className="p-6 hover:bg-gray-50 transition-colors duration-150"
-                            >
-                                <div className="flex items-start justify-between">
+                        {searchResults.map((product) => (
+                            <div key={product.id}
+                                 className="p-6 hover:bg-blue-50 transition-colors duration-150">
+                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                     <div className="flex-1 min-w-0">
-                                        {/* Product Header */}
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                <Package className="w-5 h-5 text-blue-600" />
+                                            <div className="flex-shrink-0">
+                                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                    <Package className="w-5 h-5 text-blue-600" />
+                                                </div>
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="text-lg font-semibold text-gray-900 truncate">
                                                     {product.name}
                                                 </h3>
-                                                <p className="text-sm text-gray-600">
-                                                    Κωδικός: {product.code} • Κατηγορία: {product.categoryName}
+                                                <p className="text-sm text-gray-500">
+                                                    Κωδικός: {product.code} • {product.categoryName}
                                                 </p>
                                             </div>
                                         </div>
 
-                                        {/* Product Details Grid */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                                            <div>
-                                                <p className="text-sm text-gray-500">Κόστος Παραγωγής</p>
-                                                <p className="font-medium text-gray-900">{formatPrice(product.totalCost)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-gray-500">Προτεινόμενη Τιμή</p>
-                                                <p className="font-medium text-gray-900">{formatPrice(product.suggestedRetailPrice)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-gray-500">Τελική Τιμή</p>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-gray-900">{formatPrice(product.finalRetailPrice)}</span>
-                                                    {getPriceDifferenceBadge(product.percentageDifference)}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                            <div className="flex items-center gap-2 text-gray-600">
+                                                <div className="font-medium">Τιμή Λιανικής:</div>
+                                                <div className="font-semibold text-green-600">
+                                                    {formatCurrency(product.finalRetailPrice)}
                                                 </div>
                                             </div>
-                                            <div>
-                                                <p className="text-sm text-gray-500">Χρόνος Παραγωγής</p>
-                                                <p className="font-medium text-gray-900">{product.minutesToMake} λεπτά</p>
-                                            </div>
-                                        </div>
 
-                                        {/* Stock Information */}
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm text-gray-500">Απόθεμα:</span>
-                                                <span className="font-medium text-gray-900">{product.currentStock}</span>
-                                                {getStockStatusBadge(product)}
-                                            </div>
-                                            {product.lowStockAlert && (
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm text-gray-500">Όριο συναγερμού:</span>
-                                                    <span className="font-medium text-gray-900">{product.lowStockAlert}</span>
+                                            <div className="flex items-center gap-2 text-gray-600">
+                                                <div className="font-medium">Κόστος:</div>
+                                                <div className="font-semibold">
+                                                    {formatCurrency(product.totalCost)}
                                                 </div>
-                                            )}
-                                            {!product.isActive && (
-                                                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                                                    Ανενεργό
-                                                </span>
-                                            )}
+                                            </div>
+
+                                            <div className="flex items-center gap-2 text-gray-600">
+                                                <div className="font-medium">Διαφορά Τιμής:</div>
+                                                <div className={`font-semibold ${getPriceDifferenceColor(product.percentageDifference)}`}>
+                                                    {product.percentageDifference.toFixed(1)}%
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <div className="font-medium text-gray-600">Απόθεμα:</div>
+                                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStockStatusColor(product)}`}>
+                                                    {product.currentStock} τεμ.
+                                                    {product.isLowStock && ' (Χαμηλό)'}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex flex-col sm:flex-row gap-2 ml-4">
+                                    <div className="flex items-center gap-2 lg:flex-col lg:gap-2">
                                         <Button
                                             onClick={() => onViewDetails(product)}
-                                            variant="outline-primary"
+                                            variant="info"
                                             size="sm"
-                                            className="flex items-center gap-2"
+                                            className="flex items-center gap-1"
                                         >
                                             <Eye className="w-4 h-4" />
                                             Προβολή
                                         </Button>
                                         <Button
                                             onClick={() => onEdit(product)}
-                                            variant="outline-secondary"
+                                            variant="teal"
                                             size="sm"
-                                            className="flex items-center gap-2"
+                                            className="flex items-center gap-1"
                                         >
                                             <Edit className="w-4 h-4" />
                                             Επεξεργασία
@@ -367,7 +445,7 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                                             onClick={() => onDelete(product)}
                                             variant="danger"
                                             size="sm"
-                                            className="flex items-center gap-2"
+                                            className="flex items-center gap-1"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                             Διαγραφή
