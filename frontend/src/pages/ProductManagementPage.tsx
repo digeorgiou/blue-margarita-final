@@ -92,8 +92,10 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                 selectedMaterial?.materialId || undefined,
                 minPrice > 0 ? minPrice : undefined,
                 maxPrice > 0 ? maxPrice : undefined,
-                undefined, // stockStatus - we'll use the boolean filters instead
-                undefined, // isActive
+                minStock > 0 ? minStock : undefined,
+                maxStock > 0 ? maxStock : undefined,
+                undefined,
+                lowStockOnly || undefined,
                 'name', // sortBy
                 'ASC', // sortDirection
                 currentPage,
@@ -248,24 +250,6 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                     </Button>
                 </div>
 
-                {/* Pagination Controls */}
-                {searchResults && searchResults.totalPages > 1 && (
-                    <DashboardCard title="Σελιδοποίηση" icon={<Package className="w-5 h-5" />}>
-                        <EnhancedPaginationControls
-                            paginationData={{
-                                currentPage: searchResults.currentPage,
-                                totalPages: searchResults.totalPages,
-                                totalElements: searchResults.totalElements,
-                                pageSize: searchResults.pageSize,
-                                numberOfElements: searchResults.numberOfElements
-                            }}
-                            onPageChange={handlePageChange}
-                            onPageSizeChange={handlePageSizeChange}
-                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                        />
-                    </DashboardCard>
-                )}
-
                 {/* Search and Filter Section */}
                 <DashboardCard
                     title="Φίλτρα Αναζήτησης"
@@ -324,6 +308,24 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                     >
                     </ProductSearchBar>
                 </DashboardCard>
+
+                {/* Pagination Controls */}
+                {searchResults && searchResults.totalPages > 0 && (
+                    <DashboardCard title="Σελιδοποίηση" icon={<Package className="w-5 h-5" />}>
+                        <EnhancedPaginationControls
+                            paginationData={{
+                                currentPage: searchResults.currentPage,
+                                totalPages: searchResults.totalPages,
+                                totalElements: searchResults.totalElements,
+                                pageSize: searchResults.pageSize,
+                                numberOfElements: searchResults.numberOfElements
+                            }}
+                            onPageChange={handlePageChange}
+                            onPageSizeChange={handlePageSizeChange}
+                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                        />
+                    </DashboardCard>
+                )}
 
                 {/* Modals */}
                 <ConfirmDeleteModal

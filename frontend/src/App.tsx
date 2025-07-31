@@ -17,10 +17,16 @@ import SupplierManagementPage from "./pages/SupplierManagementPage.tsx";
 import ProcedureManagementPage from "./pages/ProcedureManagementPage.tsx";
 import MaterialManagementPage from "./pages/MaterialManagementPage.tsx";
 import ExpenseManagementPage from "./pages/ExpenseManagementPage.tsx";
-import OldRecordSalePage from "./pages/OldRecordSalePage";
 import ProductManagementPage from "./pages/ProductManagementPage.tsx";
 import CreateProductPage from "./pages/CreateProductPage";
+import ProductUpdatePage from "./pages/ProductUpdatePage.tsx";
 
+import './styles/global-logo-background.css';
+
+interface NavigationState {
+    page: string;
+    productId?: string;
+}
 
 type AppState = 'loading' | 'login' | 'dashboard';
 
@@ -28,17 +34,19 @@ const App: React.FC = () => {
     const [appState, setAppState] = useState<AppState>('loading');
     const [user, setUser] = useState<string | null>(null);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
-    const [currentPage, setCurrentPage] = useState('dashboard');
+
+    const [navigationState, setNavigationState] = useState<NavigationState>({
+        page: 'dashboard'
+    });
 
     // Navigation handler
-    const handleNavigation = (page: string) => {
-        setCurrentPage(page);
-        console.log(`Navigating to: ${page}`);
+    const handleNavigation = (page: string, productId?: string) => {
+        setNavigationState({ page, productId });
     };
 
     // Render page content based on currentPage
     const renderPageContent = () => {
-        switch (currentPage) {
+        switch (navigationState.page) {
             case 'dashboard':
                 return <Dashboard onNavigate={handleNavigation} />;
             case 'low-stock-products':
@@ -48,7 +56,7 @@ const App: React.FC = () => {
             case 'all-tasks':
                 return <AllTasksPage onNavigate={handleNavigation} />;
             case 'manage-sales':
-                return <OldRecordSalePage onNavigate={handleNavigation}/>;
+                return <div className="p-4"><h1 className="text-2xl text-white">Πωλήσεις- Coming Soon</h1></div>;
             case 'manage-products':
                 return <ProductManagementPage onNavigate={handleNavigation} />;
             case 'customers':
@@ -75,6 +83,10 @@ const App: React.FC = () => {
                 return <ExpenseManagementPage/>;
             case 'create-product' :
                 return <CreateProductPage onNavigate={handleNavigation} />;
+            case 'update-product' :
+                return <ProductUpdatePage
+                    productId={Number(navigationState.productId)}
+                    onNavigate={handleNavigation} />;
             default:
                 return <Dashboard onNavigate={handleNavigation} />;
         }
@@ -162,17 +174,18 @@ const App: React.FC = () => {
         );
     }
 
-    // Show dashboard with Layout (THIS IS THE KEY CHANGE!)
     return (
-        <div className="bg-gradient-to-r from-blue-900 to-purple-300 min-h-screen">
-            <Layout
-                currentPage={currentPage}
-                onNavigate={handleNavigation}
-                user={user}
-                onLogout={handleLogout}
-            >
-                {renderPageContent()}
-            </Layout>
+        <div className="bg-gradient-to-r from-blue-900 to-purple-300 min-h-screen global-logo-background">
+            <div className="relative z-10">
+                <Layout
+                    currentPage={navigationState.page}
+                    onNavigate={handleNavigation}
+                    user={user}
+                    onLogout={handleLogout}
+                >
+                    {renderPageContent()}
+                </Layout>
+            </div>
         </div>
     );
 };

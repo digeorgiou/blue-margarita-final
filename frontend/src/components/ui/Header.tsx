@@ -1,6 +1,6 @@
 import React from 'react';
 import LogoImage from './LogoImage';
-import logo from '../../assets/white.png'
+import logo from '../../assets/logo-transp.png'
 import Button from './Button'; // Import our custom Button component
 import {
     LogOut,
@@ -120,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({
         <header className="relative bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-3 lg:px-6">
             <div className="flex items-center justify-between">
 
-                {/* Left Section - Logo */}
+                {/* Left Section - Icon */}
                 <div className="flex items-center">
                     <div className="relative">
                         <LogoImage

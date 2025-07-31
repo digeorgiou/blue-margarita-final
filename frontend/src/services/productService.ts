@@ -87,12 +87,14 @@ class ProductService {
         materialId?: number,
         minPrice?: number,
         maxPrice?: number,
-        stockStatus?: string,
+        minStock?: number,
+        maxStock?: number,
         isActive?: boolean,
+        lowStock?: boolean,
         sortBy?: string,
         sortDirection?: string,
         page: number = 0,
-        size: number = 12
+        pageSize: number = 12
     ): Promise<Paginated<ProductListItemDTO>> {
         try {
             const params = new URLSearchParams();
@@ -105,8 +107,11 @@ class ProductService {
             if (materialId !== undefined) params.append('materialId', materialId.toString());
             if (minPrice !== undefined) params.append('minPrice', minPrice.toString());
             if (maxPrice !== undefined) params.append('maxPrice', maxPrice.toString());
-            if (stockStatus?.trim()) params.append('stockStatus', stockStatus.trim());
             if (isActive !== undefined) params.append('isActive', isActive.toString());
+
+            if (minStock !== undefined && minStock > 0) params.append('minStock', minStock.toString());
+            if (maxStock !== undefined && maxStock > 0) params.append('maxStock', maxStock.toString());
+            if (lowStock !== undefined) params.append('lowStock', lowStock.toString());
 
             // Add sorting
             if (sortBy?.trim()) params.append('sortBy', sortBy.trim());
@@ -114,7 +119,7 @@ class ProductService {
 
             // Add pagination
             params.append('page', page.toString());
-            params.append('size', size.toString());
+            params.append('pageSize', pageSize.toString());
 
             const response = await ApiErrorHandler.enhancedFetch(
                 `${API_BASE_URL}?${params.toString()}`,

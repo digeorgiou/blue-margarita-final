@@ -3,9 +3,9 @@ import { productService } from '../services/productService';
 import { procedureService } from '../services/procedureService';
 import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
-import { Button, LoadingSpinner, Input, Alert } from '../components/ui';
+import { CustomTextInput, CustomNumberInput, CustomSelect, CustomSearchDropdown } from '../components/ui/inputs';
+import { Button, LoadingSpinner, Alert } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
-import SearchDropdown from '../components/ui/searchDropdowns/SearchDropdown.tsx'
 import {
     Package,
     Plus,
@@ -50,7 +50,7 @@ const WHOLESALE_MARKUP_FACTOR = 1.86;
 const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => {
     // Loading and error states
     const [submitting, setSubmitting] = useState(false);
-    const { fieldErrors, generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
+    const { generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
 
     // Form data
     const [productName, setProductName] = useState('');
@@ -76,109 +76,95 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
 
     // Search states for procedures
     const [procedureSearchTerm, setProcedureSearchTerm] = useState('');
-    const [filteredProcedures, setFilteredProcedures] = useState<ProcedureForDropdownDTO[]>([]);
+    const [procedureSearchResults, setProcedureSearchResults] = useState<ProcedureForDropdownDTO[]>([]);
     const [isLoadingProcedures, setIsLoadingProcedures] = useState(false);
 
-    // Price calculation
-    const [priceCalculation, setPriceCalculation] = useState<PriceCalculation>({
-        materialCost: 0,
-        laborCost: 0,
-        procedureCost: 0,
-        totalCost: 0,
-        suggestedRetailPrice: 0,
-        suggestedWholesalePrice: 0
-    });
+    // Filtered procedures (removes already selected ones)
+    const filteredProcedures = procedureSearchResults.filter(
+        procedure => !selectedProcedures.some(selected => selected.procedureId === procedure.id)
+    );
 
-    // Load categories on component mount
-    useEffect(() => {
-        loadCategories();
-    }, []);
-
-    // Recalculate prices when materials, procedures, or minutesToMake change
-    useEffect(() => {
-        calculatePrices();
-    }, [selectedMaterials, selectedProcedures, minutesToMake]);
-
-    const loadCategories = async () => {
-        try {
-            const categoriesData = await categoryService.getCategoriesForDropdown();
-            setCategories(categoriesData);
-        } catch (err) {
-            console.error('Error loading categories:', err);
-        }
-    };
-
-    const calculatePrices = () => {
-        // Calculate material cost
-        const materialCost = selectedMaterials.reduce((total, material) =>
-            total + (material.unitCost * material.quantity), 0
-        );
-
-        // Calculate procedure cost
-        const procedureCost = selectedProcedures.reduce((total, procedure) =>
-            total + procedure.cost, 0
-        );
-
-        // Calculate labor cost based on minutes to make
-        const laborCost = minutesToMake > 0
-            ? (minutesToMake / MINUTES_PER_HOUR) * HOURLY_LABOR_RATE
-            : 0;
-
-        // Calculate total cost
+    // Calculate price suggestions
+    const calculatePriceSuggestions = (): PriceCalculation => {
+        const materialCost = selectedMaterials.reduce((sum, material) => sum + material.totalCost, 0);
+        const laborCost = (minutesToMake / MINUTES_PER_HOUR) * HOURLY_LABOR_RATE;
+        const procedureCost = selectedProcedures.reduce((sum, procedure) => sum + procedure.cost, 0);
         const totalCost = materialCost + laborCost + procedureCost;
 
-        // Calculate suggested prices using markup factors
-        const suggestedRetailPrice = totalCost * RETAIL_MARKUP_FACTOR;
-        const suggestedWholesalePrice = totalCost * WHOLESALE_MARKUP_FACTOR;
-
-        // Update state with all calculations
-        setPriceCalculation({
+        return {
             materialCost,
             laborCost,
             procedureCost,
             totalCost,
-            suggestedRetailPrice,
-            suggestedWholesalePrice
-        });
+            suggestedRetailPrice: totalCost * RETAIL_MARKUP_FACTOR,
+            suggestedWholesalePrice: totalCost * WHOLESALE_MARKUP_FACTOR
+        };
     };
 
-    // Material search
-    const searchMaterials = async (term: string): Promise<void> => {
-        if (term.length < 2) {
-            setMaterialSearchResults([]);
-            return;
-        }
+    const priceCalculation = calculatePriceSuggestions();
 
-        setIsLoadingMaterials(true);
-        try {
-            const results = await materialService.searchMaterialsForAutocomplete(term);
-            setMaterialSearchResults(results);
-        } catch (err) {
-            console.error('Material search error:', err);
-            setMaterialSearchResults([]);
-        } finally {
-            setIsLoadingMaterials(false);
-        }
-    };
+    // Load initial data
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const categoriesData = await categoryService.getCategoriesForDropdown();
+                setCategories(categoriesData);
+            } catch (err) {
+                console.error('Failed to load categories:', err);
+            }
+        };
 
-    // Procedure search
-    const searchProcedures = async (term: string): Promise<void> => {
-        if (term.length < 2) {
-            setFilteredProcedures([]);
-            return;
-        }
+        loadCategories();
+    }, []);
 
-        setIsLoadingProcedures(true);
-        try {
-            const results = await procedureService.searchProceduresForAutocomplete(term);
-            setFilteredProcedures(results);
-        } catch (err) {
-            console.error('Procedure search error:', err);
-            setFilteredProcedures([]);
-        } finally {
-            setIsLoadingProcedures(false);
-        }
-    };
+    // Search materials
+    useEffect(() => {
+        const searchMaterials = async () => {
+            if (materialSearchTerm.length < 2) {
+                setMaterialSearchResults([]);
+                return;
+            }
+
+            setIsLoadingMaterials(true);
+            try {
+                const results = await materialService.searchMaterialsForAutocomplete(materialSearchTerm);
+                setMaterialSearchResults(results);
+            } catch (err) {
+                console.error('Failed to search materials:', err);
+                setMaterialSearchResults([]);
+            } finally {
+                setIsLoadingMaterials(false);
+            }
+        };
+
+        const timeoutId = setTimeout(searchMaterials, 300);
+        return () => clearTimeout(timeoutId);
+    }, [materialSearchTerm]);
+
+    // Search procedures
+    useEffect(() => {
+        const searchProcedures = async () => {
+            if (procedureSearchTerm.length < 2) {
+                setProcedureSearchResults([]);
+                return;
+            }
+
+            setIsLoadingProcedures(true);
+            try {
+                const results = await procedureService.searchProceduresForAutocomplete(procedureSearchTerm);
+                setProcedureSearchResults(results);
+            } catch (err) {
+                console.error('Failed to search procedures:', err);
+                setProcedureSearchResults([]);
+            } finally {
+                setIsLoadingProcedures(false);
+            }
+        };
+
+        const timeoutId = setTimeout(searchProcedures, 300);
+        return () => clearTimeout(timeoutId);
+    }, [procedureSearchTerm]);
+
 
     // Add material to selection
     const addMaterial = (material: MaterialSearchResultDTO) => {
@@ -190,22 +176,18 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
         const newMaterial: ProductMaterialDetailDTO = {
             materialId: material.materialId,
             materialName: material.materialName,
-            quantity: 1, // Default quantity
             unitOfMeasure: material.unitOfMeasure,
+            quantity: 1,
             unitCost: material.currentUnitCost,
             totalCost: material.currentUnitCost
         };
 
         setSelectedMaterials(prev => [...prev, newMaterial]);
+        setMaterialSearchTerm(''); // Clear search term after selection
     };
 
     // Update material quantity
     const updateMaterialQuantity = (materialId: number, newQuantity: number) => {
-        if (newQuantity <= 0) {
-            removeMaterial(materialId);
-            return;
-        }
-
         setSelectedMaterials(prev =>
             prev.map(material =>
                 material.materialId === materialId
@@ -238,6 +220,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
         };
 
         setSelectedProcedures(prev => [...prev, newProcedure]);
+        setProcedureSearchTerm(''); // Clear search term after selection
     };
 
     // Update procedure cost
@@ -317,25 +300,33 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
         subtitle: "Manufacturing Process"
     }));
 
+    // Category options for CustomSelect
+    const categoryOptions = categories.map(category => ({
+        value: category.id,
+        label: category.name
+    }));
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-            <div className="p-6">
+        <div className="min-h-screen p-4">
+            <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center space-x-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
+
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Δημιουργία Νέου Προϊόντος</h1>
+                        </div>
+                    </div>
+
                         <Button
                             onClick={() => onNavigate('manage-products')}
-                            variant="outline-secondary"
+                            variant="yellow"
                             className="flex items-center"
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back to Products
+                            Επιστροφή στα Προϊόντα
                         </Button>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Create New Product</h1>
-                            <p className="text-gray-600 mt-1">Add a new jewelry product to your inventory</p>
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* Error Display */}
@@ -351,108 +342,65 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                         <div className="xl:col-span-1 space-y-6">
                             {/* Basic Product Information */}
                             <DashboardCard title="Basic Information" className="space-y-4">
-                                <Input
-                                    label="Product Name *"
-                                    type="text"
+                                <CustomTextInput
+                                    label="Όνομα Προϊόντος"
                                     value={productName}
-                                    onChange={(e) => {
-                                        setProductName(e.target.value);
+                                    onChange={(value) => {
+                                        setProductName(value);
                                         clearFieldError('name');
                                     }}
-                                    placeholder="Enter product name..."
-                                    error={fieldErrors.name}
+                                    placeholder="Εισάγετε όνομα..."
+                                    icon={<Package className="w-4 h-4" />}
                                     required
                                 />
 
-                                <Input
-                                    label="Product Code *"
-                                    type="text"
+                                <CustomTextInput
+                                    label="Κωδικός Προϊόντος"
                                     value={productCode}
-                                    onChange={(e) => {
-                                        setProductCode(e.target.value);
+                                    onChange={(value) => {
+                                        setProductCode(value);
                                         clearFieldError('code');
                                     }}
-                                    placeholder="Enter unique product code..."
-                                    error={fieldErrors.code}
+                                    placeholder="Εισάγετε μοναδικό κωδικό προϊόντος..."
+                                    icon={<Settings className="w-4 h-4" />}
                                     required
                                 />
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Category *
-                                    </label>
-                                    <select
-                                        value={selectedCategoryId || ''}
-                                        onChange={(e) => {
-                                            setSelectedCategoryId(e.target.value ? Number(e.target.value) : undefined);
-                                            clearFieldError('categoryId');
-                                        }}
-                                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="">Select a category...</option>
-                                        {categories.map((category) => (
-                                            <option key={category.id} value={category.id}>
-                                                {category.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {fieldErrors.categoryId && (
-                                        <p className="text-red-500 text-sm mt-1">{fieldErrors.categoryId}</p>
-                                    )}
-                                </div>
+                                <CustomSelect
+                                    label="Κατηγορία"
+                                    value={selectedCategoryId || ''}
+                                    onChange={(value) => {
+                                        setSelectedCategoryId(value ? Number(value) : undefined);
+                                        clearFieldError('categoryId');
+                                    }}
+                                    options={categoryOptions}
+                                    placeholder="Επιλογή Κατηγορίας"
+                                    icon={<Package className="w-4 h-4" />}
+                                    required
+                                />
                             </DashboardCard>
 
                             {/* Materials */}
                             <DashboardCard title="Materials" className="space-y-4" height="md">
-                                <SearchDropdown
+                                <CustomSearchDropdown
+                                    label="Προσθήκη Υλικών"
                                     searchTerm={materialSearchTerm}
-                                    onSearchTermChange={(term : string) => {
-                                        setMaterialSearchTerm(term);
-                                        searchMaterials(term);
-                                    }}
+                                    onSearchTermChange={setMaterialSearchTerm}
                                     searchResults={transformedMaterialResults}
-                                    onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
+                                    onSelect={(item) => {
                                         const material = materialSearchResults.find(m => m.materialId === item.id);
-                                        if (material) {
-                                            addMaterial(material); // material is MaterialSearchResultDTO
-                                            setMaterialSearchTerm('');
-                                            setMaterialSearchResults([]);
-                                        }
+                                        if (material) addMaterial(material);
                                     }}
-                                    placeholder="Search materials..."
-                                    label="Add Materials"
-                                    icon={<Package className="w-5 h-5 text-blue-500" />}
+                                    placeholder="Αναζήτηση Υλικών..."
                                     isLoading={isLoadingMaterials}
-                                    emptyMessage="No materials found"
-                                    emptySubMessage="Try searching with different keywords"
-                                    renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                        <div className="flex-1">
-                                            <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
-                                                {item.name}
-                                            </div>
-                                            <div className="text-sm text-gray-500 mt-0.5 flex items-center space-x-2">
-                                                <span className="flex items-center">
-                                                    <Ruler className="w-3 h-3 mr-1" />
-                                                    {item.subtitle}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-                                    renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                        <div className="flex flex-col items-end space-y-1">
-                                            <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                                                {item.additionalInfo}
-                                            </div>
-                                            <div className="text-xs text-gray-400">per unit</div>
-                                        </div>
-                                    )}
+                                    entityType="material"
+                                    icon={<Ruler className="w-4 h-4" />}
                                 />
 
                                 {/* Selected Materials */}
                                 {selectedMaterials.length > 0 && (
                                     <div className="space-y-2 max-h-64 overflow-y-auto">
-                                        <h4 className="text-sm font-semibold text-gray-700">Selected Materials</h4>
+                                        <h4 className="text-sm font-semibold text-gray-700">Επιλεγμένα Υλικά</h4>
                                         {selectedMaterials.map((material) => (
                                             <div key={material.materialId} className="p-3 bg-gray-50 rounded-lg">
                                                 <div className="flex items-center justify-between mb-2">
@@ -501,80 +449,59 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
 
                             {/* Inventory Information */}
                             <DashboardCard title="Inventory" className="space-y-4">
-                                <Input
-                                    label="Initial Stock"
-                                    type="number"
+                                <CustomNumberInput
+                                    label="Αρχικό Απόθεμα"
                                     value={stock}
-                                    onChange={(e) => setStock(Number(e.target.value))}
-                                    placeholder="0"
-                                    min="0"
+                                    onChange={setStock}
+                                    placeholder="Εισάγετε Απόθεμα..."
+                                    icon={<Package className="w-4 h-4" />}
+                                    min={0}
+                                    step={1}
                                 />
 
-                                <Input
-                                    label="Low Stock Alert"
-                                    type="number"
+                                <CustomNumberInput
+                                    label="Οριακό Απόθεμα"
                                     value={lowStockAlert}
-                                    onChange={(e) => setLowStockAlert(Number(e.target.value))}
-                                    placeholder="5"
-                                    min="0"
+                                    onChange={setLowStockAlert}
+                                    placeholder="Εισάγετε οριακό απόθεμα..."
+                                    icon={<Package className="w-4 h-4" />}
+                                    min={0}
+                                    step={1}
                                 />
 
-                                <Input
-                                    label="Minutes to Make"
-                                    type="number"
+                                <CustomNumberInput
+                                    label="Χρόνος Κατασκευής (Λεπτά)"
                                     value={minutesToMake}
-                                    onChange={(e) => setMinutesToMake(Number(e.target.value))}
-                                    placeholder="0"
-                                    min="0"
+                                    onChange={setMinutesToMake}
+                                    placeholder="Εισάγετε χρόνο κατασκευής σε λεπτά..."
                                     icon={<Clock className="w-4 h-4" />}
+                                    min={0}
+                                    step={1}
                                 />
                             </DashboardCard>
 
 
                             {/* Procedures */}
                             <DashboardCard title="Procedures" className="space-y-4" height="md">
-                                <SearchDropdown
+                                <CustomSearchDropdown
+                                    label="Προσθήκη Διαδικασίας / Πάγιου Εξόδου"
                                     searchTerm={procedureSearchTerm}
-                                    onSearchTermChange={(term : string) => {
-                                        setProcedureSearchTerm(term);
-                                        searchProcedures(term);
-                                    }}
+                                    onSearchTermChange={setProcedureSearchTerm}
                                     searchResults={transformedProcedureResults}
-                                    onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
-                                        const procedure = filteredProcedures.find(p => p.id === item.id);
-                                        if (procedure) {
-                                            addProcedure(procedure); // procedure is ProcedureForDropdownDTO
-                                            setProcedureSearchTerm('');
-                                            setFilteredProcedures([]);
-                                        }
+                                    onSelect={(item) => {
+                                        const procedure = procedureSearchResults.find(p => p.id === item.id);
+                                        if (procedure) addProcedure(procedure);
                                     }}
-                                    placeholder="Search procedures..."
-                                    label="Add Procedures"
-                                    icon={<Settings className="w-5 h-5 text-purple-500" />}
+                                    placeholder="Αναζήτηση Διαδικασίας..."
                                     isLoading={isLoadingProcedures}
-                                    emptyMessage="No procedures found"
-                                    emptySubMessage="Try searching with different keywords"
-                                    renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                        <div className="flex-1">
-                                            <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">
-                                                {item.name}
-                                            </div>
-                                            <div className="text-sm text-gray-500 mt-0.5">
-                                                {item.subtitle}
-                                            </div>
-                                        </div>
-                                    )}
-                                    renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                        <div className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-md">
-                                            {item.additionalInfo}
-                                        </div>
-                                    )}
+                                    entityType="procedure"
+                                    icon={<Settings className="w-4 h-4" />}
                                 />
 
                                 {/* Selected Procedures */}
                                 {selectedProcedures.length > 0 && (
                                     <div className="space-y-2 max-h-64 overflow-y-auto">
-                                        <h4 className="text-sm font-semibold text-gray-700">Selected Procedures</h4>
+                                        <h4 className="text-sm font-semibold text-gray-700">Επιλεγμένες Διαδικασίες</h4>
                                         {selectedProcedures.map((procedure) => (
                                             <div key={procedure.procedureId} className="p-3 bg-gray-50 rounded-lg">
                                                 <div className="flex items-center justify-between mb-2">
@@ -609,36 +536,38 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                         {/* Right Column - Pricing */}
                         <div className="xl:col-span-1 space-y-6">
                             {/* Price Calculation */}
-                            <DashboardCard title="Price Calculation" className="space-y-4">
+                            <DashboardCard title="Price Calculation" className="space-y-4" height="md">
                                 <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                                    <div className="flex justify-between text-sm">
-                                        <span>Material Cost:</span>
+                                    <div className="flex justify-between text-xs">
+                                        <span>Κόστος Υλικών:</span>
                                         <span className="font-medium">€{priceCalculation.materialCost.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span>Labor Cost:</span>
+                                    <div className="flex justify-between text-xs">
+                                        <span>Κόστος Εργατικών:</span>
                                         <span className="font-medium">€{priceCalculation.laborCost.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span>Procedure Cost:</span>
+                                    <div className="flex justify-between text-xs">
+                                        <span>Κόστος Διαδικασιών:</span>
                                         <span className="font-medium">€{priceCalculation.procedureCost.toFixed(2)}</span>
                                     </div>
                                     <div className="border-t pt-2">
                                         <div className="flex justify-between font-semibold">
-                                            <span>Total Cost:</span>
+                                            <span>Συνολικό Κόστος:</span>
                                             <span>€{priceCalculation.totalCost.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-green-50 p-4 rounded-lg space-y-3">
-                                    <h4 className="font-semibold text-green-800">Suggested Prices</h4>
-                                    <div className="flex justify-between text-sm">
-                                        <span>Suggested Retail:</span>
+                                <div className="bg-green-50 p-4 rounded-lg space-y-3 mt-2">
+                                    <div className="font-bold">
+                                        <span>Προτεινόμενες Τιμές</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm font-semibold">
+                                        <span>Προτεινόμενη Λιανική:</span>
                                         <span className="font-medium text-green-700">€{priceCalculation.suggestedRetailPrice.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span>Suggested Wholesale:</span>
+                                    <div className="flex justify-between text-sm font-semibold">
+                                        <span>Προτεινόμενη Χονδρική:</span>
                                         <span className="font-medium text-green-700">€{priceCalculation.suggestedWholesalePrice.toFixed(2)}</span>
                                     </div>
                                 </div>
@@ -646,61 +575,47 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
 
                             {/* Final Pricing */}
                             <DashboardCard title="Final Pricing" className="space-y-4">
-                                <Input
-                                    label="Final Retail Price"
-                                    type="number"
+                                <CustomNumberInput
+                                    label="Τελική Λιανική Τιμή (€)"
                                     value={finalSellingPriceRetail}
-                                    onChange={(e) => setFinalSellingPriceRetail(Number(e.target.value))}
-                                    placeholder={priceCalculation.suggestedRetailPrice.toFixed(2)}
-                                    min="0"
-                                    step="0.01"
+                                    onChange={setFinalSellingPriceRetail}
+                                    placeholder="Εισάγετε τελική λιανική..."
                                     icon={<Euro className="w-4 h-4" />}
+                                    min={0}
+                                    step={1}
                                 />
 
-                                <Input
-                                    label="Final Wholesale Price"
-                                    type="number"
+                                <CustomNumberInput
+                                    label="Τελική Χονδρική Τιμή (€)"
                                     value={finalSellingPriceWholesale}
-                                    onChange={(e) => setFinalSellingPriceWholesale(Number(e.target.value))}
-                                    placeholder={priceCalculation.suggestedWholesalePrice.toFixed(2)}
-                                    min="0"
-                                    step="0.01"
+                                    onChange={setFinalSellingPriceWholesale}
+                                    placeholder="Εισάγετε τελική Χονδρική..."
                                     icon={<Euro className="w-4 h-4" />}
+                                    min={0}
+                                    step={1}
+                                    className="mt-2"
                                 />
                             </DashboardCard>
 
                             {/* Submit Button */}
-                            <DashboardCard className="text-center">
-                                <div className="space-y-3">
                                     <Button
                                         type="submit"
-                                        variant="primary"
-                                        className="w-full"
+                                        variant="create"
+                                        className="w-full px-1 py-4"
                                         disabled={submitting}
                                     >
                                         {submitting ? (
                                             <>
                                                 <LoadingSpinner />
-                                                <span className="ml-2">Creating...</span>
+                                                <span className="ml-2">Δημιουργία...</span>
                                             </>
                                         ) : (
                                             <>
                                                 <Save className="w-4 h-4 mr-2" />
-                                                Create Product
+                                                Δημιουργία Προϊόντος
                                             </>
                                         )}
                                     </Button>
-                                    <Button
-                                        type="button"
-                                        onClick={() => onNavigate('manage-products')}
-                                        variant="outline-secondary"
-                                        className="w-full"
-                                        disabled={submitting}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </div>
-                            </DashboardCard>
                         </div>
                     </div>
                 </form>

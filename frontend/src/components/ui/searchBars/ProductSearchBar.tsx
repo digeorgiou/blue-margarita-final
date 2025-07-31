@@ -120,12 +120,6 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
         return 'text-green-600 bg-green-50';
     };
 
-    const getPriceDifferenceColor = (percentage: number) => {
-        if (percentage < -10) return 'text-red-600';
-        if (percentage < 0) return 'text-yellow-600';
-        return 'text-green-600';
-    };
-
     // Transform data for SearchDropdown components (following RecordPurchasePage pattern)
     const transformedMaterialResults = materialSearchResults.map(material => ({
         id: material.materialId,
@@ -140,6 +134,51 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
         subtitle: 'Διαδικασία',
         additionalInfo: undefined
     }));
+
+    // Transform selected items for display in CustomSearchDropdown
+    const selectedMaterialForDropdown = selectedMaterial ? {
+        id: selectedMaterial.materialId,
+        name: selectedMaterial.materialName,
+        subtitle: `${selectedMaterial.currentUnitCost}€/${selectedMaterial.unitOfMeasure}`,
+        additionalInfo: selectedMaterial.unitOfMeasure
+    } : null;
+
+    const selectedProcedureForDropdown = selectedProcedure ? {
+        id: selectedProcedure.id,
+        name: selectedProcedure.name,
+        subtitle: 'Διαδικασία',
+        additionalInfo: undefined
+    } : null;
+
+    // Handle material selection
+    const handleMaterialSelect = (item: SearchResult) => {
+        const originalMaterial = materialSearchResults.find(m => m.materialId === item.id);
+        if (originalMaterial) {
+            onMaterialSelect(originalMaterial);
+            // Don't change the search term here - let the dropdown handle the display
+        }
+    };
+
+    // Handle material clear
+    const handleMaterialClear = () => {
+        onMaterialSelect(null);
+        onMaterialSearchTermChange('');
+    };
+
+    // Handle procedure selection
+    const handleProcedureSelect = (item: SearchResult) => {
+        const originalProcedure = procedureSearchResults.find(p => p.id === item.id);
+        if (originalProcedure) {
+            onProcedureSelect(originalProcedure);
+            // Don't change the search term here - let the dropdown handle the display
+        }
+    };
+
+    // Handle procedure clear
+    const handleProcedureClear = () => {
+        onProcedureSelect(null);
+        onProcedureSearchTermChange('');
+    };
 
     return (
         <div className="space-y-6">
@@ -171,8 +210,8 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                     </div>
                 </div>
 
-                {/* Row 2: Stock Filters + Price Filters + Low Stock Toggle (1/5 each) */}
-                <div className="grid grid-cols-5 gap-4">
+                {/* Row 2: Stock Filters + Price Filters  */}
+                <div className="grid grid-cols-4 gap-4">
                     <div className="col-span-1">
                         <CustomNumberInput
                             label="Ελάχιστο Απόθεμα"
@@ -211,122 +250,52 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                             step={0.01}
                         />
                     </div>
-                    <div className="col-span-1 flex items-center justify-center">
-                        <CustomToggleOption
-                            label="Με Χαμηλό Απόθεμα"
-                            value={lowStockOnly}
-                            onChange={onLowStockOnlyChange}
-                        />
-                    </div>
                 </div>
 
                 {/* Row 3: Material Search + Selected Material + Procedure Search + Selected Procedure (1/4 each) */}
-                <div className="grid grid-cols-4 gap-4">
-                    <div className="col-span-1">
+                <div className="grid grid-cols-5 gap-4">
+                    <div className="col-span-2">
                         <CustomSearchDropdown
                             label="Υλικό"
                             searchTerm={materialSearchTerm}
                             onSearchTermChange={onMaterialSearchTermChange}
                             searchResults={transformedMaterialResults}
-                            onSelect={(item: SearchResult) => {
-                                // Find the original MaterialSearchResultDTO from the transformed result
-                                const originalMaterial = materialSearchResults.find(m => m.materialId === item.id);
-                                onMaterialSelect(originalMaterial || null);
-                                if (originalMaterial) {
-                                    onMaterialSearchTermChange(originalMaterial.materialName);
-                                }
-                            }}
+                            onSelect={handleMaterialSelect}
                             placeholder="Αναζήτηση υλικού..."
                             entityType="material"
                             isLoading={loadingMaterials}
-                            selectedItem={null}
-                            onClearSelection={undefined}
+                            selectedItem={selectedMaterialForDropdown}
+                            onClearSelection={handleMaterialClear}
                             emptyMessage="Δεν βρέθηκαν υλικά"
                             emptySubMessage="Δοκιμάστε διαφορετικό όρο αναζήτησης"
                         />
                     </div>
 
-                    <div className="col-span-1">
-                        {/* Selected Material Display */}
-                        {selectedMaterial ? (
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Επιλεγμένο Υλικό
-                                </label>
-                                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-2">
-                                            <Package className="w-4 h-4 text-emerald-600" />
-                                            <div>
-                                                <div className="text-sm font-medium text-emerald-900">
-                                                    {selectedMaterial.materialName}
-                                                </div>
-                                                <div className="text-xs text-emerald-600">
-                                                    {selectedMaterial.currentUnitCost}€/{selectedMaterial.unitOfMeasure}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="col-span-1">
+                    <div className="col-span-2">
                         <CustomSearchDropdown
                             label="Διαδικασία"
                             searchTerm={procedureSearchTerm}
                             onSearchTermChange={onProcedureSearchTermChange}
                             searchResults={transformedProcedureResults}
-                            onSelect={(item: SearchResult) => {
-                                // Find the original ProcedureForDropdownDTO from the transformed result
-                                const originalProcedure = procedureSearchResults.find(p => p.id === item.id);
-                                onProcedureSelect(originalProcedure || null);
-                                if (originalProcedure) {
-                                    onProcedureSearchTermChange(originalProcedure.name);
-                                }
-                            }}
+                            onSelect={handleProcedureSelect}
                             placeholder="Αναζήτηση διαδικασίας..."
                             entityType="procedure"
                             isLoading={loadingProcedures}
-                            selectedItem={null}
-                            onClearSelection={undefined}
+                            selectedItem={selectedProcedureForDropdown}
+                            onClearSelection={handleProcedureClear}
                             emptyMessage="Δεν βρέθηκαν διαδικασίες"
                             emptySubMessage="Δοκιμάστε διαφορετικό όρο αναζήτησης"
                         />
                     </div>
 
-                    <div className="col-span-1">
-                        {/* Selected Procedure Display */}
-                        {selectedProcedure ? (
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Επιλεγμένη Διαδικασία
-                                </label>
-                                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-2">
-                                            <Package className="w-4 h-4 text-purple-600" />
-                                            <div>
-                                                <div className="text-sm font-medium text-purple-900">
-                                                    {selectedProcedure.name}
-                                                </div>
-                                                <div className="text-xs text-purple-600">
-                                                    Διαδικασία
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div>
-                            </div>
-                        )}
+                    <div className="col-span-1 flex items-center justify-center">
+                        <CustomToggleOption
+                            optionLabel="Με Χαμηλό Απόθεμα"
+                            value={lowStockOnly}
+                            onChange={onLowStockOnlyChange}
+                        />
                     </div>
+
                 </div>
 
                 {/* Clear Filters Button */}
@@ -389,25 +358,11 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                                             <div className="flex items-center gap-2 text-gray-600">
                                                 <div className="font-medium">Τιμή Λιανικής:</div>
                                                 <div className="font-semibold text-green-600">
                                                     {formatCurrency(product.finalRetailPrice)}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <div className="font-medium">Κόστος:</div>
-                                                <div className="font-semibold">
-                                                    {formatCurrency(product.totalCost)}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <div className="font-medium">Διαφορά Τιμής:</div>
-                                                <div className={`font-semibold ${getPriceDifferenceColor(product.percentageDifference)}`}>
-                                                    {product.percentageDifference.toFixed(1)}%
                                                 </div>
                                             </div>
 
@@ -422,15 +377,15 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center gap-2 lg:flex-col lg:gap-2">
+                                    <div className="flex items-center gap-2 ml-4">
                                         <Button
                                             onClick={() => onViewDetails(product)}
                                             variant="info"
                                             size="sm"
-                                            className="flex items-center gap-1"
+                                            className="flex items-center gap-1 p-2"
                                         >
                                             <Eye className="w-4 h-4" />
-                                            Προβολή
+                                            Λεπτομέρειες
                                         </Button>
                                         <Button
                                             onClick={() => onEdit(product)}
@@ -445,7 +400,7 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                                             onClick={() => onDelete(product)}
                                             variant="danger"
                                             size="sm"
-                                            className="flex items-center gap-1"
+                                            className="flex items-center gap-1 p-2"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                             Διαγραφή
