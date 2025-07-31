@@ -15,7 +15,7 @@ import {
     AlertTriangle,
     DollarSign,
     Gem, Wrench,
-    Truck
+    Truck, Edit
 } from 'lucide-react';
 import { FaEuroSign } from "react-icons/fa6";
 import {HeaderProps} from "../../types/components/header.ts";
@@ -47,9 +47,19 @@ const Header: React.FC<HeaderProps> = ({
                 description: 'Track and manage all your sales'
             },
             'manage-products': {
-                title: 'Product Management',
+                title: 'Διαχείριση Προϊόντων',
                 icon: <Package className="w-9 h-9" />,
-                description: 'Manage your product catalog'
+                description: 'Διαχειριστείτε τα προϊόντα σας και παρακολουθείστε στατιστικά ανα προϊόν'
+            },
+            'create-product': {
+                title: 'Δημιουργία Προϊόντος',
+                icon: <Package className="w-9 h-9" />,
+                description: "Δημιουργείστε καινούρια προϊόντα, δείτε προτεινόμενες τιμές"
+            },
+            'update-product': {
+                title: 'Επεξεργασία Προϊόντος',
+                icon: <Edit className="w-9 h-9" />,
+                description: "Επεξεργαστείτε τα αποθηκευμένα στοιχεία ενός προϊόντος"
             },
             'customers': {
                 title: 'Πελάτες',

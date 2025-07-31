@@ -16,6 +16,7 @@ import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
+import {ProductDetailModal} from "../components/ui";
 
 interface ProductManagementPageProps {
     onNavigate: (page: string, productId?: string) => void;
@@ -51,7 +52,10 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
     // Modal states
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<ProductListItemDTO | null>(null);
+    const [productDetails, setProductDetails] = useState<ProductDetailedViewDTO | null>(null);
+    const [detailsLoading, setDetailsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
     // Error handling
@@ -177,11 +181,21 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
         return () => clearTimeout(timeoutId);
     }, [procedureSearchTerm]);
 
-    const handleViewDetails = (product: ProductListItemDTO) => {
-        setSelectedProduct(product);
-        // Navigate to product details page or open modal
-        // For now, we'll just log it since no details modal is implemented
-        console.log('View details for product:', product);
+    // Handle view details - Load detailed product data and open modal
+    const handleViewDetails = async (product: ProductListItemDTO) => {
+        try {
+            setSelectedProduct(product);
+            setIsDetailsModalOpen(true);
+            setDetailsLoading(true);
+
+            const details = await productService.getProductDetails(Number(product.id));
+            setProductDetails(details);
+        } catch (error) {
+            console.error('Error loading product details:', error);
+            await handleApiError(error);
+        } finally {
+            setDetailsLoading(false);
+        }
     };
 
     const handleEdit = (product: ProductListItemDTO) => {
@@ -347,7 +361,17 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                     message={successMessage.message}
                 />
 
-                {/* Product Details Modal would go here if you have one */}
+                {/* Product Detail Modal */}
+                <ProductDetailModal
+                    isOpen={isDetailsModalOpen}
+                    onClose={() => {
+                        setIsDetailsModalOpen(false);
+                        setProductDetails(null);
+                        setSelectedProduct(null);
+                    }}
+                    product={productDetails}
+                    loading={detailsLoading}
+                />
             </div>
         </div>
     );

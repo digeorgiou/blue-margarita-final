@@ -39,6 +39,8 @@ export { default as CustomerUpdateModal } from './modals/customer/CustomerUpdate
 export { default as CustomerDetailModal } from './modals/customer/CustomerDetailModal'
 export { default as CustomerSearchBar } from './searchBars/CustomerSearchBar.tsx'
 
+export { default as ProductDetailModal } from './modals/product/ProductDetailModal'
+
 
 export { default as MaterialProductUsageModal } from './modals/material/MaterialProductUsageModal'
 

@@ -3,9 +3,9 @@ import { productService } from '../services/productService';
 import { procedureService } from '../services/procedureService';
 import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
-import { Button, LoadingSpinner, Input, Alert } from '../components/ui';
+import { CustomTextInput, CustomNumberInput, CustomSelect, CustomSearchDropdown } from '../components/ui/inputs';
+import { Button, LoadingSpinner, Alert } from '../components/ui';
 import DashboardCard from '../components/ui/DashboardCard';
-import SearchDropdown from '../components/ui/searchDropdowns/SearchDropdown';
 import {
     Package,
     Plus,
@@ -53,39 +53,46 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
     // Loading and error states
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const { fieldErrors, generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
+    const { generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
 
-    // Form fields - using correct field names from ProductDetailedViewDTO
+    // Basic product fields
     const [name, setName] = useState('');
     const [code, setCode] = useState('');
-    const [categoryId, setCategoryId] = useState<number | null>(null);
+    const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
     const [minutesToMake, setMinutesToMake] = useState(0);
-    const [finalRetailPrice, setFinalRetailPrice] = useState(0);
-    const [finalWholesalePrice, setFinalWholesalePrice] = useState(0);
     const [currentStock, setCurrentStock] = useState(0);
     const [lowStockAlert, setLowStockAlert] = useState(0);
+    const [finalRetailPrice, setFinalRetailPrice] = useState(0);
+    const [finalWholesalePrice, setFinalWholesalePrice] = useState(0);
+
+    // Original values for comparison (ALL fields)
+    const [originalName, setOriginalName] = useState('');
+    const [originalCode, setOriginalCode] = useState('');
+    const [originalCategoryId, setOriginalCategoryId] = useState<number | undefined>(undefined);
+    const [originalMinutesToMake, setOriginalMinutesToMake] = useState(0);
+    const [originalCurrentStock, setOriginalCurrentStock] = useState(0);
+    const [originalLowStockAlert, setOriginalLowStockAlert] = useState(0);
+    const [originalFinalRetailPrice, setOriginalFinalRetailPrice] = useState(0);
+    const [originalFinalWholesalePrice, setOriginalFinalWholesalePrice] = useState(0);
 
     // Materials and procedures
     const [selectedMaterials, setSelectedMaterials] = useState<ProductMaterialDetailDTO[]>([]);
     const [selectedProcedures, setSelectedProcedures] = useState<ProductProcedureDetailDTO[]>([]);
+    const [originalMaterials, setOriginalMaterials] = useState<ProductMaterialDetailDTO[]>([]);
+    const [originalProcedures, setOriginalProcedures] = useState<ProductProcedureDetailDTO[]>([]);
 
-    // Dropdown data
-    const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
-
-    // Search states for materials
+    // Material search states
     const [materialSearchTerm, setMaterialSearchTerm] = useState('');
     const [materialSearchResults, setMaterialSearchResults] = useState<MaterialSearchResultDTO[]>([]);
     const [isLoadingMaterials, setIsLoadingMaterials] = useState(false);
 
-    // Search states for procedures
+    // Procedure search states
     const [procedureSearchTerm, setProcedureSearchTerm] = useState('');
     const [filteredProcedures, setFilteredProcedures] = useState<ProcedureForDropdownDTO[]>([]);
     const [isLoadingProcedures, setIsLoadingProcedures] = useState(false);
 
-    // Track if there are unsaved changes
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [originalMaterials, setOriginalMaterials] = useState<ProductMaterialDetailDTO[]>([]);
-    const [originalProcedures, setOriginalProcedures] = useState<ProductProcedureDetailDTO[]>([]);
+    // Dropdown data
+    const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
 
     // Price calculation
     const [priceCalculation, setPriceCalculation] = useState<PriceCalculation>({
@@ -96,6 +103,9 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         suggestedRetailPrice: 0,
         suggestedWholesalePrice: 0
     });
+
+    // Track unsaved changes
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     // Current user ID (get from auth context)
     const getCurrentUserId = (): number => {
@@ -124,10 +134,33 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
 
     // Check for unsaved changes
     useEffect(() => {
+        const basicFieldsChanged = (
+            name !== originalName ||
+            code !== originalCode ||
+            categoryId !== originalCategoryId ||
+            minutesToMake !== originalMinutesToMake ||
+            currentStock !== originalCurrentStock ||
+            lowStockAlert !== originalLowStockAlert ||
+            finalRetailPrice !== originalFinalRetailPrice ||
+            finalWholesalePrice !== originalFinalWholesalePrice
+        );
+
         const materialsChanged = JSON.stringify(selectedMaterials) !== JSON.stringify(originalMaterials);
         const proceduresChanged = JSON.stringify(selectedProcedures) !== JSON.stringify(originalProcedures);
-        setHasUnsavedChanges(materialsChanged || proceduresChanged);
-    }, [selectedMaterials, selectedProcedures, originalMaterials, originalProcedures]);
+
+        setHasUnsavedChanges(basicFieldsChanged || materialsChanged || proceduresChanged);
+    }, [
+        name, originalName,
+        code, originalCode,
+        categoryId, originalCategoryId,
+        minutesToMake, originalMinutesToMake,
+        currentStock, originalCurrentStock,
+        lowStockAlert, originalLowStockAlert,
+        finalRetailPrice, originalFinalRetailPrice,
+        finalWholesalePrice, originalFinalWholesalePrice,
+        selectedMaterials, originalMaterials,
+        selectedProcedures, originalProcedures
+    ]);
 
     // Recalculate prices whenever materials, procedures, or minutesToMake change
     useEffect(() => {
@@ -139,33 +172,38 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
             setLoading(true);
             const productData = await productService.getProductDetails(productId);
 
-            // Always refresh form fields from database - don't preserve local changes
+            // Set current form fields
             setName(productData.name);
             setCode(productData.code);
             setCategoryId(productData.categoryId);
-            setMinutesToMake(productData.minutesToMake || 0);
-            setFinalRetailPrice(productData.finalRetailPrice || 0);
-            setFinalWholesalePrice(productData.finalWholesalePrice || 0);
-            setCurrentStock(productData.currentStock || 0);
-            setLowStockAlert(productData.lowStockAlert || 0);
+            setMinutesToMake(productData.minutesToMake);
+            setCurrentStock(productData.currentStock);
+            setLowStockAlert(productData.lowStockAlert);
+            setFinalRetailPrice(productData.finalRetailPrice);
+            setFinalWholesalePrice(productData.finalWholesalePrice);
 
-            // Always refresh materials and procedures from database
+            // Store original values for ALL fields
+            setOriginalName(productData.name);
+            setOriginalCode(productData.code);
+            setOriginalCategoryId(productData.categoryId);
+            setOriginalMinutesToMake(productData.minutesToMake);
+            setOriginalCurrentStock(productData.currentStock);
+            setOriginalLowStockAlert(productData.lowStockAlert);
+            setOriginalFinalRetailPrice(productData.finalRetailPrice);
+            setOriginalFinalWholesalePrice(productData.finalWholesalePrice);
+
+            // Set materials and procedures
             const materials = productData.materials || [];
             const procedures = productData.procedures || [];
 
             setSelectedMaterials(materials);
             setSelectedProcedures(procedures);
+            setOriginalMaterials([...materials]);
+            setOriginalProcedures([...procedures]);
 
-            // Store original values for comparison
-            setOriginalMaterials(materials);
-            setOriginalProcedures(procedures);
-            setHasUnsavedChanges(false);
-
-            console.log('Product data refreshed from database:', {
-                materials: materials.length,
-                procedures: procedures.length
-            });
+            clearErrors();
         } catch (err) {
+            console.error('Error loading product data:', err);
             await handleApiError(err);
         } finally {
             setLoading(false);
@@ -181,29 +219,25 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         }
     };
 
-    // Calculate all prices locally - instant calculation, no API calls
     const calculatePrices = () => {
         // Calculate material cost
-        const materialCost = selectedMaterials.reduce((total, material) =>
-            total + (material.unitCost * material.quantity), 0);
+        const materialCost = selectedMaterials.reduce((sum, material) =>
+            sum + (material.unitCost * material.quantity), 0);
+
+        // Calculate labor cost
+        const laborCost = (minutesToMake / MINUTES_PER_HOUR) * HOURLY_LABOR_RATE;
 
         // Calculate procedure cost
-        const procedureCost = selectedProcedures.reduce((total, procedure) =>
-            total + procedure.cost, 0);
-
-        // Calculate labor cost: (minutes ÷ 60) × hourly rate
-        const laborCost = minutesToMake > 0
-            ? (minutesToMake / MINUTES_PER_HOUR) * HOURLY_LABOR_RATE
-            : 0;
+        const procedureCost = selectedProcedures.reduce((sum, procedure) =>
+            sum + procedure.cost, 0);
 
         // Calculate total cost
         const totalCost = materialCost + laborCost + procedureCost;
 
-        // Calculate suggested prices using markup factors
+        // Calculate suggested prices
         const suggestedRetailPrice = totalCost * RETAIL_MARKUP_FACTOR;
         const suggestedWholesalePrice = totalCost * WHOLESALE_MARKUP_FACTOR;
 
-        // Update state with all calculations
         setPriceCalculation({
             materialCost,
             laborCost,
@@ -214,130 +248,105 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         });
     };
 
-    // Material search
-    const searchMaterials = async (term: string): Promise<void> => {
-        if (term.length < 2) {
-            setMaterialSearchResults([]);
-            return;
+    // Material search with debouncing
+    useEffect(() => {
+        const searchMaterials = async () => {
+            if (materialSearchTerm.length < 2) {
+                setMaterialSearchResults([]);
+                return;
+            }
+
+            setIsLoadingMaterials(true);
+            try {
+                const results = await materialService.searchMaterialsForAutocomplete(materialSearchTerm);
+                setMaterialSearchResults(results);
+            } catch (err) {
+                console.error('Error searching materials:', err);
+            } finally {
+                setIsLoadingMaterials(false);
+            }
+        };
+
+        const timeoutId = setTimeout(searchMaterials, 300);
+        return () => clearTimeout(timeoutId);
+    }, [materialSearchTerm]);
+
+    // Procedure search with debouncing
+    useEffect(() => {
+        const searchProcedures = async () => {
+            if (procedureSearchTerm.length < 2) {
+                setFilteredProcedures([]);
+                return;
+            }
+
+            setIsLoadingProcedures(true);
+            try {
+                const results = await procedureService.searchProceduresForAutocomplete(procedureSearchTerm);
+                setFilteredProcedures(results);
+            } catch (err) {
+                console.error('Error searching procedures:', err);
+            } finally {
+                setIsLoadingProcedures(false);
+            }
+        };
+
+        const timeoutId = setTimeout(searchProcedures, 300);
+        return () => clearTimeout(timeoutId);
+    }, [procedureSearchTerm]);
+
+    // Material handlers
+    const handleMaterialSelect = (material: MaterialSearchResultDTO): void => {
+        const existingMaterial = selectedMaterials.find(m => m.materialId === material.materialId);
+        if (existingMaterial) {
+            return; // Material already selected
         }
 
-        setIsLoadingMaterials(true);
-        try {
-            const results = await materialService.searchMaterialsForAutocomplete(term);
-            setMaterialSearchResults(results);
-        } catch (err) {
-            console.error('Material search error:', err);
-            setMaterialSearchResults([]);
-        } finally {
-            setIsLoadingMaterials(false);
-        }
-    };
-
-    // Procedure search
-    const searchProcedures = async (term: string): Promise<void> => {
-        if (term.length < 2) {
-            setFilteredProcedures([]);
-            return;
-        }
-
-        setIsLoadingProcedures(true);
-        try {
-            const results = await procedureService.searchProceduresForAutocomplete(term);
-            setFilteredProcedures(results);
-        } catch (err) {
-            console.error('Procedure search error:', err);
-            setFilteredProcedures([]);
-        } finally {
-            setIsLoadingProcedures(false);
-        }
-    };
-
-    // Material management - LOCAL ONLY (no immediate API calls)
-    const addMaterial = (material: MaterialSearchResultDTO): void => {
-        console.log('Adding material locally:', material);
-
-        // Check if material is already selected
-        if (selectedMaterials.some(m => m.materialId === material.materialId)) {
-            console.log('Material already selected:', material.materialId);
-            return;
-        }
-
-        // Update local state only - no API call
         const newMaterial: ProductMaterialDetailDTO = {
             materialId: material.materialId,
             materialName: material.materialName,
-            quantity: 1,
             unitOfMeasure: material.unitOfMeasure,
             unitCost: material.currentUnitCost,
-            totalCost: material.currentUnitCost
+            quantity: 1
         };
 
-        setSelectedMaterials(prev => {
-            const updated = [...prev, newMaterial];
-            console.log('Updated materials list (local only):', updated);
-            return updated;
-        });
-
-        // Clear search state
+        setSelectedMaterials(prev => [...prev, newMaterial]);
         setMaterialSearchTerm('');
         setMaterialSearchResults([]);
     };
 
     const updateMaterialQuantity = (materialId: number, newQuantity: number): void => {
-        if (newQuantity <= 0) {
-            removeMaterial(materialId);
-            return;
-        }
-
-        // Update local state only - no API call
         setSelectedMaterials(prev =>
             prev.map(material =>
                 material.materialId === materialId
-                    ? {
-                        ...material,
-                        quantity: newQuantity,
-                        totalCost: material.unitCost * newQuantity
-                    }
+                    ? { ...material, quantity: Math.max(0, newQuantity) }
                     : material
             )
         );
     };
 
     const removeMaterial = (materialId: number): void => {
-        // Update local state only - no API call
         setSelectedMaterials(prev => prev.filter(m => m.materialId !== materialId));
     };
 
-    // Procedure management - LOCAL ONLY (no immediate API calls)
-    const addProcedure = (procedure: ProcedureForDropdownDTO): void => {
-        console.log('Adding procedure locally:', procedure);
-
-        // Check if procedure is already selected
-        if (selectedProcedures.some(p => p.procedureId === procedure.id)) {
-            console.log('Procedure already selected:', procedure.id);
-            return;
+    // Procedure handlers
+    const handleProcedureSelect = (procedure: ProcedureForDropdownDTO): void => {
+        const existingProcedure = selectedProcedures.find(p => p.procedureId === procedure.id);
+        if (existingProcedure) {
+            return; // Procedure already selected
         }
 
-        // Update local state only - no API call
         const newProcedure: ProductProcedureDetailDTO = {
             procedureId: procedure.id,
             procedureName: procedure.name,
-            cost: 0 // User will set the cost
+            cost: 0
         };
 
-        setSelectedProcedures(prev => {
-            const updated = [...prev, newProcedure];
-            console.log('Updated procedures list (local only):', updated);
-            return updated;
-        });
-
-        // Clear search state
+        setSelectedProcedures(prev => [...prev, newProcedure]);
         setProcedureSearchTerm('');
         setFilteredProcedures([]);
     };
 
     const updateProcedureCost = (procedureId: number, newCost: number): void => {
-        // Update local state only - no API call
         setSelectedProcedures(prev =>
             prev.map(procedure =>
                 procedure.procedureId === procedureId
@@ -348,7 +357,6 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
     };
 
     const removeProcedure = (procedureId: number): void => {
-        // Update local state only - no API call
         setSelectedProcedures(prev => prev.filter(p => p.procedureId !== procedureId));
     };
 
@@ -380,7 +388,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                 updaterUserId: getCurrentUserId()
             };
 
-            await productService.updateProduct(productId,productData);
+            await productService.updateProduct(productId, productData);
             console.log('Basic product info updated');
 
             // 2. Get current materials/procedures from database to compare
@@ -452,6 +460,15 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         subtitle: "Manufacturing Process"
     }));
 
+    // Transform categories for CustomSelect
+    const categoryOptions = [
+        { value: '', label: 'Select a category...' },
+        ...categories.map(category => ({
+            value: category.id,
+            label: category.name
+        }))
+    ];
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -464,48 +481,41 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-            <div className="p-6">
+        <div className="min-h-screen p-4">
+            <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center space-x-4">
-                        <Button
-                            onClick={() => onNavigate('manage-products')}
-                            variant="outline-secondary"
-                            className="flex items-center"
-                        >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back to Products
-                        </Button>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Update Product
-                                {hasUnsavedChanges && (
-                                    <span className="ml-3 text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
-                                        Unsaved changes
-                                    </span>
-                                )}
-                            </h1>
-                            <p className="text-gray-600 mt-1">Edit product details and pricing</p>
+                            <h1 className="text-2xl font-bold text-white">Επεξεργασία Προϊόντος</h1>
+                            {hasUnsavedChanges && (
+                                <span className="text-sm text-amber-300 font-medium">
+                                    ⚠️ Υπάρχουν μη αποθηκευμένες αλλαγές
+                                </span>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center space-x-3">
                         <Button
-                            type="button"
-                            onClick={() => {
-                                console.log('Refreshing product data...');
-                                loadProductData();
-                            }}
-                            variant="outline-secondary"
+                            onClick={() => onNavigate('manage-products')}
+                            variant="yellow"
                             className="flex items-center"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Επιστροφή στα Προϊόντα
+                        </Button>
+                        <Button
+                            onClick={loadProductData}
+                            variant="pink"
                             disabled={loading}
+                            className="flex items-center"
                         >
                             {loading ? (
                                 <LoadingSpinner/>
                             ) : (
-                                <RefreshCw className="w-4 h-4 mr-2" />
+                                 <RefreshCw className="w-4 h-4 mr-2" />
                             )}
-                            Refresh
+                            Ανανέωση
                         </Button>
                     </div>
                 </div>
@@ -523,93 +533,44 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                         <div className="xl:col-span-1 space-y-6">
                             {/* Basic Product Information */}
                             <DashboardCard title="Basic Information" className="space-y-4">
-                                <Input
-                                    label="Product Name *"
-                                    type="text"
+                                <CustomTextInput
+                                    label="Όνομα Προϊόντος"
                                     value={name}
-                                    onChange={(e) => {
-                                        setName(e.target.value);
+                                    onChange={(value) => {
+                                        setName(value);
                                         clearFieldError('name');
                                     }}
-                                    placeholder="Enter product name..."
-                                    error={fieldErrors.name}
+                                    placeholder="Εισάγετε όνομα..."
                                     required
+                                    icon={<Package className="w-4 h-4" />}
                                 />
 
-                                <Input
-                                    label="Product Code *"
-                                    type="text"
+                                <CustomTextInput
+                                    label="Κωδικός Προϊόντος"
                                     value={code}
-                                    onChange={(e) => {
-                                        setCode(e.target.value);
+                                    onChange={(value) => {
+                                        setCode(value);
                                         clearFieldError('code');
                                     }}
-                                    placeholder="Enter unique product code..."
-                                    error={fieldErrors.code}
+                                    placeholder="Εισάγετε μοναδικό κωδικό προϊόντος..."
+                                    required
+                                    icon={<Settings className="w-4 h-4" />}
+                                />
+
+                                <CustomSelect
+                                    label="Κατηγορία"
+                                    value={categoryId || ''}
+                                    onChange={(value) => {
+                                        setCategoryId(value as number || undefined);
+                                        clearFieldError('categoryId');
+                                    }}
+                                    options={categoryOptions}
+                                    placeholder=""
                                     required
                                 />
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Category *
-                                    </label>
-                                    <select
-                                        value={categoryId || ''}
-                                        onChange={(e) => {
-                                            setCategoryId(e.target.value ? Number(e.target.value) : null);
-                                            clearFieldError('categoryId');
-                                        }}
-                                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="">Select a category...</option>
-                                        {categories.map((category) => (
-                                            <option key={category.id} value={category.id}>
-                                                {category.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {fieldErrors.categoryId && (
-                                        <p className="text-red-500 text-sm mt-1">{fieldErrors.categoryId}</p>
-                                    )}
-                                </div>
                             </DashboardCard>
 
-                            {/* Inventory Information */}
-                            <DashboardCard title="Inventory" className="space-y-4">
-                                <Input
-                                    label="Current Stock"
-                                    type="number"
-                                    value={currentStock}
-                                    onChange={(e) => setCurrentStock(Number(e.target.value))}
-                                    placeholder="0"
-                                    min="0"
-                                />
-
-                                <Input
-                                    label="Low Stock Alert"
-                                    type="number"
-                                    value={lowStockAlert}
-                                    onChange={(e) => setLowStockAlert(Number(e.target.value))}
-                                    placeholder="5"
-                                    min="0"
-                                />
-
-                                <Input
-                                    label="Minutes to Make"
-                                    type="number"
-                                    value={minutesToMake}
-                                    onChange={(e) => setMinutesToMake(Number(e.target.value))}
-                                    placeholder="0"
-                                    min="0"
-                                    icon={<Clock className="w-4 h-4" />}
-                                />
-                            </DashboardCard>
-                        </div>
-
-                        {/* Middle Column - Materials and Procedures */}
-                        <div className="xl:col-span-1 space-y-6">
-                            {/* Materials */}
+                            {/* Materials Section */}
                             <DashboardCard
                                 title={
                                     <div className="flex items-center justify-between">
@@ -623,58 +584,36 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                 }
                                 className="space-y-4"
                             >
-                                <SearchDropdown
+                                <CustomSearchDropdown
+                                    label="Προσθήκη Υλικών"
                                     searchTerm={materialSearchTerm}
-                                    onSearchTermChange={(term: string) => {
-                                        setMaterialSearchTerm(term);
-                                        searchMaterials(term);
-                                    }}
+                                    onSearchTermChange={setMaterialSearchTerm}
                                     searchResults={transformedMaterialResults}
-                                    onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
+                                    onSelect={(item) => {
                                         const material = materialSearchResults.find(m => m.materialId === item.id);
-                                        if (material) {
-                                            addMaterial(material);
-                                            setMaterialSearchTerm('');
-                                            setMaterialSearchResults([]);
-                                        }
+                                        if (material) handleMaterialSelect(material);
                                     }}
-                                    placeholder="Search materials..."
-                                    label="Add Materials"
-                                    icon={<Package className="w-5 h-5 text-blue-500" />}
+                                    placeholder="Αναζήτηση Υλικών"
                                     isLoading={isLoadingMaterials}
+                                    entityType="material"
+                                    icon={<Ruler className="w-4 h-4" />}
                                     emptyMessage="No materials found"
                                     emptySubMessage="Try searching with different keywords"
-                                    renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                        <div className="flex-1">
-                                            <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
-                                                {item.name}
-                                            </div>
-                                            <div className="text-sm text-gray-500 mt-0.5 flex items-center space-x-2">
-                                                <span className="flex items-center">
-                                                    <Ruler className="w-3 h-3 mr-1" />
-                                                    {item.subtitle}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-                                    renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                        <div className="flex flex-col items-end space-y-1">
-                                            <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                                                {item.additionalInfo}
-                                            </div>
-                                            <div className="text-xs text-gray-400">per unit</div>
-                                        </div>
-                                    )}
                                 />
 
-                                {/* Selected Materials */}
+                                {/* Selected Materials Display */}
                                 {selectedMaterials.length > 0 && (
-                                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                                        <h4 className="text-sm font-semibold text-gray-700">Selected Materials</h4>
+                                    <div className="space-y-2">
+                                        <h4 className="text-sm font-medium text-gray-700">Επιλεγμένα Υλικά:</h4>
                                         {selectedMaterials.map((material) => (
-                                            <div key={material.materialId} className="p-3 bg-gray-50 rounded-lg">
+                                            <div key={material.materialId} className="bg-blue-50 p-3 rounded-lg border">
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="font-medium text-gray-900">{material.materialName}</span>
+                                                    <div className="flex-1">
+                                                        <span className="font-medium text-gray-900">{material.materialName}</span>
+                                                        <div className="text-sm text-gray-600">
+                                                            €{material.unitCost.toFixed(2)} per {material.unitOfMeasure}
+                                                        </div>
+                                                    </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => removeMaterial(material.materialId)}
@@ -688,6 +627,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                                         type="button"
                                                         onClick={() => updateMaterialQuantity(material.materialId, material.quantity - 1)}
                                                         className="p-1 text-gray-500 hover:text-gray-700"
+                                                        disabled={material.quantity <= 0}
                                                     >
                                                         <Minus className="w-4 h-4" />
                                                     </button>
@@ -702,7 +642,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                                         <Plus className="w-4 h-4" />
                                                     </button>
                                                     <span className="ml-auto text-sm text-gray-600">
-                                                        €{material.totalCost.toFixed(2)}
+                                                        Σύνολο: €{(material.unitCost * material.quantity).toFixed(2)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -711,7 +651,47 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                 )}
                             </DashboardCard>
 
-                            {/* Procedures */}
+
+                        </div>
+
+                        {/* Middle Column - Materials and Procedures */}
+                        <div className="xl:col-span-1 space-y-6">
+
+                            {/* Stock Information */}
+                            <DashboardCard title="Stock Information" className="space-y-4">
+                                <CustomNumberInput
+                                    label="Απόθεμα"
+                                    value={currentStock}
+                                    onChange={setCurrentStock}
+                                    placeholder="0"
+                                    min={0}
+                                    icon={<Package className="w-4 h-4" />}
+                                    step={1}
+                                />
+
+                                <CustomNumberInput
+                                    label="Οριακό Απόθεμα"
+                                    value={lowStockAlert}
+                                    onChange={setLowStockAlert}
+                                    placeholder="0"
+                                    min={0}
+                                    step={1}
+                                />
+
+                                <CustomNumberInput
+                                    label="Χρόνος Κατασκευής (Λεπτά)"
+                                    value={minutesToMake}
+                                    onChange={setMinutesToMake}
+                                    placeholder="0"
+                                    min={0}
+                                    icon={<Clock className="w-4 h-4" />}
+                                    step={1}
+                                />
+                            </DashboardCard>
+
+
+
+                            {/* Procedures Section */}
                             <DashboardCard
                                 title={
                                     <div className="flex items-center justify-between">
@@ -725,50 +705,29 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                 }
                                 className="space-y-4"
                             >
-                                <SearchDropdown
+                                <CustomSearchDropdown
+                                    label="Προσθήκη Διαδικασίας"
                                     searchTerm={procedureSearchTerm}
-                                    onSearchTermChange={(term: string) => {
-                                        setProcedureSearchTerm(term);
-                                        searchProcedures(term);
-                                    }}
+                                    onSearchTermChange={setProcedureSearchTerm}
                                     searchResults={transformedProcedureResults}
-                                    onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
+                                    onSelect={(item) => {
                                         const procedure = filteredProcedures.find(p => p.id === item.id);
-                                        if (procedure) {
-                                            addProcedure(procedure);
-                                            setProcedureSearchTerm('');
-                                            setFilteredProcedures([]);
-                                        }
+                                        if (procedure) handleProcedureSelect(procedure);
                                     }}
-                                    placeholder="Search procedures..."
-                                    label="Add Procedures"
-                                    icon={<Settings className="w-5 h-5 text-purple-500" />}
+                                    placeholder="Αναζήτηση Διαδικασίας..."
                                     isLoading={isLoadingProcedures}
+                                    entityType="procedure"
+                                    icon={<Settings className="w-4 h-4" />}
                                     emptyMessage="No procedures found"
                                     emptySubMessage="Try searching with different keywords"
-                                    renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                        <div className="flex-1">
-                                            <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">
-                                                {item.name}
-                                            </div>
-                                            <div className="text-sm text-gray-500 mt-0.5">
-                                                {item.subtitle}
-                                            </div>
-                                        </div>
-                                    )}
-                                    renderAdditionalInfo={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                        <div className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-md">
-                                            {item.additionalInfo}
-                                        </div>
-                                    )}
                                 />
 
-                                {/* Selected Procedures */}
+                                {/* Selected Procedures Display */}
                                 {selectedProcedures.length > 0 && (
-                                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                                        <h4 className="text-sm font-semibold text-gray-700">Selected Procedures</h4>
+                                    <div className="space-y-2">
+                                        <h4 className="text-sm font-medium text-gray-700">Επιλεγμένες Διαδικασίες:</h4>
                                         {selectedProcedures.map((procedure) => (
-                                            <div key={procedure.procedureId} className="p-3 bg-gray-50 rounded-lg">
+                                            <div key={procedure.procedureId} className="bg-purple-50 p-3 rounded-lg border">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <span className="font-medium text-gray-900">{procedure.procedureName}</span>
                                                     <button
@@ -781,14 +740,14 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <Euro className="w-4 h-4 text-gray-400" />
-                                                    <input
-                                                        type="number"
+                                                    <CustomNumberInput
+                                                        label=""
                                                         value={procedure.cost}
-                                                        onChange={(e) => updateProcedureCost(procedure.procedureId, Number(e.target.value))}
+                                                        onChange={(value) => updateProcedureCost(procedure.procedureId, value)}
                                                         placeholder="Enter cost..."
-                                                        className="flex-1 p-2 border border-gray-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                        min="0"
-                                                        step="0.01"
+                                                        min={0}
+                                                        step={0.01}
+                                                        className="flex-1"
                                                     />
                                                 </div>
                                             </div>
@@ -802,93 +761,82 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                         <div className="xl:col-span-1 space-y-6">
                             {/* Price Calculation */}
                             <DashboardCard title="Price Calculation" className="space-y-4">
-                                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                                <div className="space-y-3">
                                     <div className="flex justify-between text-sm">
-                                        <span>Material Cost:</span>
+                                        <span className="text-gray-600">Κόστος Υλικών:</span>
                                         <span className="font-medium">€{priceCalculation.materialCost.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span>Labor Cost:</span>
+                                        <span className="text-gray-600">Κόστος Εργατικών:</span>
                                         <span className="font-medium">€{priceCalculation.laborCost.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span>Procedure Cost:</span>
+                                        <span className="text-gray-600">Κόστος Διαδικασιών:</span>
                                         <span className="font-medium">€{priceCalculation.procedureCost.toFixed(2)}</span>
                                     </div>
-                                    <div className="border-t pt-2">
-                                        <div className="flex justify-between font-semibold">
-                                            <span>Total Cost:</span>
-                                            <span>€{priceCalculation.totalCost.toFixed(2)}</span>
-                                        </div>
+                                    <hr className="border-gray-200" />
+                                    <div className="flex justify-between font-medium">
+                                        <span>Συνολικό Κόστος:</span>
+                                        <span>€{priceCalculation.totalCost.toFixed(2)}</span>
                                     </div>
-                                </div>
-
-                                <div className="bg-green-50 p-4 rounded-lg space-y-3">
-                                    <h4 className="font-semibold text-green-800">Suggested Prices</h4>
+                                    <hr className="border-gray-200" />
                                     <div className="flex justify-between text-sm">
-                                        <span>Suggested Retail:</span>
-                                        <span className="font-medium text-green-700">€{priceCalculation.suggestedWholesalePrice.toFixed(2)}</span>
+                                        <span className="text-gray-600">Προτεινόμενη Λιανική:</span>
+                                        <span className="font-medium text-green-600">
+                                            €{priceCalculation.suggestedRetailPrice.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Προτεινόμενη Χονδρική:</span>
+                                        <span className="font-medium text-blue-600">
+                                            €{priceCalculation.suggestedWholesalePrice.toFixed(2)}
+                                        </span>
                                     </div>
                                 </div>
                             </DashboardCard>
 
                             {/* Final Pricing */}
                             <DashboardCard title="Final Pricing" className="space-y-4">
-                                <Input
-                                    label="Final Retail Price"
-                                    type="number"
+                                <CustomNumberInput
+                                    label="Τελική Λιανική Τιμή"
                                     value={finalRetailPrice}
-                                    onChange={(e) => setFinalRetailPrice(Number(e.target.value))}
-                                    placeholder={priceCalculation.suggestedRetailPrice.toFixed(2)}
-                                    min="0"
-                                    step="0.01"
+                                    onChange={setFinalRetailPrice}
+                                    placeholder="0.00"
+                                    min={0}
+                                    step={1}
                                     icon={<Euro className="w-4 h-4" />}
                                 />
 
-                                <Input
-                                    label="Final Wholesale Price"
-                                    type="number"
+                                <CustomNumberInput
+                                    label="Τελική Χονδρική Τιμή"
                                     value={finalWholesalePrice}
-                                    onChange={(e) => setFinalWholesalePrice(Number(e.target.value))}
-                                    placeholder={priceCalculation.suggestedWholesalePrice.toFixed(2)}
-                                    min="0"
-                                    step="0.01"
+                                    onChange={setFinalWholesalePrice}
+                                    placeholder="0.00"
+                                    className={"mt-2"}
+                                    min={0}
+                                    step={1}
                                     icon={<Euro className="w-4 h-4" />}
                                 />
                             </DashboardCard>
 
-                            {/* Submit Button */}
-                            <DashboardCard className="text-center">
-                                <div className="space-y-3">
-                                    <Button
-                                        type="submit"
-                                        variant="primary"
-                                        className={`w-full ${hasUnsavedChanges ? 'bg-orange-600 hover:bg-orange-700' : ''}`}
-                                        disabled={submitting}
-                                    >
-                                        {submitting ? (
-                                            <>
-                                                <LoadingSpinner />
-                                                <span className="ml-2">Saving Changes...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save className="w-4 h-4 mr-2" />
-                                                {hasUnsavedChanges ? 'Save All Changes' : 'Update Product'}
-                                            </>
-                                        )}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        onClick={() => onNavigate('manage-products')}
-                                        variant="outline-secondary"
-                                        className="w-full"
-                                        disabled={submitting}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </div>
-                            </DashboardCard>
+                            <Button
+                                type="submit"
+                                variant="create"
+                                disabled={submitting || !name.trim() || !code.trim() || !categoryId}
+                                className="w-full px-1 py-4"
+                            >
+                                {submitting ? (
+                                    <>
+                                        <LoadingSpinner />
+                                        <span className="ml-2">Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4 mr-2" />
+                                        Αποθήκευση Αλλαγών
+                                    </>
+                                )}
+                            </Button>
                         </div>
                     </div>
                 </form>
