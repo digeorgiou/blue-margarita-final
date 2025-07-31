@@ -97,6 +97,20 @@ class SaleService {
         }
     }
 
+    async getPaymentMethods(): Promise<PaymentMethodDTO[]> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch('/api/record-sale/payment-methods', {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Get payment methods error:', error);
+            throw error;
+        }
+    }
+
     // =============================================================================
     // FORM HELPER ENDPOINTS
     // =============================================================================

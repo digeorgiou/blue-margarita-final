@@ -11,7 +11,6 @@ import {
     Boxes,
     Settings,
     AlertTriangle,
-    CheckCircle,
     Ruler
 } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../index';

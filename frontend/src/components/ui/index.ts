@@ -47,3 +47,6 @@ export { default as MaterialProductUsageModal } from './modals/material/Material
 export { default as ProcedureProductUsageModal } from './modals/procedure/ProcedureProductUsageModal'
 
 export { default as ProductUsageModal } from './modals/common/ProductUsageModal.tsx'
+
+export { default as SaleUpdateModal } from './modals/sale/SaleUpdateModal'
+export { default as SaleDetailModal } from './modals/sale/SaleDetailModal'

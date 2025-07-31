@@ -20,6 +20,7 @@ import ExpenseManagementPage from "./pages/ExpenseManagementPage.tsx";
 import ProductManagementPage from "./pages/ProductManagementPage.tsx";
 import CreateProductPage from "./pages/CreateProductPage";
 import ProductUpdatePage from "./pages/ProductUpdatePage.tsx";
+import SaleManagementPage from "./pages/SaleManagementPage.tsx";
 
 import './styles/global-logo-background.css';
 
@@ -56,7 +57,7 @@ const App: React.FC = () => {
             case 'all-tasks':
                 return <AllTasksPage onNavigate={handleNavigation} />;
             case 'manage-sales':
-                return <div className="p-4"><h1 className="text-2xl text-white">Πωλήσεις- Coming Soon</h1></div>;
+                return <SaleManagementPage onNavigate={handleNavigation}/>;
             case 'manage-products':
                 return <ProductManagementPage onNavigate={handleNavigation} />;
             case 'customers':

@@ -11,4 +11,12 @@ public class PaginatedFilteredSalesWithSummary extends Paginated<SaleReadOnlyDTO
         super(page);
         this.summary = summary;
     }
+
+    public SalesSummaryDTO getSummary() {
+        return summary;
+    }
+
+    public void setSummary(SalesSummaryDTO summary) {
+        this.summary = summary;
+    }
 }
