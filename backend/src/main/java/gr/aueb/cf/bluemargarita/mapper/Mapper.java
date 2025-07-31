@@ -518,6 +518,7 @@ public class Mapper {
                 sale.getCustomer() != null ? sale.getCustomer().getFullName() : "Περαστικός",
                 sale.getLocation().getName(),
                 sale.getSaleDate(),
+                sale.getIsWholesale(),
                 sale.getSuggestedTotalPrice(),
                 sale.getFinalTotalPrice(),
                 sale.getDiscountPercentage(),

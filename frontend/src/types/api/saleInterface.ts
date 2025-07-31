@@ -7,6 +7,7 @@ export interface SaleReadOnlyDTO {
     customerName: string;
     locationName: string;
     saleDate: string;
+    isWholesale: boolean;
     suggestedTotalPrice: number;
     finalTotalPrice: number;
     discountPercentage: number;

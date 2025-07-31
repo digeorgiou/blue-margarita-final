@@ -12,6 +12,7 @@ public record SaleReadOnlyDTO(
         String customerName,
         String locationName,
         LocalDate saleDate,
+        Boolean isWholesale,
         BigDecimal suggestedTotalPrice,
         BigDecimal finalTotalPrice,
         BigDecimal discountPercentage,

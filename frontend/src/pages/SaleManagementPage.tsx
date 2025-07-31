@@ -192,15 +192,26 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
 
     // EVENT HANDLERS
     const handleViewDetails = async (sale: SaleReadOnlyDTO) => {
+        console.log('Opening sale details for sale:', sale); // Debug log
         try {
             setSelectedSale(sale);
             setIsDetailModalOpen(true);
             setDetailsLoading(true);
+            setSaleDetails(null); // Clear previous details
 
+            console.log('Fetching sale details for ID:', sale.id); // Debug log
             const details = await saleService.getSaleDetailedView(sale.id);
+            console.log('Received sale details:', details); // Debug log
+
             setSaleDetails(details);
         } catch (error) {
             console.error('Error loading sale details:', error);
+
+            // Close modal on error and show error message
+            setIsDetailModalOpen(false);
+            setSelectedSale(null);
+            setSaleDetails(null);
+
             await handleApiError(error);
         } finally {
             setDetailsLoading(false);
@@ -446,43 +457,44 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                 )}
 
                 {/* Modals */}
-                {selectedSale && (
-                    <>
-                        <SaleDetailModal
-                            isOpen={isDetailModalOpen}
-                            onClose={() => {
-                                setIsDetailModalOpen(false);
-                                setSaleDetails(null);
-                                setSelectedSale(null);
-                            }}
-                            saleDetails={saleDetails}
-                            loading={detailsLoading}
-                        />
+                    {selectedSale && (
+                        <>
+                            <SaleDetailModal
+                                isOpen={isDetailModalOpen}
+                                onClose={() => {
+                                    console.log('Closing sale detail modal'); // Debug log
+                                    setIsDetailModalOpen(false);
+                                    setSaleDetails(null);
+                                    setSelectedSale(null);
+                                }}
+                                saleDetails={saleDetails}
+                                loading={detailsLoading}
+                            />
 
-                        <SaleUpdateModal
-                            isOpen={isUpdateModalOpen}
-                            onClose={() => {
-                                setIsUpdateModalOpen(false);
-                                setSelectedSale(null);
-                            }}
-                            sale={selectedSale}
-                            locations={locations}
-                            paymentMethods={paymentMethods}
-                            onUpdate={handleUpdateSale}
-                        />
+                            <SaleUpdateModal
+                                isOpen={isUpdateModalOpen}
+                                onClose={() => {
+                                    setIsUpdateModalOpen(false);
+                                    setSelectedSale(null);
+                                }}
+                                sale={selectedSale}
+                                locations={locations}
+                                paymentMethods={paymentMethods}
+                                onUpdate={handleUpdateSale}
+                            />
 
-                        <ConfirmDeleteModal
-                            isOpen={isDeleteModalOpen}
-                            title="Επιβεβαίωση Διαγραφής Πώλησης"
-                            message={`Είστε σίγουροι ότι θέλετε να διαγράψετε την πώληση στις ${formatDate(selectedSale.saleDate)} για ${formatCurrency(selectedSale.finalTotalPrice)}; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.`}
-                            onConfirm={handleDeleteSale}
-                            onCancel={() => {
-                                setIsDeleteModalOpen(false);
-                                setSelectedSale(null);
-                            }}
-                        />
-                    </>
-                )}
+                            <ConfirmDeleteModal
+                                isOpen={isDeleteModalOpen}
+                                title="Επιβεβαίωση Διαγραφής Πώλησης"
+                                message={`Είστε σίγουροι ότι θέλετε να διαγράψετε την πώληση στις ${formatDate(selectedSale.saleDate)} για ${formatCurrency(selectedSale.finalTotalPrice)}; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.`}
+                                onConfirm={handleDeleteSale}
+                                onCancel={() => {
+                                    setIsDeleteModalOpen(false);
+                                    setSelectedSale(null);
+                                }}
+                            />
+                        </>
+                    )}
 
                 {/* Success Modal */}
                 <SuccessModal

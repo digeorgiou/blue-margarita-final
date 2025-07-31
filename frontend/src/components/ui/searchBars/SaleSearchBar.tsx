@@ -140,6 +140,59 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
         ...paymentMethods.map(pm => ({ value: pm.value, label: pm.displayName }))
     ];
 
+    // Transform customer data to match SearchResult interface (like ProductSearchBar does)
+    const transformedCustomerResults = customerSearchResults.map(customer => ({
+        id: customer.id,
+        name: customer.fullName,  // Map fullName to name
+        subtitle: customer.email,  // Show email as subtitle
+        additionalInfo: undefined
+    }));
+
+    // Transform product data to match SearchResult interface
+    const transformedProductResults = productSearchResults.map(product => ({
+        id: product.id,
+        name: product.name,
+        subtitle: `${product.code} - ${product.categoryName}`,  // Show code and category
+        additionalInfo: product.categoryName
+    }));
+
+    // Transform selected items for display
+    const selectedCustomerForDropdown = selectedCustomer ? {
+        id: selectedCustomer.id,
+        name: selectedCustomer.fullName,
+        subtitle: selectedCustomer.email,
+        additionalInfo: undefined
+    } : null;
+
+    const selectedProductForDropdown = selectedProduct ? {
+        id: selectedProduct.id,
+        name: selectedProduct.name,
+        subtitle: `${selectedProduct.code} - ${selectedProduct.categoryName}`,
+        additionalInfo: selectedProduct.categoryName
+    } : null;
+
+    const generateSaleTitle = (sale: SaleReadOnlyDTO): string => {
+        if (!sale.products || sale.products.length === 0) {
+            return `Πώληση #${sale.id}`;
+        }
+
+        // If only one product, show product name and quantity
+        if (sale.products.length === 1) {
+            const product = sale.products[0];
+            return `${product.productName} (×${product.quantity})`;
+        }
+
+        // If multiple products, show first product and count
+        const firstProduct = sale.products[0];
+        const remainingCount = sale.products.length - 1;
+
+        if (remainingCount === 1) {
+            return `${firstProduct.productName} (×${firstProduct.quantity}) + 1 άλλο`;
+        } else {
+            return `${firstProduct.productName} (×${firstProduct.quantity}) + ${remainingCount} άλλα`;
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Search and Filter Controls */}
@@ -150,9 +203,17 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
                         label="Πελάτης"
                         searchTerm={customerSearchTerm}
                         onSearchTermChange={onCustomerSearchTermChange}
-                        searchResults={customerSearchResults}
-                        onSelect={onCustomerSelect}
-                        selectedItem={selectedCustomer}
+                        searchResults={transformedCustomerResults}  // Use transformed data
+                        onSelect={(customer) => {
+                            // Transform back to original type when selecting
+                            if (customer) {
+                                const originalCustomer = customerSearchResults.find(c => c.id === customer.id);
+                                onCustomerSelect(originalCustomer || null);
+                            } else {
+                                onCustomerSelect(null);
+                            }
+                        }}
+                        selectedItem={selectedCustomerForDropdown}  // Use transformed selected item
                         onClearSelection={() => onCustomerSelect(null)}
                         placeholder="Αναζήτηση πελάτη..."
                         icon={<Users className="w-5 h-5 text-blue-500" />}
@@ -161,28 +222,23 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
                         minSearchLength={2}
                         emptyMessage="Δεν βρέθηκαν πελάτες"
                         emptySubMessage="Δοκιμάστε διαφορετικούς όρους αναζήτησης"
-                        renderItem={(customer) => (
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="font-medium">{customer.name}</div>
-                                    {customer.email && (
-                                        <div className="text-sm text-gray-500">{customer.email}</div>
-                                    )}
-                                </div>
-                                {customer.phoneNumber && (
-                                    <div className="text-sm text-gray-400">{customer.phoneNumber}</div>
-                                )}
-                            </div>
-                        )}
                     />
 
                     <CustomSearchDropdown
                         label="Προϊόν"
                         searchTerm={productSearchTerm}
                         onSearchTermChange={onProductSearchTermChange}
-                        searchResults={productSearchResults}
-                        onSelect={onProductSelect}
-                        selectedItem={selectedProduct}
+                        searchResults={transformedProductResults}  // Use transformed data
+                        onSelect={(product) => {
+                            // Transform back to original type when selecting
+                            if (product) {
+                                const originalProduct = productSearchResults.find(p => p.id === product.id);
+                                onProductSelect(originalProduct || null);
+                            } else {
+                                onProductSelect(null);
+                            }
+                        }}
+                        selectedItem={selectedProductForDropdown}  // Use transformed selected item
                         onClearSelection={() => onProductSelect(null)}
                         placeholder="Αναζήτηση προϊόντος..."
                         icon={<Package className="w-5 h-5 text-green-500" />}
@@ -191,15 +247,6 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
                         minSearchLength={2}
                         emptyMessage="Δεν βρέθηκαν προϊόντα"
                         emptySubMessage="Δοκιμάστε διαφορετικούς όρους αναζήτησης"
-                        renderItem={(product) => (
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="font-medium">{product.name}</div>
-                                    <div className="text-sm text-gray-500">{product.code}</div>
-                                </div>
-                                <div className="text-sm text-gray-400">{product.categoryName}</div>
-                            </div>
-                        )}
                     />
                 </div>
 
@@ -285,84 +332,93 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
                 ) : (
                     <div className="divide-y divide-gray-200">
                         {searchResults.map((sale) => (
-                            <div key={sale.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
-                                <div className="flex items-start justify-between">
+                            <div key={sale.id} className="p-6 hover:bg-blue-100 transition-colors duration-150">
+                                <div className="flex items-center gap-6">
+                                    {/* Left Half */}
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
+                                        {/* Title and Date */}
+                                        <div className="flex items-center gap-3 mb-3">
                                             <ShoppingCart className="w-5 h-5 text-blue-500" />
                                             <h3 className="text-lg font-semibold text-gray-900">
-                                                Πώληση #{sale.id}
+                                                {generateSaleTitle(sale)}
                                             </h3>
                                             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
                                                 {formatDate(sale.saleDate)}
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
-                                            <div className="flex items-center">
-                                                <Users className="w-4 h-4 mr-2 text-gray-400" />
-                                                <span>{sale.customerName || 'Περαστικός Πελάτης'}</span>
+                                        {/* Two Columns */}
+                                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                            {/* First Column: Customer, Payment Method, Location */}
+                                            <div className="space-y-2">
+                                                <div className="flex items-center">
+                                                    <Users className="w-4 h-4 mr-2 text-gray-400" />
+                                                    <span>{sale.customerName || 'Περαστικός Πελάτης'}</span>
+                                                </div>
+                                                <div className="flex items-center">
+                                                    <CreditCard className="w-4 h-4 mr-2 text-gray-400" />
+                                                    <span>{getPaymentMethodDisplayName(sale.paymentMethod)}</span>
+                                                </div>
+                                                <div className="flex items-center">
+                                                    <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                                                    <span>{sale.locationName}</span>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center">
-                                                <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                                                <span>{sale.locationName}</span>
-                                            </div>
-                                            <div className="flex items-center">
-                                                <CreditCard className="w-4 h-4 mr-2 text-gray-400" />
-                                                <span>{getPaymentMethodDisplayName(sale.paymentMethod)}</span>
-                                            </div>
-                                            <div className="flex items-center">
-                                                <Package className="w-4 h-4 mr-2 text-gray-400" />
-                                                <span>{sale.productCount} προϊόντα</span>
-                                            </div>
-                                        </div>
 
-                                        <div className="flex items-center gap-4 text-sm">
-                                            <div className="flex items-center text-green-600">
-                                                <FaEuroSign className="w-4 h-4 mr-1" />
-                                                <span className="font-semibold">Τελικό: {formatCurrency(sale.finalTotalPrice)}</span>
+                                            {/* Second Column: Τελική Τιμή, Έκπτωση, Συσκευασία */}
+                                            <div className="space-y-2">
+                                                <div className="flex items-center text-green-600">
+                                                    <FaEuroSign className="w-4 h-4 mr-1" />
+                                                    <span className="font-semibold">Τελική Τιμή: {formatCurrency(sale.finalTotalPrice)}</span>
+                                                </div>
+                                                {sale.discountPercentage > 0 ? (
+                                                    <div className="flex items-center text-orange-600">
+                                                        <span className="font-medium">
+                                                            Έκπτωση: {sale.discountPercentage}% ({formatCurrency(sale.discountAmount)})
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center text-gray-400">
+                                                        <span>Έκπτωση: Καμία</span>
+                                                    </div>
+                                                )}
+                                                {sale.packagingPrice > 0 ? (
+                                                    <div className="flex items-center text-blue-600">
+                                                        <span className="font-medium">
+                                                            Συσκευασία: {formatCurrency(sale.packagingPrice)}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center text-gray-400">
+                                                        <span>Συσκευασία: Καμία</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                            {sale.discountPercentage > 0 && (
-                                                <div className="flex items-center text-orange-600">
-                                                    <span className="font-medium">
-                                                        Έκπτωση: {sale.discountPercentage}% ({formatCurrency(sale.discountAmount)})
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {sale.packagingPrice > 0 && (
-                                                <div className="flex items-center text-blue-600">
-                                                    <span className="font-medium">
-                                                        Συσκευασία: {formatCurrency(sale.packagingPrice)}
-                                                    </span>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 ml-4">
+                                    {/* Right Half: Action Buttons */}
+                                    <div className="flex items-center justify-center gap-2 min-w-fit">
                                         <Button
                                             onClick={() => onViewDetails(sale)}
-                                            variant="ghost"
+                                            variant="info"
                                             size="sm"
-                                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                         >
                                             <Eye className="w-4 h-4 mr-1" />
-                                            Προβολή
+                                            Λεπτομέρειες
                                         </Button>
                                         <Button
                                             onClick={() => onEdit(sale)}
-                                            variant="ghost"
+                                            variant="teal"
                                             size="sm"
-                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
                                         >
                                             <Edit className="w-4 h-4 mr-1" />
                                             Επεξεργασία
                                         </Button>
                                         <Button
                                             onClick={() => onDelete(sale)}
-                                            variant="ghost"
+                                            variant="danger"
                                             size="sm"
-                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                         >
                                             <Trash2 className="w-4 h-4 mr-1" />
                                             Διαγραφή
