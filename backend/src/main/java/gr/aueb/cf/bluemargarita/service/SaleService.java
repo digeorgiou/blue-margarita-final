@@ -492,30 +492,14 @@ public class SaleService implements ISaleService {
     // PRIVATE HELPER METHODS - Filtering and Specifications
     // =============================================================================
     private Specification<Sale> getSpecsFromFilters(SaleFilters filters) {
-        Specification<Sale> spec = Specification
+
+
+        return Specification
                 .where(SaleSpecification.hasCategoryId(filters.getCategoryId()))
                 .and(SaleSpecification.hasDateBetween(filters.getSaleDateFrom(), filters.getSaleDateTo()))
                 .and(SaleSpecification.hasLocationId(filters.getLocationId()))
-                .and(SaleSpecification.hasPaymentMethod(filters.getPaymentMethod()));
-
-        // Product filtering with priority logic
-        if (filters.getProductId() != null) {
-            // User selected specific product from autocomplete
-            spec = spec.and(SaleSpecification.hasProductId(filters.getProductId()));
-        } else if (filters.getProductNameOrCode() != null && !filters.getProductNameOrCode().trim().isEmpty()) {
-            // User is typing in autocomplete
-            spec = spec.and(SaleSpecification.hasProductNameOrCode(filters.getProductNameOrCode()));
-        }
-
-        // Customer filtering with priority logic
-        if (filters.getCustomerId() != null) {
-            // User selected specific customer from autocomplete
-            spec = spec.and(SaleSpecification.hasCustomerId(filters.getCustomerId()));
-        } else if (filters.getCustomerNameOrEmail() != null && !filters.getCustomerNameOrEmail().trim().isEmpty()) {
-            // User is typing in autocomplete
-            spec = spec.and(SaleSpecification.hasCustomerNameOrEmail(filters.getCustomerNameOrEmail()));
-        }
-
-        return spec;
+                .and(SaleSpecification.hasPaymentMethod(filters.getPaymentMethod()))
+                .and(SaleSpecification.hasCustomerId(filters.getCustomerId()))
+                .and(SaleSpecification.hasProductId(filters.getProductId()));
     }
 }

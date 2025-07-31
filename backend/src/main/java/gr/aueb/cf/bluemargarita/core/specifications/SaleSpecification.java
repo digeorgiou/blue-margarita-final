@@ -46,26 +46,6 @@ public class SaleSpecification {
     }
 
     /**
-     * Filter sales by customer name or email (for autocomplete search)
-     */
-    public static Specification<Sale> hasCustomerNameOrEmail(String searchTerm) {
-        return (root, query, criteriaBuilder) -> {
-            if (searchTerm == null || searchTerm.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-
-            Join<Sale, Customer> customerJoin = root.join("customer", JoinType.LEFT);
-            String upperSearchTerm = "%" + searchTerm.toUpperCase() + "%";
-
-            return criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.upper(customerJoin.get("firstname")), upperSearchTerm),
-                    criteriaBuilder.like(criteriaBuilder.upper(customerJoin.get("lastname")), upperSearchTerm),
-                    criteriaBuilder.like(criteriaBuilder.upper(customerJoin.get("email")), upperSearchTerm)
-            );
-        };
-    }
-
-    /**
      * Filter sales by location
      */
     public static Specification<Sale> hasLocationId(Long locationId) {
@@ -107,29 +87,6 @@ public class SaleSpecification {
             }
 
             return criteriaBuilder.equal(root.get("paymentMethod"), paymentMethod);
-        };
-    }
-
-    /**
-     * Filter sales by product name or productCode
-     * Joins with SaleProduct and Product entities
-     */
-    public static Specification<Sale> hasProductNameOrCode(String productNameOrCode) {
-        return (root, query, criteriaBuilder) -> {
-            if (productNameOrCode == null || productNameOrCode.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-
-            // Join Sale -> SaleProduct -> Product
-            Join<Sale, SaleProduct> saleProductJoin = root.join("saleProducts", JoinType.INNER);
-            Join<SaleProduct, Product> productJoin = saleProductJoin.join("product", JoinType.INNER);
-
-            String searchTerm = "%" + productNameOrCode.trim().toUpperCase() + "%";
-
-            return criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.upper(productJoin.get("name")), searchTerm),
-                    criteriaBuilder.like(criteriaBuilder.upper(productJoin.get("productCode")), searchTerm)
-            );
         };
     }
 
