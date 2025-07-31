@@ -1,4 +1,6 @@
 import {SaleProductDTO, SalesSummaryDTO} from "./dashboardInterface.ts";
+import {SaleFilters} from "../../services/saleService.ts";
+import { PaymentMethod } from "./dashboardInterface.ts";
 
 export interface SaleReadOnlyDTO {
     id: number;
@@ -39,4 +41,18 @@ export interface PaginatedFilteredSalesWithSummary {
     currentPage: number;
     pageSize: number;
     summary: SalesSummaryDTO;
+}
+
+export interface SaleFilters {
+    customerId?: number;
+    productId?: number;
+    locationId?: number;
+    categoryId?: number;
+    saleDateFrom?: string; // ISO date string
+    saleDateTo?: string; // ISO date string
+    paymentMethod?: PaymentMethod;
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortDirection?: string;
 }
