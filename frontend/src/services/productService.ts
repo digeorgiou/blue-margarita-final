@@ -278,19 +278,15 @@ class ProductService {
     async getProductSalesAnalytics(
         productId: number,
         startDate: string,
-        endDate: string,
-        includeTrendData?: boolean
+        endDate: string
     ): Promise<ProductSalesAnalyticsDTO> {
         try {
             const params = new URLSearchParams();
             params.append('startDate', startDate);
             params.append('endDate', endDate);
-            if (includeTrendData !== undefined) {
-                params.append('includeTrendData', includeTrendData.toString());
-            }
 
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/analytics?${params.toString()}`,
+                `${API_BASE_URL}/${productId}/sales-analytics?${params.toString()}`,  // ← Fixed endpoint
                 {
                     method: 'GET',
                     headers: this.getAuthHeaders()

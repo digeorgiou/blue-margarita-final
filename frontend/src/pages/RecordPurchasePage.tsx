@@ -272,12 +272,6 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                 emptyMessage="No materials found"
                                                 emptySubMessage="Try searching by name"
                                                 icon={<Package className="w-4 h-4 text-emerald-500" />}
-                                                renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
-                                                        <Package className="w-3 h-3 inline mr-1" />
-                                                        {item.additionalInfo}
-                                                    </div>
-                                                )}
                                             />
                                         </div>
 
@@ -304,13 +298,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                 isLoading={isLoadingSuppliers}
                                                 emptyMessage="No suppliers found"
                                                 emptySubMessage="Try searching by name or email"
-                                                icon={<Building2 className="w-4 h-4 text-orange-500" />}
-                                                renderItem={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => (
-                                                    <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-md">
-                                                        <Building2 className="w-3 h-3 inline mr-1" />
-                                                        {item.additionalInfo}
-                                                    </div>
-                                                )}
+                                                icon={<Building2 className="w-4 h-4 text-blue-500" />}
                                             />
                                         </div>
 

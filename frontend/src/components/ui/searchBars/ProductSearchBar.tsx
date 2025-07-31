@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Package, Edit, Trash2, Eye, Filter } from 'lucide-react';
+import { Search, Package, Edit, Trash2, Eye, Filter, BarChart3 } from 'lucide-react';
 import { Button, LoadingSpinner } from '../index';
 import { CustomTextInput, CustomSelect, CustomSearchDropdown, CustomToggleOption, CustomNumberInput } from '../inputs';
 import type { ProductListItemDTO } from '../../../types/api/productInterface';
@@ -54,6 +54,7 @@ interface ProductSearchBarProps {
     onViewDetails: (product: ProductListItemDTO) => void;
     onEdit: (product: ProductListItemDTO) => void;
     onDelete: (product: ProductListItemDTO) => void;
+    onAnalytics: (product: ProductListItemDTO) => void;
     children?: React.ReactNode;
 }
 
@@ -90,6 +91,7 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                                                                onViewDetails,
                                                                onEdit,
                                                                onDelete,
+                                                               onAnalytics,
                                                                children
                                                            }) => {
 
@@ -386,6 +388,15 @@ const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                                         >
                                             <Eye className="w-4 h-4" />
                                             Λεπτομέρειες
+                                        </Button>
+                                        <Button
+                                            onClick={() => onAnalytics(product)}  // ← Add this button
+                                            variant="purple"
+                                            size="sm"
+                                            className="flex items-center gap-1 p-2"
+                                        >
+                                            <BarChart3 className="w-4 h-4" />
+                                            Στατιστικά
                                         </Button>
                                         <Button
                                             onClick={() => onEdit(product)}

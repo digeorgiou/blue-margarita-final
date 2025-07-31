@@ -198,6 +198,10 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
         }
     };
 
+    const handleAnalytics = (product: ProductListItemDTO) => {
+        onNavigate('product-sales-analytics', product.id, product.name);
+    };
+
     const handleEdit = (product: ProductListItemDTO) => {
         onNavigate('update-product', product.id);
     };
@@ -319,6 +323,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                         onViewDetails={handleViewDetails}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onAnalytics={handleAnalytics}
                     >
                     </ProductSearchBar>
                 </DashboardCard>

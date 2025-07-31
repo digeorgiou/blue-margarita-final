@@ -82,19 +82,20 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
             label: 'Διαδικασίες',
             icon: <Wrench className="w-5 h-5" />,
             href: 'procedures'
-        },
-        {
-            id: 'expenses',
-            label: 'Έξοδα',
-            icon: <Receipt className="w-5 h-5" />,
-            href: 'expenses'
-        },
-        {
-            id: 'profit-losses',
-            label: 'Κέρδη/Ζημίες',
-            icon: <TrendingUp className="w-5 h-5" />,
-            href: 'profit-losses'
         }
+        // ,
+        // {
+        //     id: 'expenses',
+        //     label: 'Έξοδα',
+        //     icon: <Receipt className="w-5 h-5" />,
+        //     href: 'expenses'
+        // },
+        // {
+        //     id: 'profit-losses',
+        //     label: 'Κέρδη/Ζημίες',
+        //     icon: <TrendingUp className="w-5 h-5" />,
+        //     href: 'profit-losses'
+        // }
     ];
 
     const handleNavigation = (page: string) => {

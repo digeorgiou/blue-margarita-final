@@ -45,6 +45,22 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Transform customer data to match SearchResult interface (like other components do)
+    const transformedCustomerResults = customerSearchResults.map(customer => ({
+        id: customer.id,
+        name: customer.fullName,
+        subtitle: customer.email || 'No email',
+        additionalInfo: undefined
+    }));
+
+// Transform selected customer for display
+    const selectedCustomerForDropdown = selectedCustomer ? {
+        id: selectedCustomer.id,
+        name: selectedCustomer.fullName,
+        subtitle: selectedCustomer.email || 'No email',
+        additionalInfo: undefined
+    } : null;
+
     // Error handling
     const { fieldErrors, generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
 
@@ -261,9 +277,13 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                             label="Πελάτης (Προαιρετικό)"
                             searchTerm={customerSearchTerm}
                             onSearchTermChange={setCustomerSearchTerm}
-                            searchResults={customerSearchResults}
-                            onSelect={handleCustomerSelect}
-                            selectedItem={selectedCustomer}
+                            searchResults={transformedCustomerResults}  // ← Use transformed data
+                            onSelect={(item: { id: number; name: string; subtitle?: string; additionalInfo?: string }) => {
+                                // Transform back to original type when selecting
+                                const originalCustomer = customerSearchResults.find(c => c.id === item.id);
+                                handleCustomerSelect(originalCustomer || null);
+                            }}
+                            selectedItem={selectedCustomerForDropdown}  // ← Use transformed selected item
                             onClearSelection={() => handleCustomerSelect(null)}
                             placeholder="Αναζήτηση πελάτη ή αφήστε κενό για περαστικό..."
                             icon={<ShoppingCart className="w-5 h-5 text-blue-500" />}
@@ -272,19 +292,6 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                             minSearchLength={2}
                             emptyMessage="Δεν βρέθηκαν πελάτες"
                             emptySubMessage="Δοκιμάστε διαφορετικούς όρους αναζήτησης"
-                            renderItem={(customer) => (
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <div className="font-medium">{customer.name}</div>
-                                        {customer.email && (
-                                            <div className="text-sm text-gray-500">{customer.email}</div>
-                                        )}
-                                    </div>
-                                    {customer.phoneNumber && (
-                                        <div className="text-sm text-gray-400">{customer.phoneNumber}</div>
-                                    )}
-                                </div>
-                            )}
                             className={fieldErrors.customerId ? 'border-red-500' : ''}
                         />
                         {fieldErrors.customerId && (
@@ -387,7 +394,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                             </span>
                         </div>
                         <div>
-                            <span className="text-gray-600">Υποσύνολο:</span>
+                            <span className="text-gray-600">Κόστος Προϊόντων:</span>
                             <span className="ml-2 font-medium text-gray-800">
                                 {formatCurrency(formData.finalTotalPrice - formData.packagingPrice)}
                             </span>
@@ -404,20 +411,6 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                                 {formData.finalTotalPrice > sale.finalTotalPrice ? '+' : ''}
                                 {formatCurrency(formData.finalTotalPrice - sale.finalTotalPrice)}
                             </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Products Notice */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start gap-2">
-                        <Package className="w-5 h-5 text-blue-600 mt-0.5" />
-                        <div className="text-sm text-blue-800">
-                            <p className="font-medium mb-1">Προϊόντα Πώλησης:</p>
-                            <p>
-                                Η πώληση περιλαμβάνει {sale.productCount} προϊόντα με συνολική αξία {formatCurrency(sale.grandTotal)}.
-                                Τα προϊόντα δεν μπορούν να τροποποιηθούν από αυτή τη φόρμα.
-                            </p>
                         </div>
                     </div>
                 </div>

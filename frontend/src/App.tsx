@@ -21,6 +21,7 @@ import ProductManagementPage from "./pages/ProductManagementPage.tsx";
 import CreateProductPage from "./pages/CreateProductPage";
 import ProductUpdatePage from "./pages/ProductUpdatePage.tsx";
 import SaleManagementPage from "./pages/SaleManagementPage.tsx";
+import ProductSalesAnalyticsPage from "./pages/ProductSalesAnalyticsPage.tsx";
 
 import './styles/global-logo-background.css';
 
@@ -60,6 +61,11 @@ const App: React.FC = () => {
                 return <SaleManagementPage onNavigate={handleNavigation}/>;
             case 'manage-products':
                 return <ProductManagementPage onNavigate={handleNavigation} />;
+            case 'product-sales-analytics':
+                return <ProductSalesAnalyticsPage
+                    onNavigate={handleNavigation}
+                    productId={navigationState.productId!}
+                />;
             case 'customers':
                 return <CustomerManagementPage/>;
             case 'materials':
