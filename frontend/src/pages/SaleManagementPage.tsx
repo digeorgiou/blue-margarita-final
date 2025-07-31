@@ -47,6 +47,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
     const [locationFilter, setLocationFilter] = useState<number | undefined>(undefined);
     const [categoryFilter, setCategoryFilter] = useState<number | undefined>(undefined);
     const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
+    const [isWholesaleFilter, setIsWholesaleFilter] = useState<boolean | undefined>(undefined);
     const [dateFromFilter, setDateFromFilter] = useState('');
     const [dateToFilter, setDateToFilter] = useState('');
 
@@ -106,6 +107,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
         locationFilter,
         categoryFilter,
         paymentMethodFilter,
+        isWholesaleFilter,
         dateFromFilter,
         dateToFilter,
         currentPage,
@@ -122,6 +124,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                 locationId: locationFilter,
                 categoryId: categoryFilter,
                 paymentMethod: paymentMethodFilter || undefined,
+                isWholesale: isWholesaleFilter,
                 saleDateFrom: dateFromFilter || undefined,
                 saleDateTo: dateToFilter || undefined,
                 page: currentPage,
@@ -362,6 +365,10 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                         paymentMethodFilter={paymentMethodFilter}
                         onPaymentMethodFilterChange={setPaymentMethodFilter}
                         paymentMethods={paymentMethods}
+
+                        // ADD THIS
+                        isWholesaleFilter={isWholesaleFilter}
+                        onIsWholesaleFilterChange={setIsWholesaleFilter}
 
                         // Date filters
                         dateFromFilter={dateFromFilter}

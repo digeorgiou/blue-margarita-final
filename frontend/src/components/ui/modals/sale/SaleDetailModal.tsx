@@ -4,6 +4,7 @@ import {
     X } from 'lucide-react';
 import { LoadingSpinner, Button } from "../../index";
 import type { SaleDetailedViewDTO } from '../../../types/api/recordSaleInterface';
+import { getPaymentMethodDisplayName } from '../../../../utils/paymentMethodUtils.ts';
 import { FaEuroSign } from "react-icons/fa6";
 
 interface SaleDetailModalProps {
@@ -112,7 +113,9 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({
                                             <CreditCard className="w-5 h-5 text-purple-600" />
                                             <span className="font-medium text-purple-700">Τρόπος Πληρωμής</span>
                                         </div>
-                                        <p className="font-semibold text-purple-900">{saleDetails.paymentMethod}</p>
+                                        <p className="font-semibold text-purple-900">
+                                            {getPaymentMethodDisplayName(saleDetails.paymentMethod)}
+                                        </p>
                                     </div>
                                 </div>
 

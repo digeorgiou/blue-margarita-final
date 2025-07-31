@@ -35,4 +35,7 @@ public class SaleFilters extends GenericFilters {
 
     @Nullable
     private PaymentMethod paymentMethod;
+
+    @Nullable
+    private Boolean isWholesale;
 }

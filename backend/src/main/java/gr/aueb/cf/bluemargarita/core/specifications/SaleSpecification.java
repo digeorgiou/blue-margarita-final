@@ -106,4 +106,13 @@ public class SaleSpecification {
         };
     }
 
+    public static Specification<Sale> isWholesale(Boolean isWholesale) {
+        return (root, query, criteriaBuilder) -> {
+            if (isWholesale == null) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+            return criteriaBuilder.equal(root.get("isWholesale"), isWholesale);
+        };
+    }
+
 }

@@ -500,6 +500,7 @@ public class SaleService implements ISaleService {
                 .and(SaleSpecification.hasLocationId(filters.getLocationId()))
                 .and(SaleSpecification.hasPaymentMethod(filters.getPaymentMethod()))
                 .and(SaleSpecification.hasCustomerId(filters.getCustomerId()))
-                .and(SaleSpecification.hasProductId(filters.getProductId()));
+                .and(SaleSpecification.hasProductId(filters.getProductId()))
+                .and(SaleSpecification.isWholesale(filters.getIsWholesale()));
     }
 }

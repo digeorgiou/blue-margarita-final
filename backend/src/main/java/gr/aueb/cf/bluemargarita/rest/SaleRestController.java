@@ -164,6 +164,7 @@ public class SaleRestController {
             @Parameter(description = "Sale date from (inclusive)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate saleDateFrom,
             @Parameter(description = "Sale date to (inclusive)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate saleDateTo,
             @Parameter(description = "Payment method filter") @RequestParam(required = false) PaymentMethod paymentMethod,
+            @Parameter(description = "Wholesale filter") @RequestParam(required = false) Boolean isWholesale,
             @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
             @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "saleDate") String sortBy,
@@ -177,6 +178,7 @@ public class SaleRestController {
                 .saleDateFrom(saleDateFrom)
                 .saleDateTo(saleDateTo)
                 .paymentMethod(paymentMethod)
+                .isWholesale(isWholesale)
                 .build();
 
         // Set pagination properties using request parameters (with defaults)

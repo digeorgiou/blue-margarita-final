@@ -81,7 +81,12 @@ class SaleService {
             // Add all filter parameters
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== '') {
-                    queryParams.append(key, value.toString());
+                    // Special handling for boolean values
+                    if (typeof value === 'boolean') {
+                        queryParams.append(key, value.toString());
+                    } else {
+                        queryParams.append(key, value.toString());
+                    }
                 }
             });
 

@@ -250,7 +250,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 {data.dashboardTasks.overdueAndTodayTasks.length === 0 ? (
                                     <div className="text-center py-8">
                                         <div className="text-4xl mb-2">✨</div>
-                                        <p className="text-gray-500 italic">No active tasks</p>
+                                        <p className="text-gray-500 italic">Δεν υπάρχουν εκκρεμότητες για σήμερα</p>
                                     </div>
                                 ) : (
                                     data.dashboardTasks.overdueAndTodayTasks.map((task) => (
@@ -272,7 +272,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 {data.dashboardTasks.thisWeekTasks.length === 0 ? (
                                     <div className="text-center py-8">
                                         <div className="text-4xl mb-2">🌟</div>
-                                        <p className="text-gray-500 italic">No tasks scheduled this week</p>
+                                        <p className="text-gray-500 italic">Δεν υπάρχουν tasks για αυτήν την εβδομάδα</p>
                                     </div>
                                 ) : (
                                     data.dashboardTasks.thisWeekTasks.slice(0, 10).map((task) => (

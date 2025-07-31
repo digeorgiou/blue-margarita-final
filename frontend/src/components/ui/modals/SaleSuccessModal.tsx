@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle, X, User, MapPin, CreditCard, Package, Calendar } from 'lucide-react';
 import { SaleDetailedViewDTO } from '../../../types/api/recordSaleInterface';
+import { getPaymentMethodDisplayName } from '../../../utils/paymentMethodUtils.ts';
 
 interface SaleSuccessModalProps {
     sale: SaleDetailedViewDTO;
@@ -89,7 +90,9 @@ export const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({ sale, onClos
                                     <CreditCard className="w-4 h-4 mr-2" />
                                     Τρόπος Πληρωμής
                                 </div>
-                                <div className="text-green-900 font-medium">{sale.paymentMethod}</div>
+                                <div className="text-green-900 font-medium">
+                                    {getPaymentMethodDisplayName(sale.paymentMethod)}
+                                </div>
                             </div>
 
                             <div className="bg-orange-50 p-4 rounded-lg">

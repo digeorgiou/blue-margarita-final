@@ -42,6 +42,10 @@ interface SaleSearchBarProps {
     onPaymentMethodFilterChange: (value: string) => void;
     paymentMethods: PaymentMethodDTO[];
 
+    // Wholesale filter
+    isWholesaleFilter: boolean | undefined;
+    onIsWholesaleFilterChange: (value: boolean | undefined) => void;
+
     // Date filters
     dateFromFilter: string;
     onDateFromFilterChange: (value: string) => void;
@@ -79,6 +83,8 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
                                                          paymentMethodFilter,
                                                          onPaymentMethodFilterChange,
                                                          paymentMethods,
+                                                         isWholesaleFilter,
+                                                         onIsWholesaleFilterChange,
                                                          dateFromFilter,
                                                          onDateFromFilterChange,
                                                          dateToFilter,
@@ -120,6 +126,7 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
         onLocationIdChange(undefined);
         onCategoryIdChange(undefined);
         onPaymentMethodFilterChange('');
+        onIsWholesaleFilterChange(undefined);
         onDateFromFilterChange('');
         onDateToFilterChange('');
     };
@@ -129,6 +136,22 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
         { value: '', label: 'Όλες οι τοποθεσίες' },
         ...locations.map(location => ({ value: location.id, label: location.name }))
     ];
+
+    const wholesaleOptions = [
+        { value: '', label: 'Όλες οι πωλήσεις' },
+        { value: 'true', label: 'Χονδρικής' },
+        { value: 'false', label: 'Λιανικής' }
+    ];
+
+    const getSaleTypeBadgeClass = (isWholesale: boolean): string => {
+        return isWholesale
+            ? 'bg-purple-100 text-purple-800'
+            : 'bg-green-100 text-green-800';
+    };
+
+    const getSaleTypeDisplayName = (isWholesale: boolean): string => {
+        return isWholesale ? 'Χονδρικής' : 'Λιανικής';
+    };
 
     const categoryOptions = [
         { value: '', label: 'Όλες οι κατηγορίες' },
@@ -251,7 +274,7 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
                 </div>
 
                 {/* Row 2: Location, Category, Payment Method */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <CustomSelect
                         label="Τοποθεσία"
                         value={selectedLocationId?.toString() || ''}
@@ -278,6 +301,22 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
                         icon={<CreditCard className="w-5 h-5 text-green-500" />}
                         placeholder=""
                     />
+
+                    <CustomSelect
+                        label="Τύπος Πώλησης"
+                        value={isWholesaleFilter === undefined ? '' : isWholesaleFilter.toString()}
+                        onChange={(value) => {
+                            if (value === '') {
+                                onIsWholesaleFilterChange(undefined);
+                            } else {
+                                onIsWholesaleFilterChange(value === 'true');
+                            }
+                        }}
+                        options={wholesaleOptions}
+                        icon={<ShoppingCart className="w-5 h-5 text-orange-500" />}
+                        placeholder=""
+                    />
+
                 </div>
 
                 {/* Row 3: Date Filters and Clear Button */}
@@ -344,6 +383,9 @@ const SaleSearchBar: React.FC<SaleSearchBarProps> = ({
                                             </h3>
                                             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
                                                 {formatDate(sale.saleDate)}
+                                            </span>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSaleTypeBadgeClass(sale.isWholesale)}`}>
+                                                {getSaleTypeDisplayName(sale.isWholesale)}
                                             </span>
                                         </div>
 

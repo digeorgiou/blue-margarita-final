@@ -52,6 +52,7 @@ export interface SaleFilters {
     saleDateFrom?: string; // ISO date string
     saleDateTo?: string; // ISO date string
     paymentMethod?: PaymentMethod;
+    isWholesale?: boolean;
     page?: number;
     pageSize?: number;
     sortBy?: string;
