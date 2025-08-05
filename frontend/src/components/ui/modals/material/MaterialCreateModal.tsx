@@ -143,7 +143,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                         </label>
                         <Input
                             type="number"
-                            step="0.01"
+                            step="0.1"
                             min="0"
                             value={formData.currentUnitCost}
                             onChange={(e) => handleInputChange('currentUnitCost', parseFloat(e.target.value) || 0)}

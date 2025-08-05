@@ -7,7 +7,7 @@ import { PurchaseDetailedViewDTO } from "../types/api/purchaseInterface";
 import { SupplierSearchResultDTO } from "../types/api/supplierInterface";
 import { MaterialSearchResultDTO } from "../types/api/materialInterface";
 import { Button, LoadingSpinner, Alert } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import { ShoppingCart, Package, Calendar, Plus, Minus, Trash2, Building2, Mail, X } from 'lucide-react';
 import { PurchaseSuccessModal } from '../components/ui/modals/PurchaseSuccessModal';
 import { materialService } from "../services/materialService.ts";
@@ -244,7 +244,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2">
-                            <DashboardCard height="md">
+                            <CustomCard height="md">
                                 <div className="space-y-4 pl-2 pr-2 pb-2">
 
                                     {/* Row 1: Material Search, Purchase Date */}
@@ -356,12 +356,12 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                         </div>
                                     </div>
                                 </div>
-                            </DashboardCard>
+                            </CustomCard>
                         </div>
 
                         {/* Cart Items Card */}
                         <div className="lg:col-span-1">
-                            <DashboardCard
+                            <CustomCard
                                 title={`Καλάθι Υλικών (${cart.length})`}
                                 icon={<ShoppingCart className="w-5 h-5" />}
                                 height="md"
@@ -433,12 +433,12 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                         </div>
                                     )}
                                 </div>
-                            </DashboardCard>
+                            </CustomCard>
                         </div>
                     </div>
 
                     {/* Purchase Summary Card */}
-                    <DashboardCard
+                    <CustomCard
                         title="Σύνοψη Αγοράς"
                         icon={<Package className="w-5 h-5" />}
                         height="lg"
@@ -512,7 +512,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                 </div>
                             )}
                         </div>
-                    </DashboardCard>
+                    </CustomCard>
                 </div>
             </div>
 

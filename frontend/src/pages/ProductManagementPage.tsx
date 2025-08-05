@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Package, Plus } from 'lucide-react';
 import { Button, Alert } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
-import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
-import ProductSearchBar from '../components/ui/searchBars/ProductSearchBar';
+import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import { ProductFilterPanel } from '../components/ui/filterPanels'
 import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
 import { procedureService } from '../services/procedureService';
 import { materialService } from '../services/materialService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import type { ProductListItemDTO } from '../types/api/productInterface';
+import type {ProductDetailedViewDTO, ProductListItemDTO} from '../types/api/productInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
@@ -199,7 +199,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
     };
 
     const handleAnalytics = (product: ProductListItemDTO) => {
-        onNavigate('product-sales-analytics', product.id, product.name);
+        onNavigate('product-sales-analytics', product.id);
     };
 
     const handleEdit = (product: ProductListItemDTO) => {
@@ -269,12 +269,12 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                 </div>
 
                 {/* Search and Filter Section */}
-                <DashboardCard
+                <CustomCard
                     title="Φίλτρα Αναζήτησης"
                     icon={<Search className="w-5 h-5" />}
                     className="shadow-lg"
                 >
-                    <ProductSearchBar
+                    <ProductFilterPanel
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
                         selectedCategoryId={selectedCategoryId}
@@ -325,12 +325,12 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                         onDelete={handleDelete}
                         onAnalytics={handleAnalytics}
                     >
-                    </ProductSearchBar>
-                </DashboardCard>
+                    </ProductFilterPanel>
+                </CustomCard>
 
                 {/* Pagination Controls */}
                 {searchResults && searchResults.totalPages > 0 && (
-                    <DashboardCard title="Σελιδοποίηση" icon={<Package className="w-5 h-5" />}>
+                    <CustomCard title="Σελιδοποίηση" icon={<Package className="w-5 h-5" />}>
                         <EnhancedPaginationControls
                             paginationData={{
                                 currentPage: searchResults.currentPage,
@@ -343,7 +343,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                             onPageSizeChange={handlePageSizeChange}
                             className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                         />
-                    </DashboardCard>
+                    </CustomCard>
                 )}
 
                 {/* Modals */}

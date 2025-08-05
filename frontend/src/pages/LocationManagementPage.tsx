@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, LocationDropdownList, LoadingSpinner, LocationCreateModal, LocationUpdateModal, LocationDetailModal } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import { Button, Alert, LocationList, LoadingSpinner, LocationCreateModal, LocationUpdateModal, LocationDetailModal } from '../components/ui';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { locationService } from '../services/locationService';
@@ -157,11 +157,11 @@ const LocationManagementPage = () => {
 
                 {/* Locations List */}
                 <div className="mt-8">
-                    <DashboardCard
+                    <CustomCard
                         title="Τοποθεσίες"
                         className="bg-white/10 backdrop-blur-sm border-white/20"
                     >
-                        <LocationDropdownList
+                        <LocationList
                             locations={locations}
                             loading={loading}
                             onViewDetails={(location) => {
@@ -179,7 +179,7 @@ const LocationManagementPage = () => {
                                 setIsDeleteModalOpen(true);
                             }}
                         />
-                    </DashboardCard>
+                    </CustomCard>
                 </div>
 
                 {/* Modals */}

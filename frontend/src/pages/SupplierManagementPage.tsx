@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button, Alert } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
-import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
+import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { supplierService } from '../services/supplierService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Truck, UserPlus, Search } from 'lucide-react';
@@ -15,14 +15,14 @@ import type {
 } from '../types/api/supplierInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 
-// Import supplier-specific components following the customer pattern
-import SupplierSearchBar from '../components/ui/searchBars/SupplierSearchBar';
+import { SupplierFilterPanel } from '../components/ui/filterPanels'
+
+
 import SupplierDetailModal from '../components/ui/modals/supplier/SupplierDetailModal';
 import SupplierUpdateModal from '../components/ui/modals/supplier/SupplierUpdateModal';
 import SupplierCreateModal from '../components/ui/modals/supplier/SupplierCreateModal';
 
 const SupplierManagementPage = () => {
-    // Search and pagination state - simplified (following customer pattern)
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(12);
@@ -208,7 +208,7 @@ const SupplierManagementPage = () => {
 
                 {/* Pagination Controls - Top */}
                 {searchResults && searchResults.totalElements > 0 && (
-                    <DashboardCard className="shadow-lg">
+                    <CustomCard className="shadow-lg">
                         <EnhancedPaginationControls
                             paginationData={{
                                 currentPage: searchResults.currentPage,
@@ -221,16 +221,16 @@ const SupplierManagementPage = () => {
                             onPageSizeChange={handlePageSizeChange}
                             className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                         />
-                    </DashboardCard>
+                    </CustomCard>
                 )}
 
                 {/* Search Section */}
-                <DashboardCard
+                <CustomCard
                     title="Αναζήτηση Προμηθευτή"
                     icon={<Search className="w-5 h-5" />}
                     className="shadow-lg"
                 >
-                    <SupplierSearchBar
+                    <SupplierFilterPanel
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
                         searchResults={searchResults?.data ? searchResults.data : []}
@@ -239,7 +239,7 @@ const SupplierManagementPage = () => {
                         onEdit={handleEdit}
                         onDelete={handleDelete}
                     />
-                </DashboardCard>
+                </CustomCard>
             </div>
 
             {/* Modals */}

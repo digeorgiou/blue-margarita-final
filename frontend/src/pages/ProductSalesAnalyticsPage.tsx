@@ -13,7 +13,7 @@ import {
     Filter
 } from 'lucide-react';
 import { Button, Alert, LoadingSpinner } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import { CustomDateInput } from '../components/ui/inputs';
 import { productService } from '../services/productService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
@@ -185,43 +185,8 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                 <div className="space-y-6 mt-6">
                     {/* Core Metrics Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <DashboardCard
-                            title="Συνολικές Πωλήσεις"
-                            icon={<DollarSign className="text-green-600" />}
-                            className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200"
-                        >
-                            <div className="text-center py-4">
-                                <div className="text-3xl font-bold text-green-700 mb-2">
-                                    {formatCurrency(analytics.totalRevenue)}
-                                </div>
-                                <div className="text-sm text-green-600">
-                                    {formatNumber(analytics.totalQuantitySold)} τεμάχια σε {analytics.numberOfSales} πωλήσεις
-                                </div>
-                            </div>
-                        </DashboardCard>
 
-                        <DashboardCard
-                            title="Μέσοι Όροι"
-                            icon={<Target className="text-blue-600" />}
-                            className="bg-gradient-to-br from-blue-50 to-sky-100 border-blue-200"
-                        >
-                            <div className="space-y-3 py-2">
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Μ.Ο. τιμή πώλησης:</span>
-                                    <span className="font-semibold text-blue-700">{formatCurrency(analytics.averageSellingPrice)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Μ.Ο. ποσότητα/πώληση:</span>
-                                    <span className="font-semibold text-blue-700">{formatNumber(analytics.averageQuantityPerSale)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Μ.Ο. έσοδα/πώληση:</span>
-                                    <span className="font-semibold text-blue-700">{formatCurrency(analytics.averageRevenuePerSale)}</span>
-                                </div>
-                            </div>
-                        </DashboardCard>
-
-                        <DashboardCard
+                        <CustomCard
                             title="Στοιχεία Προϊόντος"
                             icon={<Package className="text-purple-600" />}
                             className="bg-gradient-to-br from-purple-50 to-violet-100 border-purple-200"
@@ -244,13 +209,49 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                                     <span className="font-semibold text-purple-700">{formatDate(analytics.lastSaleDate)}</span>
                                 </div>
                             </div>
-                        </DashboardCard>
+                        </CustomCard>
+
+                        <CustomCard
+                            title="Συνολικές Πωλήσεις"
+                            icon={<DollarSign className="text-green-600" />}
+                            className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200"
+                        >
+                            <div className="text-center py-4">
+                                <div className="text-3xl font-bold text-green-700 mb-2">
+                                    {formatCurrency(analytics.totalRevenue)}
+                                </div>
+                                <div className="text-sm text-green-600">
+                                    {formatNumber(analytics.totalQuantitySold)} τεμάχια σε {analytics.numberOfSales} πωλήσεις
+                                </div>
+                            </div>
+                        </CustomCard>
+
+                        <CustomCard
+                            title="Μέσοι Όροι"
+                            icon={<Target className="text-blue-600" />}
+                            className="bg-gradient-to-br from-blue-50 to-sky-100 border-blue-200"
+                        >
+                            <div className="space-y-3 py-2">
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Μ.Ο. τιμή πώλησης:</span>
+                                    <span className="font-semibold text-blue-700">{formatCurrency(analytics.averageSellingPrice)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Μ.Ο. ποσότητα/πώληση:</span>
+                                    <span className="font-semibold text-blue-700">{formatNumber(analytics.averageQuantityPerSale)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">Μ.Ο. έσοδα/πώληση:</span>
+                                    <span className="font-semibold text-blue-700">{formatCurrency(analytics.averageRevenuePerSale)}</span>
+                                </div>
+                            </div>
+                        </CustomCard>
                     </div>
 
                     {/* Sales Data Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Weekly Data */}
-                        <DashboardCard
+                        <CustomCard
                             title="Προηγούμενη Εβδομάδα"
                             icon={<TrendingUp className="text-orange-600" />}
                             className="bg-gradient-to-br from-orange-50 to-amber-100 border-orange-200"
@@ -271,10 +272,10 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                                     <span className="font-semibold text-orange-700">{formatCurrency(analytics.weeklySalesData.revenue)}</span>
                                 </div>
                             </div>
-                        </DashboardCard>
+                        </CustomCard>
 
                         {/* Monthly Data */}
-                        <DashboardCard
+                        <CustomCard
                             title="Προηγούμενος Μήνας"
                             icon={<Calendar className="text-indigo-600" />}
                             className="bg-gradient-to-br from-indigo-50 to-blue-100 border-indigo-200"
@@ -292,10 +293,10 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                                     <span className="font-semibold text-indigo-700">{formatCurrency(analytics.monthlySalesData.revenue)}</span>
                                 </div>
                             </div>
-                        </DashboardCard>
+                        </CustomCard>
 
                         {/* Yearly Data */}
-                        <DashboardCard
+                        <CustomCard
                             title="Προηγούμενο Έτος"
                             icon={<PieChart className="text-teal-600" />}
                             className="bg-gradient-to-br from-teal-50 to-cyan-100 border-teal-200"
@@ -313,13 +314,13 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                                     <span className="font-semibold text-teal-700">{formatCurrency(analytics.yearlySalesData.revenue)}</span>
                                 </div>
                             </div>
-                        </DashboardCard>
+                        </CustomCard>
                     </div>
 
                     {/* Top Locations and Customers Row */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Top Locations */}
-                        <DashboardCard
+                        <CustomCard
                             title="Κορυφαίες Τοποθεσίες"
                             icon={<MapPin className="text-red-600" />}
                             className="bg-gradient-to-br from-red-50 to-rose-100 border-red-200"
@@ -361,10 +362,10 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                                     </div>
                                 )}
                             </div>
-                        </DashboardCard>
+                        </CustomCard>
 
                         {/* Top Customers */}
-                        <DashboardCard
+                        <CustomCard
                             title="Κορυφαίοι Πελάτες"
                             icon={<Users className="text-blue-600" />}
                             className="bg-gradient-to-br from-blue-50 to-sky-100 border-blue-200"
@@ -409,7 +410,7 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                                     </div>
                                 )}
                             </div>
-                        </DashboardCard>
+                        </CustomCard>
                     </div>
                 </div>
             ) : (

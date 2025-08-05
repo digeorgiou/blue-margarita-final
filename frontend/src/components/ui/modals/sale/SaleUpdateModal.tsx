@@ -29,7 +29,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                                                          }) => {
     // Form state
     const [formData, setFormData] = useState<Omit<SaleUpdateDTO, 'saleId' | 'updaterUserId'>>({
-        customerId: 0,
+        customerId: null,
         locationId: 0,
         saleDate: '',
         finalTotalPrice: 0,
@@ -81,7 +81,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
             const location = locations.find(loc => loc.name === sale.locationName);
 
             setFormData({
-                customerId: 0, // Will be set when customer is found
+                customerId: null,
                 locationId: location?.id || 0,
                 saleDate: sale.saleDate.split('T')[0], // Extract date part
                 finalTotalPrice: sale.finalTotalPrice,
@@ -152,7 +152,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
         setSelectedCustomer(customer);
         setFormData(prev => ({
             ...prev,
-            customerId: customer?.id || 0
+            customerId: customer?.id || null
         }));
         if (customer) {
             setCustomerSearchTerm('');
@@ -170,7 +170,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
             const dataToSubmit: SaleUpdateDTO = {
                 saleId: sale.id,
                 updaterUserId: 1, // You'd get this from auth context
-                customerId: formData.customerId,
+                customerId: selectedCustomer?.id || null,
                 locationId: formData.locationId,
                 saleDate: formData.saleDate,
                 finalTotalPrice: formData.finalTotalPrice,
@@ -196,7 +196,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
         formData.finalTotalPrice !== sale.finalTotalPrice ||
         formData.packagingPrice !== sale.packagingPrice ||
         formData.paymentMethod !== sale.paymentMethod ||
-        (selectedCustomer?.id || 0) !== (sale.customerName !== 'Περαστικός Πελάτης' ? 1 : 0) // Simplified check
+        (selectedCustomer?.id || null) !== (sale.customerName !== 'Περαστικός Πελάτης' ? sale.customerId : null)
     ) : false;
 
     const formatCurrency = (amount: number): string => {
@@ -207,7 +207,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
         }).format(amount);
     };
 
-    // Create options for dropdowns
+    // Create options for viewAll
     const locationOptions = locations.map(location => ({
         value: location.id,
         label: location.name
@@ -351,8 +351,8 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                             onChange={(value) => handleInputChange('finalTotalPrice', value)}
                             placeholder="0.00"
                             icon={<FaEuroSign className="w-5 h-5 text-green-500" />}
-                            min={0.01}
-                            step={0.01}
+                            min={0}
+                            step={1}
                             className={fieldErrors.finalTotalPrice ? 'border-red-500' : ''}
                             required
                         />
@@ -368,7 +368,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                             placeholder="0.00"
                             icon={<Package className="w-5 h-5 text-orange-500" />}
                             min={0}
-                            step={0.01}
+                            step={0.5}
                             className={fieldErrors.packagingPrice ? 'border-red-500' : ''}
                         />
                         {fieldErrors.packagingPrice && (

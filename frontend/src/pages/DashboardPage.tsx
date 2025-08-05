@@ -6,7 +6,7 @@ import {
     getPaymentMethodLabel,
 } from "../types/api/dashboardInterface.ts";
 import { Button, ListItem, LoadingSpinner, StatCard, TaskItem, QuickActions } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import TaskModal from "../components/ui/modals/TaskModal.tsx";
 
 interface DashboardProps {
@@ -188,7 +188,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
                     {/* Sales Summary Card */}
-                    <DashboardCard
+                    <CustomCard
                         title="Σύνοψη Πωλήσεων"
                         icon="💰"
                         height="xl"
@@ -226,10 +226,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 </div>
                             </div>
                         </div>
-                    </DashboardCard>
+                    </CustomCard>
 
                     {/* Combined Tasks Card */}
-                    <DashboardCard
+                    <CustomCard
                         title="To Do List"
                         icon="📋"
                         height="xl"
@@ -290,10 +290,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 )}
                             </div>
                         )}
-                    </DashboardCard>
+                    </CustomCard>
 
                     {/* Top Products Card */}
-                    <DashboardCard
+                    <CustomCard
                         title="Τα 5 καλύτερα προϊόντα του μήνα"
                         icon="🏆"
                         height="xl"
@@ -316,10 +316,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 ))
                             )}
                         </div>
-                    </DashboardCard>
+                    </CustomCard>
 
                     {/* Recent Sales Card */}
-                    <DashboardCard
+                    <CustomCard
                         title="Οι 5 πιο πρόσφατες πωλήσεις"
                         icon="🛒"
                         height="xl"
@@ -342,10 +342,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 ))
                             )}
                         </div>
-                    </DashboardCard>
+                    </CustomCard>
 
                     {/* Low Stock Alert Card */}
-                    <DashboardCard
+                    <CustomCard
                         title="Προϊόντα με χαμηλό απόθεμα"
                         icon="⚠️"
                         height="xl"
@@ -376,10 +376,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 ))
                             )}
                         </div>
-                    </DashboardCard>
+                    </CustomCard>
 
                     {/* Mispriced Products Card */}
-                    <DashboardCard
+                    <CustomCard
                         title="Προϊόντα με λάθος τιμή"
                         icon="💸"
                         height="xl"
@@ -434,7 +434,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 })
                             )}
                         </div>
-                    </DashboardCard>
+                    </CustomCard>
 
                 </div>
             </div>

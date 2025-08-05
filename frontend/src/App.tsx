@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Login from './pages/LoginPage';
 import { authService } from './services/authService';
 import { LoadingSpinner } from "./components/ui";
-import Layout from "./pages/Layout.tsx"
+import Layout from "./components/ui/common/Layout.tsx"
 import Dashboard from "./pages/DashboardPage.tsx";
 import LowStockProductsPage from './pages/LowStockProductsPage';
 import MispricedProductsPage from './pages/MispricedProductsPage';

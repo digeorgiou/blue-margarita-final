@@ -5,7 +5,7 @@ import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
 import { CustomTextInput, CustomNumberInput, CustomSelect, CustomSearchDropdown } from '../components/ui/inputs';
 import { Button, LoadingSpinner, Alert } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import {
     Package,
     Plus,
@@ -532,7 +532,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                         {/* Left Column - Basic Info */}
                         <div className="xl:col-span-1 space-y-6">
                             {/* Basic Product Information */}
-                            <DashboardCard title="Basic Information" className="space-y-4">
+                            <CustomCard title="Basic Information" className="space-y-4">
                                 <CustomTextInput
                                     label="Όνομα Προϊόντος"
                                     value={name}
@@ -568,10 +568,10 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                     placeholder=""
                                     required
                                 />
-                            </DashboardCard>
+                            </CustomCard>
 
                             {/* Materials Section */}
-                            <DashboardCard
+                            <CustomCard
                                 title={
                                     <div className="flex items-center justify-between">
                                         <span>Materials</span>
@@ -649,7 +649,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                         ))}
                                     </div>
                                 )}
-                            </DashboardCard>
+                            </CustomCard>
 
 
                         </div>
@@ -658,7 +658,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                         <div className="xl:col-span-1 space-y-6">
 
                             {/* Stock Information */}
-                            <DashboardCard title="Stock Information" className="space-y-4">
+                            <CustomCard title="Stock Information" className="space-y-4">
                                 <CustomNumberInput
                                     label="Απόθεμα"
                                     value={currentStock}
@@ -687,12 +687,12 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                     icon={<Clock className="w-4 h-4" />}
                                     step={1}
                                 />
-                            </DashboardCard>
+                            </CustomCard>
 
 
 
                             {/* Procedures Section */}
-                            <DashboardCard
+                            <CustomCard
                                 title={
                                     <div className="flex items-center justify-between">
                                         <span>Procedures</span>
@@ -754,13 +754,13 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                         ))}
                                     </div>
                                 )}
-                            </DashboardCard>
+                            </CustomCard>
                         </div>
 
                         {/* Right Column - Pricing */}
                         <div className="xl:col-span-1 space-y-6">
                             {/* Price Calculation */}
-                            <DashboardCard title="Price Calculation" className="space-y-4">
+                            <CustomCard title="Price Calculation" className="space-y-4">
                                 <div className="space-y-3">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Κόστος Υλικών:</span>
@@ -793,10 +793,10 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                         </span>
                                     </div>
                                 </div>
-                            </DashboardCard>
+                            </CustomCard>
 
                             {/* Final Pricing */}
-                            <DashboardCard title="Final Pricing" className="space-y-4">
+                            <CustomCard title="Final Pricing" className="space-y-4">
                                 <CustomNumberInput
                                     label="Τελική Λιανική Τιμή"
                                     value={finalRetailPrice}
@@ -817,7 +817,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                     step={1}
                                     icon={<Euro className="w-4 h-4" />}
                                 />
-                            </DashboardCard>
+                            </CustomCard>
 
                             <Button
                                 type="submit"

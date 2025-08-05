@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, CategoryDropdownList, LoadingSpinner } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import { Button, Alert, CategoryList, LoadingSpinner } from '../components/ui';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import CategoryCreateModal from '../components/ui/modals/CategoryCreateModal';
 import CategoryUpdateModal from '../components/ui/modals/CategoryUpdateModal';
 import CategoryDetailModal from '../components/ui/modals/CategoryDetailModal';
@@ -190,17 +190,17 @@ const CategoryManagementPage  = () => {
 
                 {/* Categories List */}
                 <div className="mt-8">
-                    <DashboardCard
+                    <CustomCard
                         className="bg-white/10 backdrop-blur-sm border-white/20"
                     >
-                        <CategoryDropdownList
+                        <CategoryList
                             categories={categories}
                             loading={loading}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             onViewDetails={handleViewDetails}
                         />
-                    </DashboardCard>
+                    </CustomCard>
                 </div>
 
                 {/* Create Modal */}

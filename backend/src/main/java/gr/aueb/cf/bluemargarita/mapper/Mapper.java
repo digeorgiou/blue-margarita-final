@@ -494,7 +494,7 @@ public class Mapper {
 
     public SaleReadOnlyDTO mapToSaleReadOnlyDTO(Sale sale){
 
-        BigDecimal discountAmount = sale.getDiscountPercentage().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP).multiply(sale.getSuggestedTotalPrice().add(sale.getPackagingPrice()));
+        BigDecimal discountAmount = sale.getSuggestedTotalPrice().subtract(sale.getFinalTotalPrice());
 
         List<SaleProductDTO> products = new ArrayList<>();
 

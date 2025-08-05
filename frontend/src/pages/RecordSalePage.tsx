@@ -11,9 +11,9 @@ import {
 import { SaleSuccessModal } from '../components/ui/modals/SaleSuccessModal';
 import { CustomerSearchResultDTO } from "../types/api/customerInterface.ts";
 import { Button, LoadingSpinner, Alert } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
-import CartSummary from '../components/ui/CartSummary';
-import CartItem from '../components/ui/CartItem';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
+import CartSummary from '../components/ui/cart/CartSummary.tsx';
+import CartItem from '../components/ui/cart/CartItem.tsx';
 import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator, Mail, X, Calendar } from 'lucide-react';
 
 import { CustomNumberInput, CustomDateInput, CustomRadioGroup, CustomSelect, CustomSearchDropdown } from "../components/ui/inputs";
@@ -356,7 +356,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2">
-                            <DashboardCard
+                            <CustomCard
                                 height="md"
                             >
                                 <div className="space-y-4 pl-2">
@@ -541,12 +541,12 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
 
                                     </div>
                                 </div>
-                            </DashboardCard>
+                            </CustomCard>
                         </div>
 
                         {/* Cart Items Card - 1/3 width, reduced height */}
                         <div className="lg:col-span-1">
-                            <DashboardCard
+                            <CustomCard
                                 title={`Καλάθι (${cart.length})`}
                                 icon={<ShoppingCart className="w-5 h-5" />}
                                 height="md"
@@ -572,12 +572,12 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                         </div>
                                     )}
                                 </div>
-                            </DashboardCard>
+                            </CustomCard>
                         </div>
                     </div>
 
                     {/* Bottom Row - Order Summary & Checkout (Single Card) */}
-                    <DashboardCard
+                    <CustomCard
                         title="Ανάλυση Πώλησης"
                         icon={<Calculator className="w-5 h-5" />}
                         height="xl"
@@ -616,7 +616,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                 </div>
                             )}
                         </div>
-                    </DashboardCard>
+                    </CustomCard>
                 </div>
             </div>
 

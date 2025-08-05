@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button, Alert, ProductUsageModal } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
-import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
+import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { procedureService } from '../services/procedureService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Plus, Cog, Search } from 'lucide-react';
@@ -16,7 +16,7 @@ import type {
 import type { Paginated } from '../types/api/dashboardInterface';
 
 // Updated components following the material pattern
-import ProcedureSearchBar from '../components/ui/searchBars/ProcedureSearchBar';
+import { ProcedureFilterPanel } from '../components/ui/filterPanels'
 import ProcedureDetailModal from '../components/ui/modals/procedure/ProcedureDetailModal';
 import ProcedureUpdateModal from '../components/ui/modals/procedure/ProcedureUpdateModal';
 import ProcedureCreateModal from '../components/ui/modals/procedure/ProcedureCreateModal';
@@ -212,7 +212,7 @@ const ProcedureManagementPage = () => {
 
                 {/* Pagination Controls - Top */}
                 {searchResults && searchResults.totalElements > 0 && (
-                    <DashboardCard className="shadow-lg">
+                    <CustomCard className="shadow-lg">
                         <EnhancedPaginationControls
                             paginationData={{
                                 currentPage: searchResults.currentPage,
@@ -225,16 +225,16 @@ const ProcedureManagementPage = () => {
                             onPageSizeChange={handlePageSizeChange}
                             className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                         />
-                    </DashboardCard>
+                    </CustomCard>
                 )}
 
                 {/* Search and Results Card */}
-                <DashboardCard
+                <CustomCard
                     title="Αναζήτηση Διαδικασίας"
                     icon={<Search className="w-5 h-5" />}
                     className="shadow-lg"
                 >
-                    <ProcedureSearchBar
+                    <ProcedureFilterPanel
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
                         searchResults={searchResults?.data ? searchResults.data : []}
@@ -244,7 +244,7 @@ const ProcedureManagementPage = () => {
                         onDelete={handleDelete}
                         onViewProducts={handleViewProducts}
                     />
-                </DashboardCard>
+                </CustomCard>
 
                 {/* Modals */}
                 <ProcedureCreateModal

@@ -129,7 +129,7 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({
                                         </div>
                                         <div className="space-y-2 text-sm">
                                             <div className="flex justify-between">
-                                                <span className="text-gray-600">Υποσύνολο:</span>
+                                                <span className="text-gray-600">Κόστος Προϊόντων:</span>
                                                 <span className="font-medium">{formatCurrency(saleDetails.subtotal)}</span>
                                             </div>
                                             <div className="flex justify-between">
@@ -219,7 +219,7 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({
                                                     </div>
                                                     {item.totalDiscount > 0 && (
                                                         <div className="text-xs text-orange-600">
-                                                            Έκπτωση: {formatCurrency(item.totalDiscount)}
+                                                            Έκπτωση Προϊόντος: {formatCurrency(item.totalDiscount)}
                                                         </div>
                                                     )}
                                                 </div>

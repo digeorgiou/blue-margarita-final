@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { saleService } from '../services/saleService';
@@ -22,11 +22,12 @@ import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 import type { CustomerSearchResultDTO } from '../types/api/customerInterface';
 import type { ProductSearchResultDTO } from '../types/api/productInterface';
 
-// Import custom components
-import SaleSearchBar from '../components/ui/searchBars/SaleSearchBar';
+import { SaleFilterPanel } from '../components/ui/filterPanels'
+
+
 import SaleDetailModal from '../components/ui/modals/sale/SaleDetailModal';
 import SaleUpdateModal from '../components/ui/modals/sale/SaleUpdateModal';
-import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
+import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 
 interface SaleManagementPageProps {
     onNavigate: (page: string) => void;
@@ -329,12 +330,12 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                 </div>
 
                 {/* Search and Filter Section */}
-                <DashboardCard
+                <CustomCard
                     title="Φίλτρα"
                     icon={<Search className="w-5 h-5" />}
                     className="shadow-lg"
                 >
-                    <SaleSearchBar
+                    <SaleFilterPanel
                         // Customer filter
                         customerSearchTerm={customerSearchTerm}
                         onCustomerSearchTermChange={setCustomerSearchTerm}
@@ -442,12 +443,12 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                             </div>
                         )}
 
-                    </SaleSearchBar>
-                </DashboardCard>
+                    </SaleFilterPanel>
+                </CustomCard>
 
                 {/* Pagination */}
                 {searchResults && searchResults.totalElements > 0 && (
-                    <DashboardCard title="" className="shadow-lg">
+                    <CustomCard title="" className="shadow-lg">
                         <EnhancedPaginationControls
                             paginationData={{
                                 currentPage: searchResults.currentPage,
@@ -460,7 +461,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                             onPageSizeChange={handlePageSizeChange}
                             className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                         />
-                    </DashboardCard>
+                    </CustomCard>
                 )}
 
                 {/* Modals */}
@@ -495,7 +496,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                                 title="Επιβεβαίωση Διαγραφής Πώλησης"
                                 message={`Είστε σίγουροι ότι θέλετε να διαγράψετε την πώληση στις ${formatDate(selectedSale.saleDate)} για ${formatCurrency(selectedSale.finalTotalPrice)}; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.`}
                                 onConfirm={handleDeleteSale}
-                                onCancel={() => {
+                                onClose={() => {
                                     setIsDeleteModalOpen(false);
                                     setSelectedSale(null);
                                 }}

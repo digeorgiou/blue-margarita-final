@@ -5,7 +5,7 @@ import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
 import { CustomTextInput, CustomNumberInput, CustomSelect, CustomSearchDropdown } from '../components/ui/inputs';
 import { Button, LoadingSpinner, Alert } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import {
     Package,
     Plus,
@@ -341,7 +341,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                         {/* Left Column - Basic Info */}
                         <div className="xl:col-span-1 space-y-6">
                             {/* Basic Product Information */}
-                            <DashboardCard title="Basic Information" className="space-y-4">
+                            <CustomCard title="Basic Information" className="space-y-4">
                                 <CustomTextInput
                                     label="Όνομα Προϊόντος"
                                     value={productName}
@@ -378,10 +378,10 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                     icon={<Package className="w-4 h-4" />}
                                     required
                                 />
-                            </DashboardCard>
+                            </CustomCard>
 
                             {/* Materials */}
-                            <DashboardCard title="Materials" className="space-y-4" height="md">
+                            <CustomCard title="Materials" className="space-y-4" height="md">
                                 <CustomSearchDropdown
                                     label="Προσθήκη Υλικών"
                                     searchTerm={materialSearchTerm}
@@ -439,7 +439,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                         ))}
                                     </div>
                                 )}
-                            </DashboardCard>
+                            </CustomCard>
 
 
                         </div>
@@ -448,7 +448,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                         <div className="xl:col-span-1 space-y-6">
 
                             {/* Inventory Information */}
-                            <DashboardCard title="Inventory" className="space-y-4">
+                            <CustomCard title="Inventory" className="space-y-4">
                                 <CustomNumberInput
                                     label="Αρχικό Απόθεμα"
                                     value={stock}
@@ -478,11 +478,11 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                     min={0}
                                     step={1}
                                 />
-                            </DashboardCard>
+                            </CustomCard>
 
 
                             {/* Procedures */}
-                            <DashboardCard title="Procedures" className="space-y-4" height="md">
+                            <CustomCard title="Procedures" className="space-y-4" height="md">
                                 <CustomSearchDropdown
                                     label="Προσθήκη Διαδικασίας / Πάγιου Εξόδου"
                                     searchTerm={procedureSearchTerm}
@@ -530,13 +530,13 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                         ))}
                                     </div>
                                 )}
-                            </DashboardCard>
+                            </CustomCard>
                         </div>
 
                         {/* Right Column - Pricing */}
                         <div className="xl:col-span-1 space-y-6">
                             {/* Price Calculation */}
-                            <DashboardCard title="Price Calculation" className="space-y-4" height="md">
+                            <CustomCard title="Price Calculation" className="space-y-4" height="md">
                                 <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                                     <div className="flex justify-between text-xs">
                                         <span>Κόστος Υλικών:</span>
@@ -571,10 +571,10 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                         <span className="font-medium text-green-700">€{priceCalculation.suggestedWholesalePrice.toFixed(2)}</span>
                                     </div>
                                 </div>
-                            </DashboardCard>
+                            </CustomCard>
 
                             {/* Final Pricing */}
-                            <DashboardCard title="Final Pricing" className="space-y-4">
+                            <CustomCard title="Final Pricing" className="space-y-4">
                                 <CustomNumberInput
                                     label="Τελική Λιανική Τιμή (€)"
                                     value={finalSellingPriceRetail}
@@ -595,7 +595,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                     step={1}
                                     className="mt-2"
                                 />
-                            </DashboardCard>
+                            </CustomCard>
 
                             {/* Submit Button */}
                                     <Button

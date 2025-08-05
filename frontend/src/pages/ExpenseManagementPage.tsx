@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, Alert } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { expenseService } from '../services/expenseService';
@@ -17,12 +17,12 @@ import type {
 } from '../types/api/expenseInterface';
 
 // Import custom components
-import ExpenseSearchBar from '../components/ui/searchBars/ExpenseSearchBar';
+import { ExpenseFilterPanel } from '../components/ui/filterPanels'
 import { CustomDateInput } from '../components/ui/inputs';
 import ExpenseDetailModal from '../components/ui/modals/expense/ExpenseDetailModal';
 import ExpenseUpdateModal from '../components/ui/modals/expense/ExpenseUpdateModal';
 import ExpenseCreateModal from '../components/ui/modals/expense/ExpenseCreateModal';
-import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
+import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 
 const ExpenseManagementPage = () => {
     // Toggle state for switching between main page and analytics
@@ -310,7 +310,7 @@ const ExpenseManagementPage = () => {
                     <>
                         {/* Pagination Controls - Top */}
                         {searchResults && searchResults.totalElements > 0 && (
-                            <DashboardCard className="shadow-lg">
+                            <CustomCard className="shadow-lg">
                                 <EnhancedPaginationControls
                                     paginationData={{
                                         currentPage: searchResults.currentPage,
@@ -323,16 +323,16 @@ const ExpenseManagementPage = () => {
                                     onPageSizeChange={handlePageSizeChange}
                                     className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                                 />
-                            </DashboardCard>
+                            </CustomCard>
                         )}
 
                         {/* Search and Filter Section */}
-                        <DashboardCard
+                        <CustomCard
                             title="Φίλτρα"
                             icon={<Search className="w-5 h-5" />}
                             className="shadow-lg"
                         >
-                            <ExpenseSearchBar
+                            <ExpenseFilterPanel
                                 searchTerm={searchTerm}
                                 onSearchTermChange={setSearchTerm}
                                 expenseTypeFilter={expenseTypeFilter}
@@ -394,14 +394,14 @@ const ExpenseManagementPage = () => {
                                         </div>
                                     </div>
                                 )}
-                            </ExpenseSearchBar>
-                        </DashboardCard>
+                            </ExpenseFilterPanel>
+                        </CustomCard>
                     </>
                 )}
 
                 {/* ANALYTICS VIEW - Expense Breakdown */}
                 {currentView === 'analytics' && (
-                    <DashboardCard
+                    <CustomCard
                         title="Ανάλυση Εξόδων"
                         icon={<BarChart3 className="w-5 h-5" />}
                         className="shadow-lg"
@@ -486,7 +486,7 @@ const ExpenseManagementPage = () => {
                                 </div>
                             )}
                         </div>
-                    </DashboardCard>
+                    </CustomCard>
                 )}
 
                 {/* Modals */}

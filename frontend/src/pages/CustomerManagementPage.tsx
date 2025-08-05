@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, CustomerSearchBar, CustomerDetailModal, CustomerUpdateModal, CustomerCreateModal} from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import { Button, Alert, CustomerDetailModal, CustomerUpdateModal, CustomerCreateModal} from '../components/ui';
+import { CustomerFilterPanel } from '../components/ui/filterPanels'
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
-import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
+import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { customerService } from '../services/customerService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Users, UserPlus, Search } from 'lucide-react';
@@ -205,7 +206,7 @@ const CustomerManagementPage = () => {
 
                 {/* Pagination Controls - Top */}
                 {searchResults && searchResults.totalElements > 0 && (
-                    <DashboardCard className="shadow-lg">
+                    <CustomCard className="shadow-lg">
                         <EnhancedPaginationControls
                             paginationData={{
                                 currentPage: searchResults.currentPage,
@@ -218,16 +219,16 @@ const CustomerManagementPage = () => {
                             onPageSizeChange={handlePageSizeChange}
                             className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                         />
-                    </DashboardCard>
+                    </CustomCard>
                 )}
 
                 {/* Search Section */}
-                <DashboardCard
+                <CustomCard
                     title="Αναζήτηση Πελάτη"
                     icon={<Search className="w-5 h-5" />}
                     className="shadow-lg"
                 >
-                    <CustomerSearchBar
+                    <CustomerFilterPanel
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
                         tinOnlyFilter={tinOnlyFilter}
@@ -238,7 +239,7 @@ const CustomerManagementPage = () => {
                         onEdit={handleEdit}
                         onDelete={handleDelete}
                     />
-                </DashboardCard>
+                </CustomCard>
 
             </div>
 

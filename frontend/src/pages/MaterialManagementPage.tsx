@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button, Alert, ProductUsageModal } from '../components/ui';
-import DashboardCard from '../components/ui/DashboardCard';
+import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
-import EnhancedPaginationControls from '../components/ui/EnhancedPaginationControls';
+import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { materialService } from '../services/materialService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Plus, Boxes, Search } from 'lucide-react';
@@ -15,8 +15,9 @@ import type {
 } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 
-// We'll need to create these components following the customer pattern
-import MaterialSearchBar from '../components/ui/searchBars/MaterialSearchBar';
+import { MaterialFilterPanel } from '../components/ui/filterPanels'
+
+
 import MaterialDetailModal from "../components/ui/modals/material/MaterialDetailModal.tsx";
 import MaterialUpdateModal from '../components/ui/modals/material/MaterialUpdateModal';
 import MaterialCreateModal from '../components/ui/modals/material/MaterialCreateModal';
@@ -212,7 +213,7 @@ const MaterialManagementPage = () => {
 
                 {/* Pagination Controls - Bottom */}
                 {searchResults && searchResults.totalElements > 0 && (
-                    <DashboardCard className="shadow-lg">
+                    <CustomCard className="shadow-lg">
                         <EnhancedPaginationControls
                             paginationData={{
                                 currentPage: searchResults.currentPage,
@@ -225,7 +226,7 @@ const MaterialManagementPage = () => {
                             onPageSizeChange={handlePageSizeChange}
                             className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                         />
-                    </DashboardCard>
+                    </CustomCard>
                 )}
 
                 {/* General Error Display */}
@@ -236,12 +237,12 @@ const MaterialManagementPage = () => {
                 )}
 
                 {/* Search and Results Card */}
-                    <DashboardCard
+                    <CustomCard
                     title="Αναζήτηση Υλικού"
                     icon={<Search className="w-5 h-5" />}
                     className="shadow-lg"
                     >
-                        <MaterialSearchBar
+                        <MaterialFilterPanel
                             searchTerm={searchTerm}
                             onSearchTermChange={setSearchTerm}
                             searchResults={searchResults ? searchResults.data : []}
@@ -251,7 +252,7 @@ const MaterialManagementPage = () => {
                             onDelete={handleDelete}
                             onViewProducts={handleViewProducts}
                         />
-                </DashboardCard>
+                </CustomCard>
             </div>
 
             {/* Modals */}
