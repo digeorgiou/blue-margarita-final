@@ -1,12 +1,13 @@
-import { Package, Settings, User, Building2 } from 'lucide-react';
+import { Settings, User, Truck } from 'lucide-react';
 import type { EntityConfig, ColorClasses, EntityType, ColorVariant } from '../../../types/components/input-types.ts';
 import { GiDiamondRing } from "react-icons/gi";
+import { IoHammerOutline } from 'react-icons/io5';
 
 export const entityConfig: Record<EntityType, EntityConfig> = {
     material: {
         color: 'blue',
-        defaultIcon: <Package className="w-5 h-5 text-blue-500" />,
-        emptyIcon: <Package className="w-6 h-6 text-gray-400" />
+        defaultIcon: <IoHammerOutline className="w-5 h-5 text-blue-500" />,
+        emptyIcon: <IoHammerOutline className="w-6 h-6 text-gray-400" />
     },
     procedure: {
         color: 'purple',
@@ -25,8 +26,8 @@ export const entityConfig: Record<EntityType, EntityConfig> = {
     },
     supplier: {
         color: 'orange',
-        defaultIcon: <Building2 className="w-5 h-5 text-orange-500" />,
-        emptyIcon: <Building2 className="w-6 h-6 text-gray-400" />
+        defaultIcon: <Truck className="w-5 h-5 text-orange-500" />,
+        emptyIcon: <Truck className="w-6 h-6 text-gray-400" />
     }
 };
 

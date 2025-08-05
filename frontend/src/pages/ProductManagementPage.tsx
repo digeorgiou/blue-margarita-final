@@ -17,6 +17,7 @@ import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 import {ProductDetailModal} from "../components/ui";
+import { GiDiamondRing } from "react-icons/gi";
 
 interface ProductManagementPageProps {
     onNavigate: (page: string, productId?: string) => void;
@@ -252,7 +253,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center space-x-3 mb-4 md:mb-0">
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Package className="w-8 h-8 text-white" />
+                            <GiDiamondRing className="w-8 h-8 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">Διαχείριση Προϊόντων</h1>

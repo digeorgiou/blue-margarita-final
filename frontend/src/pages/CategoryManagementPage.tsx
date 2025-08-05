@@ -7,7 +7,7 @@ import CategoryDetailModal from '../components/ui/modals/CategoryDetailModal';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { categoryService } from '../services/categoryService';
-import { Package, Plus } from 'lucide-react';
+import { Gem, Plus } from 'lucide-react';
 import type {
     CategoryForDropdownDTO,
     CategoryReadOnlyDTO,
@@ -173,7 +173,7 @@ const CategoryManagementPage  = () => {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center space-x-3 mb-4 md:mb-0">
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Package className="w-6 h-6 text-white" />
+                            <Gem className="w-6 h-6 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white mb-2">Διαχείριση Κατηγοριών</h1>
@@ -244,7 +244,7 @@ const CategoryManagementPage  = () => {
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="flex items-center">
                                         <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                                            <Package className="w-6 h-6 text-blue-600" />
+                                            <Gem className="w-6 h-6 text-blue-600" />
                                         </div>
                                         <div>
                                             <h2 className="text-2xl font-bold text-gray-900 mb-1">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Calendar, Eye, Edit, Trash2, Package, Filter } from 'lucide-react';
+import { Search, Calendar, Eye, Edit, Trash2, Filter } from 'lucide-react';
 import { Button, LoadingSpinner } from '../index';
 import { CustomTextInput, CustomSelect, CustomDateInput } from '../inputs';
 import { FaEuroSign } from "react-icons/fa6";
@@ -142,8 +142,8 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
                         {searchResults.map((expense) => (
                             <div key={expense.id}
                                  className="p-6 hover:bg-blue-100 transition-colors duration-150">
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                    <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-6">
+                                    <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="flex-shrink-0">
                                                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -156,29 +156,23 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
                                                 </h3>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                        <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div className="flex items-center gap-2 text-gray-600">
-                                                <div className="flex items-center gap-2 text-gray-600">
+                                                <div className="flex items-center gap-4 text-gray-600">
                                                     <span>{formatDate(expense.expenseDate)}</span>
-                                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                                    <span className="bg-orange-200 text-orange-800 px-4 py-2 rounded-full text-center">
                                                         {getExpenseTypeDisplayName(expense.expenseType)}
                                                     </span>
-                                                    {expense.purchaseId && (
-                                                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full flex items-center">
-                                                            <Package className="w-3 h-3 mr-1" />
-                                                            Αγορά
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-lg font-semibold text-gray-900">
+                                            <div className="flex items-center">
+                                                <p className="text-lg font-semibold text-red-600">
                                                     {formatCurrency(expense.amount)}
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 ml-4">
+                                    <div className="flex items-center justify-center gap-2 min-w-fit">
                                         <Button
                                             onClick={() => onViewDetails(expense)}
                                             variant="info"

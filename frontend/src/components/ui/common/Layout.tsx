@@ -17,8 +17,7 @@ const Layout: React.FC<LayoutProps> = ({
             />
 
             {/* Main content */}
-            <div className="flex-1 flex flex-col min-h-screen">
-                {/* New Fancy Header */}
+            <div className="flex-1 flex flex-col min-h-screen lg:ml-0 ml-16">
                 <Header
                     onLogout={onLogout}
                     currentPage={currentPage}

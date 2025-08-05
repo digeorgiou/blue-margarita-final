@@ -15,10 +15,10 @@ import {
     ArrowLeft,
     Save,
     Euro,
-    Ruler,
     Clock,
     RefreshCw
 } from 'lucide-react';
+import { IoHammerOutline } from "react-icons/io5";
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import type {
     ProductUpdateDTO,
@@ -596,9 +596,9 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                     placeholder="Αναζήτηση Υλικών"
                                     isLoading={isLoadingMaterials}
                                     entityType="material"
-                                    icon={<Ruler className="w-4 h-4" />}
-                                    emptyMessage="No materials found"
-                                    emptySubMessage="Try searching with different keywords"
+                                    icon={<IoHammerOutline className="w-4 h-4" />}
+                                    emptyMessage="Δεν βρέθηκαν υλικά"
+                                    emptySubMessage="Δοκιμάστε διαφορετικό όρο αναζήτησης"
                                 />
 
                                 {/* Selected Materials Display */}
@@ -718,8 +718,8 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                     isLoading={isLoadingProcedures}
                                     entityType="procedure"
                                     icon={<Settings className="w-4 h-4" />}
-                                    emptyMessage="No procedures found"
-                                    emptySubMessage="Try searching with different keywords"
+                                    emptyMessage="Δεν βρέθηκαν διαδικασίες"
+                                    emptySubMessage="Δοκιμάστε διαφορετικό όρο αναζήτησης"
                                 />
 
                                 {/* Selected Procedures Display */}

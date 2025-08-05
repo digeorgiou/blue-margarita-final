@@ -8,10 +8,11 @@ import { SupplierSearchResultDTO } from "../types/api/supplierInterface";
 import { MaterialSearchResultDTO } from "../types/api/materialInterface";
 import { Button, LoadingSpinner, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
-import { ShoppingCart, Package, Calendar, Plus, Minus, Trash2, Building2, Mail, X } from 'lucide-react';
+import { ShoppingCart, Package, Calendar, Plus, Minus, Trash2, Truck, Mail, X } from 'lucide-react';
 import { PurchaseSuccessModal } from '../components/ui/modals/PurchaseSuccessModal';
 import { materialService } from "../services/materialService.ts";
 import { CustomNumberInput, CustomDateInput, CustomSearchDropdown  } from "../components/ui/inputs";
+import { IoHammerOutline } from "react-icons/io5";
 
 interface RecordPurchasePageProps {
     onNavigate: (page: string) => void;
@@ -269,9 +270,9 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                 placeholder="Αναζήτηση υλικού..."
                                                 entityType="material"
                                                 isLoading={isLoadingMaterials}
-                                                emptyMessage="No materials found"
-                                                emptySubMessage="Try searching by name"
-                                                icon={<Package className="w-4 h-4 text-emerald-500" />}
+                                                emptyMessage="Δεν βρέθηκαν υλικά"
+                                                emptySubMessage="Δοκιμάστε διαφορετικό όρο αναζήτησης"
+                                                icon={<IoHammerOutline className="w-4 h-4 text-emerald-500" />}
                                             />
                                         </div>
 
@@ -296,9 +297,9 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                 placeholder="Αναζήτηση προμηθευτή..."
                                                 entityType="supplier"
                                                 isLoading={isLoadingSuppliers}
-                                                emptyMessage="No suppliers found"
-                                                emptySubMessage="Try searching by name or email"
-                                                icon={<Building2 className="w-4 h-4 text-blue-500" />}
+                                                emptyMessage="Δεν βρέθηκαν προμηθευτές"
+                                                emptySubMessage="Δοκιμάστε διαφορετικό όρο αναζήτησης"
+                                                icon={<Truck className="w-4 h-4 text-blue-500" />}
                                             />
                                         </div>
 
@@ -331,7 +332,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center space-x-2">
                                                             <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                                <Building2 className="w-3 h-3 text-blue-600" />
+                                                                <Truck className="w-3 h-3 text-blue-600" />
                                                             </div>
                                                             <div className="min-w-0 flex-1">
                                                                 <p className="font-medium text-blue-900 text-xs truncate">{selectedSupplier.supplierName}</p>

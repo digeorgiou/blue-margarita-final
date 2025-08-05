@@ -3,9 +3,7 @@ import {SidebarProps, NavigationItem} from "../../../types/components/sidebar.ts
 
 import {
     ShoppingCart,
-    Package,
     Users,
-    Layers,
     ShoppingBag,
     MapPin,
     Home,
@@ -13,14 +11,21 @@ import {
     Smartphone,
     Gem,
     Truck,
-    Wrench,
     Receipt,
-    TrendingUp
+    TrendingUp,
+    Settings
 } from 'lucide-react';
+import { IoHammerOutline } from "react-icons/io5";
+import { GiDiamondRing } from "react-icons/gi";
 
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    // Initialize sidebar state based on screen size
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        // Only collapse by default on mobile/tablet screens
+        return window.innerWidth < 1024;
+    });
 
     const navigationItems: NavigationItem[] = [
         {
@@ -38,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
         {
             id: 'manage-products',
             label: 'Προϊόντα',
-            icon: <Package className="w-5 h-5" />,
+            icon: <GiDiamondRing className="w-5 h-5" />,
             href: 'manage-products'
         },
         {
@@ -50,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
         {
             id: 'materials',
             label: 'Υλικά',
-            icon: <Layers className="w-5 h-5" />,
+            icon: <IoHammerOutline className="w-5 h-5" />,
             href: 'materials'
         },
         {
@@ -80,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
         {
             id: 'procedures',
             label: 'Διαδικασίες',
-            icon: <Wrench className="w-5 h-5" />,
+            icon: <Settings className="w-5 h-5" />,
             href: 'procedures'
         }
         ,
@@ -100,7 +105,34 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
 
     const handleNavigation = (page: string) => {
         onNavigate(page);
+
+        // Auto-collapse on mobile after navigation
+        if (window.innerWidth < 1024) {
+            setIsCollapsed(true);
+        }
     };
+
+    // Handle window resize to adjust sidebar behavior
+    React.useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                // On desktop, expand sidebar
+                setIsCollapsed(false);
+            } else {
+                // On mobile/tablet, collapse sidebar
+                setIsCollapsed(true);
+            }
+        };
+
+        // Add event listener
+        window.addEventListener('resize', handleResize);
+
+        // Call once on mount to set initial state
+        handleResize();
+
+        // Cleanup
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     return (
         <>
@@ -117,8 +149,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
                 fixed left-0 top-0 h-full bg-white/10 backdrop-blur-md border-r border-white/20 
                 transition-all duration-300 z-50
                 ${isCollapsed ? 'w-16' : 'w-64'}
-                lg:relative lg:translate-x-0
-                ${isCollapsed ? 'translate-x-0' : 'translate-x-0'}
+                lg:relative lg:w-64 lg:translate-x-0
             `}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/20">

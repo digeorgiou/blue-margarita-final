@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Eye, Edit, Trash2, Package, Euro, Ruler } from 'lucide-react';
+import { IoHammerOutline } from "react-icons/io5";
 import { Button, LoadingSpinner } from './../index';
 import { CustomTextInput } from "../inputs";
 import { MaterialFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
@@ -76,7 +77,7 @@ const MaterialFilterPanel: React.FC<MaterialFilterPanelProps> = ({
                                         {/* Material Header */}
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                                <Package className="w-5 h-5 text-purple-600" />
+                                                <IoHammerOutline className="w-5 h-5 text-purple-600" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="text-lg font-semibold text-gray-900 truncate">

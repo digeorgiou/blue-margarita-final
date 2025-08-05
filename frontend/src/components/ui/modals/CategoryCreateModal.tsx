@@ -88,12 +88,6 @@ const CategoryCreateModal: React.FC<CategoryCreateModalProps> = ({
                         {name.length}/100 χαρακτήρες
                     </p>
                 </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                        💡 <strong>Συμβουλή:</strong> Επιλέξτε ένα περιγραφικό όνομα που θα βοηθήσει στην εύκολη κατηγοριοποίηση των προϊόντων σας.
-                    </p>
-                </div>
             </div>
         </BaseFormModal>
     );

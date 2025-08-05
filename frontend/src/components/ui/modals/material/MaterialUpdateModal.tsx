@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Euro, Ruler } from 'lucide-react';
+import { Euro, Ruler } from 'lucide-react';
+import { IoHammerOutline } from "react-icons/io5";
 import { BaseFormModal, Input } from '../../index';
 import { MaterialReadOnlyDTO, MaterialUpdateDTO } from '../../../../types/api/materialInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
@@ -134,7 +135,7 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                 {/* Name - Required */}
                 <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                        <Package className="w-4 h-4" />
+                        <IoHammerOutline className="w-4 h-4" />
                         Όνομα Υλικού *
                     </label>
                     <Input

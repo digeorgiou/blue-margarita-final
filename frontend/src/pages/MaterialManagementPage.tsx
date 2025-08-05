@@ -6,7 +6,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { materialService } from '../services/materialService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Plus, Boxes, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import type {
     MaterialReadOnlyDTO,
     MaterialDetailedViewDTO,
@@ -16,6 +16,7 @@ import type {
 import type { Paginated } from '../types/api/dashboardInterface';
 
 import { MaterialFilterPanel } from '../components/ui/filterPanels'
+import { IoHammerOutline } from "react-icons/io5";
 
 
 import MaterialDetailModal from "../components/ui/modals/material/MaterialDetailModal.tsx";
@@ -195,7 +196,7 @@ const MaterialManagementPage = () => {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center space-x-3 mb-4 md:mb-0">
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Boxes className="w-8 h-8 text-white" />
+                            <IoHammerOutline className="w-8 h-8 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">Διαχείριση Υλικών</h1>

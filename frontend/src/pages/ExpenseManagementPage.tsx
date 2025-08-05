@@ -23,6 +23,7 @@ import ExpenseDetailModal from '../components/ui/modals/expense/ExpenseDetailMod
 import ExpenseUpdateModal from '../components/ui/modals/expense/ExpenseUpdateModal';
 import ExpenseCreateModal from '../components/ui/modals/expense/ExpenseCreateModal';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import { getExpenseTypeDisplayName } from "../utils/EnumUtils.ts";
 
 const ExpenseManagementPage = () => {
     // Toggle state for switching between main page and analytics
@@ -455,7 +456,7 @@ const ExpenseManagementPage = () => {
                                     {expenseBreakdown.map((breakdown, index) => (
                                         <div key={index} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                                             <div className="flex items-center justify-between mb-3">
-                                                <h4 className="text-sm font-medium text-gray-900">{breakdown.expenseType}</h4>
+                                                <h4 className="text-sm font-medium text-gray-900">{getExpenseTypeDisplayName(breakdown.expenseType)}</h4>
                                                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                                                     {breakdown.percentage.toFixed(1)}%
                                                 </span>

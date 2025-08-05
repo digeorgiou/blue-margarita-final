@@ -8,16 +8,18 @@ import {
     ShoppingCart,
     Package,
     Users,
-    Layers,
     ShoppingBag,
     MapPin,
     CheckSquare,
     AlertTriangle,
     DollarSign,
-    Gem, Wrench,
-    Truck, Edit
+    Gem,
+    Truck, Edit,
+    Settings
 } from 'lucide-react';
+import { GiDiamondRing } from 'react-icons/gi';
 import { FaEuroSign } from "react-icons/fa6";
+import { IoHammerOutline } from "react-icons/io5";
 import {HeaderProps} from "../../../types/components/header.ts";
 
 const Header: React.FC<HeaderProps> = ({
@@ -48,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({
             },
             'manage-products': {
                 title: 'Διαχείριση Προϊόντων',
-                icon: <Package className="w-9 h-9" />,
+                icon: <GiDiamondRing className="w-9 h-9" />,
                 description: 'Διαχειριστείτε τα προϊόντα σας και παρακολουθείστε στατιστικά ανα προϊόν'
             },
             'create-product': {
@@ -68,7 +70,7 @@ const Header: React.FC<HeaderProps> = ({
             },
             'materials': {
                 title: 'Υλικό',
-                icon: <Layers className="w-9 h-9" />,
+                icon: <IoHammerOutline className="w-9 h-9" />,
                 description: 'Διαχειριστείτε τα υλικά που χρησιμοποιείτε στην παραγωγή και δείτε στατιστικά ανα υλικό'
             },
             'categories': {
@@ -103,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({
             },
             'procedures' : {
                 title: 'Διαδικασίες',
-                icon: <Wrench className="w-9 h-9"/>,
+                icon: <Settings className="w-9 h-9"/>,
                 description: "Διαχειριστείτε τις διαδικασίες και τα πάγια έξοδα παραγωγής των προϊόντων σας"
             },
             'suppliers' : {

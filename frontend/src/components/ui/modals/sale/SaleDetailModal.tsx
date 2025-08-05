@@ -4,7 +4,7 @@ import {
     X } from 'lucide-react';
 import { LoadingSpinner, Button } from "../../index";
 import type { SaleDetailedViewDTO } from '../../../types/api/recordSaleInterface';
-import { getPaymentMethodDisplayName } from '../../../../utils/paymentMethodUtils.ts';
+import { getPaymentMethodDisplayName } from '../../../../utils/EnumUtils.ts';
 import { FaEuroSign } from "react-icons/fa6";
 
 interface SaleDetailModalProps {
