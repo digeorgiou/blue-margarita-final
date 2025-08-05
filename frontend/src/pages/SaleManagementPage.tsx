@@ -296,7 +296,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
 
     return (
             <div className="min-h-screen p-4">
-                <div className="max-w-7xl mx-auto">
+                <div className="max-w-7xl mx-auto space-y-8">
                     {/* Success Alert */}
                     {successMessage && (
                         <Alert
@@ -308,7 +308,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                     )}
 
                     {/* Header - Mobile responsive */}
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                                 <ShoppingCart className="w-6 h-6 text-white" />
@@ -331,6 +331,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                     </div>
 
                     {/* Search and Filter Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                     <CustomCard
                         title="Φίλτρα"
                         icon={<Search className="w-5 h-5" />}
@@ -466,6 +467,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                             </div>
                         </CustomCard>
                     )}
+                    </div>
 
                     {/* Modals */}
                         {selectedSale && (
