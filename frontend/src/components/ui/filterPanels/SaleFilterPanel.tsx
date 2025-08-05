@@ -264,7 +264,7 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                         <Button
                             onClick={clearFilters}
                             variant="pink"
-                            className="w-full h-12"
+                            className="w-full h-13"
                         >
                             <Filter className="w-5 h-5 mr-2" />
                             Καθαρισμός Φίλτρων

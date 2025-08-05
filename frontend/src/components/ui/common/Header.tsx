@@ -1,7 +1,5 @@
 import React from 'react';
-import LogoImage from './LogoImage.tsx';
-import logo from '../../../assets/logo-transp.png'
-import Button from './Button.tsx'; // Import our custom Button component
+import Button from './Button.tsx';
 import {
     LogOut,
     Home,
@@ -27,96 +25,78 @@ const Header: React.FC<HeaderProps> = ({
                                            currentPage
                                        }) => {
     const getPageInfo = () => {
-        const pageInfo: Record<string, { title: string; icon: React.ReactNode; description: string }> = {
+        const pageInfo: Record<string, { title: string; icon: React.ReactNode; }> = {
             'dashboard': {
                 title: 'Αρχική Σελίδα',
-                icon: <Home className="w-9 h-9" />,
-                description: 'Βασικά στοιχεία για την απόδοση της επιχείρησης'
+                icon: <Home className="w-9 h-9" />
             },
             'record-sale' : {
                 title: 'Καταγραφή Πώλησης',
-                icon: <ShoppingCart className="w-9 h-9" />,
-                description: 'Καταγράψτε όλες τις λεπτομέρειες κάθε σας πώλησης'
+                icon: <ShoppingCart className="w-9 h-9" />
             },
             'record-purchase' : {
                 title: 'Καταγραφή Αγοράς',
-                icon: <ShoppingCart className="w-9 h-9" />,
-                description: 'Καταγράψτε όλες τις λεπτομέρειες κάθε σας αγοράς'
+                icon: <ShoppingCart className="w-9 h-9" />
             },
             'manage-sales': {
-                title: 'Sales Management',
-                icon: <ShoppingCart className="w-9 h-9" />,
-                description: 'Track and manage all your sales'
+                title: 'Διαχείριση Πωλήσεων',
+                icon: <ShoppingCart className="w-9 h-9" />
             },
             'manage-products': {
                 title: 'Διαχείριση Προϊόντων',
-                icon: <GiDiamondRing className="w-9 h-9" />,
-                description: 'Διαχειριστείτε τα προϊόντα σας και παρακολουθείστε στατιστικά ανα προϊόν'
+                icon: <GiDiamondRing className="w-9 h-9" />
             },
             'create-product': {
                 title: 'Δημιουργία Προϊόντος',
-                icon: <Package className="w-9 h-9" />,
-                description: "Δημιουργείστε καινούρια προϊόντα, δείτε προτεινόμενες τιμές"
+                icon: <Package className="w-9 h-9" />
             },
             'update-product': {
                 title: 'Επεξεργασία Προϊόντος',
-                icon: <Edit className="w-9 h-9" />,
-                description: "Επεξεργαστείτε τα αποθηκευμένα στοιχεία ενός προϊόντος"
+                icon: <Edit className="w-9 h-9" />
             },
             'customers': {
                 title: 'Πελάτες',
-                icon: <Users className="w-9 h-9" />,
-                description: 'Διαχειριστείτε τους πελάτες σας και παρακολουθήστε τα στατιστικά ανα πελάτη'
+                icon: <Users className="w-9 h-9" />
             },
             'materials': {
                 title: 'Υλικό',
-                icon: <IoHammerOutline className="w-9 h-9" />,
-                description: 'Διαχειριστείτε τα υλικά που χρησιμοποιείτε στην παραγωγή και δείτε στατιστικά ανα υλικό'
+                icon: <IoHammerOutline className="w-9 h-9" />
             },
             'categories': {
                 title:'Κατηγορίες',
-                icon: <Gem className="w-9 h-9" />,
-                description: 'Διαχειριστείτε τις κατηγορίες των προϊόντων σας και παρακολουθήστε τα στατιστικά ανα κατηγορία'
+                icon: <Gem className="w-9 h-9" />
             },
             'purchases': {
                 title: 'Purchases',
-                icon: <ShoppingBag className="w-9 h-9" />,
-                description: 'Purchase orders and supplier management'
+                icon: <ShoppingBag className="w-9 h-9" />
             },
             'locations': {
                 title: 'Τοποθεσίες',
-                icon: <MapPin className="w-9 h-9" />,
-                description: 'Διαχειριστείτε τις τοποθεσίες πώλησης σας και παρακολουθήστε τα στατιστικά ανα τοποθεσία'
+                icon: <MapPin className="w-9 h-9" />
             },
             'all-tasks': {
                 title: 'Tasks',
-                icon: <CheckSquare className="w-9 h-9" />,
-                description: 'Προβολή και διαχείριση όλων σας των tasks'
+                icon: <CheckSquare className="w-9 h-9" />
             },
             'low-stock-products': {
                 title: 'Low Stock Products',
-                icon: <AlertTriangle className="w-9 h-9" />,
-                description: 'Products that need restocking'
+                icon: <AlertTriangle className="w-9 h-9" />
             },
             'mispriced-products': {
                 title: 'Mispriced Products',
-                icon: <DollarSign className="w-9 h-9" />,
-                description: 'Products with pricing issues'
+                icon: <DollarSign className="w-9 h-9" />
             },
             'procedures' : {
                 title: 'Διαδικασίες',
-                icon: <Settings className="w-9 h-9"/>,
-                description: "Διαχειριστείτε τις διαδικασίες και τα πάγια έξοδα παραγωγής των προϊόντων σας"
+                icon: <Settings className="w-9 h-9"/>
             },
             'suppliers' : {
                 title: 'Προμηθευτές',
-                icon: <Truck className="w-9 h-9" />,
-                description: 'Διαχειριστείτε τους προμηθευτές σας και παρακολουθήστε τα στατιστικά ανα προμηθευτή'
+                icon: <Truck className="w-9 h-9" />
             },
             'expenses' : {
                 title: "Έξοδα",
-                icon: < FaEuroSign className="w-9 h-9" />,
-                description: "Διαχειριστείτε τα έξοδα σας και παρακολουθείστε τα στατιστικά τους"
+                icon: < FaEuroSign className="w-9 h-9" />
             }
         };
         return pageInfo[currentPage || 'dashboard'] || {
@@ -134,28 +114,17 @@ const Header: React.FC<HeaderProps> = ({
 
                 {/* Left Section - Icon */}
                 <div className="flex items-center">
-                    <div className="relative">
-                        <LogoImage
-                            src={logo}
-                            alt="Blue Margarita Logo"
-                            size="md"
-                            className="drop-shadow-lg"
-                        />
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white px-1 py-1">
+                        {pageInfo.icon}
                     </div>
                 </div>
 
                 {/* Center Section - Page Info */}
                 <div className="flex items-center space-x-3">
-                    <div className="text-white/80">
-                        {pageInfo.icon}
-                    </div>
                     <div className="text-center ml-4">
                         <h1 className="text-xl font-bold text-white">
                             {pageInfo.title}
                         </h1>
-                        <p className="text-sm text-white/70 mt-1">
-                            {pageInfo.description}
-                        </p>
                     </div>
                 </div>
 

@@ -241,7 +241,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
 
     return (
         <div className="min-h-screen p-4">
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-8">
                 {/* Error Display */}
                 {generalError && (
                     <Alert variant="error">
@@ -250,10 +250,10 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                 )}
 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+                    <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <GiDiamondRing className="w-8 h-8 text-white" />
+                            <GiDiamondRing className="w-6 h-6 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">Διαχείριση Προϊόντων</h1>
@@ -270,82 +270,85 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                 </div>
 
                 {/* Search and Filter Section */}
-                <CustomCard
-                    title="Φίλτρα Αναζήτησης"
-                    icon={<Search className="w-5 h-5" />}
-                    className="shadow-lg"
-                >
-                    <ProductFilterPanel
-                        searchTerm={searchTerm}
-                        onSearchTermChange={setSearchTerm}
-                        selectedCategoryId={selectedCategoryId}
-                        onCategoryIdChange={setSelectedCategoryId}
-                        categories={categories}
-                        materialSearchTerm={materialSearchTerm}
-                        onMaterialSearchTermChange={setMaterialSearchTerm}
-                        materialSearchResults={materialSearchResults}
-                        selectedMaterial={selectedMaterial}
-                        onMaterialSelect={(material) => {
-                            console.log('Material selected:', material);
-                            setSelectedMaterial(material);
-                            if (material) {
-                                setMaterialSearchTerm(material.materialName);
-                            } else {
-                                setMaterialSearchTerm('');
-                            }
-                        }}
-                        loadingMaterials={loadingMaterials}
-                        procedureSearchTerm={procedureSearchTerm}
-                        onProcedureSearchTermChange={setProcedureSearchTerm}
-                        procedureSearchResults={procedureSearchResults}
-                        selectedProcedure={selectedProcedure}
-                        onProcedureSelect={(procedure) => {
-                            console.log('Procedure selected:', procedure);
-                            setSelectedProcedure(procedure);
-                            if (procedure) {
-                                setProcedureSearchTerm(procedure.name);
-                            } else {
-                                setProcedureSearchTerm('');
-                            }
-                        }}
-                        loadingProcedures={loadingProcedures}
-                        lowStockOnly={lowStockOnly}
-                        onLowStockOnlyChange={setLowStockOnly}
-                        minStock={minStock}
-                        onMinStockChange={setMinStock}
-                        maxStock={maxStock}
-                        onMaxStockChange={setMaxStock}
-                        minPrice={minPrice}
-                        onMinPriceChange={setMinPrice}
-                        maxPrice={maxPrice}
-                        onMaxPriceChange={setMaxPrice}
-                        searchResults={searchResults?.data || []}
-                        loading={loading}
-                        onViewDetails={handleViewDetails}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onAnalytics={handleAnalytics}
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+                    <CustomCard
+                        title="Φίλτρα Αναζήτησης"
+                        icon={<Search className="w-5 h-5" />}
+                        className="shadow-lg"
                     >
-                    </ProductFilterPanel>
-                </CustomCard>
-
-                {/* Pagination Controls */}
-                {searchResults && searchResults.totalPages > 0 && (
-                    <CustomCard title="Σελιδοποίηση" icon={<Package className="w-5 h-5" />}>
-                        <EnhancedPaginationControls
-                            paginationData={{
-                                currentPage: searchResults.currentPage,
-                                totalPages: searchResults.totalPages,
-                                totalElements: searchResults.totalElements,
-                                pageSize: searchResults.pageSize,
-                                numberOfElements: searchResults.numberOfElements
+                        <ProductFilterPanel
+                            searchTerm={searchTerm}
+                            onSearchTermChange={setSearchTerm}
+                            selectedCategoryId={selectedCategoryId}
+                            onCategoryIdChange={setSelectedCategoryId}
+                            categories={categories}
+                            materialSearchTerm={materialSearchTerm}
+                            onMaterialSearchTermChange={setMaterialSearchTerm}
+                            materialSearchResults={materialSearchResults}
+                            selectedMaterial={selectedMaterial}
+                            onMaterialSelect={(material) => {
+                                console.log('Material selected:', material);
+                                setSelectedMaterial(material);
+                                if (material) {
+                                    setMaterialSearchTerm(material.materialName);
+                                } else {
+                                    setMaterialSearchTerm('');
+                                }
                             }}
-                            onPageChange={handlePageChange}
-                            onPageSizeChange={handlePageSizeChange}
-                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                        />
+                            loadingMaterials={loadingMaterials}
+                            procedureSearchTerm={procedureSearchTerm}
+                            onProcedureSearchTermChange={setProcedureSearchTerm}
+                            procedureSearchResults={procedureSearchResults}
+                            selectedProcedure={selectedProcedure}
+                            onProcedureSelect={(procedure) => {
+                                console.log('Procedure selected:', procedure);
+                                setSelectedProcedure(procedure);
+                                if (procedure) {
+                                    setProcedureSearchTerm(procedure.name);
+                                } else {
+                                    setProcedureSearchTerm('');
+                                }
+                            }}
+                            loadingProcedures={loadingProcedures}
+                            lowStockOnly={lowStockOnly}
+                            onLowStockOnlyChange={setLowStockOnly}
+                            minStock={minStock}
+                            onMinStockChange={setMinStock}
+                            maxStock={maxStock}
+                            onMaxStockChange={setMaxStock}
+                            minPrice={minPrice}
+                            onMinPriceChange={setMinPrice}
+                            maxPrice={maxPrice}
+                            onMaxPriceChange={setMaxPrice}
+                            searchResults={searchResults?.data || []}
+                            loading={loading}
+                            onViewDetails={handleViewDetails}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onAnalytics={handleAnalytics}
+                        >
+                        </ProductFilterPanel>
                     </CustomCard>
-                )}
+
+
+                    {/* Pagination Controls */}
+                    {searchResults && searchResults.totalPages > 0 && (
+                        <CustomCard title="Σελιδοποίηση" icon={<Package className="w-5 h-5" />}>
+                            <EnhancedPaginationControls
+                                paginationData={{
+                                    currentPage: searchResults.currentPage,
+                                    totalPages: searchResults.totalPages,
+                                    totalElements: searchResults.totalElements,
+                                    pageSize: searchResults.pageSize,
+                                    numberOfElements: searchResults.numberOfElements
+                                }}
+                                onPageChange={handlePageChange}
+                                onPageSizeChange={handlePageSizeChange}
+                                className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                            />
+                        </CustomCard>
+                    )}
+                </div>
 
                 {/* Modals */}
                 <ConfirmDeleteModal
