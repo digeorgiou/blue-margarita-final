@@ -7,40 +7,52 @@ import { FaEuroSign } from "react-icons/fa6";
 import { SaleFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 
 const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
-                                                         customerSearchTerm,
-                                                         onCustomerSearchTermChange,
-                                                         customerSearchResults,
-                                                         selectedCustomer,
-                                                         onCustomerSelect,
-                                                         loadingCustomers,
-                                                         productSearchTerm,
-                                                         onProductSearchTermChange,
-                                                         productSearchResults,
-                                                         selectedProduct,
-                                                         onProductSelect,
-                                                         loadingProducts,
-                                                         selectedLocationId,
-                                                         onLocationIdChange,
-                                                         locations,
-                                                         selectedCategoryId,
-                                                         onCategoryIdChange,
-                                                         categories,
-                                                         paymentMethodFilter,
-                                                         onPaymentMethodFilterChange,
-                                                         paymentMethods,
-                                                         isWholesaleFilter,
-                                                         onIsWholesaleFilterChange,
-                                                         dateFromFilter,
-                                                         onDateFromFilterChange,
-                                                         dateToFilter,
-                                                         onDateToFilterChange,
-                                                         searchResults,
-                                                         loading,
-                                                         onViewDetails,
-                                                         onEdit,
-                                                         onDelete,
-                                                         children
-                                                     }) => {
+                                                             customerSearchTerm,
+                                                             onCustomerSearchTermChange,
+                                                             customerSearchResults,
+                                                             selectedCustomer,
+                                                             onCustomerSelect,
+                                                             loadingCustomers,
+                                                             productSearchTerm,
+                                                             onProductSearchTermChange,
+                                                             productSearchResults,
+                                                             selectedProduct,
+                                                             onProductSelect,
+                                                             loadingProducts,
+                                                             selectedLocationId,
+                                                             onLocationIdChange,
+                                                             locations,
+                                                             selectedCategoryId,
+                                                             onCategoryIdChange,
+                                                             categories,
+                                                             paymentMethodFilter,
+                                                             onPaymentMethodFilterChange,
+                                                             paymentMethods,
+                                                             isWholesaleFilter,
+                                                             onIsWholesaleFilterChange,
+                                                             dateFromFilter,
+                                                             onDateFromFilterChange,
+                                                             dateToFilter,
+                                                             onDateToFilterChange,
+                                                             searchResults,
+                                                             loading,
+                                                             onViewDetails,
+                                                             onEdit,
+                                                             onDelete,
+                                                             children
+                                                         }) => {
+
+    const clearFilters = () => {
+        onCustomerSelect(null);
+        onProductSelect(null);
+        onLocationIdChange(undefined);
+        onCategoryIdChange(undefined);
+        onPaymentMethodFilterChange('');
+        onIsWholesaleFilterChange(undefined);
+        onDateFromFilterChange('');
+        onDateToFilterChange('');
+    };
+
     const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('el-GR', {
             style: 'currency',
@@ -58,36 +70,6 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
         });
     };
 
-    const getPaymentMethodDisplayName = (value: string): string => {
-        const paymentMethod = paymentMethods.find(pm => pm.value === value);
-        return paymentMethod ? paymentMethod.displayName : value;
-    };
-
-    const clearFilters = () => {
-        onCustomerSelect(null);
-        onCustomerSearchTermChange('');
-        onProductSelect(null);
-        onProductSearchTermChange('');
-        onLocationIdChange(undefined);
-        onCategoryIdChange(undefined);
-        onPaymentMethodFilterChange('');
-        onIsWholesaleFilterChange(undefined);
-        onDateFromFilterChange('');
-        onDateToFilterChange('');
-    };
-
-    // Create options for viewAll
-    const locationOptions = [
-        { value: '', label: 'Όλες οι τοποθεσίες' },
-        ...locations.map(location => ({ value: location.id, label: location.name }))
-    ];
-
-    const wholesaleOptions = [
-        { value: '', label: 'Όλες οι πωλήσεις' },
-        { value: 'true', label: 'Χονδρικής' },
-        { value: 'false', label: 'Λιανικής' }
-    ];
-
     const getSaleTypeBadgeClass = (isWholesale: boolean): string => {
         return isWholesale
             ? 'bg-purple-100 text-purple-800'
@@ -98,9 +80,19 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
         return isWholesale ? 'Χονδρικής' : 'Λιανικής';
     };
 
+    const getPaymentMethodDisplayName = (paymentMethodValue: string): string => {
+        const paymentMethod = paymentMethods.find(pm => pm.value === paymentMethodValue);
+        return paymentMethod ? paymentMethod.displayName : paymentMethodValue;
+    };
+
     const categoryOptions = [
         { value: '', label: 'Όλες οι κατηγορίες' },
         ...categories.map(category => ({ value: category.id, label: category.name }))
+    ];
+
+    const locationOptions = [
+        { value: '', label: 'Όλες οι τοποθεσίες' },
+        ...locations.map(location => ({ value: location.id, label: location.name }))
     ];
 
     const paymentMethodOptions = [
@@ -108,11 +100,17 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
         ...paymentMethods.map(pm => ({ value: pm.value, label: pm.displayName }))
     ];
 
-    // Transform customer data to match SearchResult interface (like ProductFilterPanel does)
+    const wholesaleOptions = [
+        { value: '', label: 'Όλες οι πωλήσεις' },
+        { value: 'true', label: 'Μόνο χονδρικές' },
+        { value: 'false', label: 'Μόνο λιανικές' }
+    ];
+
+    // Transform customer data to match SearchResult interface
     const transformedCustomerResults = customerSearchResults.map(customer => ({
         id: customer.id,
-        name: customer.fullName,  // Map fullName to name
-        subtitle: customer.email,  // Show email as subtitle
+        name: customer.fullName,
+        subtitle: customer.email,
         additionalInfo: undefined
     }));
 
@@ -163,87 +161,70 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
 
     return (
         <div className="space-y-6">
-            {/* Search and Filter Controls */}
+            {/* MOBILE-RESPONSIVE FILTER CONTROLS - Exact layout you requested */}
             <div className="space-y-4">
-                {/* Row 1: Customer and Product Search */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* Row 1: Customer and Product - 2 columns on desktop, stack on mobile */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <CustomSearchDropdown
                         label="Πελάτης"
                         searchTerm={customerSearchTerm}
                         onSearchTermChange={onCustomerSearchTermChange}
-                        searchResults={transformedCustomerResults}  // Use transformed data
-                        onSelect={(customer) => {
-                            // Transform back to original type when selecting
-                            if (customer) {
-                                const originalCustomer = customerSearchResults.find(c => c.id === customer.id);
-                                onCustomerSelect(originalCustomer || null);
-                            } else {
-                                onCustomerSelect(null);
-                            }
-                        }}
-                        selectedItem={selectedCustomerForDropdown}  // Use transformed selected item
+                        searchResults={transformedCustomerResults}
+                        onSelect={(customer) => onCustomerSelect(
+                            customerSearchResults.find(c => c.id === customer.id) || null
+                        )}
+                        selectedItem={selectedCustomerForDropdown}
                         onClearSelection={() => onCustomerSelect(null)}
                         placeholder="Αναζήτηση πελάτη..."
                         icon={<Users className="w-5 h-5 text-blue-500" />}
                         isLoading={loadingCustomers}
                         entityType="customer"
-                        minSearchLength={2}
-                        emptyMessage="Δεν βρέθηκαν πελάτες"
-                        emptySubMessage="Δοκιμάστε διαφορετικούς όρους αναζήτησης"
                     />
 
                     <CustomSearchDropdown
                         label="Προϊόν"
                         searchTerm={productSearchTerm}
                         onSearchTermChange={onProductSearchTermChange}
-                        searchResults={transformedProductResults}  // Use transformed data
-                        onSelect={(product) => {
-                            // Transform back to original type when selecting
-                            if (product) {
-                                const originalProduct = productSearchResults.find(p => p.id === product.id);
-                                onProductSelect(originalProduct || null);
-                            } else {
-                                onProductSelect(null);
-                            }
-                        }}
-                        selectedItem={selectedProductForDropdown}  // Use transformed selected item
+                        searchResults={transformedProductResults}
+                        onSelect={(product) => onProductSelect(
+                            productSearchResults.find(p => p.id === product.id) || null
+                        )}
+                        selectedItem={selectedProductForDropdown}
                         onClearSelection={() => onProductSelect(null)}
                         placeholder="Αναζήτηση προϊόντος..."
                         icon={<Package className="w-5 h-5 text-green-500" />}
                         isLoading={loadingProducts}
                         entityType="product"
-                        minSearchLength={2}
-                        emptyMessage="Δεν βρέθηκαν προϊόντα"
-                        emptySubMessage="Δοκιμάστε διαφορετικούς όρους αναζήτησης"
                     />
                 </div>
 
-                {/* Row 2: Location, Category, Payment Method */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Row 2: Category, Location, Payment Method, Sale Type - 4 columns on desktop, stack on mobile */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <CustomSelect
-                        label="Τοποθεσία"
-                        value={selectedLocationId?.toString() || ''}
-                        onChange={(value) => onLocationIdChange(value ? Number(value) : undefined)}
-                        options={locationOptions}
-                        icon={<MapPin className="w-5 h-5 text-purple-500" />}
+                        label="Κατηγορία"
+                        value={selectedCategoryId || ''}
+                        onChange={(value) => onCategoryIdChange(value === '' ? undefined : Number(value))}
+                        options={categoryOptions}
+                        icon={<Package className="w-5 h-5 text-purple-500" />}
                         placeholder=""
                     />
 
                     <CustomSelect
-                        label="Κατηγορία"
-                        value={selectedCategoryId?.toString() || ''}
-                        onChange={(value) => onCategoryIdChange(value ? Number(value) : undefined)}
-                        options={categoryOptions}
-                        icon={<Package className="w-5 h-5 text-indigo-500" />}
+                        label="Τοποθεσία"
+                        value={selectedLocationId || ''}
+                        onChange={(value) => onLocationIdChange(value === '' ? undefined : Number(value))}
+                        options={locationOptions}
+                        icon={<MapPin className="w-5 h-5 text-green-500" />}
                         placeholder=""
                     />
 
                     <CustomSelect
                         label="Τρόπος Πληρωμής"
                         value={paymentMethodFilter}
-                        onChange={(value) => onPaymentMethodFilterChange(value as string)}
+                        onChange={onPaymentMethodFilterChange}
                         options={paymentMethodOptions}
-                        icon={<CreditCard className="w-5 h-5 text-green-500" />}
+                        icon={<CreditCard className="w-5 h-5 text-orange-500" />}
                         placeholder=""
                     />
 
@@ -261,10 +242,9 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                         icon={<ShoppingCart className="w-5 h-5 text-orange-500" />}
                         placeholder=""
                     />
-
                 </div>
 
-                {/* Row 3: Date Filters and Clear Button */}
+                {/* Row 3: Date Filters and Clear Button - 3 columns on desktop, stack on mobile */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <CustomDateInput
                         label="Από Ημερομηνία"
@@ -284,7 +264,7 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                         <Button
                             onClick={clearFilters}
                             variant="pink"
-                            className="w-full py-4"
+                            className="w-full h-12"
                         >
                             <Filter className="w-5 h-5 mr-2" />
                             Καθαρισμός Φίλτρων
@@ -300,7 +280,7 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                 </div>
             )}
 
-            {/* Results Section */}
+            {/* RESULTS SECTION - Keep original clear layout, make mobile responsive */}
             <div className="bg-white rounded-lg border border-gray-200">
                 {loading ? (
                     <div className="flex items-center justify-center p-8">
@@ -317,11 +297,12 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                     <div className="divide-y divide-gray-200">
                         {searchResults.map((sale) => (
                             <div key={sale.id} className="p-6 hover:bg-blue-100 transition-colors duration-150">
-                                <div className="flex items-center gap-6">
+                                {/* Original layout: flex items-center gap-6 on desktop, stack on mobile */}
+                                <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                                     {/* Left Half */}
                                     <div className="flex-1">
-                                        {/* Title and Date */}
-                                        <div className="flex items-center gap-3 mb-3">
+                                        {/* Title and Date - Wrap badges on mobile */}
+                                        <div className="flex flex-wrap items-center gap-3 mb-3">
                                             <ShoppingCart className="w-5 h-5 text-blue-500" />
                                             <h3 className="text-lg font-semibold text-gray-900">
                                                 {generateSaleTitle(sale)}
@@ -334,8 +315,8 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                                             </span>
                                         </div>
 
-                                        {/* Two Columns */}
-                                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                        {/* Two Columns - Stack on mobile, side-by-side on desktop */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                                             {/* First Column: Customer, Payment Method, Location */}
                                             <div className="space-y-2">
                                                 <div className="flex items-center">
@@ -352,7 +333,7 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                                                 </div>
                                             </div>
 
-                                            {/* Second Column: Τελική Τιμή, Έκπτωση, Συσκευασία */}
+                                            {/* Second Column: Final Price, Discount, Packaging */}
                                             <div className="space-y-2">
                                                 <div className="flex items-center text-green-600">
                                                     <FaEuroSign className="w-4 h-4 mr-1" />
@@ -384,12 +365,13 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                                         </div>
                                     </div>
 
-                                    {/* Right Half: Action Buttons */}
-                                    <div className="flex items-center justify-center gap-2 min-w-fit">
+                                    {/* Right Half: Action Buttons - Stack on mobile */}
+                                    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center justify-center gap-2 lg:min-w-fit">
                                         <Button
                                             onClick={() => onViewDetails(sale)}
                                             variant="info"
                                             size="sm"
+                                            className="w-full sm:w-auto"
                                         >
                                             <Eye className="w-4 h-4 mr-1" />
                                             Λεπτομέρειες
@@ -398,6 +380,7 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                                             onClick={() => onEdit(sale)}
                                             variant="teal"
                                             size="sm"
+                                            className="w-full sm:w-auto"
                                         >
                                             <Edit className="w-4 h-4 mr-1" />
                                             Επεξεργασία
@@ -406,6 +389,7 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                                             onClick={() => onDelete(sale)}
                                             variant="danger"
                                             size="sm"
+                                            className="w-full sm:w-auto"
                                         >
                                             <Trash2 className="w-4 h-4 mr-1" />
                                             Διαγραφή

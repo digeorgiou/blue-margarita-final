@@ -295,224 +295,227 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
     };
 
     return (
-        <div className="min-h-screen p-4">
-                <div className="max-w-7xl mx-auto space-y-6">
-                {/* Success Alert */}
-                {successMessage && (
-                    <Alert
-                        type="success"
-                        title={successMessage.title}
-                        message={successMessage.message}
-                        onClose={() => setSuccessMessage(null)}
-                    />
-                )}
-
-                {/* Header and Actions */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <ShoppingCart className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                        <h1 className="text-2xl font-bold text-white">
-                            Διαχείριση Πωλήσεων
-                        </h1>
-                        </div>
-                    </div>
-                    <Button
-                        onClick={() => onNavigate('record-sale')}
-                        variant="create"
-                        size="lg"
-                    >
-                        <Plus className="w-5 h-5 mr-2" />
-                        Νέα Πώληση
-                    </Button>
-                </div>
-
-                {/* Search and Filter Section */}
-                <CustomCard
-                    title="Φίλτρα"
-                    icon={<Search className="w-5 h-5" />}
-                    className="shadow-lg"
-                >
-                    <SaleFilterPanel
-                        // Customer filter
-                        customerSearchTerm={customerSearchTerm}
-                        onCustomerSearchTermChange={setCustomerSearchTerm}
-                        customerSearchResults={customerSearchResults}
-                        selectedCustomer={customerFilter}
-                        onCustomerSelect={setCustomerFilter}
-                        loadingCustomers={loadingCustomers}
-
-                        // Product filter
-                        productSearchTerm={productSearchTerm}
-                        onProductSearchTermChange={setProductSearchTerm}
-                        productSearchResults={productSearchResults}
-                        selectedProduct={productFilter}
-                        onProductSelect={setProductFilter}
-                        loadingProducts={loadingProducts}
-
-                        // Location filter
-                        selectedLocationId={locationFilter}
-                        onLocationIdChange={setLocationFilter}
-                        locations={locations}
-
-                        // Category filter
-                        selectedCategoryId={categoryFilter}
-                        onCategoryIdChange={setCategoryFilter}
-                        categories={categories}
-
-                        // Payment method filter
-                        paymentMethodFilter={paymentMethodFilter}
-                        onPaymentMethodFilterChange={setPaymentMethodFilter}
-                        paymentMethods={paymentMethods}
-
-                        // ADD THIS
-                        isWholesaleFilter={isWholesaleFilter}
-                        onIsWholesaleFilterChange={setIsWholesaleFilter}
-
-                        // Date filters
-                        dateFromFilter={dateFromFilter}
-                        onDateFromFilterChange={setDateFromFilter}
-                        dateToFilter={dateToFilter}
-                        onDateToFilterChange={setDateToFilter}
-
-                        // Results and actions
-                        searchResults={searchResults?.data || []}
-                        loading={loading}
-                        onViewDetails={handleViewDetails}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                    >
-                        {/* Summary Card */}
-                        {searchResults?.summary && (
-                            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
-                                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                    <Calendar className="w-4 h-4 mr-2 text-green-600" />
-                                    Σύνοψη Αποτελεσμάτων
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="text-center">
-                                        <div className="text-2xl font-bold text-green-600">
-                                            {formatNumber(searchResults.summary.totalSalesCount)}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Συνολικες Πωλήσεις</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-2xl font-bold text-blue-600">
-                                            {formatCurrency(searchResults.summary.totalRevenue)}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Συνολικά Έσοδα</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-2xl font-bold text-purple-600">
-                                            {formatCurrency(searchResults.summary.averageOrderValue)}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Μέσος Όρος Πώλησης</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-2xl font-bold text-purple-600">
-                                            {`${searchResults.summary.averageDiscountPercentage}%`}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Μέση Έκπτωση ανα Πώληση</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-2xl font-bold text-purple-600">
-                                            {formatCurrency(searchResults.summary.totalDiscountAmount)}
-                                        </div>
-                                        <div className="text-sm text-gray-600">Σύνολικό Πόσο Εκπτώσεων</div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* No Summary Warning */}
-                        {searchResults && !searchResults.summary && searchResults.totalElements > 100 && (
-                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
-                                <div className="flex">
-                                    <div className="ml-3">
-                                        <p className="text-sm text-yellow-700">
-                                            <strong>Πάρα πολλά αποτελέσματα για σύνοψη:</strong> Βρέθηκαν {formatNumber(searchResults.totalElements)} έξοδα.
-                                            Η σύνοψη εμφανίζεται μόνο για ≤100 αποτελέσματα για λόγους απόδοσης.
-                                        </p>
-                                        <p className="text-sm text-yellow-600">
-                                            💡 <strong>Συμβουλή:</strong> Περιορίστε τα φίλτρα σας (π.χ. ημερομηνίες, κατηγορίες, προϊόντα ) για να δείτε τη σύνοψη.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                    </SaleFilterPanel>
-                </CustomCard>
-
-                {/* Pagination */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <CustomCard title="" className="shadow-lg">
-                        <EnhancedPaginationControls
-                            paginationData={{
-                                currentPage: searchResults.currentPage,
-                                totalPages: searchResults.totalPages,
-                                totalElements: searchResults.totalElements,
-                                pageSize: searchResults.pageSize,
-                                numberOfElements: searchResults.numberOfElements
-                            }}
-                            onPageChange={handlePageChange}
-                            onPageSizeChange={handlePageSizeChange}
-                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+            <div className="min-h-screen p-4">
+                <div className="max-w-7xl mx-auto">
+                    {/* Success Alert */}
+                    {successMessage && (
+                        <Alert
+                            type="success"
+                            title={successMessage.title}
+                            message={successMessage.message}
+                            onClose={() => setSuccessMessage(null)}
                         />
-                    </CustomCard>
-                )}
-
-                {/* Modals */}
-                    {selectedSale && (
-                        <>
-                            <SaleDetailModal
-                                isOpen={isDetailModalOpen}
-                                onClose={() => {
-                                    console.log('Closing sale detail modal'); // Debug log
-                                    setIsDetailModalOpen(false);
-                                    setSaleDetails(null);
-                                    setSelectedSale(null);
-                                }}
-                                saleDetails={saleDetails}
-                                loading={detailsLoading}
-                            />
-
-                            <SaleUpdateModal
-                                isOpen={isUpdateModalOpen}
-                                onClose={() => {
-                                    setIsUpdateModalOpen(false);
-                                    setSelectedSale(null);
-                                }}
-                                sale={selectedSale}
-                                locations={locations}
-                                paymentMethods={paymentMethods}
-                                onUpdate={handleUpdateSale}
-                            />
-
-                            <ConfirmDeleteModal
-                                isOpen={isDeleteModalOpen}
-                                title="Επιβεβαίωση Διαγραφής Πώλησης"
-                                message={`Είστε σίγουροι ότι θέλετε να διαγράψετε την πώληση στις ${formatDate(selectedSale.saleDate)} για ${formatCurrency(selectedSale.finalTotalPrice)}; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.`}
-                                onConfirm={handleDeleteSale}
-                                onClose={() => {
-                                    setIsDeleteModalOpen(false);
-                                    setSelectedSale(null);
-                                }}
-                            />
-                        </>
                     )}
 
-                {/* Success Modal */}
-                <SuccessModal
-                    isOpen={!!successMessage}
-                    title={successMessage?.title || ''}
-                    message={successMessage?.message || ''}
-                    onClose={() => setSuccessMessage(null)}
-                />
+                    {/* Header - Mobile responsive */}
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                <ShoppingCart className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                            <h1 className="text-2xl font-bold text-white">
+                                Διαχείριση Πωλήσεων
+                            </h1>
+                            </div>
+                        </div>
+                        <Button
+                            onClick={() => onNavigate('record-sale')}
+                            variant="create"
+                            size="lg"
+                            className={"w-full md:w-auto"}
+                        >
+                            <Plus className="w-5 h-5 mr-2" />
+                            Νέα Πώληση
+                        </Button>
+                    </div>
+
+                    {/* Search and Filter Section */}
+                    <CustomCard
+                        title="Φίλτρα"
+                        icon={<Search className="w-5 h-5" />}
+                        className="shadow-lg"
+                    >
+                        <SaleFilterPanel
+                            // Customer filter
+                            customerSearchTerm={customerSearchTerm}
+                            onCustomerSearchTermChange={setCustomerSearchTerm}
+                            customerSearchResults={customerSearchResults}
+                            selectedCustomer={customerFilter}
+                            onCustomerSelect={setCustomerFilter}
+                            loadingCustomers={loadingCustomers}
+
+                            // Product filter
+                            productSearchTerm={productSearchTerm}
+                            onProductSearchTermChange={setProductSearchTerm}
+                            productSearchResults={productSearchResults}
+                            selectedProduct={productFilter}
+                            onProductSelect={setProductFilter}
+                            loadingProducts={loadingProducts}
+
+                            // Location filter
+                            selectedLocationId={locationFilter}
+                            onLocationIdChange={setLocationFilter}
+                            locations={locations}
+
+                            // Category filter
+                            selectedCategoryId={categoryFilter}
+                            onCategoryIdChange={setCategoryFilter}
+                            categories={categories}
+
+                            // Payment method filter
+                            paymentMethodFilter={paymentMethodFilter}
+                            onPaymentMethodFilterChange={setPaymentMethodFilter}
+                            paymentMethods={paymentMethods}
+
+                            // ADD THIS
+                            isWholesaleFilter={isWholesaleFilter}
+                            onIsWholesaleFilterChange={setIsWholesaleFilter}
+
+                            // Date filters
+                            dateFromFilter={dateFromFilter}
+                            onDateFromFilterChange={setDateFromFilter}
+                            dateToFilter={dateToFilter}
+                            onDateToFilterChange={setDateToFilter}
+
+                            // Results and actions
+                            searchResults={searchResults?.data || []}
+                            loading={loading}
+                            onViewDetails={handleViewDetails}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                        >
+                            {/* Summary Card */}
+                            {searchResults?.summary && (
+                                <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
+                                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                        <Calendar className="w-4 h-4 mr-2 text-green-600" />
+                                        Σύνοψη Αποτελεσμάτων
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-green-600">
+                                                {formatNumber(searchResults.summary.totalSalesCount)}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Συνολικες Πωλήσεις</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-blue-600">
+                                                {formatCurrency(searchResults.summary.totalRevenue)}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Συνολικά Έσοδα</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-purple-600">
+                                                {formatCurrency(searchResults.summary.averageOrderValue)}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Μέσος Όρος Πώλησης</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-purple-600">
+                                                {`${searchResults.summary.averageDiscountPercentage}%`}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Μέση Έκπτωση ανα Πώληση</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-purple-600">
+                                                {formatCurrency(searchResults.summary.totalDiscountAmount)}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Σύνολικό Πόσο Εκπτώσεων</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* No Summary Warning */}
+                            {searchResults && !searchResults.summary && searchResults.totalElements > 100 && (
+                                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+                                    <div className="flex">
+                                        <div className="ml-3">
+                                            <p className="text-sm text-yellow-700">
+                                                <strong>Πάρα πολλά αποτελέσματα για σύνοψη:</strong> Βρέθηκαν {formatNumber(searchResults.totalElements)} έξοδα.
+                                                Η σύνοψη εμφανίζεται μόνο για ≤100 αποτελέσματα για λόγους απόδοσης.
+                                            </p>
+                                            <p className="text-sm text-yellow-600">
+                                                💡 <strong>Συμβουλή:</strong> Περιορίστε τα φίλτρα σας (π.χ. ημερομηνίες, κατηγορίες, προϊόντα ) για να δείτε τη σύνοψη.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        </SaleFilterPanel>
+                    </CustomCard>
+
+                    {/* Pagination */}
+                    {searchResults && searchResults.totalElements > 0 && (
+                        <CustomCard title="" className="shadow-lg">
+                            <div className="w-full overflow-x-auto">
+                                <EnhancedPaginationControls
+                                    paginationData={{
+                                        currentPage: searchResults.currentPage,
+                                        totalPages: searchResults.totalPages,
+                                        totalElements: searchResults.totalElements,
+                                        pageSize: searchResults.pageSize,
+                                        numberOfElements: searchResults.numberOfElements
+                                    }}
+                                    onPageChange={handlePageChange}
+                                    onPageSizeChange={handlePageSizeChange}
+                                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                                />
+                            </div>
+                        </CustomCard>
+                    )}
+
+                    {/* Modals */}
+                        {selectedSale && (
+                            <>
+                                <SaleDetailModal
+                                    isOpen={isDetailModalOpen}
+                                    onClose={() => {
+                                        console.log('Closing sale detail modal'); // Debug log
+                                        setIsDetailModalOpen(false);
+                                        setSaleDetails(null);
+                                        setSelectedSale(null);
+                                    }}
+                                    saleDetails={saleDetails}
+                                    loading={detailsLoading}
+                                />
+
+                                <SaleUpdateModal
+                                    isOpen={isUpdateModalOpen}
+                                    onClose={() => {
+                                        setIsUpdateModalOpen(false);
+                                        setSelectedSale(null);
+                                    }}
+                                    sale={selectedSale}
+                                    locations={locations}
+                                    paymentMethods={paymentMethods}
+                                    onUpdate={handleUpdateSale}
+                                />
+
+                                <ConfirmDeleteModal
+                                    isOpen={isDeleteModalOpen}
+                                    title="Επιβεβαίωση Διαγραφής Πώλησης"
+                                    message={`Είστε σίγουροι ότι θέλετε να διαγράψετε την πώληση στις ${formatDate(selectedSale.saleDate)} για ${formatCurrency(selectedSale.finalTotalPrice)}; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.`}
+                                    onConfirm={handleDeleteSale}
+                                    onClose={() => {
+                                        setIsDeleteModalOpen(false);
+                                        setSelectedSale(null);
+                                    }}
+                                />
+                            </>
+                        )}
+
+                    {/* Success Modal */}
+                    <SuccessModal
+                        isOpen={!!successMessage}
+                        title={successMessage?.title || ''}
+                        message={successMessage?.message || ''}
+                        onClose={() => setSuccessMessage(null)}
+                    />
             </div>
-        </div>
+            </div>
     );
 };
 
