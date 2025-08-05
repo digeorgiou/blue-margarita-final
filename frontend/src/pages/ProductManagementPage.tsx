@@ -250,15 +250,9 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                 )}
 
                 {/* Header */}
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
                     <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <GiDiamondRing className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">Διαχείριση Προϊόντων</h1>
-
-                        </div>
+                        <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
                     <Button
                         onClick={() => onNavigate('create-product')}
