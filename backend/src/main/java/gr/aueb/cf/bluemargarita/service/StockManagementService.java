@@ -259,33 +259,6 @@ public class StockManagementService implements IStockManagementService{
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public StockOverviewDTO getStockOverview() {
-        LOGGER.debug("Calculating stock overview");
-
-        ProductFilters lowStockFilters = ProductFilters.builder()
-                .lowStock(true)
-                .isActive(true)
-                .build();
-
-
-
-        // Multiple simple repository calls
-        Integer totalProducts = productRepository.countByIsActiveTrue();
-        Integer lowStockCount = countProductsByFilters(lowStockFilters);
-        BigDecimal totalInventoryValue = productRepository.calculateTotalInventoryValue();
-
-        Double healthPercentage = calculateStockHealthPercentage(totalProducts, lowStockCount);
-
-        return new StockOverviewDTO(
-                totalProducts,
-                lowStockCount,
-                totalInventoryValue,
-                healthPercentage
-        );
-    }
-
     // =============================================================================
     // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================

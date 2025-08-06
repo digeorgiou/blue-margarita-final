@@ -80,10 +80,5 @@ public interface IStockManagementService {
      */
     List<StockAlertDTO> getNegativeStockProducts(int limit);
 
-    /**
-     * Gets comprehensive stock overview for stock management dashboard
-     * Single method to load all stock management data
-     */
-    StockOverviewDTO getStockOverview();
 
 }

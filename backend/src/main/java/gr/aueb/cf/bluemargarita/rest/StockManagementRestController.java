@@ -39,31 +39,6 @@ public class StockManagementRestController {
     private final IProductService productService;
 
     // =============================================================================
-    // PAGE INITIALIZATION - LOAD STOCK OVERVIEW
-    // =============================================================================
-
-    @Operation(
-            summary = "Get Stock Management page overview",
-            description = "Retrieves stock management overview including products with different stock statuses. Provides filtered views for low stock, negative stock, and normal stock products. Optimized for page load.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Complete stock management overview with categorized products",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = StockOverviewDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/overview")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<StockOverviewDTO> getStockManagementOverview() {
-        StockOverviewDTO overview = stockManagementService.getStockOverview();
-        return new ResponseEntity<>(overview, HttpStatus.OK);
-    }
-
-    // =============================================================================
     // STOCK LISTING AND FILTERING
     // =============================================================================
 
@@ -247,7 +222,7 @@ public class StockManagementRestController {
     )
     @PatchMapping("/update-stock")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<StockUpdateResultDTO> updatePuproductStock(
+    public ResponseEntity<StockUpdateResultDTO> updateProductStock(
             @Valid @RequestBody StockUpdateDTO updateDTO,
             BindingResult bindingResult) throws ValidationException, EntityNotFoundException {
 
