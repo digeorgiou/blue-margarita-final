@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus } from 'lucide-react';
+import { Package, Plus, Calculator } from 'lucide-react';
 import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
@@ -17,6 +17,9 @@ import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 import {ProductDetailModal} from "../components/ui";
+import { PriceRecalculationResultModal } from '../components/ui';
+import { PriceRecalculationConfirmModal} from "../components/ui";
+import { PriceRecalculationResultDTO } from "../types/api/productInterface";
 
 interface ProductManagementPageProps {
     onNavigate: (page: string, productId?: string) => void;
@@ -57,6 +60,12 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
     const [productDetails, setProductDetails] = useState<ProductDetailedViewDTO | null>(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
+
+    const [isRecalculating, setIsRecalculating] = useState(false);
+    const [isRecalculationConfirmOpen, setIsRecalculationConfirmOpen] = useState(false);
+    const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
+    const [recalculationResult, setRecalculationResult] = useState<PriceRecalculationResultDTO | null>(null);
+
 
     // Error handling
     const { generalError, handleApiError, clearErrors } = useFormErrorHandler();
@@ -211,6 +220,30 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
         setIsDeleteModalOpen(true);
     };
 
+    const handleRecalculateAllPrices = async () => {
+        try {
+            setIsRecalculating(true);
+            setIsRecalculationConfirmOpen(false); // Close confirm modal
+            clearErrors();
+
+            // TODO: Get actual user ID from auth context or pass as prop
+            const updaterUserId = 1;
+
+            const result = await productService.recalculateAllProductPrices(updaterUserId);
+            setRecalculationResult(result);
+            setIsRecalculationModalOpen(true);
+
+        } catch (err) {
+            await handleApiError(err);
+        } finally {
+            setIsRecalculating(false);
+        }
+    };
+
+    const showRecalculationConfirm = () => {
+        setIsRecalculationConfirmOpen(true);
+    };
+
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
@@ -253,6 +286,19 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                     <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
+
+                    <Button
+                        onClick={showRecalculationConfirm}
+                        variant="warning"
+                        size="md"
+                        disabled={isRecalculating || loading}
+                        className="flex items-center space-x-2"
+                        title="Επανυπολογισμός όλων των προτεινόμενων τιμών προϊόντων βάσει τρεχόντων κοστών"
+                    >
+                        <Calculator className="w-4 h-4" />
+                        <span>Επανυπολογισμός Τιμών</span>
+                    </Button>
+
                     <Button
                         onClick={() => onNavigate('create-product')}
                         variant="create"
@@ -372,6 +418,20 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                     product={productDetails}
                     loading={detailsLoading}
                 />
+
+                <PriceRecalculationConfirmModal
+                    isOpen={isRecalculationConfirmOpen}
+                    onClose={() => setIsRecalculationConfirmOpen(false)}
+                    onConfirm={handleRecalculateAllPrices}
+                    isLoading={isRecalculating}
+                />
+
+                <PriceRecalculationResultModal
+                    isOpen={isRecalculationModalOpen}
+                    onClose={() => setIsRecalculationModalOpen(false)}
+                    result={recalculationResult}
+                />
+
             </div>
         </div>
     );

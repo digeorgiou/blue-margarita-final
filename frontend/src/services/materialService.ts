@@ -1,5 +1,3 @@
-// Updated materialService.ts - Following CustomerService pattern with ApiErrorHandler
-
 import { authService } from './authService';
 import { ApiErrorHandler } from '../utils/apiErrorHandler';
 import {
@@ -195,6 +193,7 @@ class MaterialService {
             throw error;
         }
     }
+
 }
 
 // Export a singleton instance

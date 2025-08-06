@@ -168,3 +168,34 @@ export interface ProductStatsSummaryDTO{
     totalRevenue: number;
     lastSaleDate: string;
 }
+
+export interface PriceRecalculationResultDTO {
+    totalProductsProcessed: number;
+    productsUpdated: number;
+    productsSkipped: number;
+    productsFailed: number;
+    processedAt: string;
+    processedByUsername: string;
+    failedProductCodes: string[];
+}
+
+export class PriceRecalculationUtils {
+    static getSuccessRate(result: PriceRecalculationResultDTO): number {
+        if (result.totalProductsProcessed === 0) return 0.0;
+        return (result.productsUpdated / result.totalProductsProcessed) * 100;
+    }
+
+    static isCompletelySuccessful(result: PriceRecalculationResultDTO): boolean {
+        return result.productsFailed === 0 && result.totalProductsProcessed > 0;
+    }
+
+    static formatProcessedAt(result: PriceRecalculationResultDTO): string {
+        return new Date(result.processedAt).toLocaleString('el-GR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}

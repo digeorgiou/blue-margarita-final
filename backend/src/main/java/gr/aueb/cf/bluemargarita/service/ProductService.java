@@ -417,12 +417,24 @@ public class ProductService implements IProductService{
         for (Product product : activeProducts) {
             try {
                 // Calculate new suggested prices
-                BigDecimal newRetailPrice = calculateSuggestedRetailPrice(product);
-                BigDecimal newWholesalePrice = calculateSuggestedWholesalePrice(product);
+                BigDecimal newRetailPrice = calculateSuggestedRetailPrice(product).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal newWholesalePrice = calculateSuggestedWholesalePrice(product).setScale(2, RoundingMode.HALF_UP);
+
+                // Get current prices
+                BigDecimal currentRetailPrice = product.getSuggestedRetailSellingPrice();
+                BigDecimal currentWholesalePrice = product.getSuggestedWholeSaleSellingPrice();
+
+                // Normalize current prices to same scale
+                if (currentRetailPrice != null) {
+                    currentRetailPrice = currentRetailPrice.setScale(2, RoundingMode.HALF_UP);
+                }
+                if (currentWholesalePrice != null) {
+                    currentWholesalePrice = currentWholesalePrice.setScale(2, RoundingMode.HALF_UP);
+                }
 
                 // Check if prices actually changed to avoid unnecessary updates
-                boolean retailPriceChanged = !newRetailPrice.equals(product.getSuggestedRetailSellingPrice());
-                boolean wholesalePriceChanged = !newWholesalePrice.equals(product.getSuggestedWholeSaleSellingPrice());
+                boolean retailPriceChanged = areBigDecimalsEqual(newRetailPrice, currentRetailPrice);
+                boolean wholesalePriceChanged = areBigDecimalsEqual(newWholesalePrice, currentWholesalePrice);
 
                 if (retailPriceChanged || wholesalePriceChanged) {
                     // Update prices
@@ -662,6 +674,23 @@ public class ProductService implements IProductService{
         updatedProduct.setLastUpdatedBy(updater);
     }
 
+    /**
+     * Helper method to properly compare BigDecimal values handling null cases
+     * BigDecimal.equals() compares both value and scale, so we need to use compareTo()
+     */
+
+    private boolean areBigDecimalsEqual(BigDecimal value1, BigDecimal value2) {
+        // Handle null cases
+        if (value1 == null && value2 == null) {
+            return false;
+        }
+        if (value1 == null || value2 == null) {
+            return true;
+        }
+
+        return value1.compareTo(value2) != 0;
+    }
+
 
     // =============================================================================
     // PRIVATE HELPER METHODS - Entity Validation and Retrieval
@@ -850,41 +879,43 @@ public class ProductService implements IProductService{
 
     private BigDecimal calculateSuggestedRetailPrice(Product product) {
         BigDecimal totalCost = calculateTotalProductCost(product);
-        return totalCost.multiply(RETAIL_MARKUP_FACTOR);
+        return totalCost.multiply(RETAIL_MARKUP_FACTOR).setScale(2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateSuggestedWholesalePrice(Product product) {
         BigDecimal totalCost = calculateTotalProductCost(product);
-        return totalCost.multiply(WHOLESALE_MARKUP_FACTOR);
+        return totalCost.multiply(WHOLESALE_MARKUP_FACTOR).setScale(2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateTotalProductCost(Product product) {
         BigDecimal materialCost = calculateMaterialCost(product);
         BigDecimal laborCost = calculateLaborCost(product);
         BigDecimal procedureCost = calculateProcedureCost(product);
-        return materialCost.add(laborCost).add(procedureCost);
+        return materialCost.add(laborCost).add(procedureCost).setScale(2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateMaterialCost(Product product) {
         return product.getAllProductMaterials().stream()
                 .filter(pm -> pm.getMaterial().getCurrentUnitCost() != null && pm.getQuantity() != null)
                 .map(pm -> pm.getMaterial().getCurrentUnitCost().multiply(pm.getQuantity()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateLaborCost(Product product) {
         if (product.getMinutesToMake() == null || product.getMinutesToMake() <= 0) {
-            return BigDecimal.ZERO;
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
 
         BigDecimal hoursToMake = BigDecimal.valueOf(product.getMinutesToMake())
                 .divide(MINUTES_PER_HOUR, 4, RoundingMode.HALF_UP);
 
-        return hoursToMake.multiply(HOURLY_LABOR_RATE);
+        return hoursToMake.multiply(HOURLY_LABOR_RATE).setScale(2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateProcedureCost(Product product) {
-        return productProcedureRepository.sumCostByProductId(product.getId());
+        BigDecimal cost = productProcedureRepository.sumCostByProductId(product.getId());
+        return cost != null ? cost.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculatePercentageDifference(BigDecimal current, BigDecimal suggested) {

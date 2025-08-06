@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Euro, Ruler } from 'lucide-react';
+import { Euro, Ruler, AlertTriangle, Calculator } from 'lucide-react';
 import { IoHammerOutline } from "react-icons/io5";
 import { BaseFormModal, Input } from '../../index';
 import { MaterialReadOnlyDTO, MaterialUpdateDTO } from '../../../../types/api/materialInterface';
@@ -24,7 +24,9 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
         unitOfMeasure: ''
     });
 
-    // Use the reusable error handler hook
+    // Track original price for comparison
+    const [originalPrice, setOriginalPrice] = useState<number>(0);
+
     const {
         fieldErrors,
         generalError,
@@ -40,11 +42,14 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
     // Initialize form data when material changes
     useEffect(() => {
         if (material) {
-            setFormData({
+            const initialData = {
                 name: material.name || '',
                 currentUnitCost: material.currentUnitCost || 0,
                 unitOfMeasure: material.unitOfMeasure || ''
-            });
+            };
+
+            setFormData(initialData);
+            setOriginalPrice(material.currentUnitCost || 0);
         }
     }, [material]);
 
@@ -102,6 +107,8 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
             minimumFractionDigits: 2
         }).format(amount);
     };
+
+    const priceHasChanged = originalPrice !== formData.currentUnitCost;
 
     return (
         <BaseFormModal
@@ -195,6 +202,45 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                         </p>
                     </div>
                 </div>
+
+                {/* Price Change Warning */}
+                {priceHasChanged && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-start space-x-3">
+                            <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                                    <span className="text-md font-semibold text-yellow-800">
+                                        Προσοχή: Αλλαγή Κόστους Υλικού
+                                    </span>
+                                </div>
+                                <div className="space-y-2 text-xs text-yellow-700">
+                                    <div className="flex justify-between items-center">
+                                        <span>Παλαιό κόστος:</span>
+                                        <span className="font-medium">{formatCurrency(originalPrice)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span>Νέο κόστος:</span>
+                                        <span className="font-medium">{formatCurrency(formData.currentUnitCost)}</span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 p-3 bg-yellow-100 rounded border border-yellow-200">
+                                    <div className="flex items-center space-x-2">
+                                        <Calculator className="w-4 h-4 text-yellow-700" />
+                                        <span className="text-xs font-medium text-yellow-800">
+                                            Συνιστούμε να κάνετε επανυπολογισμό των τιμών προϊόντων
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-yellow-700 mt-1">
+                                        {`Μετά την ενημέρωση, πηγαίνετε στη διαχείριση προϊόντων και χρησιμοποιήστε το κουμπί "Επανυπολογισμός Τιμών" για να ενημερώσετε τις προτεινόμενες τιμές όλων των προϊόντων που περιέχουν ${material?.name}`}
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                )}
 
                 {/* Audit Information */}
                 {material && (

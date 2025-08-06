@@ -34,4 +34,6 @@ export { default as CustomerDetailModal } from './modals/customer/CustomerDetail
 export { default as ProductDetailModal } from './modals/product/ProductDetailModal'
 
 export { default as ProductUsageModal } from './modals/common/ProductUsageModal.tsx'
+export { default as PriceRecalculationResultModal } from './modals/priceRecalculationResultModal'
+export { default as PriceRecalculationConfirmModal } from './modals/priceRecalculationConfirmModal'
 

@@ -1,5 +1,3 @@
-// productService.ts - Following CustomerService pattern with ApiErrorHandler
-
 import { authService } from './authService';
 import { ApiErrorHandler } from '../utils/apiErrorHandler';
 import {
@@ -10,6 +8,7 @@ import {
     ProductSearchResultDTO,
     ProductSalesAnalyticsDTO,
     ProductStatsSummaryDTO,
+    PriceRecalculationResultDTO
 } from "../types/api/productInterface.ts";
 import { Paginated } from "../types/api/dashboardInterface.ts";
 
@@ -401,6 +400,27 @@ class ProductService {
             return await response.json();
         } catch (error) {
             console.error('Recalculate product pricing error:', error);
+            throw error;
+        }
+    }
+
+    // =============================================================================
+    // BULK OPERATIONS - PRICE RECALCULATION
+    // =============================================================================
+
+    async recalculateAllProductPrices(updaterUserId: number): Promise<PriceRecalculationResultDTO> {
+        try {
+            const queryParams = new URLSearchParams();
+            queryParams.append('updaterUserId', updaterUserId.toString());
+
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/recalculate-all-prices?${queryParams}`, {
+                method: 'POST',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Recalculate all product prices error:', error);
             throw error;
         }
     }
