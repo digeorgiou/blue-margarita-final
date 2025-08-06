@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
@@ -244,59 +244,57 @@ const ExpenseManagementPage = () => {
 
     return (
         <div className="min-h-screen p-4">
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header with Toggle */}
 
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                        <div className="flex items-center space-x-3 mb-4 md:mb-0">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                <FaEuroSign className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-white">Διαχείριση Εξόδων</h1>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            {/* View Toggle Buttons */}
-                            <div className="flex bg-purple-600 rounded-lg p-1">
-                                <button
-                                    onClick={() => setCurrentView('main')}
-                                    className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${
-                                        currentView === 'main'
-                                            ? 'bg-white text-blue-600 shadow-sm'
-                                            : 'text-white hover:text-blue-100'
-                                    }`}
-                                >
-                                    <FaEuroSign className="w-4 h-4" />
-                                    Διαχείριση
-                                </button>
-                                <button
-                                    onClick={() => setCurrentView('analytics')}
-                                    className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${
-                                        currentView === 'analytics'
-                                            ? 'bg-white text-blue-600 shadow-sm'
-                                            : 'text-white hover:text-blue-100'
-                                    }`}
-                                >
-                                    <BarChart3 className="w-4 h-4" />
-                                    Ανάλυση
-                                </button>
-                            </div>
-
-                            {/* Create Button */}
-
-                                <Button
-                                    onClick={() => setIsCreateModalOpen(true)}
-                                    variant="create"
-                                    size="lg"
-                                >
-                                    <Plus className="w-5 h-5 mr-2" />
-                                    Νέο Έξοδο
-                                </Button>
-
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                            <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                         </div>
                     </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                        {/* View Toggle Buttons */}
+                        <div className="flex bg-purple-600 rounded-lg p-1 w-full sm:w-auto">
+                            <button
+                                onClick={() => setCurrentView('main')}
+                                className={`px-4 py-2 rounded-md flex items-center justify-center gap-2 transition-colors flex-1 sm:flex-none ${
+                                    currentView === 'main'
+                                        ? 'bg-white text-blue-600 shadow-sm'
+                                        : 'text-white hover:text-blue-100'
+                                }`}
+                            >
+                                <FaEuroSign className="w-4 h-4" />
+                                Διαχείριση
+                            </button>
+                            <button
+                                onClick={() => setCurrentView('analytics')}
+                                className={`px-4 py-2 rounded-md flex items-center justify-center gap-2 transition-colors flex-1 sm:flex-none ${
+                                    currentView === 'analytics'
+                                        ? 'bg-white text-blue-600 shadow-sm'
+                                        : 'text-white hover:text-blue-100'
+                                }`}
+                            >
+                                <BarChart3 className="w-4 h-4" />
+                                Ανάλυση
+                            </button>
+                        </div>
+
+
+
+                        {/* Create Button */}
+                        <Button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            variant="create"
+                            size="lg"
+                            className="w-full sm:w-auto"
+                        >
+                            <Plus className="w-5 h-5 mr-2" />
+                            Νέο Έξοδο
+                        </Button>
+                    </div>
+                </div>
 
 
                 {/* Error Display */}
@@ -309,28 +307,9 @@ const ExpenseManagementPage = () => {
                 {/* MAIN VIEW - Expense Management */}
                 {currentView === 'main' && (
                     <>
-                        {/* Pagination Controls - Top */}
-                        {searchResults && searchResults.totalElements > 0 && (
-                            <CustomCard className="shadow-lg">
-                                <EnhancedPaginationControls
-                                    paginationData={{
-                                        currentPage: searchResults.currentPage,
-                                        totalPages: searchResults.totalPages,
-                                        totalElements: searchResults.totalElements,
-                                        pageSize: searchResults.pageSize,
-                                        numberOfElements: searchResults.numberOfElements
-                                    }}
-                                    onPageChange={handlePageChange}
-                                    onPageSizeChange={handlePageSizeChange}
-                                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                                />
-                            </CustomCard>
-                        )}
-
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                         {/* Search and Filter Section */}
                         <CustomCard
-                            title="Φίλτρα"
-                            icon={<Search className="w-5 h-5" />}
                             className="shadow-lg"
                         >
                             <ExpenseFilterPanel
@@ -397,6 +376,25 @@ const ExpenseManagementPage = () => {
                                 )}
                             </ExpenseFilterPanel>
                         </CustomCard>
+
+                        {/* Pagination Controls - Top */}
+                        {searchResults && searchResults.totalElements > 0 && (
+                            <CustomCard className="shadow-lg">
+                                <EnhancedPaginationControls
+                                    paginationData={{
+                                        currentPage: searchResults.currentPage,
+                                        totalPages: searchResults.totalPages,
+                                        totalElements: searchResults.totalElements,
+                                        pageSize: searchResults.pageSize,
+                                        numberOfElements: searchResults.numberOfElements
+                                    }}
+                                    onPageChange={handlePageChange}
+                                    onPageSizeChange={handlePageSizeChange}
+                                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                                />
+                            </CustomCard>
+                        )}
+                    </div>
                     </>
                 )}
 
@@ -452,33 +450,42 @@ const ExpenseManagementPage = () => {
                                     <p className="text-gray-600">Δοκιμάστε να αλλάξετε το εύρος ημερομηνιών</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="space-y-4">
                                     {expenseBreakdown.map((breakdown, index) => (
-                                        <div key={index} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <h4 className="text-sm font-medium text-gray-900">{getExpenseTypeDisplayName(breakdown.expenseType)}</h4>
-                                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                                    {breakdown.percentage.toFixed(1)}%
-                                                </span>
+                                        <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                                            <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                                                <div className="flex-1">
+                                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                                        {getExpenseTypeDisplayName(breakdown.expenseType)}
+                                                    </h3>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                                                    <div>
+                                                        <span className="font-medium text-gray-600">Συνολικό Ποσό:</span>
+                                                        <div className="text-lg font-bold text-red-600">
+                                                            {formatCurrency(breakdown.totalAmount)}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-medium text-gray-600">Πλήθος:</span>
+                                                        <div className="text-lg font-bold text-blue-600">
+                                                            {formatNumber(breakdown.count)}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-medium text-gray-600">Ποσοστό:</span>
+                                                        <div className="text-lg font-bold text-green-600">
+                                                            {breakdown.percentage.toFixed(1)}%
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-xs text-gray-600">Συνολικό Ποσό</span>
-                                                    <span className="text-sm font-semibold text-gray-900">
-                                                        {formatCurrency(breakdown.totalAmount)}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-xs text-gray-600">Αριθμός Εξόδων</span>
-                                                    <span className="text-sm font-medium text-gray-700">
-                                                        {formatNumber(breakdown.count)}
-                                                    </span>
-                                                </div>
-                                                {/* Progress bar */}
-                                                <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+                                            {/* Progress bar */}
+                                            <div className="lg:w-32">
+                                                <div className="w-full bg-gray-200 rounded-full h-2">
                                                     <div
-                                                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                                        style={{ width: `${breakdown.percentage}%` }}
+                                                        className="bg-blue-600 h-2 rounded-full"
+                                                        style={{ width: `${Math.min(breakdown.percentage, 100)}%` }}
                                                     ></div>
                                                 </div>
                                             </div>

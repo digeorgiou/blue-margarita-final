@@ -59,9 +59,9 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
     return (
         <div className="space-y-6">
             {/* Search and Filter Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+            <div className="space-y-4">
                 {/* Search Term */}
-                <div className="flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <CustomTextInput
                         label="Αναζήτηση με την περιγραφή"
                         value={searchTerm}
@@ -70,11 +70,7 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
                         icon={<Search className="w-5 h-5" />}
                         className="w-full"
                     />
-                </div>
 
-                {/* Filters Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Expense Type Filter */}
                     <CustomSelect
                         label="Τύπος Εξόδου"
                         value={expenseTypeFilter}
@@ -82,7 +78,9 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
                         options={expenseTypeOptions}
                         placeholder=""
                     />
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Date From Filter */}
                     <CustomDateInput
                         label="Από Ημερομηνία"
@@ -123,7 +121,7 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
             {/* Results Section */}
             <div className="bg-white rounded-lg border border-gray-200">
                 {loading ? (
-                    <div className="p-8 text-center">
+                    <div className="flex items-center justify-center p-8">
                         <LoadingSpinner />
                         <span className="mt-4 text-gray-600">Φόρτωση εξόδων...</span>
                     </div>
@@ -141,65 +139,70 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
                     <div className="divide-y divide-gray-200">
                         {searchResults.map((expense) => (
                             <div key={expense.id}
-                                 className="p-6 hover:bg-blue-100 transition-colors duration-150">
-                                <div className="flex items-center gap-6">
+                                 className="p-6 hover:bg-red-100 transition-colors duration-150">
+                                <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="flex-shrink-0">
-                                                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                                    <FaEuroSign className="w-5 h-5 text-purple-600" />
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="text-lg font-semibold text-gray-900 truncate">
-                                                    {expense.description}
-                                                </h3>
-                                            </div>
+                                        <div className="flex flex-wrap items-center gap-3 mb-3">
+                                            <FaEuroSign className="w-5 h-5 text-red-500" />
+                                            <h3 className="text-lg font-semibold text-gray-900">
+                                                {expense.description}
+                                            </h3>
+                                            <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">
+                                                {getExpenseTypeDisplayName(expense.expenseType)}
+                                            </span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4 text-sm">
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <div className="flex items-center gap-4 text-gray-600">
-                                                    <span>{formatDate(expense.expenseDate)}</span>
-                                                    <span className="bg-orange-200 text-orange-800 px-4 py-2 rounded-full text-center">
-                                                        {getExpenseTypeDisplayName(expense.expenseType)}
-                                                    </span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 text-sm">
+                                            <div className="flex items-center text-gray-600">
+                                                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                                                <div>
+                                                    <span className="font-medium">Ημερομηνία:</span>
+                                                    <div className="text-blue-600 font-semibold">
+                                                        {formatDate(expense.expenseDate)}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center">
-                                                <p className="text-lg font-semibold text-red-600">
-                                                    {formatCurrency(expense.amount)}
-                                                </p>
+
+                                            <div className="flex items-center text-gray-600">
+                                                <FaEuroSign className="w-4 h-4 mr-2 text-red-500" />
+                                                <div>
+                                                    <span className="font-medium">Ποσό:</span>
+                                                    <div className="text-red-600 font-bold text-lg">
+                                                        {formatCurrency(expense.amount)}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-center gap-2 min-w-fit">
-                                        <Button
-                                            onClick={() => onViewDetails(expense)}
-                                            variant="info"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                            Λεπτομέρειες
-                                        </Button>
-                                        <Button
-                                            onClick={() => onEdit(expense)}
-                                            variant="teal"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                            Επεξεργασία
-                                        </Button>
-                                        <Button
-                                            onClick={() => onDelete(expense)}
-                                            variant="danger"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                            Διαγραφή
-                                        </Button>
+                                    <div className="lg:w-auto">
+                                        <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
+                                            <Button
+                                                onClick={() => onViewDetails(expense)}
+                                                variant="info"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                                Λεπτομέρειες
+                                            </Button>
+                                            <Button
+                                                onClick={() => onEdit(expense)}
+                                                variant="teal"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                                Επεξεργασία
+                                            </Button>
+                                            <Button
+                                                onClick={() => onDelete(expense)}
+                                                variant="danger"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                Διαγραφή
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
