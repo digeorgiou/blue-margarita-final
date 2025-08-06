@@ -32,61 +32,65 @@ const LocationList: React.FC<LocationDropdownListProps> = ({
     }
 
     return (
-        <div className="space-y-3">
-            {locations.map((location) => (
-                <div
-                    key={location.id}
-                    className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-green-300 transition-all duration-200"
-                >
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                                <MapPin className="w-5 h-5 text-green-600" />
+        <div className="bg-white rounded-lg border border-gray-200">
+            <div className="divide-y divide-gray-200">
+                {locations.map((location) => (
+                    <div
+                        key={location.id}
+                        className="p-6 hover:bg-green-100 transition-colors duration-150 rounded-lg"
+                    >
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                            <div className="flex-1">
+                                <div className="flex flex-wrap items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <MapPin className="w-5 h-5 text-green-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
+                                            {location.name}
+                                        </h3>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
-                                    {location.name}
-                                </h3>
-                                <p className="text-sm text-gray-500">ID: {location.id}</p>
-                            </div>
-                        </div>
 
-                        <div className="flex items-center space-x-2 transition-opacity">
-                            <Button
-                                size="sm"
-                                variant="info"
-                                onClick={() => onViewDetails(location)}
-                                title="Προβολή Λεπτομερειών"
-                                className="hover:bg-blue-50"
-                            >
-                                <Eye className="w-4 h-4" />
-                                Λεπτομέρειες
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="teal"
-                                onClick={() => onEdit(location)}
-                                title="Επεξεργασία"
-                                className="hover:bg-green-50 hover:text-green-600"
-                            >
-                                <Edit className="w-4 h-4" />
-                                Επεξεργασία
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant={"danger"}
-                                onClick={() => onDelete(location)}
-                                title="Διαγραφή"
-                                className="hover:bg-red-50"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Διαγραφή
-                            </Button>
+                                <div className="lg:w-auto">
+                                    <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
+                                        <Button
+                                            size="sm"
+                                            variant="info"
+                                            onClick={() => onViewDetails(location)}
+                                            title="Προβολή Λεπτομερειών"
+                                            className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                            Λεπτομέρειες
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="teal"
+                                            onClick={() => onEdit(location)}
+                                            title="Επεξεργασία"
+                                            className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            Επεξεργασία
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant={"danger"}
+                                            onClick={() => onDelete(location)}
+                                            title="Διαγραφή"
+                                            className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                            Διαγραφή
+                                        </Button>
+                                    </div>
+                                </div>
                         </div>
                     </div>
-                    <div className="absolute inset-0 border-2 border-transparent group-hover:border-green-200 rounded-lg pointer-events-none transition-colors" />
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 };

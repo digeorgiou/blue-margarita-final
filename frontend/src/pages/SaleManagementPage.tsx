@@ -308,7 +308,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                     )}
 
                     {/* Header - Mobile responsive */}
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
                         <div className="flex items-center space-x-3">
                             <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                         </div>

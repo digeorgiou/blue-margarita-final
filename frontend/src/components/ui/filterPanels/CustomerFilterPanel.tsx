@@ -29,9 +29,10 @@ const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
     return (
         <div className="space-y-6">
             {/* Search Controls */}
-            <div className="flex flex-col lg:flex-row gap-4">
+            <div className="space-y-4">
                 {/* Search Input */}
-                <div className="flex-1">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
                     <CustomTextInput
                         label=""
                         value={searchTerm}
@@ -40,51 +41,43 @@ const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
                         icon={<Search className="w-5 h-5 text-gray-400" />}
                         className="w-full"
                     />
-                </div>
 
-                {/* TIN Filter */}
-                <div className="lg:w-64 flex items-end">
-                    <CustomToggleOption
-                        value={tinOnlyFilter}
-                        onChange={onTinOnlyFilterChange}
-                        optionLabel="Μόνο πελάτες Χονδρικής"
-                        className="pb-2"
-                    />
+                    {/* TIN Filter */}
+                    <div className="flex items-center justify-center">
+                        <CustomToggleOption
+                            value={tinOnlyFilter}
+                            onChange={onTinOnlyFilterChange}
+                            optionLabel="Μόνο πελάτες Χονδρικής"
+                            className="pb-2"
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Results */}
-            <div className="border-t pt-6">
+            <div className="bg-white rounded-lg border border-gray-200">
                 {loading && (
-                    <div className="flex justify-center py-12">
+                    <div className="flex items-center justify-center p-8">
                         <LoadingSpinner />
+                        <span className="ml-3 text-gray-600">Αναζήτηση πελατών...</span>
                     </div>
                 )}
 
                 {!loading && filteredResults.length === 0 && (
                     <div className="text-center py-12">
                         <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            Δεν βρέθηκαν πελάτες
-                        </h3>
-                        <p className="text-gray-500">
-                            {tinOnlyFilter && searchResults.length > 0
-                                ? `Από τους ${searchResults.length} πελάτες, κανένας δεν έχει ΑΦΜ`
-                                : searchTerm.length > 0
-                                    ? `Δεν υπάρχουν πελάτες που να ταιριάζουν με "${searchTerm}"`
-                                    : "Δεν υπάρχουν πελάτες στο σύστημα"
-                            }
-                        </p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Δεν βρέθηκαν πελάτες</h3>
+                        <p className="text-gray-500">Δοκιμάστε να αλλάξετε τα κριτήρια αναζήτησης</p>
                     </div>
                 )}
                 {!loading && filteredResults.length > 0 && (
-                    <div className="grid gap-4">
+                    <div className="divide-y divide-gray-200">
                         {filteredResults.map((customer) => (
                             <div
                                 key={customer.customerId}
-                                className="bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all duration-200"
+                                className="p-6 hover:bg-blue-50 transition-colors duration-150"
                             >
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                                     {/* Customer Info */}
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-center gap-3">
@@ -98,7 +91,7 @@ const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
                                             )}
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                             {customer.email && (
                                                 <div className="flex items-center gap-2">
                                                     <Mail className="w-4 h-4 text-gray-400" />
@@ -127,34 +120,36 @@ const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex gap-2">
-                                        <Button
-                                            onClick={() => onViewDetails(customer)}
-                                            variant="info"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                            Προβολή
-                                        </Button>
-                                        <Button
-                                            onClick={() => onEdit(customer)}
-                                            variant="teal"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                            Επεξεργασία
-                                        </Button>
-                                        <Button
-                                            onClick={() => onDelete(customer)}
-                                            variant="danger"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                            Διαγραφή
-                                        </Button>
+                                    <div className="lg:w-auto">
+                                        <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
+                                            <Button
+                                                onClick={() => onViewDetails(customer)}
+                                                variant="info"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                                Προβολή
+                                            </Button>
+                                            <Button
+                                                onClick={() => onEdit(customer)}
+                                                variant="teal"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                                Επεξεργασία
+                                            </Button>
+                                            <Button
+                                                onClick={() => onDelete(customer)}
+                                                variant="danger"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                Διαγραφή
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -55,23 +55,23 @@ const Header: React.FC<HeaderProps> = ({
                 icon: <Edit className="w-9 h-9" />
             },
             'customers': {
-                title: 'Πελάτες',
+                title: 'Διαχείριση Πελατών',
                 icon: <Users className="w-9 h-9" />
             },
             'materials': {
-                title: 'Υλικό',
+                title: 'Διαχείριση Υλικών',
                 icon: <IoHammerOutline className="w-9 h-9" />
             },
             'categories': {
-                title:'Κατηγορίες',
+                title:'Διαχείριση Κατηγοριών',
                 icon: <Gem className="w-9 h-9" />
             },
             'purchases': {
-                title: 'Purchases',
+                title: 'Διαχείριση Αγορών',
                 icon: <ShoppingBag className="w-9 h-9" />
             },
             'locations': {
-                title: 'Τοποθεσίες',
+                title: 'Διαχείριση Τοποθεσιών',
                 icon: <MapPin className="w-9 h-9" />
             },
             'all-tasks': {
@@ -87,15 +87,15 @@ const Header: React.FC<HeaderProps> = ({
                 icon: <DollarSign className="w-9 h-9" />
             },
             'procedures' : {
-                title: 'Διαδικασίες',
+                title: 'Διαχείριση Διαδικασιών',
                 icon: <Settings className="w-9 h-9"/>
             },
             'suppliers' : {
-                title: 'Προμηθευτές',
+                title: 'Διαχείριση Προμηθευτών',
                 icon: <Truck className="w-9 h-9" />
             },
             'expenses' : {
-                title: "Έξοδα",
+                title: "Διαχείριση Εξόδων",
                 icon: < FaEuroSign className="w-9 h-9" />
             }
         };

@@ -164,7 +164,6 @@ const EnhancedPaginationControls: React.FC<EnhancedPaginationControlsProps> = ({
             <PageSizeSelector
                 currentPageSize={pageSize}
                 onPageSizeChange={onPageSizeChange}
-                totalElements={totalElements}
             />
         </div>
     );

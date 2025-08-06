@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Package, Plus } from 'lucide-react';
+import { Package, Plus } from 'lucide-react';
 import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
@@ -17,7 +17,6 @@ import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 import {ProductDetailModal} from "../components/ui";
-import { GiDiamondRing } from "react-icons/gi";
 
 interface ProductManagementPageProps {
     onNavigate: (page: string, productId?: string) => void;
@@ -250,7 +249,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                 )}
 
                 {/* Header */}
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
                     <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
@@ -266,8 +265,6 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
                 {/* Search and Filter Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                     <CustomCard
-                        title="Φίλτρα Αναζήτησης"
-                        icon={<Search className="w-5 h-5" />}
                         className="shadow-lg"
                     >
                         <ProductFilterPanel

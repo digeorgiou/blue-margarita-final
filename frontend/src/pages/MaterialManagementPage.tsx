@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Alert, ProductUsageModal } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
@@ -6,7 +6,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { materialService } from '../services/materialService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type {
     MaterialReadOnlyDTO,
     MaterialDetailedViewDTO,
@@ -16,7 +16,6 @@ import type {
 import type { Paginated } from '../types/api/dashboardInterface';
 
 import { MaterialFilterPanel } from '../components/ui/filterPanels'
-import { IoHammerOutline } from "react-icons/io5";
 
 
 import MaterialDetailModal from "../components/ui/modals/material/MaterialDetailModal.tsx";
@@ -191,69 +190,65 @@ const MaterialManagementPage = () => {
 
     return (
         <div className="min-h-screen p-4">
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-8">
                 {/* Page Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <IoHammerOutline className="w-8 h-8 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">Διαχείριση Υλικών</h1>
-                        </div>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                        <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
-
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
                         variant="create"
+                        size="lg"
+                        className={"w-full md:w-auto"}
                     >
-                        <Plus className="w-4 h-4 mr-2" />
+                        <Plus className="w-5 h-5 mr-2" />
                         Νέο Υλικό
                     </Button>
                 </div>
 
-                {/* Pagination Controls - Bottom */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <CustomCard className="shadow-lg">
-                        <EnhancedPaginationControls
-                            paginationData={{
-                                currentPage: searchResults.currentPage,
-                                totalPages: searchResults.totalPages,
-                                totalElements: searchResults.totalElements,
-                                pageSize: searchResults.pageSize,
-                                numberOfElements: searchResults.numberOfElements
-                            }}
-                            onPageChange={handlePageChange}
-                            onPageSizeChange={handlePageSizeChange}
-                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                        />
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+                    {/* General Error Display */}
+                    {generalError && (
+                        <Alert variant="error" className="mb-6">
+                            {generalError}
+                        </Alert>
+                    )}
+
+                    {/* Search and Results Card */}
+                        <CustomCard
+                        className="shadow-lg"
+                        >
+                            <MaterialFilterPanel
+                                searchTerm={searchTerm}
+                                onSearchTermChange={setSearchTerm}
+                                searchResults={searchResults ? searchResults.data : []}
+                                loading={loading}
+                                onViewDetails={handleViewDetails}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onViewProducts={handleViewProducts}
+                            />
                     </CustomCard>
-                )}
 
-                {/* General Error Display */}
-                {generalError && (
-                    <Alert variant="error" className="mb-6">
-                        {generalError}
-                    </Alert>
-                )}
-
-                {/* Search and Results Card */}
-                    <CustomCard
-                    title="Αναζήτηση Υλικού"
-                    icon={<Search className="w-5 h-5" />}
-                    className="shadow-lg"
-                    >
-                        <MaterialFilterPanel
-                            searchTerm={searchTerm}
-                            onSearchTermChange={setSearchTerm}
-                            searchResults={searchResults ? searchResults.data : []}
-                            loading={loading}
-                            onViewDetails={handleViewDetails}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onViewProducts={handleViewProducts}
-                        />
-                </CustomCard>
+                    {/* Pagination Controls - Bottom */}
+                    {searchResults && searchResults.totalElements > 0 && (
+                        <CustomCard className="shadow-lg">
+                            <EnhancedPaginationControls
+                                paginationData={{
+                                    currentPage: searchResults.currentPage,
+                                    totalPages: searchResults.totalPages,
+                                    totalElements: searchResults.totalElements,
+                                    pageSize: searchResults.pageSize,
+                                    numberOfElements: searchResults.numberOfElements
+                                }}
+                                onPageChange={handlePageChange}
+                                onPageSizeChange={handlePageSizeChange}
+                                className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                            />
+                        </CustomCard>
+                    )}
+                </div>
             </div>
 
             {/* Modals */}

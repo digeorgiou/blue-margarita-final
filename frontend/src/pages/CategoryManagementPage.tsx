@@ -168,16 +168,11 @@ const CategoryManagementPage  = () => {
 
     return (
         <div className="min-h-screen p-4">
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="max-w-5xl mx-auto space-y-8">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Gem className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white mb-2">Διαχείριση Κατηγοριών</h1>
-                        </div>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+
                     </div>
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
@@ -189,18 +184,18 @@ const CategoryManagementPage  = () => {
                 </div>
 
                 {/* Categories List */}
-                <div className="mt-8">
-                    <CustomCard
-                        className="bg-white/10 backdrop-blur-sm border-white/20"
-                    >
-                        <CategoryList
-                            categories={categories}
-                            loading={loading}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onViewDetails={handleViewDetails}
-                        />
-                    </CustomCard>
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+                        <CustomCard
+                            className="bg-white/10 backdrop-blur-sm border-white/20"
+                        >
+                            <CategoryList
+                                categories={categories}
+                                loading={loading}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onViewDetails={handleViewDetails}
+                            />
+                        </CustomCard>
                 </div>
 
                 {/* Create Modal */}

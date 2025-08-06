@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
@@ -6,7 +6,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { supplierService } from '../services/supplierService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Truck, UserPlus, Search } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import type {
     SupplierReadOnlyDTO,
     SupplierDetailedViewDTO,
@@ -181,20 +181,16 @@ const SupplierManagementPage = () => {
             <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Header Section - Matching CustomerManagementPage exactly */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center space-x-3 mb-4 md:mb-0">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Truck className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">Διαχείριση Προμηθευτών</h1>
-                        </div>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                        <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
                         variant="create"
+                        className={"w-full md:w-auto"}
                     >
-                        <UserPlus className="w-4 h-4 mr-2" />
+                        <UserPlus className="w-5 h-5 mr-2" />
                         Νέος Προμηθευτής
                     </Button>
                 </div>
@@ -206,40 +202,40 @@ const SupplierManagementPage = () => {
                     </Alert>
                 )}
 
-                {/* Pagination Controls - Top */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <CustomCard className="shadow-lg">
-                        <EnhancedPaginationControls
-                            paginationData={{
-                                currentPage: searchResults.currentPage,
-                                totalPages: searchResults.totalPages,
-                                totalElements: searchResults.totalElements,
-                                pageSize: searchResults.pageSize,
-                                numberOfElements: searchResults.numberOfElements
-                            }}
-                            onPageChange={handlePageChange}
-                            onPageSizeChange={handlePageSizeChange}
-                            className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+                    {/* Search Section */}
+                    <CustomCard
+                        className="shadow-lg"
+                    >
+                        <SupplierFilterPanel
+                            searchTerm={searchTerm}
+                            onSearchTermChange={setSearchTerm}
+                            searchResults={searchResults?.data ? searchResults.data : []}
+                            loading={loading}
+                            onViewDetails={handleViewDetails}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
                         />
                     </CustomCard>
-                )}
 
-                {/* Search Section */}
-                <CustomCard
-                    title="Αναζήτηση Προμηθευτή"
-                    icon={<Search className="w-5 h-5" />}
-                    className="shadow-lg"
-                >
-                    <SupplierFilterPanel
-                        searchTerm={searchTerm}
-                        onSearchTermChange={setSearchTerm}
-                        searchResults={searchResults?.data ? searchResults.data : []}
-                        loading={loading}
-                        onViewDetails={handleViewDetails}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                    />
-                </CustomCard>
+                    {/* Pagination Controls - Top */}
+                    {searchResults && searchResults.totalElements > 0 && (
+                        <CustomCard className="shadow-lg">
+                            <EnhancedPaginationControls
+                                paginationData={{
+                                    currentPage: searchResults.currentPage,
+                                    totalPages: searchResults.totalPages,
+                                    totalElements: searchResults.totalElements,
+                                    pageSize: searchResults.pageSize,
+                                    numberOfElements: searchResults.numberOfElements
+                                }}
+                                onPageChange={handlePageChange}
+                                onPageSizeChange={handlePageSizeChange}
+                                className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                            />
+                        </CustomCard>
+                    )}
+                </div>
             </div>
 
             {/* Modals */}

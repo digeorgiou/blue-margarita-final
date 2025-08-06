@@ -21,9 +21,9 @@ const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
     return (
         <div className="space-y-6">
             {/* Search Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+            <div className="space-y-4">
                 {/* Search Input */}
-                <div className="flex-1">
+                <div className="grid grid-cols-1 gap-4">
                     <CustomTextInput
                         label=""
                         placeholder="Αναζήτηση με όνομα διαδικασίας..."
@@ -38,13 +38,13 @@ const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
             {/* Results */}
             <div className="bg-white rounded-lg border border-gray-200">
                 {loading ? (
-                    <div className="p-8 text-center">
+                    <div className="flex items-center justify-center p-8">
                         <LoadingSpinner/>
                         <p className="mt-4 text-gray-600">Αναζήτηση διαδικασιών...</p>
                     </div>
                 ) : filteredResults.length === 0 ? (
-                    <div className="p-8 text-center">
-                        <Cog className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <div className="text-center py-12">
+                        <Cog className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">
                             Δεν βρέθηκαν διαδικασίες
                         </h3>
@@ -60,10 +60,10 @@ const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
                         {filteredResults.map((procedure) => (
                             <div
                                 key={procedure.procedureId}
-                                className="p-6 hover:bg-blue-100 transition-colors duration-150"
+                                className="p-6 hover:bg-purple-100 transition-colors duration-150"
                             >
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                    <div className="flex-1 min-w-0">
+                                <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                                    <div className="flex-1">
                                         {/* Procedure Header */}
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -86,44 +86,46 @@ const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:ml-4">
-                                        <Button
-                                            onClick={() => onViewDetails(procedure)}
-                                            variant="info"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                            Λεπτομέρειες
-                                        </Button>
-                                        <Button
-                                            onClick={() => onViewProducts(procedure)}
-                                            variant="orange"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                            title="Δείτε όλα τα προϊόντα που χρησιμοποιούν αυτή τη διαδικασία"
-                                        >
-                                            <Package className="w-4 h-4" />
-                                            Προϊόντα
-                                        </Button>
-                                        <Button
-                                            onClick={() => onEdit(procedure)}
-                                            variant="teal"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                            Επεξεργασία
-                                        </Button>
-                                        <Button
-                                            onClick={() => onDelete(procedure)}
-                                            variant="danger"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                            Διαγραφή
-                                        </Button>
+                                    <div className="lg:w-auto">
+                                        <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
+                                            <Button
+                                                onClick={() => onViewDetails(procedure)}
+                                                variant="info"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                                Λεπτομέρειες
+                                            </Button>
+                                            <Button
+                                                onClick={() => onViewProducts(procedure)}
+                                                variant="orange"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                                title="Δείτε όλα τα προϊόντα που χρησιμοποιούν αυτή τη διαδικασία"
+                                            >
+                                                <Package className="w-4 h-4" />
+                                                Προϊόντα
+                                            </Button>
+                                            <Button
+                                                onClick={() => onEdit(procedure)}
+                                                variant="teal"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                                Επεξεργασία
+                                            </Button>
+                                            <Button
+                                                onClick={() => onDelete(procedure)}
+                                                variant="danger"
+                                                size="sm"
+                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                Διαγραφή
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

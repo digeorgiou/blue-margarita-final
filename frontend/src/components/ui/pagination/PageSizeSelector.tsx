@@ -5,14 +5,12 @@ import React from 'react';
 interface PageSizeSelectorProps {
     currentPageSize: number;
     onPageSizeChange: (newPageSize: number) => void;
-    totalElements?: number;
     className?: string;
 }
 
 const PageSizeSelector: React.FC<PageSizeSelectorProps> = ({
                                                                currentPageSize,
                                                                onPageSizeChange,
-                                                               totalElements,
                                                                className = ""
                                                            }) => {
     const pageSizeOptions = [6, 12, 24];
@@ -36,11 +34,6 @@ const PageSizeSelector: React.FC<PageSizeSelectorProps> = ({
                     </option>
                 ))}
             </select>
-            {totalElements !== undefined && (
-                <span className="text-sm text-gray-500">
-                    (από συνολικά {totalElements})
-                </span>
-            )}
         </div>
     );
 };
