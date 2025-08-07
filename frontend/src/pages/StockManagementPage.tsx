@@ -158,20 +158,7 @@ const StockManagementPage: React.FC<StockManagementPageProps> = () => {
 
     return (
         <div className="min-h-screen p-4">
-            <div className="max-w-7xl mx-auto space-y-8">
-                {/* Page Header */}
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                        <Package className="w-8 h-8 text-blue-500" />
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">Διαχείριση Αποθέματος</h1>
-                            <p className="text-gray-300 text-sm">
-                                {products ? `${products.totalElements} προϊόντα` : 'Φόρτωση...'}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
+            <div className="max-w-7xl mx-auto space-y-8 mt-8">
                 <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                     {/* General Error Display */}
                     {generalError && (

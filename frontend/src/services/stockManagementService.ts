@@ -30,7 +30,7 @@ class StockManagementService {
             // Add all filter parameters - matching your controller exactly
             if (filters.nameOrCode) queryParams.append('nameOrCode', filters.nameOrCode);
             if (filters.categoryId) queryParams.append('categoryId', filters.categoryId.toString());
-            if (filters.status === 'LOW') queryParams.append('lowStock', 'true');
+            if (filters.status) queryParams.append('status', filters.status);
             if (filters.minStock !== undefined) queryParams.append('minStock', filters.minStock.toString());
             if (filters.maxStock !== undefined) queryParams.append('maxStock', filters.maxStock.toString());
             if (filters.page !== undefined) queryParams.append('page', filters.page.toString());

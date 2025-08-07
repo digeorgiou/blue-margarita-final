@@ -38,38 +38,6 @@ public class PurchaseSpecification {
         };
     }
 
-    public static Specification<Purchase> purchaseSupplierNameOrTinOrEmailLike(String searchTerm) {
-        return (root, query, criteriaBuilder) -> {
-            if (searchTerm == null || searchTerm.trim().isEmpty()) {
-                return null;
-            }
-            Join<Purchase, Supplier> supplierJoin = root.join("supplier", JoinType.LEFT);
-            String upperSearchTerm = "%" + searchTerm.toUpperCase() + "%";
-            return criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.upper(supplierJoin.get("name")), upperSearchTerm),
-                    criteriaBuilder.like(criteriaBuilder.upper(supplierJoin.get("tin")), upperSearchTerm),
-                    criteriaBuilder.like(criteriaBuilder.upper(supplierJoin.get("email")), upperSearchTerm)
-            );
-        };
-    }
-
-    public static Specification<Purchase> purchaseContainsMaterial(String materialName) {
-        return (root, query, criteriaBuilder) -> {
-            if (materialName == null || materialName.trim().isEmpty()) {
-                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
-            }
-
-            Join<Purchase, PurchaseMaterial> purchaseMaterialJoin = root.join("purchaseMaterials", JoinType.INNER);
-            Join<PurchaseMaterial, Material> materialJoin = purchaseMaterialJoin.join("material", JoinType.INNER);
-
-            String searchTerm = "%" + materialName.trim().toUpperCase() + "%";
-
-            return criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.upper(materialJoin.get("name")), searchTerm)
-            );
-        };
-    }
-
     public static Specification<Purchase> purchaseContainsMaterialId(Long materialId){
         return (root, query, criteriaBuilder) -> {
             if(materialId == null){

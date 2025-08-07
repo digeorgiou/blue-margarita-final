@@ -11,6 +11,7 @@ import {
     CheckSquare,
     AlertTriangle,
     DollarSign,
+    ClipboardPenLine,
     Gem,
     Truck, Edit,
     Settings
@@ -97,6 +98,10 @@ const Header: React.FC<HeaderProps> = ({
             'expenses' : {
                 title: "Διαχείριση Εξόδων",
                 icon: < FaEuroSign className="w-9 h-9" />
+            },
+            'stock-management' : {
+                title: "Διαχείριση Αποθέματος Προϊόντων",
+                icon: <ClipboardPenLine className="w-9 h-9" />
             }
         };
         return pageInfo[currentPage || 'dashboard'] || {

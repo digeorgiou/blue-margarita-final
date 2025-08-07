@@ -1,9 +1,5 @@
-// saleService.ts - Following established service patterns with ApiErrorHandler
-
 import { authService } from './authService';
 import { ApiErrorHandler } from '../utils/apiErrorHandler';
-
-// Import interfaces from recordSaleInterface.ts
 import {
     SaleDetailedViewDTO,
     PaymentMethodDTO,

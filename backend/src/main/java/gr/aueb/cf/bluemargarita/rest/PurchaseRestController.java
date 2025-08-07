@@ -159,10 +159,8 @@ public class PurchaseRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PaginatedFilteredPurchasesWithSummary> searchPurchasesWithSummary(
             @Parameter(description = "Supplier ID filter") @RequestParam(required = false) Long supplierId,
-            @Parameter(description = "Supplier name, TIN, or email filter") @RequestParam(required = false) String supplierNameOrTinOrEmail,
             @Parameter(description = "Purchase date from (inclusive)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate purchaseDateFrom,
             @Parameter(description = "Purchase date to (inclusive)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate purchaseDateTo,
-            @Parameter(description = "Material name filter") @RequestParam(required = false) String materialName,
             @Parameter(description = "Material ID filter") @RequestParam(required = false) Long materialId,
             @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
@@ -171,10 +169,8 @@ public class PurchaseRestController {
 
         PurchaseFilters filters = PurchaseFilters.builder()
                 .supplierId(supplierId)
-                .supplierNameOrTinOrEmail(supplierNameOrTinOrEmail)
                 .purchaseDateFrom(purchaseDateFrom)
                 .purchaseDateTo(purchaseDateTo)
-                .materialName(materialName)
                 .materialId(materialId)
                 .build();
 

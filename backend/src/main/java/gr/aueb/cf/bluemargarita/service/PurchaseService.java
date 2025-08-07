@@ -337,26 +337,13 @@ public class PurchaseService implements IPurchaseService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /**
-     * Creates JPA Specification from filter criteria
-     */
+
     private Specification<Purchase> getSpecsFromFilters(PurchaseFilters filters) {
-        Specification<Purchase> spec =  Specification
-                .where(PurchaseSpecification.purchaseDateBetween(filters.getPurchaseDateFrom(), filters.getPurchaseDateTo()));
 
-        if(filters.getMaterialId() != null){
-            spec = spec.and(PurchaseSpecification.purchaseContainsMaterialId(filters.getMaterialId()));
-        }else if (filters.getMaterialName() != null && !filters.getMaterialName().trim().isEmpty()) {
-            spec = spec.and(PurchaseSpecification.purchaseContainsMaterial(filters.getMaterialName()));
-        }
-
-        if(filters.getSupplierId() != null){
-            spec = spec.and(PurchaseSpecification.purchaseSupplierId(filters.getSupplierId()));
-        }else if (filters.getSupplierNameOrTinOrEmail() != null && !filters.getSupplierNameOrTinOrEmail().trim().isEmpty()) {
-            spec = spec.and(PurchaseSpecification.purchaseSupplierNameOrTinOrEmailLike(filters.getSupplierNameOrTinOrEmail()));
-        }
-
-        return spec;
+        return Specification
+                .where(PurchaseSpecification.purchaseDateBetween(filters.getPurchaseDateFrom(), filters.getPurchaseDateTo()))
+                .and(PurchaseSpecification.purchaseSupplierId(filters.getSupplierId()))
+                .and(PurchaseSpecification.purchaseContainsMaterialId(filters.getMaterialId()));
 
     }
 }

@@ -18,16 +18,10 @@ public class PurchaseFilters extends GenericFilters {
     private Long supplierId;
 
     @Nullable
-    private String supplierNameOrTinOrEmail;
-
-    @Nullable
     private LocalDate purchaseDateFrom;
 
     @Nullable
     private LocalDate purchaseDateTo;
-
-    @Nullable
-    private String materialName;
 
     @Nullable
     private Long materialId;

@@ -5,9 +5,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * DTO for purchase read-only display
- */
 public record PurchaseReadOnlyDTO(
         Long id,
         String supplierName,

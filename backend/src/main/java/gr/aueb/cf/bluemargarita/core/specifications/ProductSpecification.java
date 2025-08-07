@@ -204,8 +204,7 @@ public class ProductSpecification {
                     return criteriaBuilder.and(
                             criteriaBuilder.isNotNull(root.get("stock")),
                             criteriaBuilder.isNotNull(root.get("lowStockAlert")),
-                            criteriaBuilder.lessThanOrEqualTo(root.get("stock"), root.get("lowStockAlert")),
-                            criteriaBuilder.greaterThanOrEqualTo(root.get("stock"), 0)
+                            criteriaBuilder.lessThanOrEqualTo(root.get("stock"), root.get("lowStockAlert"))
                     );
 
                 case NEGATIVE:

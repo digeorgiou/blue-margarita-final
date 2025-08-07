@@ -215,7 +215,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
 
                 {/* Unit Price */}
                 <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Τιμή μονάδας:</span>
+                    <span className="text-xs text-gray-500">Τιμή Λιανικής Μονάδας:</span>
                     <span className="text-xs text-gray-700">
                         €{product.unitSellingPrice.toFixed(2)}
                     </span>
