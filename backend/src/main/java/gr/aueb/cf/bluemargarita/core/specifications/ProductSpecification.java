@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.core.specifications;
 
+import gr.aueb.cf.bluemargarita.core.enums.StockStatus;
 import gr.aueb.cf.bluemargarita.model.*;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -177,6 +178,46 @@ public class ProductSpecification {
         };
     }
 
+    public static Specification<Product> productHasStatus(String status) {
+        return (root, query, criteriaBuilder) -> {
+            if (status == null || status.trim().isEmpty()) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
 
+            StockStatus stockStatus = StockStatus.fromString(status);
+            if (stockStatus == null) {
+                return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+
+            switch (stockStatus) {
+                case NORMAL:
+                    // Stock > lowStockAlert AND lowStockAlert is not null AND stock is not null AND stock > 0
+                    return criteriaBuilder.and(
+                            criteriaBuilder.isNotNull(root.get("stock")),
+                            criteriaBuilder.isNotNull(root.get("lowStockAlert")),
+                            criteriaBuilder.greaterThan(root.get("stock"), root.get("lowStockAlert")),
+                            criteriaBuilder.greaterThan(root.get("stock"), 0)
+                    );
+
+                case LOW:
+                    // Stock <= lowStockAlert AND stock > 0 AND both not null
+                    return criteriaBuilder.and(
+                            criteriaBuilder.isNotNull(root.get("stock")),
+                            criteriaBuilder.isNotNull(root.get("lowStockAlert")),
+                            criteriaBuilder.lessThanOrEqualTo(root.get("stock"), root.get("lowStockAlert")),
+                            criteriaBuilder.greaterThanOrEqualTo(root.get("stock"), 0)
+                    );
+
+                case NEGATIVE:
+                    // Stock < 0 AND stock is not null
+                    return criteriaBuilder.and(
+                            criteriaBuilder.isNotNull(root.get("stock")),
+                            criteriaBuilder.lessThan(root.get("stock"), 0)
+                    );
+                default:
+                    return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+            }
+        };
+    }
 
 }

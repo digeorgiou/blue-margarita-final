@@ -197,7 +197,6 @@ const StockManagementPage: React.FC<StockManagementPageProps> = () => {
                             searchResults={products?.data || []}
                             loading={loading}
                             onClearFilters={handleClearFilters}
-                            onRefresh={searchProducts}
                             onUpdateStock={handleSingleStockUpdate}
                             updatingStock={updatingStock}
                             onUpdateStockLimit={handleStockLimitUpdate}

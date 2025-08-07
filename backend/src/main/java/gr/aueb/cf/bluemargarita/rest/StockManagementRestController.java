@@ -61,7 +61,7 @@ public class StockManagementRestController {
     public ResponseEntity<Paginated<StockManagementDTO>> getProductsForStockManagement(
             @Parameter(description = "Product name or productCode filter") @RequestParam(required = false) String nameOrCode,
             @Parameter(description = "Category ID filter") @RequestParam(required = false) Long categoryId,
-            @Parameter(description = "Low stock filter") @RequestParam(required = false) Boolean lowStock,
+            @Parameter(description = "Stock status filter") @RequestParam(required = false) String status,
             @Parameter(description = "Minimum stock filter") @RequestParam(required = false) Integer minStock,
             @Parameter(description = "Maximum stock filter") @RequestParam(required = false) Integer maxStock,
             @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
@@ -72,7 +72,7 @@ public class StockManagementRestController {
         ProductFilters filters = ProductFilters.builder()
                 .nameOrCode(nameOrCode)
                 .categoryId(categoryId)
-                .lowStock(lowStock)
+                .status(status)
                 .minStock(minStock)
                 .maxStock(maxStock)
                 .isActive(true) // Only show active products for stock management

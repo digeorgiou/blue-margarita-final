@@ -32,7 +32,7 @@ export interface StockManagementDTO {
     status: StockStatus; // NORMAL, LOW, NEGATIVE, NO_ALERT
 }
 
-export type StockStatus = 'NORMAL' | 'LOW' | 'NEGATIVE' | 'NO_ALERT';
+export type StockStatus = 'NORMAL' | 'LOW' | 'NEGATIVE';
 
 export type StockUpdateType = 'ADD' | 'REMOVE' | 'SET';
 
@@ -55,7 +55,7 @@ export interface StockAlertDTO {
     productName: string;
     currentStock: number;
     lowStockThreshold: number;
-    stockStatus: string; // LOW, NEGATIVE, NORMAL, NO_TRACKING
+    stockStatus: string; // LOW, NEGATIVE, NORMAL
 }
 
 export interface StockManagementFilters {

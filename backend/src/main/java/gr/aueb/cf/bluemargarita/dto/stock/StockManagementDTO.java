@@ -1,11 +1,8 @@
 package gr.aueb.cf.bluemargarita.dto.stock;
+import gr.aueb.cf.bluemargarita.core.enums.StockStatus;
 
 import java.math.BigDecimal;
 
-/**
- * Lightweight DTO for stock management operations
- * Contains only essential information needed for stock updates
- */
 public record StockManagementDTO(
         Long productId,
         String productName,
@@ -18,16 +15,5 @@ public record StockManagementDTO(
         BigDecimal unitSellingPrice,
         BigDecimal totalStockValue,
 
-        String status           // NORMAL, LOW, NEGATIVE, NO_ALERT
-) {
-
-    /**
-     * Stock status enumeration for easy filtering and display
-     */
-    public enum StockStatus {
-        NORMAL,     // Stock > lowStockAlert
-        LOW,        // Stock <= lowStockAlert but > 0
-        NEGATIVE,   // Stock < 0
-        NO_ALERT    // lowStockAlert not set
-    }
-}
+        StockStatus status
+) {}

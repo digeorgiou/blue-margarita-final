@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Package, Filter, RefreshCw } from 'lucide-react';
+import { Search, Package, Filter } from 'lucide-react';
 import { Button, LoadingSpinner } from '../';
 import CustomTextInput from '../inputs/CustomTextInput.tsx';
 import CustomSelect from '../inputs/CustomSelect.tsx';
@@ -30,7 +30,6 @@ interface StockManagementFilterPanelProps {
 
     // Actions
     onClearFilters: () => void;
-    onRefresh: () => void;
     onUpdateStock: (product: StockManagementDTO, newStock: number) => Promise<void>;
     updatingStock: boolean;
     onUpdateStockLimit: (product: StockManagementDTO, newStock: number) => Promise<void>;
@@ -52,7 +51,6 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
                                                                                    searchResults,
                                                                                    loading,
                                                                                    onClearFilters,
-                                                                                   onRefresh,
                                                                                    onUpdateStock,
                                                                                    updatingStock,
                                                                                    onUpdateStockLimit,
@@ -73,8 +71,7 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
         { value: '', label: 'Όλες οι Καταστάσεις' },
         { value: 'NORMAL', label: 'Κανονικό Απόθεμα' },
         { value: 'LOW', label: 'Χαμηλό Απόθεμα' },
-        { value: 'NEGATIVE', label: 'Αρνητικό Απόθεμα' },
-        { value: 'NO_ALERT', label: 'Χωρίς Ειδοποίηση' }
+        { value: 'NEGATIVE', label: 'Αρνητικό Απόθεμα' }
     ];
 
     // Get stock status color
@@ -113,7 +110,7 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
                 </div>
 
                 {/* Row 2: Status and Stock Range - 3 columns on desktop, stack on mobile */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <CustomSelect
                         label="Κατάσταση Αποθέματος"
                         value={selectedStatus || ''}
@@ -140,27 +137,15 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
                         placeholder="1000"
                         min="0"
                     />
-                </div>
 
-                {/* Row 3: Actions and Selection - flexible layout */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-end">
                         <Button
                             onClick={onClearFilters}
                             variant="pink"
-                            className="flex items-center"
+                            className="w-full h-13"
                         >
-                            <Filter className="w-4 h-4 mr-2" />
+                            <Filter className="w-5 h-5 mr-2" />
                             Καθαρισμός Φίλτρων
-                        </Button>
-                        <Button
-                            onClick={onRefresh}
-                            variant="secondary"
-                            disabled={loading}
-                            className="flex items-center"
-                        >
-                            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                            Ανανέωση
                         </Button>
                     </div>
                 </div>
@@ -183,7 +168,7 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
                         </div>
 
                         {/* Products Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {searchResults.map((product) => (
                                 <StockProductCard
                                     key={product.productId}

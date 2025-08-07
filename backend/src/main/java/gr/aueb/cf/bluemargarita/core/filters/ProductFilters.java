@@ -1,5 +1,6 @@
 package gr.aueb.cf.bluemargarita.core.filters;
 
+import gr.aueb.cf.bluemargarita.dto.stock.StockManagementDTO;
 import lombok.*;
 import org.springframework.lang.Nullable;
 
@@ -51,4 +52,7 @@ public class ProductFilters extends GenericFilters {
 
     @Nullable
     private Boolean lowStock; // Products below lowStockAlert threshold
+
+    @Nullable
+    private String status;
 }

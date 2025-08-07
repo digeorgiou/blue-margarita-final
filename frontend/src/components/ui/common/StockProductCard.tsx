@@ -1,5 +1,5 @@
 import {useState} from "react";
-import { CheckSquare, Square } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 interface StockProductCardProps {
     product: StockManagementDTO;
@@ -96,7 +96,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                     <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-700">Τρέχον Απόθεμα:</span>
                         {editingStock ? (
-                            <div className="flex items-center space-x-2">
+                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
                                 <input
                                     type="number"
                                     value={newStockValue}
@@ -107,26 +107,28 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                                     autoFocus
                                     disabled={updating}
                                 />
-                                <button
-                                    onClick={handleStockUpdate}
-                                    disabled={updating || newStockValue === product.currentStock.toString()}
-                                    className="p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded transition-colors disabled:opacity-50"
-                                    title="Αποθήκευση (Enter)"
-                                >
-                                    {updating ? (
-                                        <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                                    ) : (
-                                        <CheckSquare className="w-4 h-4" />
-                                    )}
-                                </button>
-                                <button
-                                    onClick={handleCancelEdit}
-                                    disabled={updating}
-                                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
-                                    title="Ακύρωση (Escape)"
-                                >
-                                    <Square className="w-4 h-4" />
-                                </button>
+                                <div className="flex space-x-2 sm:space-x-1 w-full sm:w-auto">
+                                    <button
+                                        onClick={handleStockUpdate}
+                                        disabled={updating || newStockValue === product.currentStock.toString()}
+                                        className="p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded transition-colors disabled:opacity-50"
+                                        title="Αποθήκευση (Enter)"
+                                    >
+                                        {updating ? (
+                                            <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            <Check className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        disabled={updating}
+                                        className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                                        title="Ακύρωση (Escape)"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <button
@@ -150,7 +152,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-600">Όριο Ειδοποίησης:</span>
                             {editingStockLimit ? (
-                                <div className="flex items-center space-x-2">
+                                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
                                     <input
                                         type="number"
                                         value={newLimitValue}
@@ -161,26 +163,28 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                                         autoFocus
                                         disabled={updatingLimit}
                                     />
-                                    <button
-                                        onClick={handleStockLimitUpdate}
-                                        disabled={updatingLimit || newLimitValue === product.lowStockAlert.toString()}
-                                        className="p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded transition-colors disabled:opacity-50"
-                                        title="Αποθήκευση (Enter)"
-                                    >
-                                        {updatingLimit ? (
-                                            <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                                        ) : (
-                                            <CheckSquare className="w-4 h-4" />
-                                        )}
-                                    </button>
-                                    <button
-                                        onClick={handleCancelLimitEdit}
-                                        disabled={updatingLimit}
-                                        className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
-                                        title="Ακύρωση (Escape)"
-                                    >
-                                        <Square className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex space-x-2 sm:space-x-1 w-full sm:w-auto">
+                                        <button
+                                            onClick={handleStockLimitUpdate}
+                                            disabled={updatingLimit || newLimitValue === product.lowStockAlert.toString()}
+                                            className="p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded transition-colors disabled:opacity-50"
+                                            title="Αποθήκευση (Enter)"
+                                        >
+                                            {updatingLimit ? (
+                                                <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                                <Check className="w-4 h-4" />
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={handleCancelLimitEdit}
+                                            disabled={updatingLimit}
+                                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                                            title="Ακύρωση (Escape)"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <button

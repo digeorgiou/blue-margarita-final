@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.mapper;
 
 import gr.aueb.cf.bluemargarita.core.enums.Role;
+import gr.aueb.cf.bluemargarita.core.enums.StockStatus;
 import gr.aueb.cf.bluemargarita.core.enums.TaskStatus;
 import gr.aueb.cf.bluemargarita.dto.category.*;
 import gr.aueb.cf.bluemargarita.dto.customer.*;
@@ -603,7 +604,7 @@ public class Mapper {
         BigDecimal unitPrice = product.getFinalSellingPriceRetail();
         BigDecimal totalValue = BigDecimal.ZERO;
 
-        if (product.getStock() != null && unitPrice != null) {
+        if (product.getStock() != null && product.getStock() > 0 && unitPrice != null) {
             totalValue = unitPrice.multiply(BigDecimal.valueOf(product.getStock()));
         }
 
@@ -632,13 +633,11 @@ public class Mapper {
         );
     }
 
-    private String calculateStockStatus(Product product) {
-        if (product.getStock() == null) return "NO_TRACKING";
-        if (product.getStock() < 0) return "NEGATIVE";
-        if (product.getLowStockAlert() != null && product.getStock() <= product.getLowStockAlert()) return "LOW";
-        return "NORMAL";
+    private StockStatus calculateStockStatus(Product product) {
+        if (product.getStock() < 0) return StockStatus.NEGATIVE;
+        if (product.getStock() <= product.getLowStockAlert()) return StockStatus.LOW;
+        return StockStatus.NORMAL;
     }
-
 
     // Supplier
 
