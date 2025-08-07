@@ -33,7 +33,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
 
     const handleStockLimitUpdate = async () => {
         const newLimit = Number(newLimitValue);
-        if (newLimit >= 0 && newLimit === product.lowStockAlert) {
+        if (newLimit >= 0 && newLimit !== product.lowStockAlert) {
             await onUpdateStockLimit(product, newLimit);
         }
         setEditingStockLimit(false);
