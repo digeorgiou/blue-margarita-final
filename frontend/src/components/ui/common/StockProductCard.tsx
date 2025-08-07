@@ -3,23 +3,25 @@ import { CheckSquare, Square } from 'lucide-react';
 
 interface StockProductCardProps {
     product: StockManagementDTO;
-    isSelected: boolean;
-    onToggleSelect: () => void;
     onUpdateStock: (product: StockManagementDTO, newStock: number) => Promise<void>;
     updating: boolean;
+    onUpdateStockLimit: (product: StockManagementDTO, newStock: number) => Promise<void>;
+    updatingLimit: boolean;
     getStatusColor: (status: StockStatus) => string;
 }
 
 const StockProductCard: React.FC<StockProductCardProps> = ({
                                                                product,
-                                                               isSelected,
-                                                               onToggleSelect,
                                                                onUpdateStock,
                                                                updating,
-                                                               getStatusColor
+                                                               getStatusColor,
+                                                               onUpdateStockLimit,
+                                                               updatingLimit,
                                                            }) => {
     const [editingStock, setEditingStock] = useState(false);
+    const [editingStockLimit, setEditingStockLimit] = useState(false);
     const [newStockValue, setNewStockValue] = useState(product.currentStock.toString());
+    const [newLimitValue, setNewLimitValue] = useState(product.lowStockAlert);
 
     const handleStockUpdate = async () => {
         const newStock = Number(newStockValue);
@@ -29,10 +31,23 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
         setEditingStock(false);
     };
 
+    const handleStockLimitUpdate = async () => {
+        const newLimit = Number(newLimitValue);
+        if (newLimit >= 0 && newLimit === product.lowStockAlert) {
+            await onUpdateStockLimit(product, newLimit);
+        }
+        setEditingStockLimit(false);
+    }
+
     const handleCancelEdit = () => {
         setNewStockValue(product.currentStock.toString());
         setEditingStock(false);
     };
+
+    const handleCancelLimitEdit = () => {
+        setNewLimitValue(product.lowStockAlert.toString());
+        setEditingStockLimit(false);
+    }
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
@@ -43,9 +58,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
     };
 
     return (
-        <div className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-2 ${
-            isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'
-        }`}>
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-2" >
             {/* Card Header */}
             <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3">
                 <div className="flex items-start justify-between">
@@ -57,20 +70,6 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                             {product.productCode}
                         </p>
                     </div>
-                    <button
-                        onClick={onToggleSelect}
-                        className={`p-2 rounded-lg transition-colors ${
-                            isSelected
-                                ? 'bg-white/20 text-white'
-                                : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                        }`}
-                    >
-                        {isSelected ? (
-                            <CheckSquare className="w-5 h-5" />
-                        ) : (
-                            <Square className="w-5 h-5" />
-                        )}
-                    </button>
                 </div>
             </div>
 
@@ -150,7 +149,54 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                     {product.lowStockAlert && (
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-600">Όριο Ειδοποίησης:</span>
-                            <span className="text-gray-800 font-medium">{product.lowStockAlert}</span>
+                            {editingStockLimit ? (
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="number"
+                                        value={newLimitValue}
+                                        onChange={(e) => setNewLimitValue(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        className="w-16 px-2 py-1 border border-blue-300 rounded text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        min="0"
+                                        autoFocus
+                                        disabled={updatingLimit}
+                                    />
+                                    <button
+                                        onClick={handleStockLimitUpdate}
+                                        disabled={updatingLimit || newLimitValue === product.lowStockAlert.toString()}
+                                        className="p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded transition-colors disabled:opacity-50"
+                                        title="Αποθήκευση (Enter)"
+                                    >
+                                        {updatingLimit ? (
+                                            <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            <CheckSquare className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={handleCancelLimitEdit}
+                                        disabled={updatingLimit}
+                                        className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                                        title="Ακύρωση (Escape)"
+                                    >
+                                        <Square className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setEditingStockLimit(true)}
+                                    className="group flex items-center space-x-1 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                                    disabled={updatingLimit}
+                                    title="Κλικ για επεξεργασία"
+                                >
+                                <span className="text-lg font-bold text-blue-600 group-hover:text-blue-800">
+                                    {product.lowStockAlert}
+                                </span>
+                                    <svg className="w-3 h-3 text-gray-400 group-hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>

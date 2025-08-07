@@ -33,6 +33,8 @@ interface StockManagementFilterPanelProps {
     onRefresh: () => void;
     onUpdateStock: (product: StockManagementDTO, newStock: number) => Promise<void>;
     updatingStock: boolean;
+    onUpdateStockLimit: (product: StockManagementDTO, newStock: number) => Promise<void>;
+    updatingStockLimit: boolean;
 }
 
 const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
@@ -52,7 +54,9 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
                                                                                    onClearFilters,
                                                                                    onRefresh,
                                                                                    onUpdateStock,
-                                                                                   updatingStock
+                                                                                   updatingStock,
+                                                                                   onUpdateStockLimit,
+                                                                                   updatingStockLimit
                                                                                }) => {
 
     // Category options
@@ -184,10 +188,10 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
                                 <StockProductCard
                                     key={product.productId}
                                     product={product}
-                                    isSelected={selectedProducts.has(product.productId)}
-                                    onToggleSelect={() => onToggleProductSelection(product.productId)}
                                     onUpdateStock={onUpdateStock}
                                     updating={updatingStock}
+                                    onUpdateStockLimit={onUpdateStockLimit}
+                                    updatingLimit={updatingStockLimit}
                                     getStatusColor={getStockStatusColor}
                                 />
                             ))}

@@ -11,6 +11,7 @@ import type {
     StockManagementDTO,
     StockManagementFilters,
     StockUpdateDTO,
+    StockLimitUpdateDTO,
     StockStatus
 } from '../types/api/stockManagementInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
@@ -38,6 +39,7 @@ const StockManagementPage: React.FC<StockManagementPageProps> = () => {
     const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
 
     const [updatingStock, setUpdatingStock] = useState(false);
+    const [updatingStockLimit, setUpdatingStockLimit] = useState(false);
 
     // Error handling
     const { generalError, clearErrors, handleApiError } = useFormErrorHandler();
@@ -134,6 +136,26 @@ const StockManagementPage: React.FC<StockManagementPageProps> = () => {
         }
     };
 
+    const handleStockLimitUpdate = async (product: StockManagementDTO, newStockLimit: number) => {
+        try {
+            setUpdatingStockLimit(true);
+            clearErrors();
+
+            const updateData: StockLimitUpdateDTO = {
+                productId: product.productId,
+                quantity: newStockLimit,
+                updaterUserId: 1
+            };
+
+            await stockManagementService.updateProductStockLimit(updateData);
+            await searchProducts();
+        } catch (error) {
+            await handleApiError(error);
+        } finally {
+            setUpdatingStockLimit(false);
+        }
+    };
+
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-8">
@@ -178,6 +200,8 @@ const StockManagementPage: React.FC<StockManagementPageProps> = () => {
                             onRefresh={searchProducts}
                             onUpdateStock={handleSingleStockUpdate}
                             updatingStock={updatingStock}
+                            onUpdateStockLimit={handleStockLimitUpdate}
+                            updatingStockLimit={updatingStockLimit}
                         />
 
                         {/* Pagination */}
