@@ -30,11 +30,13 @@ public interface IStockManagementService {
     StockUpdateResultDTO updateProductStock(StockUpdateDTO updateDTO)
             throws EntityNotFoundException;
 
+
     /**
-     * Updates stock for multiple products in bulk
-     * Used for bulk stock operations
+     * Updates stock limit alert for a single product manually
+     * used in stock management interface
      */
-    List<StockUpdateResultDTO> updateMultipleProductsStock(BulkStockUpdateDTO bulkUpdate);
+    StockLimitUpdateResultDTO updateProductStockLimit(StockLimitUpdateDTO updateDTO) throws EntityNotFoundException;
+
 
     /**
      * Gets products formatted for stock management operations
@@ -73,12 +75,6 @@ public interface IStockManagementService {
      * Used when user clicks "View All" from dashboard low stock widget
      */
     Paginated<StockAlertDTO> getAllLowStockProductsPaginated(ProductFilters filters);
-
-    /**
-     * Gets products with negative stock (emergency alerts)
-     * Called by dashboard to show urgent stock issues
-     */
-    List<StockAlertDTO> getNegativeStockProducts(int limit);
 
 
 }

@@ -127,71 +127,6 @@ public class StockManagementRestController {
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
-    @Operation(
-            summary = "Get negative stock products",
-            description = "Retrieves products with negative stock levels. These are critical inventory issues requiring immediate attention.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Paginated list of negative stock products",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = Paginated.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/negative-stock")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Paginated<StockManagementDTO>> getNegativeStockProducts(
-            @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
-            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "stock") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "ASC") String sortDirection) {
-
-        ProductFilters filters = ProductFilters.builder()
-                .maxStock(-1) // Negative stock only
-                .isActive(true)
-                .build();
-
-        // Set pagination properties
-        filters.setPage(page);
-        filters.setPageSize(pageSize);
-        filters.setSortBy(sortBy);
-        filters.setSortDirection(Sort.Direction.valueOf(sortDirection.toUpperCase()));
-
-        Paginated<StockManagementDTO> products = stockManagementService.getProductsForStockManagement(filters);
-        return new ResponseEntity<>(products, HttpStatus.OK);
-    }
-
-    // =============================================================================
-    // PRODUCT SEARCH FOR STOCK UPDATES
-    // =============================================================================
-
-    @Operation(
-            summary = "Search products for stock updates",
-            description = "Searches products for autocomplete functionality when selecting products for stock updates. Returns products matching name or productCode.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of products matching search term",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ProductSearchResultDTO.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("/products/search")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<ProductSearchResultDTO>> searchProducts(
-            @Parameter(description = "Search term (product name or productCode)", required = true)
-            @RequestParam String searchTerm) {
-
-        List<ProductSearchResultDTO> products = productService.searchProductsForAutocomplete(searchTerm);
-        return new ResponseEntity<>(products, HttpStatus.OK);
-    }
-
     // =============================================================================
     // STOCK UPDATE OPERATIONS
     // =============================================================================
@@ -234,13 +169,14 @@ public class StockManagementRestController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+
     @Operation(
-            summary = "Update stock for multiple products in bulk",
-            description = "Updates stock for multiple products in a single operation. Processes all updates and returns individual results for each product. Used for bulk stock operations like physical inventory counts.",
+            summary = "Update stock limit for a single product",
+            description = "Updates stock for a single product. Supports ADD (increase), REMOVE (decrease), and SET (absolute value) operations. Used for individual stock adjustments.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Bulk stock update completed",
+                            description = "Stock limit updated successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = StockUpdateResultDTO.class)
@@ -248,24 +184,30 @@ public class StockManagementRestController {
                     ),
                     @ApiResponse(
                             responseCode = "400",
-                            description = "Invalid bulk update data",
+                            description = "Invalid stock update data",
+                            content = @Content(mediaType = "application/json")
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Product not found",
                             content = @Content(mediaType = "application/json")
                     )
             }
     )
-    @PatchMapping("/bulk-update-stock")
+    @PatchMapping("/update-stock-limit")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<StockUpdateResultDTO>> updateMultipleProductsStock(
-            @Valid @RequestBody BulkStockUpdateDTO bulkUpdate,
-            BindingResult bindingResult) throws ValidationException {
+    public ResponseEntity<StockLimitUpdateResultDTO> updateProductStockLimit(
+            @Valid @RequestBody StockLimitUpdateDTO updateDTO,
+            BindingResult bindingResult) throws ValidationException, EntityNotFoundException {
 
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
         }
 
-        List<StockUpdateResultDTO> results = stockManagementService.updateMultipleProductsStock(bulkUpdate);
-        return new ResponseEntity<>(results, HttpStatus.OK);
+        StockLimitUpdateResultDTO result = stockManagementService.updateProductStockLimit(updateDTO);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
+
 
     // =============================================================================
     // STOCK UPDATE TYPES HELPER

@@ -22,6 +22,8 @@ import CreateProductPage from "./pages/CreateProductPage";
 import ProductUpdatePage from "./pages/ProductUpdatePage.tsx";
 import SaleManagementPage from "./pages/SaleManagementPage.tsx";
 import ProductSalesAnalyticsPage from "./pages/ProductSalesAnalyticsPage.tsx";
+import StockManagementPage from "./pages/StockManagementPage.tsx";
+
 
 import './styles/global-logo-background.css';
 
@@ -85,7 +87,7 @@ const App: React.FC = () => {
             case 'record-purchase':
                 return <RecordPurchasePage onNavigate={handleNavigation} />;
             case 'stock-management':
-                return <div className="p-4"><h1 className="text-2xl text-white">Stock Management - Coming Soon</h1></div>;
+                return <StockManagementPage/>;
             case 'expenses' :
                 return <ExpenseManagementPage/>;
             case 'create-product' :

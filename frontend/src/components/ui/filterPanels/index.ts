@@ -5,3 +5,5 @@ export { default as ProcedureFilterPanel } from './ProcedureFilterPanel';
 export { default as ProductFilterPanel } from './ProductFilterPanel';
 export { default as SaleFilterPanel } from './SaleFilterPanel';
 export { default as SupplierFilterPanel } from './SupplierFilterPanel';
+export { default as StockManagementFilterPanel } from './StockManagementFilterPanel';
+export { default as StockProductCard } from '../common/StockProductCard'

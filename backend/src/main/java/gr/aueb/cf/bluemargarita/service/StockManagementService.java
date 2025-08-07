@@ -90,37 +90,44 @@ public class StockManagementService implements IStockManagementService{
         }
     }
 
-
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public List<StockUpdateResultDTO> updateMultipleProductsStock(BulkStockUpdateDTO bulkUpdate) {
+    public StockLimitUpdateResultDTO updateProductStockLimit(StockLimitUpdateDTO updateDTO)
+            throws EntityNotFoundException {
 
-        List<StockUpdateResultDTO> results = new ArrayList<>();
+        Product product = getProductEntityById(updateDTO.productId());
+        User updater = getUserEntityById(updateDTO.updaterUserId());
 
-        for (StockUpdateDTO update : bulkUpdate.updates()) {
-            try {
-                StockUpdateResultDTO result = updateProductStock(update);
-                results.add(result);
-            } catch (Exception e) {
-                results.add(new StockUpdateResultDTO(
-                        update.productId(),
-                        "Unknown",
-                        0,
-                        0,
-                        0,
-                        false,
-                        update.updateType().toString(),
-                        LocalDateTime.now()
-                ));
-            }
+        //Calculate stock changes
+        StockCalculationResult result = calculateStockChange(product, updateDTO);
+
+        try {
+            //Apply changes
+            updateProductStockLimitValue(product, result.newStock(), updater);
+
+            return new StockLimitUpdateResultDTO(
+                    product.getId(),
+                    product.getCode(),
+                    result.previousStock(),
+                    result.newStock(),
+                    result.changeAmount(),
+                    true,
+                    LocalDateTime.now()
+            );
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to update stock limit for product {}: {}", product.getCode(), e.getMessage());
+            return new StockLimitUpdateResultDTO(
+                    product.getId(),
+                    product.getCode(),
+                    result.previousStock(),
+                    result.previousStock(),
+                    0,
+                    false,
+                    LocalDateTime.now()
+            );
         }
-
-        int successCount = results.stream().mapToInt(r -> r.success() ? 1 : 0).sum();
-        LOGGER.info("Bulk stock update completed: {} updates, {} successful", results.size(), successCount);
-
-        return results;
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -243,22 +250,6 @@ public class StockManagementService implements IStockManagementService{
         return new Paginated<>(stockAlerts);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<StockAlertDTO> getNegativeStockProducts(int limit) {
-
-        ProductFilters filters = ProductFilters.builder()
-                .isActive(true)
-                .build();
-
-        Specification<Product> spec = getSpecsFromFilters(filters);
-
-        return productRepository.findAll(spec)
-                .stream()
-                .map(mapper::mapToStockAlertDto)
-                .collect(Collectors.toList());
-    }
-
     // =============================================================================
     // PRIVATE HELPER METHODS - Entity Validation and Retrieval
     // =============================================================================
@@ -301,8 +292,24 @@ public class StockManagementService implements IStockManagementService{
         return new StockCalculationResult(previousStock, newStock, changeAmount);
     }
 
+    private StockCalculationResult calculateStockChange(Product product, StockLimitUpdateDTO updateDTO) {
+        Integer previousStock = product.getStock() != null ? product.getStock() : 0;
+        Integer newStock = updateDTO.quantity();
+        Integer changeAmount = newStock - previousStock;
+
+        return new StockCalculationResult(previousStock, newStock, changeAmount);
+    }
+
     private void updateProductStockValue(Product product, Integer newStock, User updater) {
         product.setStock(newStock);
+        if (updater != null) {
+            product.setLastUpdatedBy(updater);
+        }
+        productRepository.save(product);
+    }
+
+    private void updateProductStockLimitValue(Product product, Integer newStock, User updater) {
+        product.setLowStockAlert(newStock);
         if (updater != null) {
             product.setLastUpdatedBy(updater);
         }
