@@ -5,7 +5,8 @@ import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import { profitLossService, ProfitLossReportDTO, ProfitLossPageInitData } from '../services/profitLossService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Calendar, TrendingUp, TrendingDown, DollarSign, BarChart3, Search } from 'lucide-react';
+import { Calendar, TrendingUp, TrendingDown, DollarSign, BarChart3, Search, ChevronDown, ChevronUp  } from 'lucide-react';
+import { getExpenseTypeDisplayName } from "../utils/EnumUtils.ts";
 
 const ProfitLossPage = () => {
     // State management
@@ -112,6 +113,14 @@ const ProfitLossPage = () => {
     const [yearCardView, setYearCardView] = useState<'current' | 'last'>('current');
 
     // =============================================================================
+    // EXPENSE DISTRIBUTION TOGGLE STATES
+    // =============================================================================
+
+    const [showMonthExpenseDistribution, setShowMonthExpenseDistribution] = useState(false);
+    const [showYearExpenseDistribution, setShowYearExpenseDistribution] = useState(false);
+    const [showCustomExpenseDistribution, setShowCustomExpenseDistribution] = useState(false);
+
+    // =============================================================================
     // TOGGLE COMPONENTS
     // =============================================================================
 
@@ -172,6 +181,62 @@ const ProfitLossPage = () => {
     );
 
     // =============================================================================
+    // EXPENSE BREAKDOWN COMPONENT
+    // =============================================================================
+
+    const ExpenseBreakdown: React.FC<{
+        expensesByType: Array<{ expenseType: string; totalAmount: number; percentage: number }>;
+        isExpanded: boolean;
+        onToggle: () => void;
+    }> = ({ expensesByType, isExpanded, onToggle }) => {
+        if (expensesByType.length === 0) {
+            return (
+                <div className="pt-4 border-t">
+                    <p className="text-sm text-gray-500">Δεν υπάρχουν έξοδα για αυτή την περίοδο</p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="pt-4 border-t">
+                <button
+                    onClick={onToggle}
+                    className="flex items-center justify-between w-full text-left hover:bg-gray-50 p-2 rounded-md transition-colors"
+                >
+                    <h4 className="text-sm font-semibold text-gray-700">Προβολή Κατανομής Εξόδων</h4>
+                    <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-500">
+                            {expensesByType.length} κατηγορί{expensesByType.length === 1 ? 'α' : 'ες'}
+                        </span>
+                        {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-gray-500" />
+                        ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-500" />
+                        )}
+                    </div>
+                </button>
+
+                {isExpanded && (
+                    <div className="mt-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                        {expensesByType.map((expense, index) => (
+                            <div key={index} className="flex items-center justify-between text-sm py-2 px-3 bg-gray-50 rounded-md">
+                                <span className="text-gray-700 font-medium">{getExpenseTypeDisplayName(expense.expenseType)}</span>
+                                <div className="text-right">
+                                    <div className="font-semibold text-gray-900">{formatCurrency(expense.totalAmount)}</div>
+                                    <div className="text-xs text-gray-500">
+                                        {formatPercentage(expense.percentage)}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+
+    // =============================================================================
     // REPORT CARD COMPONENT
     // =============================================================================
 
@@ -183,7 +248,10 @@ const ProfitLossPage = () => {
         duration?: string;
         toggleView?: 'current' | 'last';
         onToggle?: (view: 'current' | 'last') => void;
-    }> = ({ title, report, showExpenseBreakdown = false, hasToggle = false, duration, toggleView, onToggle }) => (
+        expenseToggleState?: boolean;
+        onExpenseToggle?: () => void;
+    }> = ({ title, report, showExpenseBreakdown = false, hasToggle = false, duration, toggleView, onToggle, expenseToggleState = false,
+                                    onExpenseToggle }) => (
         <CustomCard className="h-full">
             <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -251,37 +319,21 @@ const ProfitLossPage = () => {
                     <div className="grid grid-cols-2 gap-4 pt-3 border-t">
                         <div className="text-center">
                             <div className="font-semibold text-blue-600">{report.totalSales}</div>
-                            <div className="text-xs text-gray-600">Sales</div>
+                            <div className="text-xs text-gray-600">Πωλήσεις</div>
                         </div>
                         <div className="text-center">
                             <div className="font-semibold text-orange-600">{report.totalExpenseEntries}</div>
-                            <div className="text-xs text-gray-600">Expenses</div>
+                            <div className="text-xs text-gray-600">Έξοδα</div>
                         </div>
                     </div>
 
                     {/* Expense Breakdown */}
-                    {showExpenseBreakdown && report.expensesByType.length > 0 && (
-                        <div className="pt-4 border-t">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Expense Breakdown</h4>
-                            <div className="space-y-2">
-                                {report.expensesByType.slice(0, 5).map((expense, index) => (
-                                    <div key={index} className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">{expense.expenseType}</span>
-                                        <div className="text-right">
-                                            <div className="font-medium">{formatCurrency(expense.totalAmount)}</div>
-                                            <div className="text-xs text-gray-500">
-                                                {formatPercentage(expense.percentage)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {report.expensesByType.length > 5 && (
-                                    <div className="text-xs text-gray-500 text-center pt-2">
-                                        +{report.expensesByType.length - 5} more types
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                    {showExpenseBreakdown && onExpenseToggle && (
+                        <ExpenseBreakdown
+                            expensesByType={report.expensesByType}
+                            isExpanded={expenseToggleState}
+                            onToggle={onExpenseToggle}
+                        />
                     )}
                 </div>
             </div>
@@ -333,6 +385,8 @@ const ProfitLossPage = () => {
                                 toggleView={monthCardView}
                                 onToggle={setMonthCardView}
                                 showExpenseBreakdown={true}
+                                expenseToggleState={showMonthExpenseDistribution}
+                                onExpenseToggle={() => setShowMonthExpenseDistribution(!showMonthExpenseDistribution)}
                             />
 
                             {/* Year to Date Card (no toggle) */}
@@ -344,6 +398,8 @@ const ProfitLossPage = () => {
                                 toggleView={yearCardView}
                                 onToggle={setYearCardView}
                                 showExpenseBreakdown={true}
+                                expenseToggleState={showYearExpenseDistribution}
+                                onExpenseToggle={() => setShowYearExpenseDistribution(!showYearExpenseDistribution)}
                             />
                         </div>
                     </div>
@@ -408,6 +464,8 @@ const ProfitLossPage = () => {
                             title="Custom Period Report"
                             report={customReport}
                             showExpenseBreakdown={true}
+                            expenseToggleState={showCustomExpenseDistribution}
+                            onExpenseToggle={() => setShowCustomExpenseDistribution(!showCustomExpenseDistribution)}
                         />
 
                         {/* Additional Analysis Card */}

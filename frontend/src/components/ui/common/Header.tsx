@@ -14,7 +14,7 @@ import {
     ClipboardPenLine,
     Gem,
     Truck, Edit,
-    Settings
+    Settings, TrendingUp
 } from 'lucide-react';
 import { GiDiamondRing } from 'react-icons/gi';
 import { FaEuroSign } from "react-icons/fa6";
@@ -102,6 +102,10 @@ const Header: React.FC<HeaderProps> = ({
             'stock-management' : {
                 title: "Διαχείριση Αποθέματος Προϊόντων",
                 icon: <ClipboardPenLine className="w-9 h-9" />
+            },
+            'profit-losses' : {
+                title: "Προβολή Κερδών/Ζημιών",
+                icon: <TrendingUp className="w-9 h-9" />
             }
         };
         return pageInfo[currentPage || 'dashboard'] || {
