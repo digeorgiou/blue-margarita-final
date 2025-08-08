@@ -250,4 +250,29 @@ public class SupplierRestController {
         return new ResponseEntity<>(supplierDetails, HttpStatus.OK);
     }
 
+
+    @Operation(
+            summary = "Search suppliers for autocomplete",
+            description = "Searches suppliers for autocomplete functionality in Record Purchase page. Returns suppliers matching name, email, or phone. Alternative to dropdown selection.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of suppliers matching search term",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = SupplierSearchResultDTO.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<List<SupplierSearchResultDTO>> searchSuppliersForAutocomplete(
+            @Parameter(description = "Search term (name, email, or tin)", required = true)
+            @RequestParam String searchTerm) {
+
+        List<SupplierSearchResultDTO> suppliers = supplierService.searchSuppliersForAutocomplete(searchTerm);
+        return new ResponseEntity<>(suppliers, HttpStatus.OK);
+    }
+
 }

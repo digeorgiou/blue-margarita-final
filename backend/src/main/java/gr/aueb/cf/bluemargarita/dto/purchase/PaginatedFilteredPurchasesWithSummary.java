@@ -12,4 +12,12 @@ public class PaginatedFilteredPurchasesWithSummary extends Paginated<PurchaseRea
         super(page);
         this.summary = summary;
     }
+
+    public PurchaseSummaryDTO getSummary() {
+        return summary;
+    }
+
+    public void setSummary(PurchaseSummaryDTO summary){
+        this.summary = summary;
+    }
 }

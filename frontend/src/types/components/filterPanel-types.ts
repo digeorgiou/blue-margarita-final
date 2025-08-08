@@ -9,6 +9,8 @@ import type {LocationForDropdownDTO} from "../api/locationInterface.ts";
 import type {PaymentMethodDTO} from "../api/recordSaleInterface.ts";
 import type {SaleReadOnlyDTO} from "../api/saleInterface.ts";
 import type {SupplierReadOnlyDTO} from "../api/supplierInterface.ts";
+import { PurchaseReadOnlyDTO } from "../api/purchaseInterface";
+import { SupplierSearchResultDTO } from "../api/supplierInterface";
 
 export type CustomerFilterPanelProps = {
     searchTerm: string;
@@ -172,4 +174,36 @@ export type SupplierFilterPanelProps = {
     onViewDetails: (supplier: SupplierReadOnlyDTO) => void;
     onEdit: (supplier: SupplierReadOnlyDTO) => void;
     onDelete: (supplier: SupplierReadOnlyDTO) => void;
+}
+
+export type PurchaseFilterPanelProps = {
+    // Supplier filter
+    supplierSearchTerm: string;
+    onSupplierSearchTermChange: (value: string) => void;
+    supplierSearchResults: SupplierSearchResultDTO[];
+    selectedSupplier: SupplierSearchResultDTO | null;
+    onSupplierSelect: (supplier: SupplierSearchResultDTO | null) => void;
+    loadingSuppliers: boolean;
+
+    // Material filter
+    materialSearchTerm: string;
+    onMaterialSearchTermChange: (value: string) => void;
+    materialSearchResults: MaterialSearchResultDTO[];
+    selectedMaterial: MaterialSearchResultDTO | null;
+    onMaterialSelect: (material: MaterialSearchResultDTO | null) => void;
+    loadingMaterials: boolean;
+
+    // Date filters
+    dateFromFilter: string;
+    onDateFromFilterChange: (value: string) => void;
+    dateToFilter: string;
+    onDateToFilterChange: (value: string) => void;
+
+    // Results and actions
+    searchResults: PurchaseReadOnlyDTO[];
+    loading: boolean;
+    onViewDetails: (purchase: PurchaseReadOnlyDTO) => void;
+    onEdit: (purchase: PurchaseReadOnlyDTO) => void;
+    onDelete: (purchase: PurchaseReadOnlyDTO) => void;
+    children?: React.ReactNode;
 }

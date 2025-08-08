@@ -280,7 +280,7 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                 </div>
             )}
 
-            {/* RESULTS SECTION - Keep original clear layout, make mobile responsive */}
+            {/* RESULTS SECTION  */}
             <div className="bg-white rounded-lg border border-gray-200">
                 {loading ? (
                     <div className="flex items-center justify-center p-8">

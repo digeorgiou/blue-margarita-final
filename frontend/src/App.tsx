@@ -23,6 +23,7 @@ import ProductUpdatePage from "./pages/ProductUpdatePage.tsx";
 import SaleManagementPage from "./pages/SaleManagementPage.tsx";
 import ProductSalesAnalyticsPage from "./pages/ProductSalesAnalyticsPage.tsx";
 import StockManagementPage from "./pages/StockManagementPage.tsx";
+import PurchaseManagementPage from "./pages/PurchaseManagementPage.tsx";
 
 
 import './styles/global-logo-background.css';
@@ -73,7 +74,7 @@ const App: React.FC = () => {
             case 'materials':
                 return <MaterialManagementPage/>;
             case 'purchases':
-                return <div className="p-4"><h1 className="text-2xl text-white">Purchases - Coming Soon</h1></div>;
+                return <PurchaseManagementPage onNavigate={handleNavigation} />;
             case 'categories':
                 return <CategoryManagementPage/>;
             case 'locations':

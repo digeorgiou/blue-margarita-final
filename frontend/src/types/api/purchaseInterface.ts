@@ -1,4 +1,4 @@
-import {PaymentMethod, PurchaseMaterialDTO} from "./dashboardInterface.ts";
+import {PurchaseMaterialDTO} from "./dashboardInterface.ts";
 
 export interface PurchaseDetailedViewDTO {
     purchaseId: number;
@@ -11,6 +11,17 @@ export interface PurchaseDetailedViewDTO {
     createdAt: string;
     createdBy: string;
     notes?: string;
+}
+
+export interface PurchaseMaterialDetailDTO {
+    materialId: number;
+    materialName: string;
+    unitOfMeasure: string;
+    quantity: number;
+    priceAtTheTime: number;
+    currentUnitCost: number;
+    lineTotal: number;
+    costDifference: number; // priceAtTheTime - currentUnitCost
 }
 
 export interface PurchaseReadOnlyDTO {
@@ -44,7 +55,7 @@ export interface PaginatedFilteredPurchasesWithSummary{
 }
 
 export interface PurchaseSummaryDTO {
-    totalPurchaseCount: number;
+    totalPurchasesCount: number;
     totalAmountSpent: number;
 }
 
