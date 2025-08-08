@@ -1,6 +1,7 @@
 export interface SupplierSearchResultDTO {
     supplierId: number;
     supplierName: string;
+    supplierTin?: string;
     email?: string;
     phoneNumber?: string;
 }

@@ -70,7 +70,7 @@ const PurchaseManagementPage: React.FC<PurchaseManagementPageProps> = ({ onNavig
             }, 300);
             return () => clearTimeout(timeoutId);
         } else {
-            setSuplierSearchResults([]);
+            setSupplierSearchResults([]);
         }
     }, [supplierSearchTerm]);
 

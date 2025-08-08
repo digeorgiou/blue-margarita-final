@@ -38,7 +38,9 @@ export const colorClasses: Record<ColorVariant, ColorClasses> = {
         bg: 'bg-blue-50',
         highlight: 'bg-blue-50 border-blue-500',
         text: 'text-blue-700',
-        dot: 'bg-blue-500'
+        dot: 'bg-blue-500',
+        hover: 'hover:bg-blue-50 hover:border-blue-500',
+        active: 'bg-blue-50 border-blue-500'
     },
     purple: {
         border: 'border-purple-500',
@@ -46,7 +48,9 @@ export const colorClasses: Record<ColorVariant, ColorClasses> = {
         bg: 'bg-purple-50',
         highlight: 'bg-purple-50 border-purple-500',
         text: 'text-purple-700',
-        dot: 'bg-purple-500'
+        dot: 'bg-purple-500',
+        hover: 'hover:bg-purple-50 hover:border-purple-500',
+        active: 'bg-purple-50 border-purple-500'
     },
     green: {
         border: 'border-green-500',
@@ -54,7 +58,9 @@ export const colorClasses: Record<ColorVariant, ColorClasses> = {
         bg: 'bg-green-50',
         highlight: 'bg-green-50 border-green-500',
         text: 'text-green-700',
-        dot: 'bg-green-500'
+        dot: 'bg-green-500',
+        hover: 'hover:bg-green-50 hover:border-green-500',
+        active: 'bg-green-50 border-green-500'
     },
     indigo: {
         border: 'border-indigo-500',
@@ -62,14 +68,18 @@ export const colorClasses: Record<ColorVariant, ColorClasses> = {
         bg: 'bg-indigo-50',
         highlight: 'bg-indigo-50 border-indigo-500',
         text: 'text-indigo-700',
-        dot: 'bg-indigo-500'
+        dot: 'bg-indigo-500',
+        hover: 'hover:bg-indigo-50 hover:border-indigo-500',
+        active: 'bg-indigo-50 border-indigo-500'
     },
     orange: {
         border: 'border-orange-500',
         ring: 'ring-orange-100',
-        bg: 'bg-orange-50',
-        highlight: 'bg-orange-50 border-orange-500',
+        bg: 'bg-orange-100',
+        highlight: 'bg-orange-100 border-orange-500',
         text: 'text-orange-700',
-        dot: 'bg-orange-500'
+        dot: 'bg-orange-500',
+        hover: 'hover:bg-orange-50 hover:border-orange-500',
+        active: 'bg-orange-50 border-orange-500'
     }
 };

@@ -5,6 +5,7 @@ import { CustomSearchDropdown, CustomDateInput } from '../inputs';
 import type { PurchaseReadOnlyDTO } from '../../../types/api/purchaseInterface';
 import { FaEuroSign } from "react-icons/fa6";
 import { PurchaseFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
+import { transformSuppliersForDropdown, transformSelectedSupplierForDropdown, transformMaterialsForDropdown, transformSelectedMaterialForDropdown } from "../../../utils/searchDropdownTransformations.ts";
 
 const PurchaseFilterPanel: React.FC<PurchaseFilterPanelProps> = ({
                                                                      supplierSearchTerm,
@@ -56,35 +57,15 @@ const PurchaseFilterPanel: React.FC<PurchaseFilterPanelProps> = ({
     };
 
     // Transform customer data to match SearchResult interface
-    const transformedSupplierResults = supplierSearchResults.map(supplier => ({
-        id: supplier.id,
-        name: supplier.supplierName,
-        subtitle: supplier.email,
-        additionalInfo: supplier.phoneNumber
-    }));
+    const transformedSupplierResults = transformSuppliersForDropdown(supplierSearchResults);
 
     // Transform product data to match SearchResult interface
-    const transformedMaterialResults = materialSearchResults.map(material => ({
-        id: material.materialId,
-        name: material.materialName,
-        subtitle: `Μονάδα μέτρησης: ${material.unitOfMeasure}`,
-        additionalInfo: `Κόστος: ${material.currentUnitCost}`
-    }));
+    const transformedMaterialResults = transformMaterialsForDropdown(materialSearchResults);
 
     // Transform selected items for display
-    const selectedSupplierForDropdown = selectedSupplier ? {
-        id: selectedSupplier.id,
-        name: selectedSupplier.supplierName,
-        subtitle: selectedSupplier.email,
-        additionalInfo: selectedSupplier.phoneNumber
-    } : null;
+    const selectedSupplierForDropdown = transformSelectedSupplierForDropdown(selectedSupplier);
 
-    const selectedMaterialForDropdown = selectedMaterial ? {
-        id: selectedMaterial.materialId,
-        name: selectedMaterial.materialName,
-        subtitle: `Μονάδα μέτρησης: ${selectedMaterial.unitOfMeasure}`,
-        additionalInfo: `Κόστος: ${selectedMaterial.currentUnitCost}`
-    } : null;
+    const selectedMaterialForDropdown = transformSelectedMaterialForDropdown(selectedMaterial);
 
     const generatePurchaseTitle = (purchase: PurchaseReadOnlyDTO): string => {
         if(!purchase.materials || purchase.materials.length === 0) {

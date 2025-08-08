@@ -481,13 +481,14 @@ public class Mapper {
                 purchase.getId(),
                 purchase.getPurchaseDate(),
                 purchase.getSupplier().getName(),
-                purchase.getSupplier().getEmail() + " / " + purchase.getSupplier().getPhoneNumber(),
+                purchase.getSupplier().getTin(),
+                purchase.getSupplier().getPhoneNumber(),
+                purchase.getSupplier().getEmail(),
                 purchase.getTotalCost(),
                 totalItemCount.intValue(),
                 materials,
                 purchase.getCreatedAt(),
-                purchase.getCreatedBy().getUsername(),
-                "Purchase from " + purchase.getSupplier().getName()
+                purchase.getCreatedBy().getUsername()
         );
     }
 

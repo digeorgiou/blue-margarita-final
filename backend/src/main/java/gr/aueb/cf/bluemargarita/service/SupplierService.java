@@ -176,6 +176,7 @@ public class SupplierService implements ISupplierService {
                 .map(supplier -> new SupplierSearchResultDTO(
                         supplier.getId(),
                         supplier.getName(),
+                        supplier.getTin(),
                         supplier.getEmail(),
                         supplier.getPhoneNumber()
                 ))

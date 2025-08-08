@@ -205,9 +205,9 @@ const CustomSearchDropdown = <T extends SearchResult>  ({
                                     flex items-center justify-between
                                     border-b border-gray-100 last:border-b-0
                                     transition-all duration-200
-                                    hover:${colors.bg} hover:${colors.border}
+                                    ${colors.hover}
                                     group
-                                    ${index === highlightedIndex ? `${colors.bg} ${colors.border}` : ''}
+                                    ${index === highlightedIndex ? colors.active : ''}
                                 `}
                             >
                                 <div className="flex items-center space-x-3 flex-1">

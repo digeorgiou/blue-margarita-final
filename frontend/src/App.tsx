@@ -24,7 +24,7 @@ import SaleManagementPage from "./pages/SaleManagementPage.tsx";
 import ProductSalesAnalyticsPage from "./pages/ProductSalesAnalyticsPage.tsx";
 import StockManagementPage from "./pages/StockManagementPage.tsx";
 import PurchaseManagementPage from "./pages/PurchaseManagementPage.tsx";
-
+import ProfitLossPage from "./pages/ProfitLossPage.tsx";
 
 import './styles/global-logo-background.css';
 
@@ -97,6 +97,8 @@ const App: React.FC = () => {
                 return <ProductUpdatePage
                     productId={Number(navigationState.productId)}
                     onNavigate={handleNavigation} />;
+            case 'profit-losses':
+                return <ProfitLossPage />;
             default:
                 return <Dashboard onNavigate={handleNavigation} />;
         }

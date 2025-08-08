@@ -12,12 +12,13 @@ public record PurchaseDetailedViewDTO(
         Long purchaseId,
         LocalDate purchaseDate,
         String supplierName,
-        String supplierContact,
+        String supplierTin,
+        String supplierPhoneNumber,
+        String supplierEmail,
         BigDecimal totalCost,
         Integer totalItemCount,
         List<PurchaseMaterialDetailDTO> materials,
         LocalDateTime createdAt,
-        String createdBy,
-        String notes
+        String createdBy
 ) {
 }

@@ -82,8 +82,8 @@ const PurchaseDetailModal: React.FC<PurchaseDetailModalProps> = ({
                                         <div>
                                             <label className="text-sm font-medium text-gray-500">Προμηθευτής</label>
                                             <p className="text-lg font-semibold">{purchaseDetails.supplierName}</p>
-                                            {purchaseDetails.supplierContact && (
-                                                <p className="text-sm text-gray-600">{purchaseDetails.supplierContact}</p>
+                                            {purchaseDetails.supplierTin && (
+                                                <p className="text-sm text-gray-600">{purchaseDetails.supplierTin}</p>
                                             )}
                                         </div>
                                     </div>
@@ -187,12 +187,6 @@ const PurchaseDetailModal: React.FC<PurchaseDetailModalProps> = ({
                                         <span className="font-medium">Από:</span> {purchaseDetails.createdBy}
                                     </div>
                                 </div>
-                                {purchaseDetails.notes && (
-                                    <div className="mt-2">
-                                        <span className="font-medium text-gray-600">Σημειώσεις:</span>
-                                        <p className="text-gray-700 mt-1">{purchaseDetails.notes}</p>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     ) : (

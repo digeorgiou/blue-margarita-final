@@ -4,13 +4,14 @@ export interface PurchaseDetailedViewDTO {
     purchaseId: number;
     purchaseDate: string;
     supplierName: string;
-    supplierContact: string;
+    supplierTin?: string;
+    supplierPhoneNumber?: string;
+    supplierEmail?: string;
     totalCost: number;
     totalItemCount: number;
     materials: PurchaseMaterialDetailDTO[];
     createdAt: string;
     createdBy: string;
-    notes?: string;
 }
 
 export interface PurchaseMaterialDetailDTO {

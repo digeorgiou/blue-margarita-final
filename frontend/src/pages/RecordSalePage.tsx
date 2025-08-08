@@ -15,6 +15,7 @@ import CustomCard from '../components/ui/common/CustomCard.tsx';
 import CartSummary from '../components/ui/cart/CartSummary.tsx';
 import CartItem from '../components/ui/cart/CartItem.tsx';
 import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator, Mail, X, Calendar } from 'lucide-react';
+import {transformCustomersForDropdown, transformSelectedCustomerForDropdown, transformProductsForDropdown, transformSelectedProductForDropdown} from "../utils/searchDropdownTransformations.ts";
 
 import { CustomNumberInput, CustomDateInput, CustomRadioGroup, CustomSelect, CustomSearchDropdown } from "../components/ui/inputs";
 
@@ -62,19 +63,9 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
         return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
-    const transformedCustomerResults = customerSearchResults.map(customer => ({
-        id: customer.id,
-        name: customer.fullName,
-        subtitle: customer.email || 'No email',
-        additionalInfo: 'Customer'
-    }));
-
-    const transformedProductResults = productSearchResults.map(product => ({
-        id: product.id,
-        name: product.name,
-        subtitle: `Code: ${product.code}`,
-        additionalInfo: product.categoryName
-    }));
+    const transformedCustomerResults = transformCustomersForDropdown(customerSearchResults);
+    const transformedProductResults = transformProductsForDropdown(productSearchResults);
+    const selectedCustomerForDropdown = transformSelectedCustomerForDropdown(selectedCustomer);
 
     // Load page data on mount
     useEffect(() => {

@@ -81,6 +81,16 @@ public class ProfitLossRestController {
                 .build();
         pageData.put("currentYearReport", profitLossService.generateProfitLossReport(yearFilters));
 
+        //Last year report
+        LocalDate lastYearStart = today.minusYears(1).withDayOfYear(1);
+        LocalDate lastYearEnd = today.minusYears(1).withDayOfYear(today.minusYears(1).lengthOfYear());
+        ProfitLossFilters lastYearFilters = ProfitLossFilters.builder()
+                .dateFrom(lastYearStart)
+                .dateTo(lastYearEnd)
+                .build();
+
+        pageData.put("lastYearReport", profitLossService.generateProfitLossReport(lastYearFilters));
+
         return new ResponseEntity<>(pageData, HttpStatus.OK);
     }
 

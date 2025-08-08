@@ -135,4 +135,6 @@ export type ColorClasses = {
     highlight: string;
     text: string;
     dot: string;
+    hover: string;
+    active: string;
 }
