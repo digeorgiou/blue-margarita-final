@@ -6,7 +6,7 @@ import type { SaleReadOnlyDTO } from '../../../types/api/saleInterface';
 import { FaEuroSign } from "react-icons/fa6";
 import { SaleFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 import { transformCustomersForDropdown, transformSelectedCustomerForDropdown, transformProductsForDropdown, transformSelectedProductForDropdown } from "../../../utils/searchDropdownTransformations.ts";
-
+import { SaleCard } from "../resultCards";
 
 const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                                                              customerSearchTerm,
@@ -258,9 +258,9 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
             )}
 
             {/* RESULTS SECTION  */}
-            <div className="bg-white rounded-lg border border-gray-200">
+            <div>
                 {loading ? (
-                    <div className="flex items-center justify-center p-8">
+                    <div className="bg-white flex items-center justify-center p-8">
                         <LoadingSpinner/>
                         <span className="ml-3 text-gray-600">Αναζήτηση πωλήσεων...</span>
                     </div>
@@ -271,109 +271,16 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                         <p className="text-gray-500">Δοκιμάστε να αλλάξετε τα κριτήρια αναζήτησης</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-200">
+                    <div className="space-y-4">
                         {searchResults.map((sale) => (
-                            <div key={sale.id} className="p-6 hover:bg-blue-100 transition-colors duration-150">
-                                {/* Original layout: flex items-center gap-6 on desktop, stack on mobile */}
-                                <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                                    {/* Left Half */}
-                                    <div className="flex-1">
-                                        {/* Title and Date - Wrap badges on mobile */}
-                                        <div className="flex flex-wrap items-center gap-3 mb-3">
-                                            <ShoppingCart className="w-5 h-5 text-blue-500" />
-                                            <h3 className="text-lg font-semibold text-gray-900">
-                                                {generateSaleTitle(sale)}
-                                            </h3>
-                                            <span className="bg-orange-200 text-black px-2 py-1 rounded-full text-sm">
-                                                {formatDate(sale.saleDate)}
-                                            </span>
-                                            <span className={`px-2 py-1 rounded-full text-sm font-medium ${getSaleTypeBadgeClass(sale.isWholesale)}`}>
-                                                {getSaleTypeDisplayName(sale.isWholesale)}
-                                            </span>
-                                        </div>
-
-                                        {/* Two Columns - Stack on mobile, side-by-side on desktop */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                                            {/* First Column: Customer, Payment Method, Location */}
-                                            <div className="space-y-2">
-                                                <div className="flex items-center">
-                                                    <Users className="w-4 h-4 mr-2 text-gray-400" />
-                                                    <span>{sale.customerName || 'Περαστικός Πελάτης'}</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <CreditCard className="w-4 h-4 mr-2 text-gray-400" />
-                                                    <span>{getPaymentMethodDisplayName(sale.paymentMethod)}</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                                                    <span>{sale.locationName}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Second Column: Final Price, Discount, Packaging */}
-                                            <div className="space-y-2">
-                                                <div className="flex items-center text-green-600">
-                                                    <FaEuroSign className="w-4 h-4 mr-1" />
-                                                    <span className="font-semibold">Τελική Τιμή: {formatCurrency(sale.finalTotalPrice)}</span>
-                                                </div>
-                                                {sale.discountPercentage > 0 ? (
-                                                    <div className="flex items-center text-orange-600">
-                                                        <span className="font-medium">
-                                                            Έκπτωση: {sale.discountPercentage}% ({formatCurrency(sale.discountAmount)})
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center text-gray-400">
-                                                        <span>Έκπτωση: Καμία</span>
-                                                    </div>
-                                                )}
-                                                {sale.packagingPrice > 0 ? (
-                                                    <div className="flex items-center text-blue-600">
-                                                        <span className="font-medium">
-                                                            Συσκευασία: {formatCurrency(sale.packagingPrice)}
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center text-gray-400">
-                                                        <span>Συσκευασία: Καμία</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Right Half: Action Buttons - Stack on mobile */}
-                                    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center justify-center gap-2 lg:min-w-fit">
-                                        <Button
-                                            onClick={() => onViewDetails(sale)}
-                                            variant="info"
-                                            size="sm"
-                                            className="w-full sm:w-auto"
-                                        >
-                                            <Eye className="w-4 h-4 mr-1" />
-                                            Λεπτομέρειες
-                                        </Button>
-                                        <Button
-                                            onClick={() => onEdit(sale)}
-                                            variant="teal"
-                                            size="sm"
-                                            className="w-full sm:w-auto"
-                                        >
-                                            <Edit className="w-4 h-4 mr-1" />
-                                            Επεξεργασία
-                                        </Button>
-                                        <Button
-                                            onClick={() => onDelete(sale)}
-                                            variant="danger"
-                                            size="sm"
-                                            className="w-full sm:w-auto"
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-1" />
-                                            Διαγραφή
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
+                            <SaleCard
+                                key={sale.id}
+                                sale={sale}
+                                onViewDetails={onViewDetails}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                getPaymentMethodDisplayName={getPaymentMethodDisplayName}
+                            />
                         ))}
                     </div>
                 )}

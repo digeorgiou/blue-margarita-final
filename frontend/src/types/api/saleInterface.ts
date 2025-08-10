@@ -1,5 +1,4 @@
 import {SaleProductDTO, SalesSummaryDTO} from "./dashboardInterface.ts";
-import {SaleFilters} from "../../services/saleService.ts";
 import { PaymentMethod } from "./dashboardInterface.ts";
 
 export interface SaleReadOnlyDTO {
@@ -13,7 +12,7 @@ export interface SaleReadOnlyDTO {
     discountPercentage: number;
     discountAmount: number;
     packagingPrice: number;
-    grandTotal: number;
+    subTotal: number;
     paymentMethod: string;
     productCount: number;
     products: SaleProductDTO[];

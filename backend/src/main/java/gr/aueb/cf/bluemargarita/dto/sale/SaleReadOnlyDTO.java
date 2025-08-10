@@ -18,7 +18,7 @@ public record SaleReadOnlyDTO(
         BigDecimal discountPercentage,
         BigDecimal discountAmount,
         BigDecimal packagingPrice,
-        BigDecimal grandTotal, // finalTotalPrice + packagingPrice
+        BigDecimal subTotal,
         PaymentMethod paymentMethod,
         int productCount,
         List<SaleProductDTO> products,

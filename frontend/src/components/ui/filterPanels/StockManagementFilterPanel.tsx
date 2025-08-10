@@ -8,7 +8,8 @@ import type {
     StockStatus
 } from '../../../types/api/stockManagementInterface';
 import type { CategoryForDropdownDTO } from '../../../types/api/categoryInterface';
-import { StockProductCard } from './'
+import { StockProductCard} from '../resultCards';
+import {CustomNumberInput} from "../inputs";
 
 interface StockManagementFilterPanelProps {
     // Filter states
@@ -80,7 +81,6 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
             case 'NORMAL': return 'text-green-600 bg-green-100';
             case 'LOW': return 'text-yellow-600 bg-yellow-100';
             case 'NEGATIVE': return 'text-red-600 bg-red-100';
-            case 'NO_ALERT': return 'text-blue-600 bg-blue-100';
             default: return 'text-gray-600 bg-gray-100';
         }
     };
@@ -120,22 +120,22 @@ const StockManagementFilterPanel: React.FC<StockManagementFilterPanelProps> = ({
                         placeholder=""
                     />
 
-                    <CustomTextInput
+                    <CustomNumberInput
                         label="Ελάχιστο Απόθεμα"
-                        type="number"
-                        value={minStock > 0 ? minStock.toString() : ''}
-                        onChange={(value) => onMinStockChange(Number(value) || 0)}
+                        value={minStock}
+                        onChange={onMinStockChange}
                         placeholder="0"
-                        min="0"
+                        min={0}
+                        step={1}
                     />
 
-                    <CustomTextInput
+                    <CustomNumberInput
                         label="Μέγιστο Απόθεμα"
-                        type="number"
-                        value={maxStock > 0 ? maxStock.toString() : ''}
-                        onChange={(value) => onMaxStockChange(Number(value) || 0)}
-                        placeholder="1000"
-                        min="0"
+                        value={maxStock}
+                        onChange={onMaxStockChange}
+                        placeholder="0"
+                        min={0}
+                        step={1}
                     />
 
                     <div className="flex items-end">

@@ -6,6 +6,7 @@ import type { PurchaseReadOnlyDTO } from '../../../types/api/purchaseInterface';
 import { FaEuroSign } from "react-icons/fa6";
 import { PurchaseFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 import { transformSuppliersForDropdown, transformSelectedSupplierForDropdown, transformMaterialsForDropdown, transformSelectedMaterialForDropdown } from "../../../utils/searchDropdownTransformations.ts";
+import { PurchaseCard } from '../resultCards';
 
 const PurchaseFilterPanel: React.FC<PurchaseFilterPanelProps> = ({
                                                                      supplierSearchTerm,
@@ -161,9 +162,9 @@ const PurchaseFilterPanel: React.FC<PurchaseFilterPanelProps> = ({
             )}
 
             {/* RESULTS SECTION  */}
-            <div className="bg-white rounded-lg border border-gray-200">
+            <div>
                 {loading ? (
-                    <div className="flex items-center justify-center p-8">
+                    <div className="bg-white flex items-center justify-center p-8">
                         <LoadingSpinner />
                         <span className="ml-3 text-gray-600">Αναζήτηση αγορών...</span>
                     </div>
@@ -174,81 +175,15 @@ const PurchaseFilterPanel: React.FC<PurchaseFilterPanelProps> = ({
                         <p className="text-gray-500">Δοκιμάστε να προσαρμόσετε τα φίλτρα σας</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-200">
+                    <div className="space-y-4">
                         {searchResults.map((purchase) => (
-                            <div
+                            <PurchaseCard
                                 key={purchase.id}
-                                className="p-6 hover:bg-blue-100 transition-colors duration-150"
-                            >
-                                <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                                    <div className="flex-1">
-                                        {/* Header with Title, Date */}
-                                        <div className="flex flex-wrap items-center gap-3 mb-3">
-                                            <ShoppingCart className="w-5 h-5 text-blue-500" />
-                                            <h3 className="text-lg font-semibold text-gray-900">
-                                                {generatePurchaseTitle(purchase)}
-                                            </h3>
-                                            <span className="bg-blue-200 text-black px-2 py-1 rounded-full text-sm">
-                                                {formatDate(purchase.purchaseDate)}
-                                            </span>
-                                        </div>
-
-                                        {/* Two Columns - Stack on mobile, side-by-side on desktop */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                                            {/* First Column: Supplier, Items Count */}
-                                            <div className="space-y-2">
-                                                <div className="flex items-center">
-                                                    <Truck className="w-4 h-4 mr-2 text-gray-400" />
-                                                    <span>{purchase.supplierName}</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <Package className="w-4 h-4 mr-2 text-gray-400" />
-                                                    <span>{purchase.itemCount}{purchase.itemCount > 1 ? " υλικά" : " υλικό"}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Second Column: Total Cost */}
-                                            <div className="space-y-2">
-                                                <div className="flex items-center text-blue-600">
-                                                    <FaEuroSign className="w-4 h-4 mr-1" />
-                                                    <span className="font-semibold">Συνολικό Κόστος: {formatCurrency(purchase.totalCost)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Buttons */}
-                                    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center justify-center gap-2 lg:min-w-fit">
-                                        <Button
-                                            onClick={() => onViewDetails(purchase)}
-                                            variant="info"
-                                            size="sm"
-                                            className="w-full sm:w-auto"
-                                        >
-                                            <Eye className="w-4 h-4 mr-1" />
-                                            Προβολή
-                                        </Button>
-                                        <Button
-                                            onClick={() => onEdit(purchase)}
-                                            variant="teal"
-                                            size="sm"
-                                            className="w-full sm:w-auto"
-                                        >
-                                            <Edit className="w-4 h-4 mr-1" />
-                                            Επεξεργασία
-                                        </Button>
-                                        <Button
-                                            onClick={() => onDelete(purchase)}
-                                            variant="danger"
-                                            size="sm"
-                                            className="w-full sm:w-auto"
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-1" />
-                                            Διαγραφή
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
+                                purchase={purchase}
+                                onViewDetails={onViewDetails}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                            />
                         ))}
                     </div>
                 )}

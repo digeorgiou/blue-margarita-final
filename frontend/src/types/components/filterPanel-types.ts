@@ -105,6 +105,8 @@ export type ProductFilterPanelProps = {
     onMinPriceChange: (value: number) => void;
     maxPrice: number;
     onMaxPriceChange: (value: number) => void;
+    thresholdPercentage?: number;
+    onThresholdPercentageChange?: (value: number) => void;
 
     // Results and actions
     searchResults: ProductListItemDTO[];

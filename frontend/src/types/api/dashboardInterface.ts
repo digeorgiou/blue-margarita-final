@@ -19,7 +19,7 @@ export interface SaleReadOnlyDTO {
     discountPercentage : number;
     discountAmount : number;
     packagingPrice : number;
-    grandTotal : number;
+    subTotal : number;
     paymentMethod : PaymentMethod;
     productCount : number;
     products : SaleProductDTO[];

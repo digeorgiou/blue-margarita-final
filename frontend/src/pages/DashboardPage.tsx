@@ -336,7 +336,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                         key={sale.id}
                                         primaryText={sale.customerName}
                                         secondaryText={`${formatDate(sale.saleDate)} | ${getPaymentMethodLabel(sale.paymentMethod)} | ${sale.productCount} ${sale.productCount > 1 ? 'προϊόντα' : 'προϊόν'}`}
-                                        rightText={formatMoney(sale.grandTotal)}
+                                        rightText={formatMoney(sale.subTotal)}
                                         rightTextColor="green"
                                     />
                                 ))

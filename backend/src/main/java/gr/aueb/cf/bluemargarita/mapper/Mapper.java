@@ -526,7 +526,7 @@ public class Mapper {
                 sale.getDiscountPercentage(),
                 discountAmount,
                 sale.getPackagingPrice(),
-                sale.getFinalTotalPrice().add(sale.getPackagingPrice()),
+                sale.getSuggestedTotalPrice().subtract(sale.getPackagingPrice()),
                 sale.getPaymentMethod(),
                 sale.getAllSaleProducts().size(),
                 products,

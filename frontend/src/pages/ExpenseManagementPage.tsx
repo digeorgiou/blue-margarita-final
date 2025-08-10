@@ -5,7 +5,7 @@ import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { expenseService } from '../services/expenseService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Plus, BarChart3, Calendar, Filter, Search } from 'lucide-react';
+import { Plus, BarChart3, Calendar, Filter } from 'lucide-react';
 import { FaEuroSign } from "react-icons/fa6";
 import type {
     ExpenseReadOnlyDTO,

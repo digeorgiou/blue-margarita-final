@@ -4,6 +4,7 @@ import { Button, LoadingSpinner } from './../index';
 import type { CustomerListItemDTO } from '../../../types/api/customerInterface';
 import { CustomTextInput, CustomToggleOption } from "../inputs";
 import { CustomerFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
+import { CustomerCard } from '../resultCards'
 
 const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
                                                                  searchTerm,
@@ -55,7 +56,7 @@ const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
             </div>
 
             {/* Results */}
-            <div className="bg-white rounded-lg border border-gray-200">
+            <div>
                 {loading && (
                     <div className="flex items-center justify-center p-8">
                         <LoadingSpinner />
@@ -71,88 +72,15 @@ const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
                     </div>
                 )}
                 {!loading && filteredResults.length > 0 && (
-                    <div className="divide-y divide-gray-200">
+                    <div className="space-y-4">
                         {filteredResults.map((customer) => (
-                            <div
+                            <CustomerCard
                                 key={customer.customerId}
-                                className="p-6 hover:bg-blue-50 transition-colors duration-150"
-                            >
-                                <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                                    {/* Customer Info */}
-                                    <div className="flex-1 space-y-2">
-                                        <div className="flex items-center gap-3">
-                                            <h3 className="text-lg font-semibold text-gray-900">
-                                                {customer.firstname} {customer.lastname}
-                                            </h3>
-                                            {customerHasTin(customer) && (
-                                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                                                    Χονδρικής
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                            {customer.email && (
-                                                <div className="flex items-center gap-2">
-                                                    <Mail className="w-4 h-4 text-gray-400" />
-                                                    <span>{customer.email}</span>
-                                                </div>
-                                            )}
-                                            {customer.phoneNumber && (
-                                                <div className="flex items-center gap-2">
-                                                    <Phone className="w-4 h-4 text-gray-400" />
-                                                    <span>{customer.phoneNumber}</span>
-                                                </div>
-                                            )}
-                                            {customer.address && (
-                                                <div className="flex items-center gap-2">
-                                                    <MapPin className="w-4 h-4 text-gray-400" />
-                                                    <span className="truncate">{customer.address}</span>
-                                                </div>
-                                            )}
-                                            {customer.tin && (
-                                                <div className="flex items-center gap-2">
-                                                    <CreditCard className="w-4 h-4 text-gray-400" />
-                                                    <span>ΑΦΜ: {customer.tin}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="lg:w-auto">
-                                        <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
-                                            <Button
-                                                onClick={() => onViewDetails(customer)}
-                                                variant="info"
-                                                size="sm"
-                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                                Προβολή
-                                            </Button>
-                                            <Button
-                                                onClick={() => onEdit(customer)}
-                                                variant="teal"
-                                                size="sm"
-                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                                Επεξεργασία
-                                            </Button>
-                                            <Button
-                                                onClick={() => onDelete(customer)}
-                                                variant="danger"
-                                                size="sm"
-                                                className="w-full lg:w-auto flex items-center justify-center gap-2"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                                Διαγραφή
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                customer={customer}
+                                onViewDetails={onViewDetails}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                            />
                         ))}
                     </div>
                 )}
