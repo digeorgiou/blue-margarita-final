@@ -5,6 +5,8 @@ import { CustomSearchDropdown, CustomSelect, CustomDateInput } from '../inputs';
 import type { SaleReadOnlyDTO } from '../../../types/api/saleInterface';
 import { FaEuroSign } from "react-icons/fa6";
 import { SaleFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
+import { transformCustomersForDropdown, transformSelectedCustomerForDropdown, transformProductsForDropdown, transformSelectedProductForDropdown } from "../../../utils/searchDropdownTransformations.ts";
+
 
 const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
                                                              customerSearchTerm,
@@ -106,36 +108,11 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
         { value: 'false', label: 'Μόνο λιανικές' }
     ];
 
-    // Transform customer data to match SearchResult interface
-    const transformedCustomerResults = customerSearchResults.map(customer => ({
-        id: customer.id,
-        name: customer.fullName,
-        subtitle: customer.email,
-        additionalInfo: undefined
-    }));
-
-    // Transform product data to match SearchResult interface
-    const transformedProductResults = productSearchResults.map(product => ({
-        id: product.id,
-        name: product.name,
-        subtitle: `Κωδικός: ${product.code}`,
-        additionalInfo: product.categoryName
-    }));
-
-    // Transform selected items for display
-    const selectedCustomerForDropdown = selectedCustomer ? {
-        id: selectedCustomer.id,
-        name: selectedCustomer.fullName,
-        subtitle: selectedCustomer.email,
-        additionalInfo: undefined
-    } : null;
-
-    const selectedProductForDropdown = selectedProduct ? {
-        id: selectedProduct.id,
-        name: selectedProduct.name,
-        subtitle: `Κωδικός: ${selectedProduct.code}`,
-        additionalInfo: selectedProduct.categoryName
-    } : null;
+    // Transform data to match SearchResult interface
+    const transformedCustomerResults = transformCustomersForDropdown(customerSearchResults);
+    const transformedProductResults = transformProductsForDropdown(productSearchResults);
+    const selectedCustomerForDropdown = transformSelectedCustomerForDropdown(selectedCustomer);
+    const selectedProductForDropdown = transformSelectedProductForDropdown(selectedProduct)
 
     const generateSaleTitle = (sale: SaleReadOnlyDTO): string => {
         if (!sale.products || sale.products.length === 0) {

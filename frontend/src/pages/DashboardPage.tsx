@@ -91,7 +91,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
 
     // Navigation handlers
-    const handleViewAllLowStock = () => onNavigate('low-stock-products');
+    const handleViewAllLowStock = () => onNavigate('stock-management', undefined, 'LOW');
     const handleViewAllMispriced = () => onNavigate('mispriced-products');
     const handleViewAllTasks = () => onNavigate('all-tasks');
     const handleRecordSale = () => onNavigate('record-sale');

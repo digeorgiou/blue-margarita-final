@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Package } from 'lucide-react';
 import { Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
@@ -18,14 +17,17 @@ import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 
 interface StockManagementPageProps {
-    onNavigate: (page: string) => void;
+    onNavigate: (page: string, ) => void;
+    stockFilter?: string;
 }
 
-const StockManagementPage: React.FC<StockManagementPageProps> = () => {
+const StockManagementPage: React.FC<StockManagementPageProps> = ({ stockFilter }) => {
     // Filter states - same pattern as ProductManagementPage
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
-    const [selectedStatus, setSelectedStatus] = useState<StockStatus | undefined>(undefined);
+    const [selectedStatus, setSelectedStatus] = useState<StockStatus | undefined>(
+        stockFilter as StockStatus | undefined // Set initial status from prop
+    );
     const [minStock, setMinStock] = useState<number>(0);
     const [maxStock, setMaxStock] = useState<number>(0);
 
@@ -100,8 +102,6 @@ const StockManagementPage: React.FC<StockManagementPageProps> = () => {
         setMinStock(0);
         setMaxStock(0);
         setCurrentPage(0);
-        setSelectedProducts(new Set());
-        setShowBulkUpdate(false);
     };
 
     // Pagination handlers

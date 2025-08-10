@@ -6,6 +6,7 @@ import type { ProductListItemDTO } from '../../../types/api/productInterface';
 import type { SearchResult } from '../../../types/components/input-types';
 import { ProductFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 import { GiDiamondRing } from 'react-icons/gi';
+import { transformProceduresForDropdown, transformSelectedProcedureForDropdown, transformMaterialsForDropdown, transformSelectedMaterialForDropdown } from "../../../utils/searchDropdownTransformations.ts";
 
 const ProductFilterPanel: React.FC<ProductFilterPanelProps> = ({
                                                                    searchTerm,
@@ -72,34 +73,14 @@ const ProductFilterPanel: React.FC<ProductFilterPanelProps> = ({
     };
 
     // Transform data for SearchDropdown components
-    const transformedMaterialResults = materialSearchResults.map(material => ({
-        id: material.materialId,
-        name: material.materialName,
-        subtitle: `${material.currentUnitCost}€/${material.unitOfMeasure}`,
-        additionalInfo: material.unitOfMeasure
-    }));
+    const transformedMaterialResults = transformMaterialsForDropdown(materialSearchResults);
 
-    const transformedProcedureResults = procedureSearchResults.map(procedure => ({
-        id: procedure.id,
-        name: procedure.name,
-        subtitle: 'Διαδικασία',
-        additionalInfo: undefined
-    }));
+    const transformedProcedureResults = transformProceduresForDropdown(procedureSearchResults);
 
     // Transform selected items for display in CustomSearchDropdown
-    const selectedMaterialForDropdown = selectedMaterial ? {
-        id: selectedMaterial.materialId,
-        name: selectedMaterial.materialName,
-        subtitle: `${selectedMaterial.currentUnitCost}€/${selectedMaterial.unitOfMeasure}`,
-        additionalInfo: selectedMaterial.unitOfMeasure
-    } : null;
+    const selectedMaterialForDropdown = transformSelectedMaterialForDropdown(selectedMaterial);
 
-    const selectedProcedureForDropdown = selectedProcedure ? {
-        id: selectedProcedure.id,
-        name: selectedProcedure.name,
-        subtitle: 'Διαδικασία',
-        additionalInfo: undefined
-    } : null;
+    const selectedProcedureForDropdown = transformSelectedProcedureForDropdown(selectedProcedure);
 
     // Handle selection events
     const handleMaterialSelect = (item: SearchResult | null) => {

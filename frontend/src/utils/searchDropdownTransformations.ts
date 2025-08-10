@@ -11,6 +11,7 @@ import type {
 import type {
     ProductSearchResultDTO,
 } from '../types/api/productInterface';
+import {ProcedureForDropdownDTO} from "../types/api/procedureInterface.ts";
 
 
 export const transformSuppliersForDropdown = (suppliers: SupplierSearchResultDTO[]): SearchResult[] => {
@@ -36,7 +37,7 @@ export const transformMaterialsForDropdown = (materials: MaterialSearchResultDTO
         id: material.materialId,
         name: material.materialName,
         subtitle: `Μονάδα μέτρησης: ${material.unitOfMeasure}`,
-        additionalInfo: `Κόστος: ${material.currentUnitCost}`
+        additionalInfo: `Κόστος: ${material.currentUnitCost} €`
     }));
 };
 
@@ -45,7 +46,7 @@ export const transformSelectedMaterialForDropdown = (selectedMaterial: MaterialS
         id: selectedMaterial.materialId,
         name: selectedMaterial.materialName,
         subtitle: `Μονάδα μέτρησης: ${selectedMaterial.unitOfMeasure}`,
-        additionalInfo: `Κόστος: ${selectedMaterial.currentUnitCost}`
+        additionalInfo: `Κόστος: ${selectedMaterial.currentUnitCost} €`
     } : null;
 };
 
@@ -82,5 +83,23 @@ export const transformSelectedCustomerForDropdown = (selectedCustomer: CustomerS
         name: selectedCustomer.fullName,
         subtitle: selectedCustomer.email || 'Χωρίς email',
         additionalInfo: 'Πελάτης'
+    } : null;
+};
+
+export const transformProceduresForDropdown = (procedures: ProcedureForDropdownDTO[]): SearchResult[] => {
+    return procedures.map(procedure => ({
+        id: procedure.id,
+        name: procedure.name,
+        subtitle: 'Διαδικασία',
+        additionalInfo: undefined
+    }));
+};
+
+export const transformSelectedProcedureForDropdown = (selectedProcedure: ProcedureForDropdownDTO | null): SearchResult | null => {
+    return selectedProcedure ? {
+        id: selectedProcedure.id,
+        name: selectedProcedure.name,
+        subtitle: 'Διαδικασία',
+        additionalInfo: undefined
     } : null;
 };

@@ -31,6 +31,7 @@ import './styles/global-logo-background.css';
 interface NavigationState {
     page: string;
     productId?: string;
+    stockFilter?: string;
 }
 
 type AppState = 'loading' | 'login' | 'dashboard';
@@ -45,8 +46,8 @@ const App: React.FC = () => {
     });
 
     // Navigation handler
-    const handleNavigation = (page: string, productId?: string) => {
-        setNavigationState({ page, productId });
+    const handleNavigation = (page: string, productId?: string, stockFilter?: string) => {
+        setNavigationState({ page, productId, stockFilter });
     };
 
     // Render page content based on currentPage
@@ -88,7 +89,10 @@ const App: React.FC = () => {
             case 'record-purchase':
                 return <RecordPurchasePage onNavigate={handleNavigation} />;
             case 'stock-management':
-                return <StockManagementPage/>;
+                return <StockManagementPage
+                    onNavigate={handleNavigation}
+                    stockFilter={navigationState.stockFilter} // Pass the stock filter
+                />;
             case 'expenses' :
                 return <ExpenseManagementPage/>;
             case 'create-product' :

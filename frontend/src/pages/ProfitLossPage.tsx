@@ -1,5 +1,3 @@
-// frontend/src/pages/ProfitLossPage.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
@@ -366,7 +364,7 @@ const ProfitLossPage = () => {
 
             {/* Error Alert */}
             {generalError && (
-                <Alert type="error" onClose={clearErrors}>
+                <Alert variant="error" onClose={clearErrors}>
                     {generalError}
                 </Alert>
             )}

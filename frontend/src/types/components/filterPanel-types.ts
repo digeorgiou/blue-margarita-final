@@ -11,6 +11,7 @@ import type {SaleReadOnlyDTO} from "../api/saleInterface.ts";
 import type {SupplierReadOnlyDTO} from "../api/supplierInterface.ts";
 import { PurchaseReadOnlyDTO } from "../api/purchaseInterface";
 import { SupplierSearchResultDTO } from "../api/supplierInterface";
+import type { MispricedProductAlertDTO } from "../api/dashboardInterface";
 
 export type CustomerFilterPanelProps = {
     searchTerm: string;
@@ -144,7 +145,7 @@ export type SaleFilterPanelProps = {
 
     // Payment method filter
     paymentMethodFilter: string;
-    onPaymentMethodFilterChange: (value: string) => void;
+    onPaymentMethodFilterChange: (value: string | number) => void;
     paymentMethods: PaymentMethodDTO[];
 
     // Wholesale filter
@@ -206,4 +207,30 @@ export type PurchaseFilterPanelProps = {
     onEdit: (purchase: PurchaseReadOnlyDTO) => void;
     onDelete: (purchase: PurchaseReadOnlyDTO) => void;
     children?: React.ReactNode;
+}
+
+export type MispricedProductFilterPanelProps = {
+    // Filter values
+    thresholdPercentage: number;
+    onThresholdPercentageChange: (value: number) => void;
+    nameOrCodeFilter: string;
+    onNameOrCodeFilterChange: (value: string) => void;
+    categoryIdFilter: number | undefined;
+    onCategoryIdFilterChange: (value: number | undefined) => void;
+    categories: CategoryForDropdownDTO[];
+    issueTypeFilter: string;
+    onIssueTypeFilterChange: (value: string) => void;
+    locationIdFilter: number | undefined;
+    onLocationIdFilterChange: (value: number | undefined) => void;
+    locations: LocationForDropdownDTO[];
+
+    // Results and actions
+    searchResults: MispricedProductAlertDTO[];
+    loading: boolean;
+    onClearFilters: () => void;
+    onRefresh: () => void;
+    onSort: (field: string) => void;
+    sortBy: string;
+    sortDirection: 'ASC' | 'DESC';
+    onNavigateToProduct: (productId: number) => void;
 }

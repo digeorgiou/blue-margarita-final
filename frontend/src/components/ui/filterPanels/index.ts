@@ -7,3 +7,4 @@ export { default as SaleFilterPanel } from './SaleFilterPanel';
 export { default as SupplierFilterPanel } from './SupplierFilterPanel';
 export { default as StockManagementFilterPanel } from './StockManagementFilterPanel';
 export { default as StockProductCard } from '../common/StockProductCard'
+export { default as MispricedProductFilterPanel } from './MispricedProductFilterPanel';
