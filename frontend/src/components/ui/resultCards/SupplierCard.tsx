@@ -1,93 +1,79 @@
 import React from 'react';
 import { Eye, Edit, Trash2, Phone, Mail, MapPin, Hash } from 'lucide-react';
-import { Button } from '../';
-import {CustomerCardProps} from "../../../types/components/resultCard-types.ts";
+import { Button } from '../index';
+import type { SupplierCardProps } from "../../../types/components/resultCard-types.ts";
 
-const CustomerCard: React.FC<CustomerCardProps> = ({
-                                                       customer,
+const SupplierCard: React.FC<SupplierCardProps> = ({
+                                                       supplier,
                                                        onViewDetails,
                                                        onEdit,
                                                        onDelete
                                                    }) => {
-    // Helper function to determine if customer has TIN
-    const customerHasTin = () => {
-        return customer.tin && customer.tin.trim() !== '';
-    };
 
     return (
         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-2">
-            {/* Card Header */}
+
+                {/* Header with supplier name and status */}
             <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3">
                 <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-white truncate">
-                            {customer.firstname} {customer.lastname}
+                           {supplier.name}
                         </h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                            {customerHasTin() ? (
-                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                                    Χονδρικής
-                                </span>
-                            ) : <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                                    Λιανικής
-                                </span> }
-                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Card Content */}
-            <div className="p-4 space-y-4 ">
-
                 {/* Contact Information */}
+            <div className="p-4 space-y-4 ">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {customer.email && (
+                    {supplier.email && (
                         <div className="flex items-center space-x-2">
-                            <Mail className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                            <span className="text-sm text-gray-700 truncate">{customer.email}</span>
+                            <Mail className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-600 truncate">{supplier.email}</span>
                         </div>
                     )}
 
-                    {customer.phoneNumber && (
+                    {supplier.phoneNumber && (
                         <div className="flex items-center space-x-2">
-                            <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-                            <span className="text-sm text-gray-700">{customer.phoneNumber}</span>
+                            <Phone className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">{supplier.phoneNumber}</span>
                         </div>
                     )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {customer.address && (
+                    {supplier.address && (
                         <div className="flex items-start space-x-2">
-                            <MapPin className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                            <span className="text-sm text-gray-700 leading-relaxed">{customer.address}</span>
+                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                            <span className="text-sm text-gray-600 line-clamp-2">{supplier.address}</span>
                         </div>
                     )}
 
-                    {customer.tin && (
+                    {supplier.tin && (
                         <div className="flex items-center space-x-2">
-                            <Hash className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-                            <span className="text-sm text-gray-700">ΑΦΜ: {customer.tin}</span>
+                            <Hash className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">ΑΦΜ: {supplier.tin}</span>
                         </div>
                     )}
                 </div>
 
-                {/* Action Buttons */}
                 <div className="pt-4 border-t border-gray-200">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <Button
                             variant="info"
                             size="sm"
-                            onClick={() => onViewDetails(customer)}
+                            onClick={() => onViewDetails(supplier)}
                         >
                             <Eye className="w-4 h-4" />
-                            <span>Προβολή</span>
+                            <span>Λεπτομέρειες</span>
                         </Button>
 
                         <Button
                             variant="teal"
                             size="sm"
-                            onClick={() => onEdit(customer)}
+                            onClick={() => onEdit(supplier)}
+                            disabled={!supplier.isActive}
                         >
                             <Edit className="w-4 h-4" />
                             <span>Επεξεργασία</span>
@@ -96,7 +82,8 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
                         <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => onDelete(customer)}
+                            onClick={() => onDelete(supplier)}
+                            disabled={!supplier.isActive}
                         >
                             <Trash2 className="w-4 h-4" />
                             <span>Διαγραφή</span>
@@ -108,4 +95,4 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
     );
 };
 
-export default CustomerCard;
+export default SupplierCard;

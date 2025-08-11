@@ -1,16 +1,9 @@
 import React from 'react';
 import { Eye, Edit, Trash2, BarChart3 } from 'lucide-react';
 import { Button } from '../index.ts';
-import type { ProductListItemDTO } from '../../../types/api/productInterface.ts';
 import { GiDiamondRing } from "react-icons/gi";
-
-interface ProductCardProps {
-    product: ProductListItemDTO;
-    onViewDetails: (product: ProductListItemDTO) => void;
-    onEdit: (product: ProductListItemDTO) => void;
-    onDelete: (product: ProductListItemDTO) => void;
-    onAnalytics: (product: ProductListItemDTO) => void;
-}
+import type { ProductCardProps } from "../../../types/components/resultCard-types.ts";
+import { formatCurrency } from "../../../utils/formatters.ts";
 
 const ProductCard: React.FC<ProductCardProps> = ({
                                                      product,
@@ -19,14 +12,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
                                                      onDelete,
                                                      onAnalytics
                                                  }) => {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
-    };
 
     const getStockStatusColor = () => {
         if (product.isLowStock) return 'text-red-600 bg-red-100';

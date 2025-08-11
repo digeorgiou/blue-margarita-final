@@ -1,14 +1,8 @@
 import React from 'react';
-import { Eye, Edit, Trash2, ShoppingCart, Truck, Package, Calendar, User } from 'lucide-react';
+import { Eye, Edit, Trash2, ShoppingCart, Truck } from 'lucide-react';
 import { Button } from '../';
-import type { PurchaseReadOnlyDTO } from '../../../types/api/purchaseInterface';
-
-interface PurchaseCardProps {
-    purchase: PurchaseReadOnlyDTO;
-    onViewDetails: (purchase: PurchaseReadOnlyDTO) => void;
-    onEdit: (purchase: PurchaseReadOnlyDTO) => void;
-    onDelete: (purchase: PurchaseReadOnlyDTO) => void;
-}
+import type { PurchaseCardProps } from "../../../types/components/resultCard-types.ts";
+import { formatCurrency, formatDate } from "../../../utils/formatters.ts";
 
 const PurchaseCard: React.FC<PurchaseCardProps> = ({
                                                        purchase,
@@ -16,32 +10,6 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
                                                        onEdit,
                                                        onDelete
                                                    }) => {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
-    const formatDateTime = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
 
     const generatePurchaseTitle = () => {
         if (!purchase.materials || purchase.materials.length === 0) {
@@ -63,18 +31,6 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
         } else {
             return `${firstMaterial.materialName} + ${remainingCount} ακόμα`;
         }
-    };
-
-    const getMaterialsSummary = () => {
-        if (!purchase.materials || purchase.materials.length === 0) {
-            return 'Χωρίς υλικά';
-        }
-
-        const totalQuantity = purchase.materials.reduce((sum, material) => {
-            return sum + material.quantity;
-        }, 0);
-
-        return `${purchase.materials.length} ${purchase.materials.length === 1 ? 'υλικό' : 'υλικά'} (${totalQuantity.toFixed(2)} συνολικές μονάδες)`;
     };
 
     return (

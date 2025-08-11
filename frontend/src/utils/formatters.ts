@@ -1,13 +1,32 @@
-export const formatMoney = (amount: number): string => {
-    return `€${amount.toLocaleString('el-GR', {
+export const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('el-GR', {
+        style: 'currency',
+        currency: 'EUR',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    })}`;
+    }).format(amount);
 };
 
-export const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('el-GR');
+export const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('el-GR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+};
+
+export const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('el-GR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+export const formatNumber = (num: number): string => {
+    return new Intl.NumberFormat('el-GR').format(num);
 };
 
 export const formatTaskDate = (task: { date: string; daysFromToday: number }): string => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
@@ -15,6 +15,7 @@ import type {
     ExpenseTypeBreakdownDTO,
     ExpenseTypeDTO
 } from '../types/api/expenseInterface';
+import { formatCurrency, formatNumber } from "../utils/formatters.ts";
 
 // Import custom components
 import { ExpenseFilterPanel } from '../components/ui/filterPanels'
@@ -220,22 +221,6 @@ const ExpenseManagementPage = () => {
     const handleDelete = (expense: ExpenseReadOnlyDTO) => {
         setSelectedExpense(expense);
         setIsDeleteModalOpen(true);
-    };
-
-    // =============================================================================
-    // UTILITY METHODS
-    // =============================================================================
-
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatNumber = (num: number): string => {
-        return new Intl.NumberFormat('el-GR').format(num);
     };
 
     // =============================================================================

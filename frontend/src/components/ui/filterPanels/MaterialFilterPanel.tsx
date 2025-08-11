@@ -1,7 +1,6 @@
 import React from 'react';
-import { Search, Eye, Edit, Trash2, Package, Euro, Ruler } from 'lucide-react';
-import { IoHammerOutline } from "react-icons/io5";
-import { Button, LoadingSpinner } from './../index';
+import { Search, Package } from 'lucide-react';
+import { LoadingSpinner } from './../index';
 import { CustomTextInput } from "../inputs";
 import { MaterialFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 import { MaterialCard } from '../resultCards'
@@ -16,15 +15,6 @@ const MaterialFilterPanel: React.FC<MaterialFilterPanelProps> = ({
                                                                  onDelete,
                                                                  onViewProducts
                                                              }) => {
-
-    // Helper function to format currency
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
 
     // Filter results based on active only filter
     const filteredResults = searchResults.filter(material => material.isActive);

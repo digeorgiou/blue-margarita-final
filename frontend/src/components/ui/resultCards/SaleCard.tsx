@@ -1,15 +1,8 @@
 import React from 'react';
 import { Eye, Edit, Trash2, ShoppingCart, Users, MapPin, Calendar, CreditCard } from 'lucide-react';
 import { Button } from '../';
-import type { SaleReadOnlyDTO } from '../../../types/api/saleInterface';
-
-interface SaleCardProps {
-    sale: SaleReadOnlyDTO;
-    onViewDetails: (sale: SaleReadOnlyDTO) => void;
-    onEdit: (sale: SaleReadOnlyDTO) => void;
-    onDelete: (sale: SaleReadOnlyDTO) => void;
-    getPaymentMethodDisplayName: (paymentMethod: string) => string;
-}
+import type { SaleCardProps} from "../../../types/components/resultCard-types.ts";
+import { formatCurrency, formatDate } from "../../../utils/formatters.ts";
 
 const SaleCard: React.FC<SaleCardProps> = ({
                                                sale,
@@ -18,22 +11,6 @@ const SaleCard: React.FC<SaleCardProps> = ({
                                                onDelete,
                                                getPaymentMethodDisplayName
                                            }) => {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
 
     const generateSaleTitle = () => {
         if (!sale.products || sale.products.length === 0) {

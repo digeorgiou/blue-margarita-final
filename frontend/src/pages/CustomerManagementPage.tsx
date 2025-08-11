@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Alert, CustomerDetailModal, CustomerUpdateModal, CustomerCreateModal} from '../components/ui';
 import { CustomerFilterPanel } from '../components/ui/filterPanels'
 import CustomCard from '../components/ui/common/CustomCard.tsx';
@@ -7,7 +7,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { customerService } from '../services/customerService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Users, UserPlus, Search } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import type {
     CustomerListItemDTO,
     CustomerDetailedViewDTO,
@@ -60,8 +60,6 @@ const CustomerManagementPage = () => {
 
             const filters = {
                 searchTerm: searchTerm.trim() || undefined,
-                // You can add the backend filter for TIN when you implement it
-                // tinNotNull: tinOnlyFilter || undefined,
                 isActive: true,
                 page,
                 pageSize: size,
@@ -135,8 +133,6 @@ const CustomerManagementPage = () => {
 
     // CRUD operations
     const handleCreateCustomer = async (data: CustomerInsertDTO) => {
-        // DON'T catch errors here - let them bubble up to the modal!
-        // The modal's useFormErrorHandler will handle them and show backend messages
         await customerService.createCustomer(data);
         await searchCustomers(); // Refresh results
         setSuccessMessage({
@@ -147,8 +143,7 @@ const CustomerManagementPage = () => {
     };
 
     const handleUpdateCustomer = async (data: CustomerUpdateDTO) => {
-        // DON'T catch errors here - let them bubble up to the modal!
-        // The modal's useFormErrorHandler will handle them and show backend messages
+
         await customerService.updateCustomer(data.customerId, data);
         await searchCustomers(); // Refresh results
         setSuccessMessage({

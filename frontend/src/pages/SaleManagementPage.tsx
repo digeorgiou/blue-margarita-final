@@ -300,7 +300,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                     {/* Success Alert */}
                     {successMessage && (
                         <Alert
-                            type="success"
+                            variant="success"
                             title={successMessage.title}
                             message={successMessage.message}
                             onClose={() => setSuccessMessage(null)}
@@ -360,7 +360,6 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                             onPaymentMethodFilterChange={setPaymentMethodFilter}
                             paymentMethods={paymentMethods}
 
-                            // ADD THIS
                             isWholesaleFilter={isWholesaleFilter}
                             onIsWholesaleFilterChange={setIsWholesaleFilter}
 

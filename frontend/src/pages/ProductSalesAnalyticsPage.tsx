@@ -10,7 +10,6 @@ import {
     BarChart3,
     PieChart,
     Target,
-    Filter
 } from 'lucide-react';
 import { Button, Alert, LoadingSpinner } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
@@ -18,6 +17,7 @@ import { CustomDateInput } from '../components/ui/inputs';
 import { productService } from '../services/productService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import type { ProductSalesAnalyticsDTO } from '../types/api/productInterface';
+import { formatCurrency, formatDate, formatNumber } from "../utils/formatters.ts";
 
 interface ProductSalesAnalyticsPageProps {
     onNavigate: (page: string) => void;
@@ -67,19 +67,6 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
         fetchAnalytics();
     }, [productId, startDate, endDate]);
 
-    // Format currency helper
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    // Format date helper
-    const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
 
     // Calculate week start and end dates from week number and year
     const getWeekDateRange = (year: number, weekNumber: number): { start: string; end: string } => {
@@ -102,14 +89,6 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
             start: targetWeekMonday.toLocaleDateString('el-GR'),
             end: targetWeekSunday.toLocaleDateString('el-GR')
         };
-    };
-
-    // Format number helper
-    const formatNumber = (num: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }).format(num);
     };
 
     return (
@@ -160,7 +139,7 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                                 className="w-full py-4"
                                 disabled={loading}
                             >
-                                {loading ? <LoadingSpinner size="sm" /> : 'Ανανέωση Δεδομένων'}
+                                {loading ? <LoadingSpinner/> : 'Ανανέωση Δεδομένων'}
                             </Button>
                         </div>
                     </div>
@@ -170,8 +149,7 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
             {/* Error Display */}
             {generalError && (
                 <Alert
-                    type="error"
-                    message={generalError}
+                    variant="error"
                     className="mb-6"
                 />
             )}
@@ -179,7 +157,7 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
              {/*Loading State*/}
             {loading ? (
                 <div className="flex justify-center items-center py-12">
-                    <LoadingSpinner size="lg" />
+                    <LoadingSpinner/>
                 </div>
             ) : analytics ? (
                 <div className="space-y-6 mt-6">

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Search, Eye, Edit, Trash2, Building2, Phone, Mail, MapPin, ReceiptText } from 'lucide-react';
-import { Button, LoadingSpinner } from './../index';
+import { Search, Building2 } from 'lucide-react';
+import { LoadingSpinner } from './../index';
 import { CustomTextInput } from "../inputs";
 import { SupplierFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
+import { SupplierCard } from '../resultCards';
 
 const SupplierFilterPanel: React.FC<SupplierFilterPanelProps> = ({
                                                                  searchTerm,
@@ -31,9 +32,9 @@ const SupplierFilterPanel: React.FC<SupplierFilterPanelProps> = ({
             </div>
 
             {/* Results Section */}
-            <div className="bg-white rounded-lg border border-gray-200">
+            <div className="rounded-lg border border-gray-200">
                 {loading && (
-                    <div className="flex items-center justify-center py-8">
+                    <div className= "bg-white flex items-center justify-center py-8">
                         <LoadingSpinner/>
                         <span className="ml-3 text-gray-600">Αναζήτηση προμηθευτών...</span>
                     </div>
@@ -51,98 +52,17 @@ const SupplierFilterPanel: React.FC<SupplierFilterPanelProps> = ({
                             </div>
                         )}
                 {!loading && searchResults.length > 0 && (
-                            <div className="divide-y divide-gray-200">
-                                {searchResults.map((supplier) => (
-                                    <div
-                                        key={supplier.supplierId}
-                                        className="p-6 hover:bg-purple-50 transition-colors duration-150"
-                                    >
-                                        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                                            {/* Supplier Info */}
-                                            <div className="flex-1">
-                                                {/* Supplier Name */}
-                                                <div className="flex flex-wrap items-center gap-3 mb-3">
-                                                        <h3 className="text-lg font-semibold text-gray-900">
-                                                            {supplier.name}
-                                                        </h3>
-                                                </div>
-
-                                                {/* Contact Details */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                                                    {/* Email */}
-                                                    {supplier.email && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Mail className="w-4 h-4 text-gray-400" />
-                                                            <span className="truncate" title={supplier.email}>
-                                                                {supplier.email}
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Phone */}
-                                                    {supplier.phoneNumber && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Phone className="w-4 h-4 text-gray-400" />
-                                                            <span>{supplier.phoneNumber}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Address */}
-                                                    {supplier.address && (
-                                                        <div className="flex items-center gap-2">
-                                                            <MapPin className="w-4 h-4 text-gray-400" />
-                                                            <span className="truncate" title={supplier.address}>
-                                                                {supplier.address}
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* TIN */}
-                                                    {supplier.tin && (
-                                                        <div className="flex items-center gap-2">
-                                                            <ReceiptText className="w-4 h-4 text-gray-400" />
-                                                            <span>ΑΦΜ: {supplier.tin}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Action Buttons */}
-                                            <div className="lg:w-auto">
-                                                <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
-                                                    <Button
-                                                        onClick={() => onViewDetails(supplier)}
-                                                        variant= "info"
-                                                        size="sm"
-                                                        className="w-full lg:w-auto flex items-center justify-center gap-2"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                        Προβολή
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => onEdit(supplier)}
-                                                        variant= "teal"
-                                                        size="sm"
-                                                        className="w-full lg:w-auto flex items-center justify-center gap-2"
-                                                    >
-                                                        <Edit className="w-4 h-4" />
-                                                        Επεξεργασία
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => onDelete(supplier)}
-                                                        variant= "danger"
-                                                        size="sm"
-                                                        className="w-full lg:w-auto flex items-center justify-center gap-2"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                        Διαγραφή
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                    <div className="space-y-4">
+                        {searchResults.map((supplier) => (
+                            <SupplierCard
+                                key={supplier.supplierId}
+                                supplier={supplier}
+                                onViewDetails={onViewDetails}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                            />
+                        ))}
+                    </div>
                 )}
             </div>
         </div>

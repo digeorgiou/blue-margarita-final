@@ -241,9 +241,8 @@ const PurchaseManagementPage: React.FC<PurchaseManagementPageProps> = ({ onNavig
                 {/* Success Alert */}
                 {successMessage && (
                     <Alert
-                        type="success"
+                        variant="success"
                         title={successMessage.title}
-                        message={successMessage.message}
                         onClose={() => setSuccessMessage(null)}
                     />
                 )}

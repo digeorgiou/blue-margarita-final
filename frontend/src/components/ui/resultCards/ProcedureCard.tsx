@@ -1,15 +1,8 @@
 import React from 'react';
-import { Eye, Edit, Trash2, Package, Settings, Calendar, User, AlertTriangle } from 'lucide-react';
+import { Eye, Edit, Trash2, Package, Settings, AlertTriangle } from 'lucide-react';
 import { Button } from '../';
-import type { ProcedureReadOnlyDTO } from '../../../types/api/procedureInterface';
-
-interface ProcedureCardProps {
-    procedure: ProcedureReadOnlyDTO;
-    onViewDetails: (procedure: ProcedureReadOnlyDTO) => void;
-    onEdit: (procedure: ProcedureReadOnlyDTO) => void;
-    onDelete: (procedure: ProcedureReadOnlyDTO) => void;
-    onViewProducts: (procedure: ProcedureReadOnlyDTO) => void;
-}
+import type { ProcedureCardProps } from "../../../types/components/resultCard-types.ts";
+import { formatDateTime, formatDate } from "../../../utils/formatters.ts";
 
 const ProcedureCard: React.FC<ProcedureCardProps> = ({
                                                          procedure,
@@ -18,63 +11,6 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({
                                                          onDelete,
                                                          onViewProducts
                                                      }) => {
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
-    const formatDateTime = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
-    const getStatusBadge = () => {
-        if (!procedure.isActive) {
-            return (
-                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
-                    Ανενεργή
-                </span>
-            );
-        }
-        return (
-            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                Ενεργή
-            </span>
-        );
-    };
-
-    const getProcedureTypeIndicator = () => {
-        // Simple classification based on procedure name patterns
-        const name = procedure.name.toLowerCase();
-
-        if (name.includes('καθαρισμό') || name.includes('καθάρισμα') || name.includes('polish')) {
-            return { text: 'Καθαρισμός', color: 'text-blue-600 bg-blue-100', icon: '🧽' };
-        }
-        if (name.includes('επισκευή') || name.includes('repair') || name.includes('fix')) {
-            return { text: 'Επισκευή', color: 'text-orange-600 bg-orange-100', icon: '🔧' };
-        }
-        if (name.includes('κατασκευή') || name.includes('manufacturing') || name.includes('creation')) {
-            return { text: 'Κατασκευή', color: 'text-purple-600 bg-purple-100', icon: '🏗️' };
-        }
-        if (name.includes('συναρμολόγηση') || name.includes('assembly') || name.includes('mount')) {
-            return { text: 'Συναρμολόγηση', color: 'text-green-600 bg-green-100', icon: '🔩' };
-        }
-        if (name.includes('ποιοτικός έλεγχος') || name.includes('quality') || name.includes('check')) {
-            return { text: 'Ποιοτικός Έλεγχος', color: 'text-indigo-600 bg-indigo-100', icon: '✅' };
-        }
-
-        return { text: 'Γενική Διαδικασία', color: 'text-gray-600 bg-gray-100', icon: '⚙️' };
-    };
-
-    const procedureType = getProcedureTypeIndicator();
 
     return (
         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-2">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Calendar, Eye, Edit, Trash2, Filter } from 'lucide-react';
+import { Search, Calendar, Filter } from 'lucide-react';
 import { Button, LoadingSpinner } from '../index';
 import { CustomTextInput, CustomSelect, CustomDateInput } from '../inputs';
 import { FaEuroSign } from "react-icons/fa6";
@@ -24,18 +24,6 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
                                                                children
                                                            }) => {
 
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
-
     // Transform expense types for CustomSelect
     const expenseTypeOptions = [
         { value: '', label: 'Όλοι οι τύποι' },
@@ -44,11 +32,6 @@ const ExpenseFilterPanel: React.FC<ExpenseFilterPanelProps> = ({
             label: type.displayName
         }))
     ];
-
-    const getExpenseTypeDisplayName = (expenseTypeValue: string): string => {
-        const expenseType = expenseTypes.find(type => type.value === expenseTypeValue);
-        return expenseType ? expenseType.displayName : expenseTypeValue;
-    };
 
     const clearFilters = () => {
         onSearchTermChange('');

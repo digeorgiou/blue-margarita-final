@@ -1,9 +1,7 @@
 import React from 'react';
-import {Calendar, Eye, Edit, Trash2, ShoppingCart, Truck, Package, Filter} from 'lucide-react';
+import {Calendar, ShoppingCart, Filter} from 'lucide-react';
 import { Button, LoadingSpinner } from '../index';
 import { CustomSearchDropdown, CustomDateInput } from '../inputs';
-import type { PurchaseReadOnlyDTO } from '../../../types/api/purchaseInterface';
-import { FaEuroSign } from "react-icons/fa6";
 import { PurchaseFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 import { transformSuppliersForDropdown, transformSelectedSupplierForDropdown, transformMaterialsForDropdown, transformSelectedMaterialForDropdown } from "../../../utils/searchDropdownTransformations.ts";
 import { PurchaseCard } from '../resultCards';
@@ -40,23 +38,6 @@ const PurchaseFilterPanel: React.FC<PurchaseFilterPanelProps> = ({
         onDateToFilterChange('');
     };
 
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     // Transform customer data to match SearchResult interface
     const transformedSupplierResults = transformSuppliersForDropdown(supplierSearchResults);
 
@@ -67,24 +48,6 @@ const PurchaseFilterPanel: React.FC<PurchaseFilterPanelProps> = ({
     const selectedSupplierForDropdown = transformSelectedSupplierForDropdown(selectedSupplier);
 
     const selectedMaterialForDropdown = transformSelectedMaterialForDropdown(selectedMaterial);
-
-    const generatePurchaseTitle = (purchase: PurchaseReadOnlyDTO): string => {
-        if(!purchase.materials || purchase.materials.length === 0) {
-            return `Αγορά #${purchase.id}`;
-        }
-        if(purchase.materials.length === 1){
-            const material = purchase.materials[0];
-            return `${material.materialName}(x${material.quantity})`
-        }
-        const firstMaterial = purchase.materials[0];
-        const remainingCount = purchase.materials.length - 1;
-
-        if (remainingCount === 1) {
-            return `${firstMaterial.materialName}  (×${firstMaterial.quantity}) + 1 ακόμα)`;
-        } else {
-            return `${firstMaterial.materialName}  (×${firstMaterial.quantity}) + ${remainingCount} ακόμα)`;
-        }
-    };
 
     return (
         <div className="space-y-6">

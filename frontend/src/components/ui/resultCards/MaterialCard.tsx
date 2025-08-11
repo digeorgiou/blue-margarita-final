@@ -2,15 +2,8 @@ import React from 'react';
 import { Eye, Edit, Trash2, Package, Ruler, AlertTriangle } from 'lucide-react';
 import { IoHammerOutline } from 'react-icons/io5';
 import { Button } from '../';
-import type { MaterialReadOnlyDTO } from '../../../types/api/materialInterface';
-
-interface MaterialCardProps {
-    material: MaterialReadOnlyDTO;
-    onViewDetails: (material: MaterialReadOnlyDTO) => void;
-    onEdit: (material: MaterialReadOnlyDTO) => void;
-    onDelete: (material: MaterialReadOnlyDTO) => void;
-    onViewProducts: (material: MaterialReadOnlyDTO) => void;
-}
+import type { MaterialCardProps } from "../../../types/components/resultCard-types.ts";
+import { formatCurrency, formatDate } from "../../../utils/formatters.ts";
 
 const MaterialCard: React.FC<MaterialCardProps> = ({
                                                        material,
@@ -19,22 +12,6 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                                                        onDelete,
                                                        onViewProducts
                                                    }) => {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
 
     return (
         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-2">

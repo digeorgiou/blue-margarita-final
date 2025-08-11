@@ -3,7 +3,7 @@ import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import { profitLossService, ProfitLossReportDTO, ProfitLossPageInitData } from '../services/profitLossService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Calendar, TrendingUp, TrendingDown, DollarSign, BarChart3, Search, ChevronDown, ChevronUp  } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Search, ChevronDown, ChevronUp  } from 'lucide-react';
 import { getExpenseTypeDisplayName } from "../utils/EnumUtils.ts";
 
 const ProfitLossPage = () => {
@@ -255,7 +255,6 @@ const ProfitLossPage = () => {
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-                        <Calendar className="h-5 w-5 text-gray-500" />
                     </div>
 
                     {/* Toggle Component */}
@@ -406,14 +405,14 @@ const ProfitLossPage = () => {
 
             {/* Custom Date Range Section */}
             <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-800">Custom Date Range Report</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Επιλέξτε διάστημα για αναφορά</h2>
 
                 <CustomCard>
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Start Date
+                                    Από :
                                 </label>
                                 <input
                                     type="date"
@@ -426,7 +425,7 @@ const ProfitLossPage = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    End Date
+                                    Έως:
                                 </label>
                                 <input
                                     type="date"
@@ -448,7 +447,7 @@ const ProfitLossPage = () => {
                                     ) : (
                                         <Search className="h-4 w-4" />
                                     )}
-                                    <span>Generate Report</span>
+                                    <span>Λήψη Αναφοράς</span>
                                 </Button>
                             </div>
                         </div>
@@ -459,7 +458,7 @@ const ProfitLossPage = () => {
                 {customReport && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <ReportCard
-                            title="Custom Period Report"
+                            title="Αναφορά για επιλεγμένο διάστημα"
                             report={customReport}
                             showExpenseBreakdown={true}
                             expenseToggleState={showCustomExpenseDistribution}
@@ -469,13 +468,13 @@ const ProfitLossPage = () => {
                         {/* Additional Analysis Card */}
                         <CustomCard>
                             <div className="p-6">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Financial Summary</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Σύνοψη</h3>
 
                                 <div className="space-y-4">
                                     <div className="bg-gray-50 p-4 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-2">Period Performance</div>
+                                        <div className="text-sm text-gray-600 mb-2">Απόδοση Περιόδου</div>
                                         <div className="text-lg font-semibold">
-                                            {customReport.netProfit >= 0 ? '📈 Profitable' : '📉 Loss Period'}
+                                            {customReport.netProfit >= 0 ? '📈 Περίοδος με κέρδη' : '📉 Περίοδος με ζημιές'}
                                         </div>
                                     </div>
 
@@ -484,24 +483,24 @@ const ProfitLossPage = () => {
                                             <div className="text-2xl font-bold text-green-600">
                                                 {formatCurrency(customReport.totalRevenue)}
                                             </div>
-                                            <div className="text-sm text-green-700">Revenue</div>
+                                            <div className="text-sm text-green-700">Τζίρος πωλήσεων</div>
                                         </div>
 
                                         <div className="text-center p-3 bg-red-50 rounded-lg">
                                             <div className="text-2xl font-bold text-red-600">
                                                 {formatCurrency(customReport.totalExpenses)}
                                             </div>
-                                            <div className="text-sm text-red-700">Expenses</div>
+                                            <div className="text-sm text-red-700">Έξοδα</div>
                                         </div>
                                     </div>
 
                                     <div className="border-t pt-4">
-                                        <div className="text-sm text-gray-600 mb-2">Expense Distribution</div>
+                                        <div className="text-sm text-gray-600 mb-2">Κατανομή Εξόδων</div>
                                         {customReport.expensesByType.length > 0 ? (
                                             <div className="space-y-2">
                                                 {customReport.expensesByType.slice(0, 3).map((expense, index) => (
                                                     <div key={index} className="flex items-center justify-between">
-                                                        <span className="text-sm">{expense.expenseType}</span>
+                                                        <span className="text-sm">{getExpenseTypeDisplayName(expense.expenseType)}</span>
                                                         <span className="text-sm font-medium">
                                                             {formatPercentage(expense.percentage)}
                                                         </span>
@@ -509,7 +508,7 @@ const ProfitLossPage = () => {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-gray-500">No expenses in this period</p>
+                                            <p className="text-sm text-gray-500">Δεν βρέθηκαν έξοδα</p>
                                         )}
                                     </div>
                                 </div>

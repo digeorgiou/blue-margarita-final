@@ -1,16 +1,11 @@
 import React from 'react';
-import { Eye, Edit, Trash2, Calendar, User, Link } from 'lucide-react';
+import { Eye, Edit, Trash2 } from 'lucide-react';
 import { FaEuroSign } from 'react-icons/fa6';
 import { Button } from '../';
-import type { ExpenseReadOnlyDTO } from '../../../types/api/expenseInterface';
 import { getExpenseTypeDisplayName } from '../../../utils/EnumUtils';
-
-interface ExpenseCardProps {
-    expense: ExpenseReadOnlyDTO;
-    onViewDetails: (expense: ExpenseReadOnlyDTO) => void;
-    onEdit: (expense: ExpenseReadOnlyDTO) => void;
-    onDelete: (expense: ExpenseReadOnlyDTO) => void;
-}
+import { ExpenseCardProps } from "../../../types/components/resultCard-types.ts";
+import { formatCurrency, formatDate } from "../../../utils/formatters.ts";
+import { getExpenseTypeColor, getExpenseIcon } from "./expense-card-config.ts";
 
 const ExpenseCard: React.FC<ExpenseCardProps> = ({
                                                      expense,
@@ -18,98 +13,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
                                                      onEdit,
                                                      onDelete
                                                  }) => {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
-    };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
-    const formatDateTime = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
-    const getExpenseTypeColor = (expenseType: string) => {
-        switch (expenseType.toLowerCase()) {
-            case 'utilities':
-                return 'text-blue-600 bg-blue-100';
-            case 'rent':
-                return 'text-purple-600 bg-purple-100';
-            case 'marketing':
-                return 'text-pink-600 bg-pink-100';
-            case 'supplies':
-                return 'text-green-600 bg-green-100';
-            case 'equipment':
-                return 'text-orange-600 bg-orange-100';
-            case 'maintenance':
-                return 'text-yellow-600 bg-yellow-100';
-            case 'insurance':
-                return 'text-indigo-600 bg-indigo-100';
-            case 'legal':
-                return 'text-gray-600 bg-gray-100';
-            case 'travel':
-                return 'text-teal-600 bg-teal-100';
-            case 'other':
-                return 'text-red-600 bg-red-100';
-            default:
-                return 'text-gray-600 bg-gray-100';
-        }
-    };
-
-    const getAmountCategory = () => {
-        const amount = expense.amount;
-        if (amount < 50) return { text: 'Μικρό Έξοδο', color: 'text-green-600 bg-green-100' };
-        if (amount < 200) return { text: 'Μέτριο Έξοδο', color: 'text-blue-600 bg-blue-100' };
-        if (amount < 500) return { text: 'Μεγάλο Έξοδο', color: 'text-orange-600 bg-orange-100' };
-        return { text: 'Πολύ Μεγάλο Έξοδο', color: 'text-red-600 bg-red-100' };
-    };
-
-    const getExpenseIcon = (expenseType: string) => {
-        switch (expenseType.toLowerCase()) {
-            case 'utilities':
-                return '⚡';
-            case 'salary':
-                return '👥'
-            case 'rent':
-                return '🏢';
-            case 'marketing':
-                return '📢';
-            case 'supplies':
-                return '📦';
-            case 'equipment':
-                return '🔧';
-            case 'maintenance':
-                return '🛠️';
-            case 'insurance':
-                return '🛡️';
-            case 'legal':
-                return '⚖️';
-            case 'travel':
-                return '✈️';
-            case 'other':
-                return '💼';
-            default:
-                return '💰';
-        }
-    };
-
-    const amountCategory = getAmountCategory();
     const expenseTypeColor = getExpenseTypeColor(expense.expenseType);
     const expenseIcon = getExpenseIcon(expense.expenseType);
 

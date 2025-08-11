@@ -1,9 +1,9 @@
 import React from 'react';
-import { Search, Eye, Edit, Trash2, Package, Cog, Settings } from 'lucide-react';
-import { Button, LoadingSpinner } from './../index';
-import { CustomTextInput } from "../inputs";
-import { ProcedureFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
-import { ProcedureCard } from '../resultCards';
+import {Cog, Search} from 'lucide-react';
+import {LoadingSpinner} from './../index';
+import {CustomTextInput} from "../inputs";
+import {ProcedureFilterPanelProps} from "../../../types/components/filterPanel-types.ts";
+import {ProcedureCard} from '../resultCards';
 
 const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
                                                                    searchTerm,
@@ -17,8 +17,6 @@ const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
                                                                }) => {
 
     // Show all procedures (active and inactive)
-    const filteredResults = searchResults;
-
     return (
         <div className="space-y-6">
             {/* Search Controls */}
@@ -43,7 +41,7 @@ const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
                         <LoadingSpinner/>
                         <p className="mt-4 text-gray-600">Αναζήτηση διαδικασιών...</p>
                     </div>
-                ) : filteredResults.length === 0 ? (
+                ) : searchResults.length === 0 ? (
                     <div className="text-center py-12">
                         <Cog className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">

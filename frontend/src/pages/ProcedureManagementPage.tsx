@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Alert, ProductUsageModal } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
@@ -6,7 +6,7 @@ import SuccessModal from '../components/ui/modals/SuccessModal';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { procedureService } from '../services/procedureService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Plus, Cog, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type {
     ProcedureReadOnlyDTO,
     ProcedureDetailedViewDTO,
@@ -14,8 +14,6 @@ import type {
     ProcedureUpdateDTO
 } from '../types/api/procedureInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
-
-// Updated components following the material pattern
 import { ProcedureFilterPanel } from '../components/ui/filterPanels'
 import ProcedureDetailModal from '../components/ui/modals/procedure/ProcedureDetailModal';
 import ProcedureUpdateModal from '../components/ui/modals/procedure/ProcedureUpdateModal';

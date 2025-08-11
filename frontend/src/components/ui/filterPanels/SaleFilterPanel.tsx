@@ -1,9 +1,7 @@
 import React from 'react';
-import { Calendar, Eye, Edit, Trash2, ShoppingCart, Filter, Users, MapPin, Package, CreditCard } from 'lucide-react';
+import { Calendar, ShoppingCart, Filter, Users, MapPin, Package, CreditCard } from 'lucide-react';
 import { Button, LoadingSpinner } from '../index';
 import { CustomSearchDropdown, CustomSelect, CustomDateInput } from '../inputs';
-import type { SaleReadOnlyDTO } from '../../../types/api/saleInterface';
-import { FaEuroSign } from "react-icons/fa6";
 import { SaleFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 import { transformCustomersForDropdown, transformSelectedCustomerForDropdown, transformProductsForDropdown, transformSelectedProductForDropdown } from "../../../utils/searchDropdownTransformations.ts";
 import { SaleCard } from "../resultCards";
@@ -55,33 +53,6 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
         onDateToFilterChange('');
     };
 
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
-    const getSaleTypeBadgeClass = (isWholesale: boolean): string => {
-        return isWholesale
-            ? 'bg-purple-100 text-purple-800'
-            : 'bg-green-100 text-green-800';
-    };
-
-    const getSaleTypeDisplayName = (isWholesale: boolean): string => {
-        return isWholesale ? 'Χονδρικής' : 'Λιανικής';
-    };
-
     const getPaymentMethodDisplayName = (paymentMethodValue: string): string => {
         const paymentMethod = paymentMethods.find(pm => pm.value === paymentMethodValue);
         return paymentMethod ? paymentMethod.displayName : paymentMethodValue;
@@ -113,28 +84,6 @@ const SaleFilterPanel: React.FC<SaleFilterPanelProps> = ({
     const transformedProductResults = transformProductsForDropdown(productSearchResults);
     const selectedCustomerForDropdown = transformSelectedCustomerForDropdown(selectedCustomer);
     const selectedProductForDropdown = transformSelectedProductForDropdown(selectedProduct)
-
-    const generateSaleTitle = (sale: SaleReadOnlyDTO): string => {
-        if (!sale.products || sale.products.length === 0) {
-            return `Πώληση #${sale.id}`;
-        }
-
-        // If only one product, show product name and quantity
-        if (sale.products.length === 1) {
-            const product = sale.products[0];
-            return `${product.productName} (×${product.quantity})`;
-        }
-
-        // If multiple products, show first product and count
-        const firstProduct = sale.products[0];
-        const remainingCount = sale.products.length - 1;
-
-        if (remainingCount === 1) {
-            return `${firstProduct.productName} (×${firstProduct.quantity}) + 1 ακόμα`;
-        } else {
-            return `${firstProduct.productName} (×${firstProduct.quantity}) + ${remainingCount} ακόμα`;
-        }
-    };
 
     return (
         <div className="space-y-6">

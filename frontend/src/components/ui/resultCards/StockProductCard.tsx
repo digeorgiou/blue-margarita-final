@@ -1,14 +1,6 @@
-import {useState} from "react";
+import React, {useState} from "react";
 import { Check, X } from 'lucide-react';
-
-interface StockProductCardProps {
-    product: StockManagementDTO;
-    onUpdateStock: (product: StockManagementDTO, newStock: number) => Promise<void>;
-    updating: boolean;
-    onUpdateStockLimit: (product: StockManagementDTO, newStock: number) => Promise<void>;
-    updatingLimit: boolean;
-    getStatusColor: (status: StockStatus) => string;
-}
+import type { StockProductCardProps } from "../../../types/components/resultCard-types.ts";
 
 const StockProductCard: React.FC<StockProductCardProps> = ({
                                                                product,
@@ -87,7 +79,6 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                         {product.status === 'NORMAL' && 'Κανονικό'}
                         {product.status === 'LOW' && 'Χαμηλό'}
                         {product.status === 'NEGATIVE' && 'Αρνητικό'}
-                        {product.status === 'NO_ALERT' && 'Χωρίς Ειδοποίηση'}
                     </span>
                 </div>
 
