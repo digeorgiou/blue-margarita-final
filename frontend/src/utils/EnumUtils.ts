@@ -27,3 +27,14 @@ export const getExpenseTypeDisplayName = (expenseType: string): string => {
     };
     return expenseTypeMap[expenseType];
 }
+
+export const getPricingIssueTypeDisplayName = (pricingIssueType: string): string => {
+    const pricingIssueTypeMap: Record<string, string> = {
+        'RETAIL_UNDERPRICED': "ΧΑΜΗΛΗ ΛΙΑΝΙΚΗ",
+        'WHOLESALE_UNDERPRICED': "ΧΑΜΗΛΗ ΧΟΝΔΡΙΚΗ",
+        'BOTH_UNDERPRICED': "ΧΑΜΗΛΕΣ ΤΙΜΕΣ",
+        'NO_ISSUES': "ΣΩΣΤΕΣ ΤΙΜΕΣ"
+    };
+    return pricingIssueTypeMap[pricingIssueType];
+}
+

@@ -7,3 +7,4 @@ export { default as PurchaseCard } from '../resultCards/PurchaseCard';
 export { default as ProcedureCard } from '../resultCards/ProcedureCard';
 export { default as ExpenseCard } from '../resultCards/ExpenseCard';
 export { default as SupplierCard } from '../resultCards/SupplierCard';
+export { default as MispricedProductCard } from '../resultCards/MispricedProductCard';

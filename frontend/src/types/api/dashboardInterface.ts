@@ -141,7 +141,10 @@ export interface ToDoTaskSummaryDTO {
     totalPendingCount: number;
 }
 
-export interface MispricedProductAlertDTO extends BaseProduct {
+export interface MispricedProductAlertDTO {
+    productId : number;
+    productName : string;
+    productCode : string;
     categoryName: string;
     suggestedRetailPrice: number;
     finalRetailPrice: number;
@@ -149,26 +152,8 @@ export interface MispricedProductAlertDTO extends BaseProduct {
     suggestedWholesalePrice: number;
     finalWholesalePrice: number;
     wholesalePriceDifferencePercentage: number;
-    issueType: PricingIssueType;
+    issueType: string;
 }
-
-export enum PricingIssueType {
-    RETAIL_UNDERPRICED = "RETAIL_UNDERPRICED",
-    WHOLESALE_UNDERPRICED = "WHOLESALE_UNDERPRICED",
-    BOTH_UNDERPRICED = "BOTH_UNDERPRICED",
-    NO_ISSUES = "NO_ISSUES"
-}
-
-export const PricingIssueTypeLabels: Record<PricingIssueType, string> = {
-    [PricingIssueType.RETAIL_UNDERPRICED]: "ΧΑΜΗΛΗ ΛΙΑΝΙΚΗ",
-    [PricingIssueType.WHOLESALE_UNDERPRICED]: "ΧΑΜΗΛΗ ΧΟΝΔΡΙΚΗ",
-    [PricingIssueType.BOTH_UNDERPRICED]: "ΧΑΜΗΛΗ ΛΙΑΝΙΚΗ ΚΑΙ ΧΟΝΔΡΙΚΗ",
-    [PricingIssueType.NO_ISSUES]: "ΣΩΣΤΕΣ ΤΙΜΕΣ"
-};
-
-export const getPricingIssueTypeLabel = (type: PricingIssueType): string => {
-    return PricingIssueTypeLabels[type];
-};
 
 export interface ToDoTaskInsertDTO {
     description: string;
