@@ -529,5 +529,46 @@ public class ProductRestController {
 
     }
 
+    @GetMapping("/mispriced-products/all")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<Paginated<MispricedProductAlertDTO>> getAllMispricedProducts(
+            @RequestParam(required = false, defaultValue = "20") BigDecimal thresholdPercentage,
+            @RequestParam(required = false) String nameOrCode,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String issueType,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int pageSize,
+            @RequestParam(required = false, defaultValue = "priceDifferencePercentage") String sortBy,
+            @RequestParam(required = false, defaultValue = "DESC") String sortDirection) {
 
+        Pageable pageable = PageRequest.of(page, pageSize,
+                Sort.by(Sort.Direction.valueOf(sortDirection.toUpperCase()), sortBy));
+
+        Paginated<MispricedProductAlertDTO> mispricedProducts =
+                productService.getAllMispricedProductsPaginated(thresholdPercentage, nameOrCode, categoryId, issueType, pageable);
+
+        return new ResponseEntity<>(mispricedProducts, HttpStatus.OK);
+    }
+
+    @PutMapping("/{productId}/final-retail-price")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<ProductListItemDTO> updateFinalRetailPrice(
+            @PathVariable Long productId,
+            @RequestParam @DecimalMin("0.01") @Digits(integer = 8, fraction = 2) BigDecimal newPrice,
+            @RequestParam Long updaterUserId) throws EntityNotFoundException {
+
+        ProductListItemDTO result = productService.updateFinalRetailPrice(productId, newPrice, updaterUserId);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @PutMapping("/{productId}/final-wholesale-price")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<ProductListItemDTO> updateFinalWholesalePrice(
+            @PathVariable Long productId,
+            @RequestParam @DecimalMin("0.01") @Digits(integer = 8, fraction = 2) BigDecimal newPrice,
+            @RequestParam Long updaterUserId) throws EntityNotFoundException {
+
+        ProductListItemDTO result = productService.updateFinalWholesalePrice(productId, newPrice, updaterUserId);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 }

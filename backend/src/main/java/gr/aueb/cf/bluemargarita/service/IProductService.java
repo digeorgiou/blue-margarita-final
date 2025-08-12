@@ -227,6 +227,8 @@ public interface IProductService {
      */
     PriceRecalculationResultDTO recalculateAllProductPrices(Long updaterUserId) throws EntityNotFoundException;
 
+    ProductListItemDTO updateFinalRetailPrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException;
+    ProductListItemDTO updateFinalWholesalePrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException;
 
     /**
      * Retrieves products where final selling prices are significantly different from suggested prices
@@ -247,8 +249,17 @@ public interface IProductService {
      * Used for "View All Mispriced Products" functionality from dashboard
      *
      * @param thresholdPercentage Minimum percentage difference to be considered significant
+     * @param nameOrCode filtering by name or code
+     * @param categoryId filtering by category
+     * @param issueType filtering by issue type
      * @param pageable Pagination and sorting parameters
      * @return Paginated list of mispriced products with filtering support
      */
-    Paginated<MispricedProductAlertDTO> getAllMispricedProductsPaginated(BigDecimal thresholdPercentage, Pageable pageable);
+    Paginated<MispricedProductAlertDTO> getAllMispricedProductsPaginated(
+            BigDecimal thresholdPercentage,
+            String nameOrCode,
+            Long categoryId,
+            String issueType,
+            Pageable pageable
+    );
 }

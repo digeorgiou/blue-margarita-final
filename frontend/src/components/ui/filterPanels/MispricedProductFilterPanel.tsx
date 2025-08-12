@@ -1,229 +1,184 @@
 import React from 'react';
+import { Search, DollarSign, Filter, Package } from 'lucide-react';
 import { Button, LoadingSpinner } from '../';
-import { CustomTextInput, CustomNumberInput, CustomSelect } from '../inputs';
-import {
-    Search,
-    Filter,
-    RefreshCw,
-    DollarSign,
-    ChevronUp,
-    ChevronDown
-} from 'lucide-react';
+import CustomTextInput from '../inputs/CustomTextInput.tsx';
+import CustomSelect from '../inputs/CustomSelect.tsx';
 import type { MispricedProductAlertDTO } from '../../../types/api/dashboardInterface';
-import type { LocationForDropdownDTO } from '../../../types/api/locationInterface';
 import type { CategoryForDropdownDTO } from '../../../types/api/categoryInterface';
-import { MispricedProductCard } from "../resultCards";
+import MispricedProductCard from '../resultCards/MispricedProductCard';
 
 interface MispricedProductFilterPanelProps {
-    // Filter values
+    // Filter states
+    searchTerm: string;
+    onSearchTermChange: (value: string) => void;
+    selectedCategoryId: number | undefined;
+    onCategoryIdChange: (value: number | undefined) => void;
+    selectedIssueType: string | undefined;
+    onIssueTypeChange: (value: string | undefined) => void;
     thresholdPercentage: number;
     onThresholdPercentageChange: (value: number) => void;
-    nameOrCodeFilter: string;
-    onNameOrCodeFilterChange: (value: string) => void;
-    categoryIdFilter: number | undefined;
-    onCategoryIdFilterChange: (value: number | undefined) => void;
-    categories: CategoryForDropdownDTO[];
-    issueTypeFilter: string;
-    onIssueTypeFilterChange: (value: string) => void;
-    locationIdFilter: number | undefined;
-    onLocationIdFilterChange: (value: number | undefined) => void;
-    locations: LocationForDropdownDTO[];
 
-    // Results and actions
+    // Data
+    categories: CategoryForDropdownDTO[];
     searchResults: MispricedProductAlertDTO[];
     loading: boolean;
+
+    // Actions
     onClearFilters: () => void;
-    onRefresh: () => void;
-    onSort: (field: string) => void;
-    sortBy: string;
-    sortDirection: 'ASC' | 'DESC';
-    onNavigateToProduct: (productId: number) => void;
+    onUpdateRetailPrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
+    onUpdateWholesalePrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
+    updatingRetailPrice: boolean;
+    updatingWholesalePrice: boolean;
+
+    // Utility functions
+    formatMoney: (amount: number) => string;
+    getPricingIssueTypeLabel: (issueType: string) => string;
 }
 
 const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = ({
+                                                                                     searchTerm,
+                                                                                     onSearchTermChange,
+                                                                                     selectedCategoryId,
+                                                                                     onCategoryIdChange,
+                                                                                     selectedIssueType,
+                                                                                     onIssueTypeChange,
                                                                                      thresholdPercentage,
                                                                                      onThresholdPercentageChange,
-                                                                                     nameOrCodeFilter,
-                                                                                     onNameOrCodeFilterChange,
-                                                                                     categoryIdFilter,
-                                                                                     onCategoryIdFilterChange,
                                                                                      categories,
-                                                                                     issueTypeFilter,
-                                                                                     onIssueTypeFilterChange,
-                                                                                     locationIdFilter,
-                                                                                     onLocationIdFilterChange,
-                                                                                     locations,
                                                                                      searchResults,
                                                                                      loading,
                                                                                      onClearFilters,
-                                                                                     onRefresh,
-                                                                                     onSort,
-                                                                                     sortBy,
-                                                                                     sortDirection,
-                                                                                     onNavigateToProduct
+                                                                                     onUpdateRetailPrice,
+                                                                                     onUpdateWholesalePrice,
+                                                                                     updatingRetailPrice,
+                                                                                     updatingWholesalePrice,
+                                                                                     formatMoney,
+                                                                                     getPricingIssueTypeLabel
                                                                                  }) => {
-
-
-    const getSortIcon = (field: string) => {
-        if (sortBy !== field) return null;
-        return sortDirection === 'ASC' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
-    };
-
-    // Dropdown options
+    // Category options
     const categoryOptions = [
         { value: '', label: 'Όλες οι κατηγορίες' },
-        ...categories.map(cat => ({ value: cat.id.toString(), label: cat.name }))
+        ...categories.map(cat => ({
+            value: cat.id.toString(),
+            label: cat.name
+        }))
     ];
 
-    const locationOptions = [
-        { value: '', label: 'Όλες οι τοποθεσίες' },
-        ...locations.map(loc => ({ value: loc.id.toString(), label: loc.name }))
-    ];
-
+    // Issue type options
     const issueTypeOptions = [
         { value: '', label: 'Όλοι οι τύποι προβλημάτων' },
-        { value: 'RETAIL_UNDERPRICED', label: 'Λιανική Χαμηλή Τιμή' },
-        { value: 'WHOLESALE_UNDERPRICED', label: 'Χονδρική Χαμηλή Τιμή' },
-        { value: 'BOTH_UNDERPRICED', label: 'Και οι Δύο Χαμηλές' }
+        { value: 'BOTH_UNDERPRICED', label: 'Χαμηλή Λιανική & Χονδρική' },
+        { value: 'RETAIL_UNDERPRICED', label: 'Χαμηλή Λιανική Τιμή' },
+        { value: 'WHOLESALE_UNDERPRICED', label: 'Χαμηλή Χονδρική Τιμή' }
+    ];
+
+    // Threshold options
+    const thresholdOptions = [
+        { value: '10', label: '10%+' },
+        { value: '20', label: '20%+' },
+        { value: '30', label: '30%+' },
+        { value: '50', label: '50%+' }
     ];
 
     return (
         <div className="space-y-6">
-            {/* Filter Controls */}
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Name/Code Search */}
-                    <CustomTextInput
-                        label="Αναζήτηση με όνομα ή κωδικό"
-                        value={nameOrCodeFilter}
-                        onChange={onNameOrCodeFilterChange}
-                        placeholder="Αναζήτηση προϊόντων..."
-                        icon={<Search className="w-5 h-5" />}
-                        className="w-full"
-                    />
-
-                    {/* Threshold Percentage */}
-                    <CustomNumberInput
-                        label="Όριο Ποσοστού Διαφοράς (%)"
-                        value={thresholdPercentage}
-                        onChange={onThresholdPercentageChange}
-                        min={1}
-                        max={100}
-                        step={1}
-                        icon={<DollarSign className="w-5 h-5 text-green-500" />}
-                        placeholder="π.χ. 20"
-                    />
-
-                    {/* Issue Type Filter */}
-                    <CustomSelect
-                        label="Τύπος Προβλήματος"
-                        value={issueTypeFilter}
-                        onChange={(value) => onIssueTypeFilterChange(value as string)}
-                        options={issueTypeOptions}
-                        placeholder=""
-                    />
+            {/* FILTERS SECTION */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                    <DollarSign className="w-6 h-6 text-red-500" />
+                    <h2 className="text-xl font-semibold text-gray-800">Φίλτρα Αναζήτησης</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Category Filter */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <CustomTextInput
+                        label="Αναζήτηση"
+                        value={searchTerm}
+                        onChange={onSearchTermChange}
+                        placeholder="Όνομα ή κωδικός προϊόντος..."
+                        icon={<Search className="w-5 h-5 text-gray-400" />}
+                    />
+
                     <CustomSelect
                         label="Κατηγορία"
-                        value={categoryIdFilter?.toString() || ''}
-                        onChange={(value) => onCategoryIdFilterChange(value ? parseInt(value as string) : undefined)}
+                        value={selectedCategoryId?.toString() || ''}
+                        onChange={(value) => onCategoryIdChange(value ? parseInt(value) : undefined)}
                         options={categoryOptions}
-                        placeholder=""
+                        icon={<Package className="w-5 h-5 text-blue-500" />}
                     />
 
-                    {/* Location Filter */}
                     <CustomSelect
-                        label="Τοποθεσία"
-                        value={locationIdFilter?.toString() || ''}
-                        onChange={(value) => onLocationIdFilterChange(value ? parseInt(value as string) : undefined)}
-                        options={locationOptions}
-                        placeholder=""
+                        label="Τύπος Προβλήματος"
+                        value={selectedIssueType || ''}
+                        onChange={(value) => onIssueTypeChange(value || undefined)}
+                        options={issueTypeOptions}
+                        icon={<DollarSign className="w-5 h-5 text-red-500" />}
                     />
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col space-y-2">
+                    <CustomSelect
+                        label="Ελάχιστη Διαφορά"
+                        value={thresholdPercentage.toString()}
+                        onChange={(value) => onThresholdPercentageChange(Number(value))}
+                        options={thresholdOptions}
+                        icon={<DollarSign className="w-5 h-5 text-orange-500" />}
+                    />
+
+                    <div className="flex items-end">
                         <Button
                             onClick={onClearFilters}
-                            variant="secondary"
-                            size="sm"
-                            className="w-full"
+                            variant="pink"
+                            className="w-full h-13"
                         >
-                            <Filter className="w-4 h-4 mr-2" />
+                            <Filter className="w-5 h-5 mr-2" />
                             Καθαρισμός Φίλτρων
-                        </Button>
-                        <Button
-                            onClick={onRefresh}
-                            variant="purple"
-                            size="sm"
-                            disabled={loading}
-                            className="w-full"
-                        >
-                            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                            Ανανέωση
                         </Button>
                     </div>
                 </div>
             </div>
 
-            {/* Results Section */}
+            {/* RESULTS SECTION */}
             <div className="bg-white rounded-lg border border-gray-200">
                 {loading ? (
                     <div className="flex items-center justify-center p-8">
                         <LoadingSpinner />
+                        <span className="ml-3 text-gray-600">Φόρτωση προϊόντων...</span>
                     </div>
-                ) : searchResults.length === 0 ? (
-                    <div className="text-center py-12">
-                        <div className="text-6xl mb-4">✅</div>
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">Δεν βρέθηκαν προϊόντα με λάθος τιμή</h3>
-                        <p className="text-gray-600 mb-4">
-                            {nameOrCodeFilter || categoryIdFilter || issueTypeFilter || locationIdFilter
-                                ? 'Δοκιμάστε να αλλάξετε τα φίλτρα σας για να δείτε περισσότερα προϊόντα.'
-                                : 'Όλες οι τιμές είναι σωστές εντός του καθορισμένου ορίου!'}
-                        </p>
-                        <Button onClick={onClearFilters} variant="secondary">
-                            Καθαρισμός Φίλτρων
-                        </Button>
-                    </div>
-                ) : (
-                    <div>
-                        {/* Products Header */}
-                        <div className="bg-gray-50 border-b border-gray-200 p-4">
-                            <div className="flex justify-between items-center">
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Button
-                                        onClick={() => onSort('productName')}
-                                        variant="secondary"
-                                        size="sm"
-                                    >
-                                        <span>Όνομα</span>
-                                        {getSortIcon('productName')}
-                                    </Button>
-                                    <Button
-                                        onClick={() => onSort('priceDifferencePercentage')}
-                                        variant="secondary"
-                                        size="sm"
-                                    >
-                                        <DollarSign className="w-4 h-4" />
-                                        <span>Διαφορά %</span>
-                                        {getSortIcon('priceDifferencePercentage')}
-                                    </Button>
-                                </div>
-                            </div>
+                ) : searchResults && searchResults.length > 0 ? (
+                    <div className="p-6">
+                        {/* Results Summary */}
+                        <div className="mb-4 flex items-center justify-between">
+                            <p className="text-sm text-gray-600">
+                                Εμφάνιση {searchResults.length} προϊόντων με λάθος τιμή
+                            </p>
+                            <p className="text-xs text-gray-500">
+                                Κλικ στις τιμές για επεξεργασία
+                            </p>
                         </div>
 
-                        {/* Products List */}
+                        {/* Products Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {searchResults.map((product) => (
                                 <MispricedProductCard
                                     key={product.productId}
                                     product={product}
-                                    onNavigateToProduct={onNavigateToProduct}
+                                    onUpdateRetailPrice={onUpdateRetailPrice}
+                                    onUpdateWholesalePrice={onUpdateWholesalePrice}
+                                    updatingRetailPrice={updatingRetailPrice}
+                                    updatingWholesalePrice={updatingWholesalePrice}
+                                    formatMoney={formatMoney}
+                                    getPricingIssueTypeLabel={getPricingIssueTypeLabel}
                                 />
                             ))}
                         </div>
+                    </div>
+                ) : (
+                    <div className="text-center py-12">
+                        <DollarSign className="w-12 h-12 mx-auto text-green-400 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            Δεν βρέθηκαν προϊόντα με λάθος τιμή
+                        </h3>
+                        <p className="text-gray-500 mb-4">
+                            Όλες οι τιμές των προϊόντων είναι σωστές ή δοκιμάστε διαφορετικά φίλτρα.
+                        </p>
                     </div>
                 )}
             </div>

@@ -1,228 +1,290 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
-import { dashboardService } from '../services/dashboardService';
-import { locationService } from '../services/locationService';
+import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import MispricedProductFilterPanel from '../components/ui/filterPanels/MispricedProductFilterPanel.tsx';
+import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { TrendingDown } from 'lucide-react';
 import type {
-    MispricedProductAlertDTO,
-    Paginated
+    MispricedProductAlertDTO
 } from '../types/api/dashboardInterface';
-import type { LocationForDropdownDTO } from '../types/api/locationInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
-
-import MispricedProductFilterPanel from '../components/ui/filterPanels/MispricedProductFilterPanel';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import { dashboardService } from "../services/dashboardService.ts";
 
 interface MispricedProductsPageProps {
     onNavigate: (page: string) => void;
 }
 
-const MispricedProductsPage: React.FC<MispricedProductsPageProps> = ({ onNavigate }) => {
-    // FILTER STATE
-    const [thresholdPercentage, setThresholdPercentage] = useState(20);
-    const [nameOrCodeFilter, setNameOrCodeFilter] = useState('');
-    const [categoryIdFilter, setCategoryIdFilter] = useState<number | undefined>(undefined);
-    const [issueTypeFilter, setIssueTypeFilter] = useState('');
-    const [locationIdFilter, setLocationIdFilter] = useState<number | undefined>(undefined);
-
-    // PAGINATION STATE
-    const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(20);
-    const [sortBy, setSortBy] = useState('priceDifferencePercentage');
-    const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
-
-    // DATA STATE
-    const [searchResults, setSearchResults] = useState<Paginated<MispricedProductAlertDTO> | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [locations, setLocations] = useState<LocationForDropdownDTO[]>([]);
+const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
+    // Raw data from backend
+    const [allProducts, setAllProducts] = useState<MispricedProductAlertDTO[]>([]);
     const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [updatingRetailPrice, setUpdatingRetailPrice] = useState(false);
+    const [updatingWholesalePrice, setUpdatingWholesalePrice] = useState(false);
 
-    // ERROR HANDLING
-    const { generalError, handleApiError, clearErrors } = useFormErrorHandler();
+    // Filter states
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
+    const [selectedIssueType, setSelectedIssueType] = useState<string | undefined>(undefined);
+    const [thresholdPercentage, setThresholdPercentage] = useState(20);
 
-    // LOAD DROPDOWN DATA
+    // Pagination states (for frontend pagination)
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize, setPageSize] = useState(9);
+
+    // Error handling
+    const { generalError, clearErrors, handleApiError } = useFormErrorHandler();
+
+    // Load initial data
     useEffect(() => {
-        const loadDropdownData = async () => {
-            try {
-                const [locationsData, categoriesData] = await Promise.all([
-                    locationService.getActiveLocationsForDropdown(),
-                    categoryService.getCategoriesForDropdown()
-                ]);
-                setLocations(locationsData);
-                setCategories(categoriesData);
-            } catch (err) {
-                console.error('Failed to load dropdown data:', err);
-            }
-        };
-
-        loadDropdownData();
+        loadCategories();
+        loadAllMispricedProducts();
     }, []);
 
-    // LOAD DATA FUNCTION
-    const loadData = async () => {
+    // Frontend filtering and pagination using useMemo
+    const { paginatedProducts, totalPages, totalElements } = useMemo(() => {
+        let filtered = [...allProducts];
+
+        // Apply threshold filter
+        filtered = filtered.filter(product =>
+            product.priceDifferencePercentage >= thresholdPercentage
+        );
+
+        // Apply search term filter (name or code)
+        if (searchTerm.trim()) {
+            const search = searchTerm.toLowerCase().trim();
+            filtered = filtered.filter(product =>
+                product.productName.toLowerCase().includes(search) ||
+                product.productCode.toLowerCase().includes(search)
+            );
+        }
+
+        // Apply category filter
+        if (selectedCategoryId) {
+            // We need to get category name from the product and match it with selected category
+            const selectedCategory = categories.find(cat => cat.id === selectedCategoryId);
+            if (selectedCategory) {
+                // Since MispricedProductAlertDTO doesn't have categoryId, we'll need to add it
+                // For now, we'll skip this filter until we add categoryId to the DTO
+                // filtered = filtered.filter(product => product.categoryId === selectedCategoryId);
+            }
+        }
+
+        // Apply issue type filter
+        if (selectedIssueType) {
+            filtered = filtered.filter(product => product.issueType === selectedIssueType);
+        }
+
+        // Sort by price difference percentage (descending)
+        filtered.sort((a, b) => b.priceDifferencePercentage - a.priceDifferencePercentage);
+
+        // Calculate pagination
+        const totalElements = filtered.length;
+        const totalPages = Math.ceil(totalElements / pageSize);
+        const startIndex = currentPage * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedProducts = filtered.slice(startIndex, endIndex);
+
+        return {
+            filteredProducts: filtered,
+            paginatedProducts,
+            totalPages,
+            totalElements
+        };
+    }, [
+        allProducts,
+        searchTerm,
+        selectedCategoryId,
+        selectedIssueType,
+        thresholdPercentage,
+        currentPage,
+        pageSize,
+        categories
+    ]);
+
+    const loadCategories = async () => {
+        try {
+            const result = await categoryService.getCategoriesForDropdown();
+            setCategories(result);
+        } catch (error) {
+            console.error('❌ Load categories error:', error);
+            await handleApiError(error);
+        }
+    };
+
+    const loadAllMispricedProducts = async () => {
         try {
             setLoading(true);
             clearErrors();
 
-            const params = {
-                thresholdPercentage,
-                nameOrCode: nameOrCodeFilter || undefined,
-                categoryId: categoryIdFilter || undefined,
-                issueType: issueTypeFilter || undefined,
-                locationId: locationIdFilter || undefined,
-                page: currentPage,
-                pageSize: pageSize,
-                sortBy: sortBy,
-                sortDirection: sortDirection
-            };
+            // Get all mispriced products with a low threshold (we'll filter on frontend)
+            const result = await dashboardService.getAllMispricedProducts({
+                thresholdPercentage: 5, // Low threshold to get all potential mispriced products
+                page: 0,
+                pageSize: 1000, // Large page size to get all data
+                sortBy: 'priceDifferencePercentage',
+                sortDirection: 'DESC'
+            });
 
-            // Create clean params object (remove empty filters)
-            const cleanParams = Object.fromEntries(
-                Object.entries(params).filter(([, value]) =>
-                    value !== '' && value !== null && value !== undefined
-                )
-            );
-
-            const response = await dashboardService.getAllMispricedProducts(cleanParams);
-            setSearchResults(response);
-
-        } catch (err) {
-            handleApiError(err, 'Failed to load mispriced products');
+            console.log('📦 All mispriced products loaded:', result);
+            setAllProducts(result.data || []);
+        } catch (error) {
+            console.error('❌ Load error:', error);
+            await handleApiError(error);
         } finally {
             setLoading(false);
         }
     };
 
-    // EFFECT TO LOAD DATA
-    useEffect(() => {
-        loadData();
-    }, [currentPage, pageSize, sortBy, sortDirection, thresholdPercentage, issueTypeFilter, categoryIdFilter, locationIdFilter]);
+    // Filter handlers
+    const handleClearFilters = () => {
+        setSearchTerm('');
+        setSelectedCategoryId(undefined);
+        setSelectedIssueType(undefined);
+        setThresholdPercentage(20);
+        setCurrentPage(0);
+    };
 
-    // Debounced search for text filters
-    useEffect(() => {
-        const debounceTimer = setTimeout(() => {
-            setCurrentPage(0); // Reset to first page when filtering
-            loadData();
-        }, 500);
-
-        return () => clearTimeout(debounceTimer);
-    }, [nameOrCodeFilter]);
-
-    // PAGINATION HANDLERS
+    // Pagination handlers
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize);
-        setCurrentPage(0); // Reset to first page when changing page size
-    };
-
-    // FILTER HANDLERS
-    const handleClearFilters = () => {
-        setNameOrCodeFilter('');
-        setThresholdPercentage(20);
-        setIssueTypeFilter('');
-        setCategoryIdFilter(undefined);
-        setLocationIdFilter(undefined);
+    const handlePageSizeChange = (size: number) => {
+        setPageSize(size);
         setCurrentPage(0);
     };
 
-    const handleSort = (field: string) => {
-        if (sortBy === field) {
-            setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');
-        } else {
-            setSortBy(field);
-            setSortDirection('ASC');
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [searchTerm, selectedCategoryId, selectedIssueType, thresholdPercentage]);
+
+    // Price update handlers
+    const handleRetailPriceUpdate = async (product: MispricedProductAlertDTO, newPrice: number) => {
+        try {
+            setUpdatingRetailPrice(true);
+            clearErrors();
+
+            await productService.updateFinalRetailPrice(product.productId, newPrice, 1);
+
+            // Refresh all data after update
+            await loadAllMispricedProducts();
+
+        } catch (error) {
+            await handleApiError(error);
+        } finally {
+            setUpdatingRetailPrice(false);
+        }
+    };
+
+    const handleWholesalePriceUpdate = async (product: MispricedProductAlertDTO, newPrice: number) => {
+        try {
+            setUpdatingWholesalePrice(true);
+            clearErrors();
+
+            await productService.updateFinalWholesalePrice(product.productId, newPrice, 1);
+
+            // Refresh all data after update
+            await loadAllMispricedProducts();
+
+        } catch (error) {
+            await handleApiError(error);
+        } finally {
+            setUpdatingWholesalePrice(false);
+        }
+    };
+
+    // Utility functions
+    const formatMoney = (amount: number): string => {
+        return `€${amount.toFixed(2)}`;
+    };
+
+    const getPricingIssueTypeLabel = (issueType: string): string => {
+        switch (issueType) {
+            case 'BOTH_UNDERPRICED':
+                return 'Χαμηλή Λιανική & Χονδρική';
+            case 'RETAIL_UNDERPRICED':
+                return 'Χαμηλή Λιανική Τιμή';
+            case 'WHOLESALE_UNDERPRICED':
+                return 'Χαμηλή Χονδρική Τιμή';
+            default:
+                return issueType;
         }
     };
 
     return (
-        <div className="min-h-screen p-4 space-y-6">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-orange-600 to-red-700 rounded-xl p-6 text-white shadow-lg">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                        <TrendingDown className="w-8 h-8" />
+        <div className="min-h-screen p-4">
+            <div className="max-w-7xl mx-auto space-y-8 mt-8">
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold">Προϊόντα με Λάθος Τιμή</h1>
-                            <p className="text-orange-100 mt-1">Προϊόντα με σημαντικές διαφορές τιμολόγησης</p>
+                            <h1 className="text-3xl font-bold text-gray-900">
+                                Προϊόντα με Λάθος Τιμή
+                            </h1>
+                            <p className="text-gray-600 mt-1">
+                                Διαχειριστείτε προϊόντα που χρειάζονται ενημέρωση τιμών
+                                {totalElements > 0 && (
+                                    <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                        {totalElements} προϊόντα βρέθηκαν
+                                    </span>
+                                )}
+                            </p>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-3 mt-4 md:mt-0">
-                        <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
-                    </div>
-                    <Button
-                        onClick={() => onNavigate('dashboard')}
-                        variant="secondary"
-                        size="lg"
-                        className="w-full md:w-auto mt-4 md:mt-0"
-                    >
-                        ← Επιστροφή στο Dashboard
-                    </Button>
-                </div>
-            </div>
 
-            {/* Error Display */}
-            {generalError && (
-                <Alert
-                    variant="error"
-                    onClose={clearErrors}
-                />
-            )}
+                    {/* General Error Display */}
+                    {generalError && (
+                        <Alert variant="error" className="mb-6">
+                            {generalError}
+                        </Alert>
+                    )}
 
-            {/* Filter Panel */}
-            <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                <CustomCard className="shadow-lg">
-                    <MispricedProductFilterPanel
-                        // Filter values
-                        thresholdPercentage={thresholdPercentage}
-                        onThresholdPercentageChange={setThresholdPercentage}
-                        nameOrCodeFilter={nameOrCodeFilter}
-                        onNameOrCodeFilterChange={setNameOrCodeFilter}
-                        categoryIdFilter={categoryIdFilter}
-                        onCategoryIdFilterChange={setCategoryIdFilter}
-                        categories={categories}
-                        issueTypeFilter={issueTypeFilter}
-                        onIssueTypeFilterChange={setIssueTypeFilter}
-                        locationIdFilter={locationIdFilter}
-                        onLocationIdFilterChange={setLocationIdFilter}
-                        locations={locations}
+                    {/* Search and Results Card */}
+                    <CustomCard className="shadow-lg">
+                        <MispricedProductFilterPanel
+                            searchTerm={searchTerm}
+                            onSearchTermChange={setSearchTerm}
+                            selectedCategoryId={selectedCategoryId}
+                            onCategoryIdChange={setSelectedCategoryId}
+                            selectedIssueType={selectedIssueType}
+                            onIssueTypeChange={setSelectedIssueType}
+                            thresholdPercentage={thresholdPercentage}
+                            onThresholdPercentageChange={setThresholdPercentage}
+                            categories={categories}
+                            searchResults={paginatedProducts}
+                            loading={loading}
+                            onClearFilters={handleClearFilters}
+                            onUpdateRetailPrice={handleRetailPriceUpdate}
+                            onUpdateWholesalePrice={handleWholesalePriceUpdate}
+                            updatingRetailPrice={updatingRetailPrice}
+                            updatingWholesalePrice={updatingWholesalePrice}
+                            formatMoney={formatMoney}
+                            getPricingIssueTypeLabel={getPricingIssueTypeLabel}
+                        />
 
-                        // Results and actions
-                        searchResults={searchResults?.data || []}
-                        loading={loading}
-                        onClearFilters={handleClearFilters}
-                        onRefresh={loadData}
-                        onSort={handleSort}
-                        sortBy={sortBy}
-                        sortDirection={sortDirection}
-                        onNavigateToProduct={(productId: number) => onNavigate(`product-details-${productId}`)}
-                    />
-                </CustomCard>
-
-                {/* Pagination */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <CustomCard title="" className="shadow-lg">
-                        <div className="w-full overflow-x-auto">
-                            <EnhancedPaginationControls
-                                paginationData={{
-                                    currentPage: searchResults.currentPage,
-                                    totalPages: searchResults.totalPages,
-                                    totalElements: searchResults.totalElements,
-                                    pageSize: searchResults.pageSize,
-                                    numberOfElements: searchResults.numberOfElements
-                                }}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
-                                className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                            />
-                        </div>
+                        {/* Pagination */}
+                        {totalElements > 0 && (
+                            <div className="mt-6">
+                                <EnhancedPaginationControls
+                                    paginationData={{
+                                        currentPage: currentPage,
+                                        totalPages: totalPages,
+                                        totalElements: totalElements,
+                                        pageSize: pageSize,
+                                        numberOfElements: paginatedProducts.length
+                                    }}
+                                    onPageChange={handlePageChange}
+                                    onPageSizeChange={handlePageSizeChange}
+                                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                                />
+                            </div>
+                        )}
                     </CustomCard>
-                )}
+                </div>
             </div>
         </div>
     );

@@ -10,7 +10,7 @@ import {
     ProductStatsSummaryDTO,
     PriceRecalculationResultDTO
 } from "../types/api/productInterface.ts";
-import { Paginated } from "../types/api/dashboardInterface.ts";
+import {MispricedProductAlertDTO, Paginated} from "../types/api/dashboardInterface.ts";
 
 const API_BASE_URL = '/api/products';
 
@@ -342,6 +342,47 @@ class ProductService {
         }
     }
 
+    async getAllMispricedProducts(params: {
+        thresholdPercentage?: number;
+        nameOrCode?: string;
+        categoryId?: number;
+        issueType?: string;
+        page?: number;
+        pageSize?: number;
+        sortBy?: string;
+        sortDirection?: string;
+    } = {}): Promise<Paginated<MispricedProductAlertDTO>> {
+        try {
+            const queryParams = new URLSearchParams();
+
+            // Set default threshold if not provided
+            if (!params.thresholdPercentage) {
+                params.thresholdPercentage = 20;
+            }
+
+            // Add all parameters to query string if they exist
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    queryParams.append(key, value.toString());
+                }
+            });
+
+            const response = await fetch(`${API_BASE_URL}/mispriced-products/all?${queryParams}`, {
+                method: 'GET',
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch all mispriced products: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('All mispriced products error:', error);
+            throw error;
+        }
+    }
+
     // =============================================================================
     // UTILITY METHODS
     // =============================================================================
@@ -424,7 +465,43 @@ class ProductService {
             throw error;
         }
     }
+
+    async updateFinalRetailPrice(productId: number, newPrice: number, updaterUserId: number): Promise<ProductListItemDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(
+                `${API_BASE_URL}/${productId}/final-retail-price?newPrice=${newPrice}&updaterUserId=${updaterUserId}`,
+                {
+                    method: 'PUT',
+                    headers: this.getAuthHeaders()
+                }
+            );
+
+            return await response.json();
+        } catch (error) {
+            console.error('Update final retail price error:', error);
+            throw error;
+        }
+    }
+
+    async updateFinalWholesalePrice(productId: number, newPrice: number, updaterUserId: number): Promise<ProductListItemDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(
+                `${API_BASE_URL}/${productId}/final-wholesale-price?newPrice=${newPrice}&updaterUserId=${updaterUserId}`,
+                {
+                    method: 'PUT',
+                    headers: this.getAuthHeaders()
+                }
+            );
+
+            return await response.json();
+        } catch (error) {
+            console.error('Update final wholesale price error:', error);
+            throw error;
+        }
+    }
 }
+
+
 
 // Export a singleton instance
 export const productService = new ProductService();

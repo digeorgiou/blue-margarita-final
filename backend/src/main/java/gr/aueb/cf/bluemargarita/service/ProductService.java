@@ -488,6 +488,35 @@ public class ProductService implements IProductService{
         );
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProductListItemDTO updateFinalRetailPrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException {
+        Product product = getProductEntityById(productId);
+        User updater = getUserEntityById(updaterUserId);
+
+        product.setFinalSellingPriceRetail(newPrice);
+        product.setLastUpdatedBy(updater);
+
+        Product savedProduct = productRepository.save(product);
+
+        ProductCostDataDTO data = getDataDTOForProduct(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct, data);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProductListItemDTO updateFinalWholesalePrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException {
+        Product product = getProductEntityById(productId);
+        User updater = getUserEntityById(updaterUserId);
+
+        product.setFinalSellingPriceWholesale(newPrice);
+        product.setLastUpdatedBy(updater);
+
+        Product savedProduct = productRepository.save(product);
+        ProductCostDataDTO data = getDataDTOForProduct(savedProduct);
+        return mapper.mapToProductListItemDTO(savedProduct, data);
+    }
+
     // =============================================================================
     // WRONG PRICING ALERTS
     // =============================================================================
@@ -513,7 +542,12 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(readOnly = true)
-    public Paginated<MispricedProductAlertDTO> getAllMispricedProductsPaginated(BigDecimal thresholdPercentage, Pageable pageable) {
+    public Paginated<MispricedProductAlertDTO> getAllMispricedProductsPaginated(
+            BigDecimal thresholdPercentage,
+            String nameOrCode,
+            Long categoryId,
+            String issueType,
+            Pageable pageable) {
         // We multiply by 3 to account for products that might be filtered out
         int batchSize = Math.max(1000, (pageable.getPageNumber() + 1) * pageable.getPageSize() * 3);
         Pageable candidatePageable = PageRequest.of(0, batchSize);
