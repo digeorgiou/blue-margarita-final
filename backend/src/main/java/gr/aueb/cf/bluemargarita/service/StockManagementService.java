@@ -335,7 +335,8 @@ public class StockManagementService implements IStockManagementService{
                 .and(ProductSpecification.productCategoryId(filters.getCategoryId()))
                 .and(ProductSpecification.productStockBetween(filters.getMinStock(), filters.getMaxStock()))
                 .and(ProductSpecification.productIsActive(filters.getIsActive()))
-                .and(ProductSpecification.productHasStatus(filters.getStatus()));
+                .and(ProductSpecification.productHasStatus(filters.getStatus()))
+                .and(ProductSpecification.productLowStock(filters.getLowStock()));
     }
 
     private Integer countProductsByFilters(ProductFilters filters) {

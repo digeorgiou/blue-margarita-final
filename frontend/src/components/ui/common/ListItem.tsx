@@ -15,7 +15,7 @@ const ListItem = ({
     };
 
     return (
-        <div className={`flex justify-between items-center p-3 rounded-lg border-l-4 ${
+        <div className={`flex justify-between items-center p-3 mr-2 rounded-lg border-l-4 ${
             isWarning
                 ? 'bg-yellow-50 border-yellow-400'
                 : 'bg-gray-50 border-blue-400'

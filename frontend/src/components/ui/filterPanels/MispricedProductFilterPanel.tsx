@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, DollarSign, Filter, Package } from 'lucide-react';
+import { Search, DollarSign, Filter, Package, AlertTriangle } from 'lucide-react';
 import { Button, LoadingSpinner } from '../';
 import CustomTextInput from '../inputs/CustomTextInput.tsx';
 import CustomSelect from '../inputs/CustomSelect.tsx';
@@ -57,16 +57,16 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                                                                                  }) => {
     // Category options
     const categoryOptions = [
-        { value: '', label: 'Όλες οι κατηγορίες' },
-        ...categories.map(cat => ({
-            value: cat.id.toString(),
-            label: cat.name
+        { value: '', label: 'Όλες οι Κατηγορίες' },
+        ...categories.map(category => ({
+            value: category.id.toString(),
+            label: category.name
         }))
     ];
 
     // Issue type options
     const issueTypeOptions = [
-        { value: '', label: 'Όλοι οι τύποι προβλημάτων' },
+        { value: '', label: 'Όλα τα Προβλήματα' },
         { value: 'BOTH_UNDERPRICED', label: 'Χαμηλή Λιανική & Χονδρική' },
         { value: 'RETAIL_UNDERPRICED', label: 'Χαμηλή Λιανική Τιμή' },
         { value: 'WHOLESALE_UNDERPRICED', label: 'Χαμηλή Χονδρική Τιμή' }
@@ -75,6 +75,7 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
     // Threshold options
     const thresholdOptions = [
         { value: '10', label: '10%+' },
+        { value: '15', label: '15%+' },
         { value: '20', label: '20%+' },
         { value: '30', label: '30%+' },
         { value: '50', label: '50%+' }
@@ -82,36 +83,37 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
 
     return (
         <div className="space-y-6">
-            {/* FILTERS SECTION */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <DollarSign className="w-6 h-6 text-red-500" />
-                    <h2 className="text-xl font-semibold text-gray-800">Φίλτρα Αναζήτησης</h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Filter Controls - Following consistent pattern */}
+            <div className="space-y-4">
+                {/* Row 1: Search and Category - 2 columns on desktop, stack on mobile */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <CustomTextInput
-                        label="Αναζήτηση"
+                        label="Αναζήτηση Προϊόντων"
                         value={searchTerm}
                         onChange={onSearchTermChange}
-                        placeholder="Όνομα ή κωδικός προϊόντος..."
+                        placeholder="Αναζήτηση με όνομα ή κωδικό..."
                         icon={<Search className="w-5 h-5 text-gray-400" />}
                     />
 
                     <CustomSelect
                         label="Κατηγορία"
-                        value={selectedCategoryId?.toString() || ''}
-                        onChange={(value) => onCategoryIdChange(value ? parseInt(value) : undefined)}
+                        value={selectedCategoryId || ''}
+                        onChange={(value) => onCategoryIdChange(value === '' ? undefined : Number(value))}
                         options={categoryOptions}
-                        icon={<Package className="w-5 h-5 text-blue-500" />}
+                        icon={<Package className="w-5 h-5 text-purple-500" />}
+                        placeholder=""
                     />
+                </div>
 
+                {/* Row 2: Issue Type, Threshold, Clear Button - 4 columns on desktop, stack on mobile */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <CustomSelect
                         label="Τύπος Προβλήματος"
                         value={selectedIssueType || ''}
                         onChange={(value) => onIssueTypeChange(value || undefined)}
                         options={issueTypeOptions}
-                        icon={<DollarSign className="w-5 h-5 text-red-500" />}
+                        icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
+                        placeholder=""
                     />
 
                     <CustomSelect
@@ -120,13 +122,14 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                         onChange={(value) => onThresholdPercentageChange(Number(value))}
                         options={thresholdOptions}
                         icon={<DollarSign className="w-5 h-5 text-orange-500" />}
+                        placeholder=""
                     />
-
+                    {/* Clear Filters Button - aligned to match other panels */}
                     <div className="flex items-end">
                         <Button
                             onClick={onClearFilters}
-                            variant="pink"
-                            className="w-full h-13"
+                            variant="secondary"
+                            className="w-full"
                         >
                             <Filter className="w-5 h-5 mr-2" />
                             Καθαρισμός Φίλτρων
@@ -135,17 +138,31 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                 </div>
             </div>
 
-            {/* RESULTS SECTION */}
-            <div className="bg-white rounded-lg border border-gray-200">
-                {loading ? (
+            {/* Results Section */}
+            <div>
+                {loading && (
                     <div className="flex items-center justify-center p-8">
                         <LoadingSpinner />
                         <span className="ml-3 text-gray-600">Φόρτωση προϊόντων...</span>
                     </div>
-                ) : searchResults && searchResults.length > 0 ? (
-                    <div className="p-6">
+                )}
+
+                {!loading && searchResults.length === 0 && (
+                    <div className="text-center py-12">
+                        <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            Δεν βρέθηκαν προϊόντα με λάθος τιμή
+                        </h3>
+                        <p className="text-gray-500">
+                            Όλες οι τιμές των προϊόντων είναι σωστές ή δοκιμάστε διαφορετικά φίλτρα.
+                        </p>
+                    </div>
+                )}
+
+                {!loading && searchResults.length > 0 && (
+                    <div className="space-y-4">
                         {/* Results Summary */}
-                        <div className="mb-4 flex items-center justify-between">
+                        <div className="flex items-center justify-between">
                             <p className="text-sm text-gray-600">
                                 Εμφάνιση {searchResults.length} προϊόντων με λάθος τιμή
                             </p>
@@ -169,16 +186,6 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                                 />
                             ))}
                         </div>
-                    </div>
-                ) : (
-                    <div className="text-center py-12">
-                        <DollarSign className="w-12 h-12 mx-auto text-green-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            Δεν βρέθηκαν προϊόντα με λάθος τιμή
-                        </h3>
-                        <p className="text-gray-500 mb-4">
-                            Όλες οι τιμές των προϊόντων είναι σωστές ή δοκιμάστε διαφορετικά φίλτρα.
-                        </p>
                     </div>
                 )}
             </div>

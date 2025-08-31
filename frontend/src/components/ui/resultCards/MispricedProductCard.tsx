@@ -124,7 +124,7 @@ const MispricedProductCard: React.FC<MispricedProductCardProps> = ({
 
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-600">Προτεινόμενη:</span>
-                            <span className="font-medium text-green-600">
+                            <span className="text-lg font-bold text-green-600 pr-6">
                                 {formatMoney(product.suggestedRetailPrice)}
                             </span>
                         </div>

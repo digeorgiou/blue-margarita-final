@@ -10,7 +10,6 @@ import type {
     MispricedProductAlertDTO
 } from '../types/api/dashboardInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
-import { dashboardService } from "../services/dashboardService.ts";
 
 interface MispricedProductsPageProps {
     onNavigate: (page: string) => void;
@@ -120,7 +119,7 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
             clearErrors();
 
             // Get all mispriced products with a low threshold (we'll filter on frontend)
-            const result = await dashboardService.getAllMispricedProducts({
+            const result = await productService.getAllMispricedProducts({
                 thresholdPercentage: 5, // Low threshold to get all potential mispriced products
                 page: 0,
                 pageSize: 1000, // Large page size to get all data

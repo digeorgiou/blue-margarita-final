@@ -367,9 +367,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 data.lowStockProducts.map((product) => (
                                     <ListItem
                                         key={product.productId}
-                                        primaryText={product.productName}
-                                        secondaryText={`Κωδικός: ${product.productCode}`}
-                                        rightText={`Απόθεμα: ${product.currentStock} | Όριο: ${product.lowStockThreshold}`}
+                                        primaryText={product.productCode}
+                                        secondaryText={`Όριο: ${product.lowStockThreshold}`}
+                                        rightText={`Απόθεμα: ${product.currentStock}`}
                                         rightTextColor="red"
                                         isWarning={true}
                                     />
