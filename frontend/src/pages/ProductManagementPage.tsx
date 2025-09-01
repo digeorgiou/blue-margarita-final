@@ -22,10 +22,14 @@ import { PriceRecalculationConfirmModal} from "../components/ui";
 import { PriceRecalculationResultDTO } from "../types/api/productInterface";
 
 interface ProductManagementPageProps {
-    onNavigate: (page: string, productId?: string) => void;
+    onNavigate: (page: string, productId?: string, successMessage?: string) => void;
+    successMessage?: string; // Add this line
 }
 
-const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigate }) => {
+const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
+                                                                         onNavigate,
+                                                                         successMessage: passedSuccessMessage
+                                                                     }) => {
     // Search and filter states
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
@@ -74,6 +78,29 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({ onNavigat
     useEffect(() => {
         loadInitialData();
     }, []);
+
+    useEffect(() => {
+        if (passedSuccessMessage && passedSuccessMessage.startsWith('SUCCESS_')) {
+            const [operation, productName] = passedSuccessMessage.split(':');
+
+            if (operation === 'SUCCESS_CREATE') {
+                setSuccessMessage({
+                    title: 'Επιτυχής Δημιουργία',
+                    message: `Το προϊόν "${productName}" δημιουργήθηκε επιτυχώς.`
+                });
+                setIsSuccessModalOpen(true);
+            } else if (operation === 'SUCCESS_UPDATE') {
+                setSuccessMessage({
+                    title: 'Επιτυχής Ενημέρωση',
+                    message: `Το προϊόν "${productName}" ενημερώθηκε επιτυχώς.`
+                });
+                setIsSuccessModalOpen(true);
+            }
+
+            // Refresh the product list to show the changes
+            performSearch();
+        }
+    }, [passedSuccessMessage]);
 
     // Load initial dropdown data
     const loadInitialData = async () => {

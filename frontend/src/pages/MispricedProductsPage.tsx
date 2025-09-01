@@ -62,13 +62,7 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
 
         // Apply category filter
         if (selectedCategoryId) {
-            // We need to get category name from the product and match it with selected category
-            const selectedCategory = categories.find(cat => cat.id === selectedCategoryId);
-            if (selectedCategory) {
-                // Since MispricedProductAlertDTO doesn't have categoryId, we'll need to add it
-                // For now, we'll skip this filter until we add categoryId to the DTO
-                // filtered = filtered.filter(product => product.categoryId === selectedCategoryId);
-            }
+            filtered = filtered.filter(product => product.categoryId === selectedCategoryId);
         }
 
         // Apply issue type filter
@@ -118,9 +112,8 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
             setLoading(true);
             clearErrors();
 
-            // Get all mispriced products with a low threshold (we'll filter on frontend)
             const result = await productService.getAllMispricedProducts({
-                thresholdPercentage: 5, // Low threshold to get all potential mispriced products
+                thresholdPercentage: 15, // Low threshold to get all potential mispriced products
                 page: 0,
                 pageSize: 1000, // Large page size to get all data
                 sortBy: 'priceDifferencePercentage',
@@ -217,22 +210,9 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-8 mt-8">
-                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Προϊόντα με Λάθος Τιμή
-                            </h1>
-                            <p className="text-gray-600 mt-1">
-                                Διαχειριστείτε προϊόντα που χρειάζονται ενημέρωση τιμών
-                                {totalElements > 0 && (
-                                    <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                                        {totalElements} προϊόντα βρέθηκαν
-                                    </span>
-                                )}
-                            </p>
-                        </div>
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
+                    <div className="flex items-center space-x-3">
+                        <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
 
                     {/* General Error Display */}

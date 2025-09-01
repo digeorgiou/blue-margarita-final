@@ -145,6 +145,7 @@ export interface MispricedProductAlertDTO {
     productId : number;
     productName : string;
     productCode : string;
+    categoryId : number;
     categoryName: string;
     suggestedRetailPrice: number;
     finalRetailPrice: number;

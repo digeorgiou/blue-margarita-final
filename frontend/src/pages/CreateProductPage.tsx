@@ -5,11 +5,10 @@ import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
 import { CustomTextInput, CustomNumberInput, CustomSelect, CustomSearchDropdown } from '../components/ui/inputs';
 import { Button, LoadingSpinner, Alert } from '../components/ui';
+import { FlexibleHeightCard } from "../components/ui";
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import {
     Package,
-    Plus,
-    Minus,
     Trash2,
     Settings,
     ArrowLeft,
@@ -29,7 +28,7 @@ import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 
 interface CreateProductPageProps {
-    onNavigate: (page: string) => void;
+    onNavigate: (page: string, productId?: string, successMessage?: string) => void;
 }
 
 interface PriceCalculation {
@@ -278,7 +277,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
             };
 
             await productService.createProduct(productData);
-            onNavigate('manage-products');
+            onNavigate('manage-products', undefined, `SUCCESS_CREATE:${productName.trim()}`);
         } catch (err) {
             await handleApiError(err);
         } finally {
@@ -381,7 +380,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                             </CustomCard>
 
                             {/* Materials */}
-                            <CustomCard title="Materials" className="space-y-4" height="md">
+                            <FlexibleHeightCard title="Materials" className="space-y-4">
                                 <CustomSearchDropdown
                                     label="Προσθήκη Υλικών"
                                     searchTerm={materialSearchTerm}
@@ -399,7 +398,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
 
                                 {/* Selected Materials */}
                                 {selectedMaterials.length > 0 && (
-                                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    <div className="space-y-2 overflow-y-auto">
                                         <h4 className="text-sm font-semibold text-gray-700">Επιλεγμένα Υλικά</h4>
                                         {selectedMaterials.map((material) => (
                                             <div key={material.materialId} className="p-3 bg-gray-50 rounded-lg">
@@ -413,33 +412,27 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateMaterialQuantity(material.materialId, material.quantity - 1)}
-                                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                                    >
-                                                        <Minus className="w-4 h-4" />
-                                                    </button>
-                                                    <span className="px-3 py-1 bg-white rounded border text-center min-w-[3rem]">
-                                                        {material.quantity} {material.unitOfMeasure}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateMaterialQuantity(material.materialId, material.quantity + 1)}
-                                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                                    >
-                                                        <Plus className="w-4 h-4" />
-                                                    </button>
+
+                                                <CustomNumberInput
+                                                    label = {`Ποσότητα (${material.unitOfMeasure})`}
+                                                    value={material.quantity}
+                                                    onChange={(value) => updateMaterialQuantity(material.materialId, value)}
+                                                    min={0}
+                                                    step={0.01}
+                                                    className="text-sm"
+                                                />
+
                                                     <span className="ml-auto text-sm text-gray-600">
-                                                        €{material.totalCost.toFixed(2)}
+                                                        Συνολικό Κόστος €{material.totalCost.toFixed(2)}
                                                     </span>
-                                                </div>
                                             </div>
                                         ))}
+
                                     </div>
+
+
                                 )}
-                            </CustomCard>
+                            </FlexibleHeightCard>
 
 
                         </div>
@@ -482,7 +475,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
 
 
                             {/* Procedures */}
-                            <CustomCard title="Procedures" className="space-y-4" height="md">
+                            <FlexibleHeightCard title="Procedures" className="space-y-4">
                                 <CustomSearchDropdown
                                     label="Προσθήκη Διαδικασίας / Πάγιου Εξόδου"
                                     searchTerm={procedureSearchTerm}
@@ -500,7 +493,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
 
                                 {/* Selected Procedures */}
                                 {selectedProcedures.length > 0 && (
-                                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    <div className="space-y-2 overflow-y-auto">
                                         <h4 className="text-sm font-semibold text-gray-700">Επιλεγμένες Διαδικασίες</h4>
                                         {selectedProcedures.map((procedure) => (
                                             <div key={procedure.procedureId} className="p-3 bg-gray-50 rounded-lg">
@@ -515,22 +508,21 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                                     </button>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    <Euro className="w-4 h-4 text-gray-400" />
-                                                    <input
-                                                        type="number"
+                                                    <CustomNumberInput
+                                                        label=""
                                                         value={procedure.cost}
-                                                        onChange={(e) => updateProcedureCost(procedure.procedureId, Number(e.target.value))}
-                                                        placeholder="Enter cost..."
-                                                        className="flex-1 p-2 border border-gray-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                        min="0"
-                                                        step="0.01"
+                                                        onChange={(value) => updateProcedureCost(procedure.procedureId, value)}
+                                                        placeholder="Εισάγετε κόστος..."
+                                                        icon={<Euro className="w-4 h-4" />}
+                                                        min={0}
+                                                        step={1}
                                                     />
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
-                            </CustomCard>
+                            </FlexibleHeightCard>
                         </div>
 
                         {/* Right Column - Pricing */}

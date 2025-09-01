@@ -12,6 +12,7 @@ export { default as QuickActions } from './common/QuickActions.tsx';
 export { default as Logo } from './common/LogoImage.tsx';
 export { default as ErrorDisplay } from './common/ErrorDisplay.tsx';
 export { default as LowStockProductItem } from './LowStockProductItem';
+export { default as FlexibleHeightCard } from './common/FlexibleHeightCard.tsx'
 
 export { default as CartItem } from './cart/CartItem.tsx';
 export { default as CartSummary } from './cart/CartSummary.tsx';

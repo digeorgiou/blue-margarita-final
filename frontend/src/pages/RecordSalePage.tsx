@@ -12,10 +12,11 @@ import { SaleSuccessModal } from '../components/ui/modals/SaleSuccessModal';
 import { CustomerSearchResultDTO } from "../types/api/customerInterface.ts";
 import { Button, LoadingSpinner, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
+import { FlexibleHeightCard } from "../components/ui";
 import CartSummary from '../components/ui/cart/CartSummary.tsx';
 import CartItem from '../components/ui/cart/CartItem.tsx';
 import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator, Mail, X, Calendar } from 'lucide-react';
-import {transformCustomersForDropdown, transformSelectedCustomerForDropdown, transformProductsForDropdown, transformSelectedProductForDropdown} from "../utils/searchDropdownTransformations.ts";
+import {transformCustomersForDropdown, transformProductsForDropdown } from "../utils/searchDropdownTransformations.ts";
 
 import { CustomNumberInput, CustomDateInput, CustomRadioGroup, CustomSelect, CustomSearchDropdown } from "../components/ui/inputs";
 
@@ -65,7 +66,6 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
 
     const transformedCustomerResults = transformCustomersForDropdown(customerSearchResults);
     const transformedProductResults = transformProductsForDropdown(productSearchResults);
-    const selectedCustomerForDropdown = transformSelectedCustomerForDropdown(selectedCustomer);
 
     // Load page data on mount
     useEffect(() => {
@@ -345,8 +345,8 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                 )}
 
                 <div className="space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
+                        <div className="lg:col-span-2 min-w-0">
                             <CustomCard
                                 height="md"
                             >
@@ -536,13 +536,13 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                         </div>
 
                         {/* Cart Items Card - 1/3 width, reduced height */}
-                        <div className="lg:col-span-1">
+                        <div className="lg:col-span-1 min-w-0">
                             <CustomCard
                                 title={`Καλάθι (${cart.length})`}
                                 icon={<ShoppingCart className="w-5 h-5" />}
                                 height="md"
                             >
-                                <div className="h-full overflow-y-auto">
+                                <div className="h-full overflow-y-auto overflow-x-hidden min-w-0">
                                     {cart.length === 0 ? (
                                         <div className="text-center text-gray-500 py-6">
                                             <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-30" />
@@ -550,7 +550,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                             <p className="text-xs">Προσθέστε προϊόντα στο καλάθι</p>
                                         </div>
                                     ) : (
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 min-w-0 w-full">
                                             {cart.map((item) => (
                                                 <CartItem
                                                     key={item.productId}
@@ -568,13 +568,11 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                     </div>
 
                     {/* Bottom Row - Order Summary & Checkout (Single Card) */}
-                    <CustomCard
+                    <FlexibleHeightCard
                         title="Ανάλυση Πώλησης"
                         icon={<Calculator className="w-5 h-5" />}
-                        height="xl"
-                        className="min-h-[700px]"
                     >
-                        <div className="h-full">
+                        <div className="min-w-0">
                             {cart.length > 0 ? (
                                 cartPricing ? (
                                     <CartSummary
@@ -589,7 +587,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                         cartItemsCount={cart.length}
                                     />
                                 ) : (
-                                    <div className="flex items-center justify-center h-full">
+                                    <div className="flex items-center justify-center py-12">
                                         <div className="text-center">
                                             <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
                                             <p className="text-2xl text-gray-600 mb-2">Calculating prices...</p>
@@ -598,7 +596,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                     </div>
                                 )
                             ) : (
-                                <div className="flex items-center justify-center h-full">
+                                <div className="flex items-center justify-center py-12">
                                     <div className="text-center text-gray-500">
                                         <Calculator className="w-24 h-24 mx-auto mb-8 opacity-30" />
                                         <p className="text-3xl font-semibold mb-4">Δεν έχουν προστεθεί προϊόντα</p>
@@ -607,7 +605,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                 </div>
                             )}
                         </div>
-                    </CustomCard>
+                    </FlexibleHeightCard>
                 </div>
             </div>
 

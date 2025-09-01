@@ -8,7 +8,8 @@ import { SupplierSearchResultDTO } from "../types/api/supplierInterface";
 import { MaterialSearchResultDTO } from "../types/api/materialInterface";
 import { Button, LoadingSpinner, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
-import { ShoppingCart, Package, Calendar, Plus, Minus, Trash2, Truck, Mail, X } from 'lucide-react';
+import { FlexibleHeightCard } from "../components/ui";
+import { ShoppingCart, Package, Calendar, Trash2, Truck, Mail, X } from 'lucide-react';
 import { PurchaseSuccessModal } from '../components/ui/modals/PurchaseSuccessModal';
 import { materialService } from "../services/materialService.ts";
 import { CustomNumberInput, CustomDateInput, CustomSearchDropdown  } from "../components/ui/inputs";
@@ -381,7 +382,6 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                                     <div className="flex justify-between items-start mb-2">
                                                         <div className="flex-1 min-w-0">
                                                             <h4 className="font-medium text-gray-900 truncate">{item.materialName}</h4>
-                                                            <p className="text-xs text-gray-500">Μονάδα Μέτρησης: {item.unitOfMeasure}</p>
                                                         </div>
                                                         <button
                                                             onClick={() => removeFromCart(item.materialId)}
@@ -394,22 +394,14 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
 
                                                     <div className="grid grid-cols-2 gap-2 mb-2">
                                                         <div>
-                                                            <label className="text-xs text-gray-600">Ποσότητα</label>
-                                                            <div className="flex items-center space-x-1 mt-4">
-                                                                <button
-                                                                    onClick={() => updateCartItemQuantity(item.materialId, item.quantity - 1)}
-                                                                    className="p-1 rounded bg-gray-200 hover:bg-gray-300"
-                                                                >
-                                                                    <Minus className="w-3 h-3" />
-                                                                </button>
-                                                                <span className="px-2 py-1 min-w-[40px] text-center text-sm">{item.quantity}</span>
-                                                                <button
-                                                                    onClick={() => updateCartItemQuantity(item.materialId, item.quantity + 1)}
-                                                                    className="p-1 rounded bg-gray-200 hover:bg-gray-300"
-                                                                >
-                                                                    <Plus className="w-3 h-3" />
-                                                                </button>
-                                                            </div>
+                                                            <CustomNumberInput
+                                                                label = {`Ποσότητα (${item.unitOfMeasure})`}
+                                                                value={item.quantity}
+                                                                onChange={(value) => updateCartItemQuantity(item.materialId, value)}
+                                                                min={0}
+                                                                step={0.01}
+                                                                className="text-sm"
+                                                            />
                                                         </div>
 
                                                         <div>
@@ -439,10 +431,9 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                     </div>
 
                     {/* Purchase Summary Card */}
-                    <CustomCard
+                    <FlexibleHeightCard
                         title="Σύνοψη Αγοράς"
                         icon={<Package className="w-5 h-5" />}
-                        height="lg"
                     >
                         <div className="space-y-6 p-6">
                             {cart.length > 0 ? (
@@ -466,16 +457,12 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                         <h4 className="font-semibold text-gray-800">Λεπτομέρειες Αγοράς:</h4>
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
-                                                <span className="text-gray-600">Προμηθευτής:</span>
+                                                <span className="text-gray-600 mr-3">Προμηθευτής:</span>
                                                 <span className="font-medium">{selectedSupplier?.supplierName || 'Δεν επιλέχθηκε'}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Ημερομηνία:</span>
                                                 <span className="font-medium">{purchaseDate}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">Αριθμός διαφορερικών υλικών:</span>
-                                                <span className="font-medium">{cart.length} υλικά</span>
                                             </div>
                                         </div>
                                     </div>
@@ -487,7 +474,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                             disabled={submitting || !isFormValid()}
                                             variant="success"
                                             size="lg"
-                                            className="w-full h-16 text-lg font-bold"
+                                            className="w-full h-20 text-lg font-bold"
                                         >
                                             {submitting ? (
                                                 <>
@@ -504,7 +491,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="flex items-center justify-center h-full py-12">
+                                <div className="flex items-center justify-center py-12">
                                     <div className="text-center text-gray-500">
                                         <Package className="w-24 h-24 mx-auto mb-4 opacity-30" />
                                         <p className="text-xl font-semibold mb-2">Δεν έχουν προστεθεί υλικά</p>
@@ -513,7 +500,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                                 </div>
                             )}
                         </div>
-                    </CustomCard>
+                    </FlexibleHeightCard>
                 </div>
             </div>
 

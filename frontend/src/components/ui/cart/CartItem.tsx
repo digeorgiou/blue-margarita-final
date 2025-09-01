@@ -1,3 +1,4 @@
+// Replace your CartItem.tsx with this - it just fixes the problematic horizontal price line
 import React, { useState } from 'react';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { CartItemDTO } from '../../../types/api/recordSaleInterface.ts';
@@ -30,7 +31,7 @@ const CartItem: React.FC<CartItemProps> = ({
     return (
         <div className="relative flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
             {/* Product Info */}
-            <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <div className="flex items-center flex-1 min-w-0">
                 <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium text-gray-900 truncate">
                         {item.productName}
@@ -38,20 +39,19 @@ const CartItem: React.FC<CartItemProps> = ({
                     <p className="text-xs text-gray-500 mt-1">
                         Κωδικός: {item.productCode}
                     </p>
-                    <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-xs text-gray-600">
+                    <div className="mt-1">
+                        <div className="text-xs text-gray-600">
                             Τιμή/τμχ: {formatMoney(item.suggestedPrice)}
-                        </span>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs font-medium text-gray-900">
+                        </div>
+                        <div className="text-xs font-medium text-gray-900">
                             Σύνολο: {formatMoney(item.totalPrice)}
-                        </span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Quantity Controls */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center">
                 <div className="flex flex-col items-center justify-center space-y-0">
                     <button
                         onClick={() => handleQuantityChange(item.quantity + 1)}
@@ -74,7 +74,7 @@ const CartItem: React.FC<CartItemProps> = ({
                     </button>
                 </div>
 
-                {/* Remove Button */}
+                 {/*Remove Button */}
                 <button
                     onClick={onRemove}
                     disabled={isUpdating}

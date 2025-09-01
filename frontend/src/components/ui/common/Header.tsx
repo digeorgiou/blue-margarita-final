@@ -10,13 +10,12 @@ import {
     MapPin,
     CheckSquare,
     AlertTriangle,
-    DollarSign,
     ClipboardPenLine,
     Gem,
     Truck, Edit,
     Settings, TrendingUp
 } from 'lucide-react';
-import { GiDiamondRing } from 'react-icons/gi';
+import { GiDiamondRing, GiPayMoney } from 'react-icons/gi';
 import { FaEuroSign } from "react-icons/fa6";
 import { IoHammerOutline } from "react-icons/io5";
 import {HeaderProps} from "../../../types/components/header.ts";
@@ -84,8 +83,8 @@ const Header: React.FC<HeaderProps> = ({
                 icon: <AlertTriangle className="w-9 h-9" />
             },
             'mispriced-products': {
-                title: 'Mispriced Products',
-                icon: <DollarSign className="w-9 h-9" />
+                title: 'Προϊόντα με Λάθος Τιμή',
+                icon: <GiPayMoney className="w-9 h-9" />
             },
             'procedures' : {
                 title: 'Διαχείριση Διαδικασιών',

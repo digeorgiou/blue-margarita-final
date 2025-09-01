@@ -8,8 +8,6 @@ import { Button, LoadingSpinner, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import {
     Package,
-    Plus,
-    Minus,
     Trash2,
     Settings,
     ArrowLeft,
@@ -31,7 +29,7 @@ import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 
 interface UpdateProductPageProps {
     productId: number;
-    onNavigate: (page: string) => void;
+    onNavigate: (page: string, productId?: string, successMessage?: string) => void;
 }
 
 interface PriceCalculation {
@@ -306,7 +304,8 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
             materialName: material.materialName,
             unitOfMeasure: material.unitOfMeasure,
             unitCost: material.currentUnitCost,
-            quantity: 1
+            quantity: 1,
+            totalCost: material.currentUnitCost
         };
 
         setSelectedMaterials(prev => [...prev, newMaterial]);
@@ -314,11 +313,15 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         setMaterialSearchResults([]);
     };
 
-    const updateMaterialQuantity = (materialId: number, newQuantity: number): void => {
+    const updateMaterialQuantity = (materialId: number, newQuantity: number) => {
         setSelectedMaterials(prev =>
             prev.map(material =>
                 material.materialId === materialId
-                    ? { ...material, quantity: Math.max(0, newQuantity) }
+                    ? {
+                        ...material,
+                        quantity: newQuantity,
+                        totalCost: material.unitCost * newQuantity
+                    }
                     : material
             )
         );
@@ -437,7 +440,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
             }
 
             console.log('All changes saved successfully');
-            onNavigate('manage-products');
+            onNavigate('manage-products', undefined, `SUCCESS_UPDATE:${name.trim()}`);
         } catch (err) {
             console.error('Error saving changes:', err);
             await handleApiError(err);
@@ -495,11 +498,11 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                             )}
                         </div>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <Button
                             onClick={() => onNavigate('manage-products')}
                             variant="yellow"
-                            className="flex items-center"
+                            className="flex items-center justify-center w-full sm:w-[200px]"
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Επιστροφή στα Προϊόντα
@@ -508,7 +511,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                             onClick={loadProductData}
                             variant="pink"
                             disabled={loading}
-                            className="flex items-center"
+                            className="flex items-center justify-center w-full sm:w-[200px]"
                         >
                             {loading ? (
                                 <LoadingSpinner/>
@@ -611,7 +614,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                                     <div className="flex-1">
                                                         <span className="font-medium text-gray-900">{material.materialName}</span>
                                                         <div className="text-sm text-gray-600">
-                                                            €{material.unitCost.toFixed(2)} per {material.unitOfMeasure}
+                                                            €{material.unitCost.toFixed(2)} / {material.unitOfMeasure}
                                                         </div>
                                                     </div>
                                                     <button
@@ -622,25 +625,20 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
+
+
                                                 <div className="flex items-center space-x-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateMaterialQuantity(material.materialId, material.quantity - 1)}
-                                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                                        disabled={material.quantity <= 0}
-                                                    >
-                                                        <Minus className="w-4 h-4" />
-                                                    </button>
-                                                    <span className="px-3 py-1 bg-white rounded border text-center min-w-[3rem]">
-                                                        {material.quantity} {material.unitOfMeasure}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => updateMaterialQuantity(material.materialId, material.quantity + 1)}
-                                                        className="p-1 text-gray-500 hover:text-gray-700"
-                                                    >
-                                                        <Plus className="w-4 h-4" />
-                                                    </button>
+
+                                                    <CustomNumberInput
+                                                        label=""
+                                                        value={material.quantity}
+                                                        onChange={(value) => updateMaterialQuantity(material.materialId, value)}
+                                                        placeholder="Enter quantity..."
+                                                        min={0}
+                                                        step={0.01}
+                                                        className="flex-1"
+                                                    />
+
                                                     <span className="ml-auto text-sm text-gray-600">
                                                         Σύνολο: €{(material.unitCost * material.quantity).toFixed(2)}
                                                     </span>

@@ -8,6 +8,7 @@ public record MispricedProductAlertDTO(
         Long productId,
         String productName,
         String productCode,
+        Long categoryId,
         String categoryName,
         BigDecimal suggestedRetailPrice,
         BigDecimal finalRetailPrice,

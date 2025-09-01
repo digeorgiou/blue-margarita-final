@@ -74,7 +74,6 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
 
     // Threshold options
     const thresholdOptions = [
-        { value: '10', label: '10%+' },
         { value: '15', label: '15%+' },
         { value: '20', label: '20%+' },
         { value: '30', label: '30%+' },
@@ -88,7 +87,7 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                 {/* Row 1: Search and Category - 2 columns on desktop, stack on mobile */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <CustomTextInput
-                        label="Αναζήτηση Προϊόντων"
+                        label="Προϊόν"
                         value={searchTerm}
                         onChange={onSearchTermChange}
                         placeholder="Αναζήτηση με όνομα ή κωδικό..."
@@ -124,12 +123,12 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                         icon={<DollarSign className="w-5 h-5 text-orange-500" />}
                         placeholder=""
                     />
-                    {/* Clear Filters Button - aligned to match other panels */}
+
                     <div className="flex items-end">
                         <Button
                             onClick={onClearFilters}
-                            variant="secondary"
-                            className="w-full"
+                            variant="pink"
+                            className="w-full h-14"
                         >
                             <Filter className="w-5 h-5 mr-2" />
                             Καθαρισμός Φίλτρων
@@ -164,7 +163,7 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                         {/* Results Summary */}
                         <div className="flex items-center justify-between">
                             <p className="text-sm text-gray-600">
-                                Εμφάνιση {searchResults.length} προϊόντων με λάθος τιμή
+                                Εμφάνιση {searchResults.length} προϊόντων
                             </p>
                             <p className="text-xs text-gray-500">
                                 Κλικ στις τιμές για επεξεργασία

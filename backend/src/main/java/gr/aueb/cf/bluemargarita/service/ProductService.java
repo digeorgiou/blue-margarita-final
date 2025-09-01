@@ -976,12 +976,15 @@ public class ProductService implements IProductService{
     // =============================================================================
 
     private Specification<Product> getSpecsFromFilters(ProductFilters filters) {
+
+        Boolean isActiveFilter = filters.getIsActive() != null ? filters.getIsActive() : true;
+
         Specification<Product> spec = Specification
                 .where(ProductSpecification.productNameOrCodeLike(filters.getNameOrCode()))
                 .and(ProductSpecification.productCategoryId(filters.getCategoryId()))
                 .and(ProductSpecification.productRetailPriceBetween(filters.getMinPrice(), filters.getMaxPrice()))
                 .and(ProductSpecification.productStockBetween(filters.getMinStock(), filters.getMaxStock()))
-                .and(ProductSpecification.productIsActive(filters.getIsActive()))
+                .and(ProductSpecification.productIsActive(isActiveFilter))
                 .and(ProductSpecification.productLowStock(filters.getLowStock()));
 
         if (filters.getMaterialId() != null) {
@@ -1052,7 +1055,8 @@ public class ProductService implements IProductService{
                 product.getId(),
                 product.getName(),
                 product.getCode(),
-                product.getCategory() != null ? product.getCategory().getName() : "No Category",
+                product.getCategory().getId(),
+                product.getCategory().getName(),
                 product.getSuggestedRetailSellingPrice(),
                 product.getFinalSellingPriceRetail(),
                 retailDifference,

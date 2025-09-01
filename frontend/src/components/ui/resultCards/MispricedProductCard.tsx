@@ -82,8 +82,8 @@ const MispricedProductCard: React.FC<MispricedProductCardProps> = ({
     };
 
     const getDifferenceColor = (percentage: number) => {
-        if (percentage >= 50) return 'text-red-600';
-        if (percentage >= 20) return 'text-orange-600';
+        if (percentage >= 50) return 'text-red-500';
+        if (percentage >= 20) return 'text-orange-500';
         return 'text-yellow-600';
     };
 
@@ -101,7 +101,7 @@ const MispricedProductCard: React.FC<MispricedProductCardProps> = ({
                         </p>
                     </div>
                     <div className="text-right">
-                        <div className={`font-bold text-lg ${getDifferenceColor(product.priceDifferencePercentage)} bg-white/20 px-2 py-1 rounded`}>
+                        <div className={`font-bold text-lg ${getDifferenceColor(product.priceDifferencePercentage)} px-2 py-1 rounded`}>
                             {product.priceDifferencePercentage.toFixed(1)}%
                         </div>
                     </div>
@@ -193,7 +193,7 @@ const MispricedProductCard: React.FC<MispricedProductCardProps> = ({
 
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-600">Προτεινόμενη:</span>
-                            <span className="font-medium text-green-600">
+                            <span className="text-lg font-bold text-green-600 pr-6">
                                 {formatMoney(product.suggestedWholesalePrice)}
                             </span>
                         </div>

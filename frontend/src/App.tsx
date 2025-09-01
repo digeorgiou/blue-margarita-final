@@ -32,6 +32,7 @@ interface NavigationState {
     page: string;
     productId?: string;
     stockFilter?: string;
+    successMessage?: string;
 }
 
 type AppState = 'loading' | 'login' | 'dashboard';
@@ -46,8 +47,13 @@ const App: React.FC = () => {
     });
 
     // Navigation handler
-    const handleNavigation = (page: string, productId?: string, stockFilter?: string) => {
-        setNavigationState({ page, productId, stockFilter });
+    const handleNavigation = (page: string, productId?: string, successMessage?: string) => {
+        // Handle success messages for product operations
+        if (successMessage && successMessage.startsWith('SUCCESS_')) {
+            setNavigationState({ page, productId, successMessage });
+        } else {
+            setNavigationState({ page, productId, stockFilter: successMessage }); // Backwards compatibility
+        }
     };
 
     // Render page content based on currentPage
@@ -64,7 +70,10 @@ const App: React.FC = () => {
             case 'manage-sales':
                 return <SaleManagementPage onNavigate={handleNavigation}/>;
             case 'manage-products':
-                return <ProductManagementPage onNavigate={handleNavigation} />;
+                return <ProductManagementPage
+                    onNavigate={handleNavigation}
+                    successMessage={navigationState.successMessage}
+                />;
             case 'product-sales-analytics':
                 return <ProductSalesAnalyticsPage
                     onNavigate={handleNavigation}

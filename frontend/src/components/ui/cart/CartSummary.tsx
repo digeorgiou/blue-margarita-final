@@ -1,3 +1,4 @@
+// Replace your CartSummary.tsx with this mobile-fixed version
 import React, { useState, useEffect } from 'react';
 import {Percent, ShoppingCart, Euro} from 'lucide-react';
 import { Button, LoadingSpinner } from '../index.ts';
@@ -48,15 +49,13 @@ const CartSummary: React.FC<CartSummaryProps> = ({
         setIsUpdatingFromPrice(true);
 
         // Calculate discount percentage based on final price
-        let discountPercentage = 0;
-        if (suggestedTotal > 0 && value < suggestedTotal) {
-            discountPercentage = ((suggestedTotal - value) / suggestedTotal) * 100;
-        }
+        const discountAmount = suggestedTotal - value;
+        const discountPercentage = suggestedTotal > 0 ? (discountAmount / suggestedTotal) * 100 : 0;
 
         onFinalPriceChange(value);
-        onDiscountPercentageChange(Math.round(discountPercentage * 10) / 10); // Round to 1 decimal
+        onDiscountPercentageChange(Math.max(0, discountPercentage));
 
-        setIsUpdatingFromPrice(false);
+        setTimeout(() => setIsUpdatingFromPrice(false), 100);
     };
 
     const handleDiscountPercentageChange = (value: number) => {
@@ -66,46 +65,61 @@ const CartSummary: React.FC<CartSummaryProps> = ({
         setIsUpdatingFromDiscount(true);
 
         // Calculate final price based on discount percentage
-        const finalPrice = suggestedTotal - (suggestedTotal * (value / 100));
+        const discountAmount = (value / 100) * suggestedTotal;
+        const finalPrice = suggestedTotal - discountAmount;
 
         onDiscountPercentageChange(value);
-        onFinalPriceChange(Math.round(finalPrice * 100) / 100); // Round to 2 decimals
+        onFinalPriceChange(Math.max(0, finalPrice));
 
-        setIsUpdatingFromDiscount(false);
+        setTimeout(() => setIsUpdatingFromDiscount(false), 100);
     };
 
     return (
-        <div className="w-full h-full flex flex-col space-y-6 p-6">
-            {/* Subtotal & Packaging - Smaller */}
-            <div className="space-y-2">
-                <div className="flex justify-between items-center py-1">
-                    <span className="text-sm text-gray-600">Αρχική Αξία Προϊόντων:</span>
-                    <span className="text-sm font-medium">{formatMoney(pricing.subtotal)}</span>
+        <div className="space-y-6 p-2 min-w-0 min-h-0">
+            {/* Summary Information */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="text-center">
+                        <p className="text-2xl font-bold text-gray-900">{cartItemsCount}</p>
+                        <p className="text-sm text-gray-600">Προϊόντα</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-2xl font-bold text-blue-600">{formatMoney(pricing.subtotal)}</p>
+                        <p className="text-sm text-gray-600">Υποσύνολο</p>
+                    </div>
                 </div>
-                <div className="flex justify-between items-center py-1">
-                    <span className="text-sm text-gray-600">Κόστος Συσκευασίας:</span>
-                    <span className="text-sm font-medium">{formatMoney(pricing.packagingCost)}</span>
+
+                {/* Packaging Cost */}
+                {pricing.packagingCost > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Κόστος Συσκευασίας:</span>
+                            <span className="font-semibold">{formatMoney(pricing.packagingCost)}</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Suggested Total */}
+                <div className="mt-4 pt-4 border-t border-gray-300">
+                    <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-gray-800">Προτεινόμενο Σύνολο:</span>
+                        <span className="text-xl font-bold text-gray-900">{formatMoney(suggestedTotal)}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Suggested Total */}
-            <div className="flex justify-between items-center py-3 border-y-2 border-gray-300">
-                <span className="text-xl font-semibold text-gray-800">Προτεινόμενη Συνολική Τιμή:</span>
-                <span className="text-xl font-bold text-gray-900">{formatMoney(suggestedTotal)}</span>
-            </div>
-
-            {/* Price Adjustment - Two Input Fields */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            {/* Discount Controls */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">Εκπτώσεις</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    {/* Discount Percentage Input - Using StyledNumberInput */}
-                    <div>
+                    {/* Discount Percentage Input */}
+                    <div className="min-w-0">
                         <CustomNumberInput
                             label={
                                 <span className="flex items-center">
-                        Ποσοστό Έκπτωσης
-                    </span>
+                                    Ποσοστό Έκπτωσης
+                                </span>
                             }
                             value={userDiscountPercentage}
                             onChange={handleDiscountPercentageChange}
@@ -117,13 +131,13 @@ const CartSummary: React.FC<CartSummaryProps> = ({
                         />
                     </div>
 
-                    {/* Final Price Input - Using StyledNumberInput */}
-                    <div>
+                    {/* Final Price Input */}
+                    <div className="min-w-0">
                         <CustomNumberInput
                             label={
                                 <span className="flex items-center">
-                        Τελική Τιμή (€)
-                    </span>
+                                    Τελική Τιμή (€)
+                                </span>
                             }
                             value={userFinalPrice}
                             onChange={handleFinalPriceChange}
@@ -147,7 +161,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({
                 </div>
             )}
 
-            {/* Final Total - Updates based on user input */}
+            {/* Final Total */}
             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                 <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-blue-900">Τελική Τιμή:</span>
@@ -157,21 +171,29 @@ const CartSummary: React.FC<CartSummaryProps> = ({
                 </div>
             </div>
 
-            {/* Item Breakdown */}
             <div className="border-t border-gray-200 pt-6">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">Προϊόντα στην πώληση:</h4>
                 <div className="space-y-3">
                     {pricing.calculatedItems.map((item) => (
-                        <div key={item.productId} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
-                            <span className="text-gray-700 font-medium mr-4">
-                                {item.productName} x{item.quantity}
-                            </span>
-                            <span className="text-gray-900 font-semibold text-md">
-                                Αρχική: {formatMoney(item.totalPrice)}
-                            </span>
-                            <span className="text-gray-900 font-semibold text-md">
-                                Τελική: {formatMoney((item.totalPrice) - (item.totalPrice * pricing.discountPercentage / 100))}
-                            </span>
+                        <div key={item.productId} className="bg-gray-50 rounded-lg p-4 space-y-2">
+                            {/* Product Name and Quantity - Full width */}
+                            <div className="font-medium text-gray-900 break-words"> {/* FIXED: Added break-words */}
+                                {item.productName} <span className="text-gray-600">(x{item.quantity})</span>
+                            </div>
+
+                            {/* Prices - Mobile-friendly layout */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                <div className="flex justify-between sm:block">
+                                    <span className="text-gray-600">Αρχική:</span>
+                                    <span className="font-semibold text-gray-900">{formatMoney(item.totalPrice)}</span>
+                                </div>
+                                <div className="flex justify-between sm:block">
+                                    <span className="text-gray-600">Τελική:</span>
+                                    <span className="font-semibold text-green-600">
+                                        {formatMoney((item.totalPrice) - (item.totalPrice * pricing.discountPercentage / 100))}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
