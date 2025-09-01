@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface SupplierRepository extends JpaRepository<Supplier, Long>,
         JpaSpecificationExecutor<Supplier> {
+    boolean existsByName(String name);
     boolean existsByTin(String tin);
     boolean existsByEmail(String email);
     boolean existsByPhoneNumber(String phoneNumber);

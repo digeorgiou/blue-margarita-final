@@ -8,8 +8,8 @@ public record MaterialUpdateDTO(
         Long materialId,
         Long updaterUserId,
 
-        @NotEmpty(message = "Παρακαλώ εισάγετε περιγραφή")
-        @Size(min = 4, max = 155, message = "Η περιγραφή πρέπει να έχει 4 ως 155 χαρακτήρες")
+        @NotEmpty(message = "Παρακαλώ εισάγετε όνομα υλικού")
+        @Size(min = 4, max = 155, message = "Το όνομα του υλικού πρέπει να έχει 4 ως 155 χαρακτήρες")
         String name,
 
         @NotNull(message = "Παρακαλώ εισάγετε κόστος υλικού")

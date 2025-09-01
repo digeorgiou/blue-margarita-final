@@ -24,6 +24,8 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
         unitOfMeasure: ''
     });
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Track original price for comparison
     const [originalPrice, setOriginalPrice] = useState<number>(0);
 
@@ -33,11 +35,7 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
         handleApiError,
         clearErrors,
         clearFieldError
-    } = useFormErrorHandler({
-        businessErrorToFieldMap: {
-            'MATERIAL_NAME_EXISTS': 'name'
-        }
-    });
+    } = useFormErrorHandler();
 
     // Initialize form data when material changes
     useEffect(() => {
@@ -60,6 +58,14 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
     };
 
     const handleClose = () => {
+        if(material) {
+            setFormData ({
+                name: material.name || '',
+                currentUnitCost: material.currentUnitCost || 0,
+                unitOfMeasure: material.unitOfMeasure || ''
+            });
+        }
+        setIsSubmitting(false);
         clearErrors();
         onClose();
     };
@@ -83,20 +89,27 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
             return;
         }
 
+        setIsSubmitting(true);
+
         clearErrors();
 
         try {
-            const updateData: MaterialUpdateDTO = {
-                materialId: material.materialId,
-                updaterUserId: 1, // Replace with actual current user ID
-                ...formData
-            };
 
-            await onSubmit(updateData);
+            const dataToSubmit: MaterialUpdateDTO = {
+                materialId: material.materialId,
+                updaterUserId: 1, // TODO Replace with actual current user ID
+                name: formData.name.trim(),
+                currentUnitCost: formData.currentUnitCost,
+                unitOfMeasure: formData.unitOfMeasure.trim()
+            }
+
+            await onSubmit(dataToSubmit);
             handleClose(); // Close modal on success
         } catch (error) {
             // The hook will handle displaying the error
             await handleApiError(error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -110,6 +123,17 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
 
     const priceHasChanged = originalPrice !== formData.currentUnitCost;
 
+    const isFormValid = formData.name.trim().length > 0 &&
+        formData.currentUnitCost > 0 &&
+        formData.unitOfMeasure.trim().length > 0 &&
+        !isSubmitting;
+
+    const hasChanges = material ? (
+        formData.name !== (material.name || '') ||
+        formData.unitOfMeasure !== (material.unitOfMeasure || '') ||
+        formData.currentUnitCost !== (material.currentUnitCost || '')
+    ) : false;
+
     return (
         <BaseFormModal
             isOpen={isOpen}
@@ -117,7 +141,7 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
             onSubmit={handleSubmit}
             title="Επεξεργασία Υλικού"
             submitText="Ενημέρωση"
-            isValid={validateForm()}
+            isValid={isFormValid && hasChanges}
         >
             <div className="space-y-6">
                 {/* General Error Display */}
@@ -153,6 +177,7 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                         error={fieldErrors.name}
                         required
                         maxLength={100}
+                        disabled={isSubmitting}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                         Δώστε ένα περιγραφικό όνομα για το υλικό
@@ -176,6 +201,7 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                             placeholder="0.00"
                             error={fieldErrors.currentUnitCost}
                             required
+                            disabled={isSubmitting}
                         />
                         <p className="text-xs text-gray-500 mt-1">
                             Κόστος σε ευρώ ανά μονάδα μέτρησης
@@ -196,6 +222,7 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                             error={fieldErrors.unitOfMeasure}
                             required
                             maxLength={50}
+                            disabled={isSubmitting}
                         />
                         <p className="text-xs text-gray-500 mt-1">
                             Μονάδα μέτρησης του υλικού

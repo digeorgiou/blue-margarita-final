@@ -44,7 +44,19 @@ const CategoryUpdateModal: React.FC<CategoryUpdateModalProps> = ({
     };
 
     const handleClose = () => {
+        // Reset form data to original category values
+        if (category) {
+            setFormData({
+                name: category.name || ''
+            });
+        }
+
+        // Reset submission state
+        setIsSubmitting(false);
+
+        // Clear errors
         clearErrors();
+
         onClose();
     };
 

@@ -48,7 +48,16 @@ const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
     };
 
     const handleClose = () => {
+        // Reset form data to original procedure values
+        if (procedure) {
+            setFormData({
+                name: procedure.name || ''
+            });
+        }
+
+        // Clear errors
         clearErrors();
+
         onClose();
     };
 

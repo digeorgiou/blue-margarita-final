@@ -60,12 +60,12 @@ public class SupplierService implements ISupplierService {
     @Transactional(rollbackFor = Exception.class)
     public SupplierReadOnlyDTO createSupplier(SupplierInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
-        // Validate unique constraints
-        validateUniqueTin(dto.tin());
-        validateUniqueEmail(dto.email());
-        validateUniquePhoneNumber(dto.phoneNumber());
-
         Supplier supplier = mapper.mapSupplierInsertToModel(dto);
+
+        validateUniqueName(supplier.getName());
+        validateUniqueTin(supplier.getTin());
+        validateUniqueEmail(supplier.getEmail());
+        validateUniquePhoneNumber(supplier.getPhoneNumber());
 
         User creator = getUserEntityById(dto.creatorUserId());
 
@@ -84,6 +84,10 @@ public class SupplierService implements ISupplierService {
     public SupplierReadOnlyDTO updateSupplier(SupplierUpdateDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException {
 
         Supplier existingSupplier = getSupplierEntityById(dto.supplierId());
+
+        if (dto.name() != null && !dto.name().equals(existingSupplier.getName())){
+            validateUniqueName(dto.name());
+        }
 
         if (dto.tin() != null && !dto.tin().equals(existingSupplier.getTin())){
             validateUniqueTin(dto.tin());
@@ -222,6 +226,12 @@ public class SupplierService implements ISupplierService {
     private User getUserEntityById(Long userId) throws EntityNotFoundException {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + userId + " not found"));
+    }
+
+    private void validateUniqueName(String name) throws EntityAlreadyExistsException {
+        if( name != null && supplierRepository.existsByName(name)){
+            throw new EntityAlreadyExistsException("Supplier", "Υπάρχει ήδη προμηθευτής με όνομα " + name);
+        }
     }
 
     private void validateUniqueEmail(String email) throws EntityAlreadyExistsException {

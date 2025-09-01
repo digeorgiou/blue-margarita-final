@@ -36,12 +36,7 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
         handleApiError,
         clearErrors,
         clearFieldError
-    } = useFormErrorHandler({
-        businessErrorToFieldMap: {
-            'CUSTOMER_EMAIL_EXISTS': 'email',
-            'CUSTOMER_TIN_EXISTS': 'tin'
-        }
-    });
+    } = useFormErrorHandler();
 
     // Initialize form data when customer changes
     useEffect(() => {
@@ -63,7 +58,25 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
     };
 
     const handleClose = () => {
+        // Reset form data to original customer values
+        if (customer) {
+            setFormData({
+                firstname: customer.firstname || '',
+                lastname: customer.lastname || '',
+                gender: customer.gender,
+                phoneNumber: customer.phoneNumber || '',
+                address: customer.address || '',
+                email: customer.email || '',
+                tin: customer.tin || ''
+            });
+        }
+
+        // Reset submission state
+        setIsSubmitting(false);
+
+        // Clear errors
         clearErrors();
+
         onClose();
     };
 
@@ -88,7 +101,7 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
         try {
             const dataToSubmit: CustomerUpdateDTO = {
                 customerId: customer.customerId,
-                updaterUserId: 1, // You'd get this from auth context
+                updaterUserId: 1, // TODO get this from auth context
                 firstname: formData.firstname.trim(),
                 lastname: formData.lastname.trim(),
                 gender: formData.gender,

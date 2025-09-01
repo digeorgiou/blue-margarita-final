@@ -25,6 +25,8 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
         email: ''
     });
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Use the reusable error handler hook
     const {
         fieldErrors,
@@ -32,13 +34,7 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
         handleApiError,
         clearErrors,
         clearFieldError
-    } = useFormErrorHandler({
-        businessErrorToFieldMap: {
-            'SUPPLIER_TIN_EXISTS': 'tin',
-            'SUPPLIER_EMAIL_EXISTS': 'email',
-            'SUPPLIER_PHONE_EXISTS': 'phoneNumber'
-        }
-    });
+    } = useFormErrorHandler();
 
     // Initialize form data when supplier changes
     useEffect(() => {
@@ -58,7 +54,20 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
     };
 
     const handleClose = () => {
+        // Reset form data to original supplier values
+        if (supplier) {
+            setFormData({
+                name: supplier.name || '',
+                address: supplier.address || '',
+                tin: supplier.tin || '',
+                phoneNumber: supplier.phoneNumber || '',
+                email: supplier.email || ''
+            });
+        }
+
+        // Clear errors
         clearErrors();
+
         onClose();
     };
 
@@ -80,23 +89,46 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
         if (!validateForm() || !supplier) {
             return;
         }
-
+        setIsSubmitting(true);
         clearErrors();
 
         try {
-            const updateData: SupplierUpdateDTO = {
+            const dataToSubmit : SupplierUpdateDTO = {
                 supplierId: supplier.supplierId,
-                updaterUserId: 1, // Replace with actual current user ID
-                ...formData
-            };
+                updaterUserId: 1, // TODO get this from auth context
+                name: formData.name.trim(),
+                address: formData.address.trim() || '',
+                tin: formData.tin.trim(),
+                phoneNumber: formData.phoneNumber.trim() || '',
+                email: formData.email.trim() || '',
+            }
 
-            await onSubmit(updateData);
+            await onSubmit(dataToSubmit);
             handleClose(); // Close modal on success
         } catch (error) {
-            // The hook will handle displaying the error
             await handleApiError(error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
+
+    const isFormValid = formData.name.trim().length > 0 &&
+        formData.tin.trim().length > 0 &&
+        !isSubmitting;
+
+    // Check if there are any changes from the original supplier data
+    const hasChanges = supplier ? (
+
+        // Always check required fields (firstname, lastname)
+        formData.name !== (supplier.name || '') ||
+
+        // For optional fields, only check if the current form value is not empty
+        (formData.phoneNumber.trim() !== '' && formData.phoneNumber !== (supplier.phoneNumber || '')) ||
+        (formData.address.trim() !== '' && formData.address !== (supplier.address || '')) ||
+        (formData.email.trim() !== '' && formData.email !== (supplier.email || '')) ||
+        (formData.tin.trim() !== '' && formData.tin !== (supplier.tin || ''))
+
+    ) : false;
 
     return (
         <BaseFormModal
@@ -105,15 +137,13 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
             onSubmit={handleSubmit}
             title="Επεξεργασία Προμηθευτή"
             submitText="Ενημέρωση"
-            isValid={validateForm()}
+            isValid={isFormValid && hasChanges}
         >
             <div className="space-y-6">
                 {/* General Error Display */}
                 {generalError && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-sm text-red-800">
-                            {generalError}
-                        </p>
+                        <p className="text-sm text-red-800">{generalError}</p>
                     </div>
                 )}
 
@@ -139,6 +169,7 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
                         onChange={(e) => handleInputChange('name', e.target.value)}
                         placeholder="π.χ. ΧΡΥΣΟΣ Α.Ε."
                         error={fieldErrors.name}
+                        disabled={isSubmitting}
                         required
                     />
                 </div>
@@ -154,6 +185,7 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
                         value={formData.address}
                         onChange={(e) => handleInputChange('address', e.target.value)}
                         placeholder="π.χ. Ερμού 123, Αθήνα"
+                        disabled={isSubmitting}
                         error={fieldErrors.address}
                     />
                 </div>
@@ -170,6 +202,7 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
                         onChange={(e) => handleInputChange('tin', e.target.value)}
                         placeholder="π.χ. 123456789"
                         error={fieldErrors.tin}
+                        disabled={isSubmitting}
                         maxLength={20}
                     />
                 </div>
@@ -186,6 +219,7 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                         placeholder="π.χ. 210-1234567"
                         error={fieldErrors.phoneNumber}
+                        disabled={isSubmitting}
                         maxLength={20}
                     />
                 </div>
@@ -202,6 +236,7 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="π.χ. info@chrysos.gr"
                         error={fieldErrors.email}
+                        disabled={isSubmitting}
                         maxLength={100}
                     />
                 </div>

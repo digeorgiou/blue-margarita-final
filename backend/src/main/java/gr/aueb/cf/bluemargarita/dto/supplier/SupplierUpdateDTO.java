@@ -13,8 +13,8 @@ public record SupplierUpdateDTO(
                 message = "Η διεύθυνση πρέπει να έχει από 4 έως 155 χαρακτήρες ή να είναι κενή")
         String address,
 
-        @Pattern(regexp = "^$|^[0-9]{5,20}$",
-                message = "Το ΑΦΜ πρέπει να έχει 5-20 ψηφία ή να είναι κενό")
+        @Pattern(regexp = "[0-9]{5,20}$",
+                message = "Το ΑΦΜ πρέπει να έχει 5-20 ψηφία")
         String tin,
 
         @Pattern(regexp = "^$|^[0-9+\\-\\s()]{8,20}$",

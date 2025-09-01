@@ -260,8 +260,8 @@ public class MaterialService implements IMaterialService {
 
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {
         if (materialRepository.existsByName(name)) {
-            throw new EntityAlreadyExistsException("Material", "Material with description "
-                    + name + " already exists");
+            throw new EntityAlreadyExistsException("Material", "Υπάρχει ήδη υλικό με όνομα "
+                    + name);
         }
     }
 

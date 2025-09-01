@@ -25,6 +25,8 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
         creatorUserId: currentUserId
     });
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Use the reusable error handler hook
     const {
         fieldErrors,
@@ -32,12 +34,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
         handleApiError,
         clearErrors,
         clearFieldError
-    } = useFormErrorHandler({
-        // Map specific business errors to field errors
-        businessErrorToFieldMap: {
-            'MATERIAL_NAME_EXISTS': 'name'
-        }
-    });
+    } = useFormErrorHandler();
 
     // Minimal client-side validation - let backend handle all the real validation
     const validateForm = (): boolean => {
@@ -84,16 +81,31 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
             return;
         }
 
+        setIsSubmitting(true);
         clearErrors();
 
         try {
-            await onSubmit(formData);
+            const dataToSubmit: MaterialInsertDTO = {
+                name: formData.name.trim(),
+                currentUnitCost: formData.currentUnitCost,
+                unitOfMeasure: formData.unitOfMeasure?.trim() || '',
+                creatorUserId: currentUserId
+            };
+
+            await onSubmit(dataToSubmit);
             handleClose(); // Close modal on success
         } catch (error) {
             // The hook will handle displaying the error
             await handleApiError(error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
+
+    const isFormValid = formData.name.trim().length > 0 &&
+        formData.currentUnitCost > 0 &&
+        formData.unitOfMeasure.trim().length > 0 &&
+        !isSubmitting;
 
     return (
         <BaseFormModal
@@ -102,7 +114,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
             onSubmit={handleSubmit}
             title="Δημιουργία Νέου Υλικού"
             submitText="Δημιουργία"
-            isValid={validateForm()}
+            isValid={isFormValid}
         >
             <div className="space-y-6">
                 {/* General Error Display */}
@@ -128,6 +140,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                         error={fieldErrors.name}
                         required
                         maxLength={100}
+                        disabled={isSubmitting}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                         Δώστε ένα περιγραφικό όνομα για το υλικό
@@ -151,6 +164,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                             placeholder="0.00"
                             error={fieldErrors.currentUnitCost}
                             required
+                            disabled={isSubmitting}
                         />
                         <p className="text-xs text-gray-500 mt-1">
                             Κόστος σε ευρώ ανά μονάδα μέτρησης
@@ -171,6 +185,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                             error={fieldErrors.unitOfMeasure}
                             required
                             maxLength={50}
+                            disabled={isSubmitting}
                         />
                         <p className="text-xs text-gray-500 mt-1">
                             Μονάδα μέτρησης του υλικού
