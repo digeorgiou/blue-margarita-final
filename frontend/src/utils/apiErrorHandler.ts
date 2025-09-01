@@ -1,6 +1,3 @@
-// src/utils/apiErrorHandler.ts
-
-// Backend error response types (matching your exact backend contract)
 export interface ResponseMessageDTO {
     code: string;
     description: string;
@@ -11,7 +8,7 @@ export interface ValidationErrors {
     [fieldName: string]: string;
 }
 
-// These are the ONLY two possible error response formats from your backend
+// These are the ONLY two possible error response formats from our backend
 export type BackendErrorResponse = ResponseMessageDTO | ValidationErrors;
 
 // Enhanced error from fetch with structured data
@@ -229,33 +226,6 @@ export class ApiErrorHandler {
             // Re-throw other errors (including our structured ApiError)
             throw error;
         }
-    }
-
-    /**
-     * Helper method to get user-friendly error messages for specific error codes
-     * Only for business logic errors - validation messages come from DTOs
-     * @param code - Error code from ResponseMessageDTO
-     * @returns User-friendly message in Greek
-     */
-    static getErrorMessage(code: string): string {
-        const errorMessages: Record<string, string> = {
-            // Business logic errors (not validation - those come from DTOs)
-            'CUSTOMER_EMAIL_EXISTS': 'Πελάτης με αυτό το email υπάρχει ήδη',
-            'CUSTOMER_TIN_EXISTS': 'Πελάτης με αυτό το ΑΦΜ υπάρχει ήδη',
-            'CUSTOMER_NOT_FOUND': 'Ο πελάτης δεν βρέθηκε',
-
-            // Authentication errors
-            'UNAUTHORIZED': 'Μη εξουσιοδοτημένη πρόσβαση',
-            'ACCESS_DENIED': 'Δεν έχετε δικαίωμα για αυτή την ενέργεια',
-
-            // Server errors
-            'SERVER_ERROR': 'Σφάλμα διακομιστή',
-
-            // Note: Validation errors (size, pattern, email, etc.) come directly
-            // from your DTO annotations and don't need mapping here
-        };
-
-        return errorMessages[code] || 'Παρουσιάστηκε σφάλμα';
     }
 }
 

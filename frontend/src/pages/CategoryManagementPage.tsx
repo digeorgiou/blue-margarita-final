@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button, Alert, CategoryList, LoadingSpinner } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
-import CategoryCreateModal from '../components/ui/modals/CategoryCreateModal';
-import CategoryUpdateModal from '../components/ui/modals/CategoryUpdateModal';
-import CategoryDetailModal from '../components/ui/modals/CategoryDetailModal';
+import CategoryCreateModal from '../components/ui/modals/category/CategoryCreateModal.tsx';
+import CategoryUpdateModal from '../components/ui/modals/category/CategoryUpdateModal.tsx';
+import CategoryDetailModal from '../components/ui/modals/category/CategoryDetailModal.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { categoryService } from '../services/categoryService';

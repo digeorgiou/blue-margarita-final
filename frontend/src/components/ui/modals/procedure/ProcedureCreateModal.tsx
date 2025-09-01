@@ -22,19 +22,13 @@ const ProcedureCreateModal: React.FC<ProcedureCreateModalProps> = ({
         creatorUserId: currentUserId
     });
 
-    // Use the reusable error handler hook
     const {
         fieldErrors,
         generalError,
         handleApiError,
         clearErrors,
         clearFieldError
-    } = useFormErrorHandler({
-        // Map specific business errors to field errors
-        businessErrorToFieldMap: {
-            'PROCEDURE_NAME_EXISTS': 'name'
-        }
-    });
+    } = useFormErrorHandler();
 
     // Minimal client-side validation - let backend handle all the real validation
     const validateForm = (): boolean => {

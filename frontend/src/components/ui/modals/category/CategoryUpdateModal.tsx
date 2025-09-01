@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { BaseFormModal, Input } from '../../index';
-import { LocationReadOnlyDTO, LocationUpdateDTO } from '../../../../types/api/locationInterface';
+import { CategoryReadOnlyDTO } from '../../../../types/api/categoryInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 
-interface LocationUpdateModalProps {
+interface CategoryUpdateModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: LocationUpdateDTO) => Promise<void>;
-    location: LocationReadOnlyDTO | null;
+    onSubmit: (data: { name: string }) => Promise<void>; // Match what CategoryManagementPage expects
+    category: CategoryReadOnlyDTO | null;
 }
 
-const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
+const CategoryUpdateModal: React.FC<CategoryUpdateModalProps> = ({
                                                                      isOpen,
                                                                      onClose,
                                                                      onSubmit,
-                                                                     location
+                                                                     category
                                                                  }) => {
-    const [formData, setFormData] = useState<Omit<LocationUpdateDTO, 'locationId' | 'updaterUserId'>>({
+    const [formData, setFormData] = useState<{ name: string }>({
         name: ''
     });
 
@@ -30,14 +30,14 @@ const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
         clearFieldError
     } = useFormErrorHandler();
 
-    // Initialize form data when location changes
+    // Initialize form data when category changes
     useEffect(() => {
-        if (location) {
+        if (category) {
             setFormData({
-                name: location.name || ''
+                name: category.name || ''
             });
         }
-    }, [location]);
+    }, [category]);
 
     const validateForm = (): boolean => {
         return formData.name.trim().length > 0;
@@ -48,7 +48,7 @@ const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
         onClose();
     };
 
-    const handleInputChange = (field: keyof Omit<LocationUpdateDTO, 'locationId' | 'updaterUserId'>, value: string) => {
+    const handleInputChange = (field: keyof typeof formData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
         // Clear field error when user starts typing
@@ -63,7 +63,7 @@ const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
     };
 
     const handleSubmit = async () => {
-        if (!validateForm() || !location) {
+        if (!validateForm() || !category) {
             return;
         }
 
@@ -71,15 +71,11 @@ const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
         clearErrors();
 
         try {
-            const dataToSubmit: LocationUpdateDTO = {
-                locationId: location.locationId,
-                updaterUserId: 1, // TODO: Get from auth context
-                name: formData.name.trim()
-            };
 
-            await onSubmit(dataToSubmit);
+            await onSubmit({ name: formData.name.trim() });
             handleClose();
         } catch (error) {
+
             await handleApiError(error);
         } finally {
             setIsSubmitting(false);
@@ -88,65 +84,72 @@ const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
 
     const isFormValid = formData.name.trim().length > 0 && !isSubmitting;
 
-    // Check if there are any changes from the original location data
-    const hasChanges = location ? (
-        formData.name !== (location.name || '')
+    // Check if there are any changes from the original category data
+    const hasChanges = category ? (
+        formData.name !== (category.name || '')
     ) : false;
 
-    if (!location) return null;
+    if (!category) return null;
 
     return (
         <BaseFormModal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Επεξεργασία Τοποθεσίας"
+            title="Επεξεργασία Κατηγορίας"
             onSubmit={handleSubmit}
             submitText={isSubmitting ? "Ενημέρωση..." : "Ενημέρωση"}
             cancelText="Ακύρωση"
             isValid={isFormValid && hasChanges}
         >
             <div className="space-y-4">
-                {/* General Error Message */}
+                {/* General Error Message - will show backend's user-friendly message */}
                 {generalError && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                         <p className="text-sm text-red-800">{generalError}</p>
                     </div>
                 )}
 
-                {/* Location Info */}
+                {/* Category Info */}
                 <div className="bg-gray-50 rounded-lg p-3">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Στοιχεία Τοποθεσίας</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Στοιχεία Κατηγορίας</h4>
                     <div className="text-sm text-gray-600 space-y-1">
-                        <p><strong>ID:</strong> {location.locationId}</p>
-                        <p><strong>Δημιουργήθηκε:</strong> {location ? new Date(location.createdAt).toLocaleString('el-GR') : ''}</p>
-                        <p><strong>Τελευταία ενημέρωση:</strong> {location ? new Date(location.updatedAt).toLocaleString('el-GR') : ''}</p>
+                        <p><strong>ID:</strong> {category.categoryId}</p>
+                        <p><strong>Δημιουργήθηκε:</strong> {category ? new Date(category.createdAt).toLocaleString('el-GR') : ''}</p>
+                        <p><strong>Τελευταία ενημέρωση:</strong> {category ? new Date(category.updatedAt).toLocaleString('el-GR') : ''}</p>
+                        <p><strong>Κατάσταση:</strong>
+                            <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                                category?.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                                {category?.isActive ? 'Ενεργή' : 'Ανενεργή'}
+                            </span>
+                        </p>
                     </div>
                 </div>
 
                 {/* Form Fields */}
                 <div className="grid grid-cols-1 gap-4">
                     <Input
-                        label="Όνομα Τοποθεσίας"
+                        label="Όνομα Κατηγορίας"
                         required
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder="π.χ. Website, Εργαστήριο..."
+                        placeholder="π.χ. Δαχτυλίδια, Κολιέ, Σκουλαρίκια..."
                         error={fieldErrors.name}
                         disabled={isSubmitting}
-                        maxLength={55}
+                        maxLength={100}
                     />
                 </div>
 
                 {/* Character Count */}
                 <div className="text-xs text-gray-500 text-right">
-                    {formData.name.length}/55 χαρακτήρες
+                    {formData.name.length}/100 χαρακτήρες
                 </div>
 
                 {/* Change Status */}
                 {!hasChanges && isFormValid && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                         <p className="text-sm text-yellow-800">
-                            ℹ️ Δεν έχουν γίνει αλλαγές στα στοιχεία της τοποθεσίας.
+                            ℹ️ Δεν έχουν γίνει αλλαγές στα στοιχεία της κατηγορίας.
                         </p>
                     </div>
                 )}
@@ -163,4 +166,4 @@ const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
     );
 };
 
-export default LocationUpdateModal;
+export default CategoryUpdateModal;

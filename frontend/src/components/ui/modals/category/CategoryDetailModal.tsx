@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Gem, TrendingUp, ShoppingBag, Euro, Calendar, Package } from 'lucide-react';
-import { Button } from '../../../components/ui';
-import type { CategoryDetailedViewDTO } from '../../../types/api/categoryInterface';
+import { Button } from '../../index.ts';
+import type { CategoryDetailedViewDTO } from '../../../../types/api/categoryInterface.ts';
 
 interface CategoryDetailModalProps {
     isOpen: boolean;

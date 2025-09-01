@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { BaseFormModal, Input } from '../../index';
-import { LocationInsertDTO } from '../../../../types/api/locationInterface';
+import { CategoryInsertDTO } from '../../../../types/api/categoryInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 
-interface LocationCreateModalProps {
+interface CategoryCreateModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: LocationInsertDTO) => Promise<void>;
+    onSubmit: (data: CategoryInsertDTO) => Promise<void>;
 }
 
-const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
+const CategoryCreateModal: React.FC<CategoryCreateModalProps> = ({
                                                                      isOpen,
                                                                      onClose,
                                                                      onSubmit
@@ -20,7 +20,8 @@ const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Use the reusable error handler hook
+    // Use the reusable error handler hook - no business error mapping needed!
+    // Backend already returns user-friendly messages
     const {
         fieldErrors,
         generalError,
@@ -30,7 +31,7 @@ const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
     } = useFormErrorHandler();
 
     const validateForm = (): boolean => {
-        // Only check if required fields are present (basic UX check)
+        // Only basic client-side validation - let backend handle the real validation
         if (!formData.name.trim()) {
             return false;
         }
@@ -68,16 +69,16 @@ const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
         clearErrors();
 
         try {
-            // Create the proper LocationInsertDTO with the required structure
-            const locationData: LocationInsertDTO = {
+            const categoryData: CategoryInsertDTO = {
                 name: formData.name.trim(),
                 creatorUserId: 1 // TODO: Get from auth context or pass as prop
             };
 
-            await onSubmit(locationData);
+            await onSubmit(categoryData);
             handleClose(); // Close modal on success
         } catch (error) {
-            // The hook will handle displaying the error
+            // The hook will handle displaying the error - no custom mapping needed!
+            // Backend already returns user-friendly Greek messages
             await handleApiError(error);
         } finally {
             setIsSubmitting(false);
@@ -90,14 +91,14 @@ const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
         <BaseFormModal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Νέα Τοποθεσία"
+            title="Νέα Κατηγορία"
             onSubmit={handleSubmit}
             submitText={isSubmitting ? "Δημιουργία..." : "Δημιουργία"}
             cancelText="Ακύρωση"
             isValid={isFormValid}
         >
             <div className="space-y-4">
-                {/* General Error Message */}
+                {/* General Error Message - will show backend's user-friendly message */}
                 {generalError && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                         <p className="text-sm text-red-800">{generalError}</p>
@@ -107,24 +108,24 @@ const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
                 {/* Form Fields */}
                 <div className="grid grid-cols-1 gap-4">
                     <Input
-                        label="Όνομα Τοποθεσίας"
+                        label="Όνομα Κατηγορίας"
                         required
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder="π.χ. Website, Εργαστήριο..."
+                        placeholder="π.χ. Δαχτυλίδια, Κολιέ, Σκουλαρίκια..."
                         error={fieldErrors.name}
                         disabled={isSubmitting}
-                        maxLength={55}
+                        maxLength={100}
                     />
                 </div>
 
                 {/* Character Count */}
                 <div className="text-xs text-gray-500 text-right">
-                    {formData.name.length}/55 χαρακτήρες
+                    {formData.name.length}/100 χαρακτήρες
                 </div>
             </div>
         </BaseFormModal>
     );
 };
 
-export default LocationCreateModal;
+export default CategoryCreateModal;

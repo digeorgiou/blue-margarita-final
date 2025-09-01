@@ -7,7 +7,7 @@ public record ProcedureUpdateDTO(
         Long procedureId,
         Long updaterUserId,
         @NotEmpty(message = "Παρακαλώ εισάγετε το όνομα της διαδικασίας")
-        @Size(min = 2, max = 155, message = "Το όνομα πρέπει να έχει 2 ως 155 χαρακτήρες")
+        @Size(min = 2, max = 155, message = "Το όνομα της διαδικασίας πρέπει να έχει 2 ως 155 χαρακτήρες")
         String name
 )
 {}

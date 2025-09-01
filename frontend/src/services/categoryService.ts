@@ -1,4 +1,5 @@
 import { authService } from './authService';
+import { ApiErrorHandler } from '../utils/apiErrorHandler';
 import {
     CategoryReadOnlyDTO,
     CategoryInsertDTO,
@@ -18,26 +19,13 @@ class CategoryService {
         return headers;
     }
 
-    private handleAuthError(response: Response): void {
-        console.error('AUTH ERROR DETAILS:', {
-            status: response.status,
-            statusText: response.statusText,
-            url: response.url,
-            headers: Object.fromEntries(response.headers.entries())
-        });
-        if (response.status === 401) {
-            console.error('Authentication failed - token may be expired or invalid');
-            throw new Error(`401 Unauthorized: ${response.statusText} - Check console for details`);
-        }
-    }
-
     // =============================================================================
     // CORE CRUD OPERATIONS - FOR CATEGORY MANAGEMENT PAGE
     // =============================================================================
 
     async createCategory(categoryData: CategoryInsertDTO): Promise<CategoryReadOnlyDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}`, {
                 method: 'POST',
                 headers: {
                     ...this.getAuthHeaders(),
@@ -45,20 +33,6 @@ class CategoryService {
                 },
                 body: JSON.stringify(categoryData)
             });
-
-            if (!response.ok) {
-                if (response.status === 400) {
-                    throw new Error('Validation errors');
-                }
-                if (response.status === 401) {
-                    this.handleAuthError(response);
-                    throw new Error('Authentication failed - please log in again');
-                }
-                if (response.status === 409) {
-                    throw new Error('Category with name already exists');
-                }
-                throw new Error(`Failed to create category: ${response.status}`);
-            }
 
             return await response.json();
         } catch (error) {
@@ -69,7 +43,7 @@ class CategoryService {
 
     async updateCategory(categoryData: CategoryUpdateDTO): Promise<CategoryReadOnlyDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryData.categoryId}`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${categoryData.categoryId}`, {
                 method: 'PUT',
                 headers: {
                     ...this.getAuthHeaders(),
@@ -77,23 +51,6 @@ class CategoryService {
                 },
                 body: JSON.stringify(categoryData)
             });
-
-            if (!response.ok) {
-                if (response.status === 400) {
-                    throw new Error('Validation errors');
-                }
-                if (response.status === 401) {
-                    this.handleAuthError(response);
-                    throw new Error('Authentication failed - please log in again');
-                }
-                if (response.status === 404) {
-                    throw new Error('Category not found');
-                }
-                if (response.status === 409) {
-                    throw new Error('Category with name already exists');
-                }
-                throw new Error(`Failed to update category: ${response.status}`);
-            }
 
             return await response.json();
         } catch (error) {
@@ -104,24 +61,10 @@ class CategoryService {
 
     async deleteCategory(categoryId: number): Promise<void> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}`, {
+            await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${categoryId}`, {
                 method: 'DELETE',
                 headers: this.getAuthHeaders()
             });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.handleAuthError(response);
-                    throw new Error('Authentication failed - please log in again');
-                }
-                if (response.status === 403) {
-                    throw new Error('Access denied - requires ADMIN role');
-                }
-                if (response.status === 404) {
-                    throw new Error('Category not found');
-                }
-                throw new Error(`Failed to delete category: ${response.status}`);
-            }
         } catch (error) {
             console.error('Delete category error:', error);
             throw error;
@@ -130,21 +73,10 @@ class CategoryService {
 
     async getCategoryById(categoryId: number): Promise<CategoryReadOnlyDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${categoryId}`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.handleAuthError(response);
-                    throw new Error('Authentication failed - please log in again');
-                }
-                if (response.status === 404) {
-                    throw new Error('Category not found');
-                }
-                throw new Error(`Failed to get category: ${response.status}`);
-            }
 
             return await response.json();
         } catch (error) {
@@ -164,29 +96,21 @@ class CategoryService {
         pageSize?: number;
         sortBy?: string;
         sortDirection?: string;
-    }): Promise<Paginated<CategoryReadOnlyDTO>> {
+    } = {}): Promise<Paginated<CategoryReadOnlyDTO>> {
         try {
-            const queryParams = new URLSearchParams();
+            const params = new URLSearchParams();
 
-            if (filters.name) queryParams.append('name', filters.name);
-            if (filters.isActive !== undefined) queryParams.append('isActive', filters.isActive.toString());
-            if (filters.page !== undefined) queryParams.append('page', filters.page.toString());
-            if (filters.pageSize !== undefined) queryParams.append('pageSize', filters.pageSize.toString());
-            if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
-            if (filters.sortDirection) queryParams.append('sortDirection', filters.sortDirection);
+            if (filters.name) params.append('name', filters.name);
+            if (filters.isActive !== undefined) params.append('isActive', filters.isActive.toString());
+            if (filters.page !== undefined) params.append('page', filters.page.toString());
+            if (filters.pageSize !== undefined) params.append('pageSize', filters.pageSize.toString());
+            if (filters.sortBy) params.append('sortBy', filters.sortBy);
+            if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
 
-            const response = await fetch(`${API_BASE_URL}?${queryParams}`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}?${params}`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.handleAuthError(response);
-                    throw new Error('Authentication failed - please log in again');
-                }
-                throw new Error(`Failed to get categories: ${response.status}`);
-            }
 
             return await response.json();
         } catch (error) {
@@ -197,21 +121,10 @@ class CategoryService {
 
     async getCategoryDetailedView(categoryId: number): Promise<CategoryDetailedViewDTO> {
         try {
-            const response = await fetch(`${API_BASE_URL}/${categoryId}/details`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${categoryId}/details`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.handleAuthError(response);
-                    throw new Error('Authentication failed - please log in again');
-                }
-                if (response.status === 404) {
-                    throw new Error('Category not found');
-                }
-                throw new Error(`Failed to get category detailed view: ${response.status}`);
-            }
 
             return await response.json();
         } catch (error) {
@@ -226,22 +139,14 @@ class CategoryService {
 
     async getCategoriesForDropdown(): Promise<CategoryForDropdownDTO[]> {
         try {
-            const response = await fetch(`${API_BASE_URL}/dropdown`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/dropdown`, {
                 method: 'GET',
                 headers: this.getAuthHeaders()
             });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.handleAuthError(response);
-                    throw new Error('Authentication failed - please log in again');
-                }
-                throw new Error(`Failed to get categories dropdown: ${response.status}`);
-            }
-
             return await response.json();
         } catch (error) {
-            console.error('Categories dropdown error:', error);
+            console.error('Get categories for dropdown error:', error);
             throw error;
         }
     }

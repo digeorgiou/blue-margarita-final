@@ -267,8 +267,7 @@ public class ProcedureService implements IProcedureService {
 
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {
         if (procedureRepository.existsByName(name)) {
-            throw new EntityAlreadyExistsException("Procedure", "Procedure with" +
-                    " name " + name + " already exists");
+            throw new EntityAlreadyExistsException("Procedure", "Υπάρχει ήδη διαδικασία με όνομα " + name);
         }
     }
 

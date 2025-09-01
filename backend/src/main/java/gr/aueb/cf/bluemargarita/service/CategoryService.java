@@ -191,8 +191,7 @@ public class CategoryService implements ICategoryService{
 
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {
         if (categoryRepository.existsByName(name)) {
-            throw new EntityAlreadyExistsException("Category", "Category with" +
-                    " name " + name + " already exists");
+            throw new EntityAlreadyExistsException("Category", "Υπάρχει ήδη κατηγορία με όνομα " + name);
         }
     }
 

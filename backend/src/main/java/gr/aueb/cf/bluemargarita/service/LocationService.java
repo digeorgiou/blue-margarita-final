@@ -184,8 +184,7 @@ public class LocationService implements ILocationService {
 
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {
         if (locationRepository.existsByName(name)) {
-            throw new EntityAlreadyExistsException("Location", "Location with" +
-                    " name " + name + " already exists");
+            throw new EntityAlreadyExistsException("Location", "Υπάρχει ήδη τοποθεσία με όνομα " + name);
         }
     }
 
