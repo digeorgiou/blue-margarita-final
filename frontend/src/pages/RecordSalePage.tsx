@@ -241,16 +241,22 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
             const subtotal = cart.reduce((sum, item) => sum + (item.suggestedPrice * item.quantity), 0);
             const suggestedTotal = subtotal + Number(packagingCost);
 
+            const roundToTwoDecimals = (value: number): number => {
+                return Math.round(value * 100) / 100;
+            };
+
             const request: PriceCalculationRequestDTO = {
                 items: cart.map(item => ({
                     productId: item.productId,
                     quantity: Number(item.quantity)
                 })),
                 isWholesale: isWholesale,
-                packagingCost: Number(packagingCost) || 0,
+                packagingCost: roundToTwoDecimals(Number(packagingCost) || 0),
                 // Use suggested total as default if user hasn't input a custom final price
-                userFinalPrice: userFinalPrice > 0 ? Number(userFinalPrice) : suggestedTotal,
-                userDiscountPercentage: Number(userDiscountPercentage) || 0
+                userFinalPrice: userFinalPrice > 0
+                    ? roundToTwoDecimals(Number(userFinalPrice))  // Round final price
+                    : roundToTwoDecimals(suggestedTotal),
+                userDiscountPercentage: roundToTwoDecimals(Number(userDiscountPercentage) || 0)
             };
 
             console.log('Sending pricing request:', request);
@@ -409,6 +415,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                                                 icon={<Package className="w-5 h-5 text-orange-500" />}
                                                 step={0.5}
                                                 min={0}
+                                                autoRoundDecimals={true}
                                             />
                                         </div>
 

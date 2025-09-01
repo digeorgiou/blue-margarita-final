@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, LoadingSpinner } from '../';
-import { CustomDateInput } from '../inputs';
+import {CustomDateInput, CustomSelect} from '../inputs';
 import {
     Calendar,
     Filter,
@@ -109,6 +109,12 @@ const TaskFilterPanel: React.FC<TaskFilterPanelProps> = ({
         }
     };
 
+    const statusOptions = [
+        { value: '', label: 'Όλες οι Κατηγορίες' },
+        { value: 'PENDING', label: 'Εκκρεμούν' },
+        { value: 'COMPLETED', label: 'Ολοκληρωμένα' }
+    ];
+
     const getSortIcon = (field: string) => {
         if (sortBy !== field) return null;
         return sortDirection === 'ASC' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
@@ -121,18 +127,28 @@ const TaskFilterPanel: React.FC<TaskFilterPanelProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Status Filter */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Κατάσταση
-                        </label>
-                        <select
+                        {/*<label className="block text-sm font-medium text-gray-700 mb-1">*/}
+                        {/*    Κατάσταση*/}
+                        {/*</label>*/}
+                        {/*<select*/}
+                        {/*    value={statusFilter}*/}
+                        {/*    onChange={(e) => onStatusFilterChange(e.target.value)}*/}
+                        {/*    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"*/}
+                        {/*>*/}
+                        {/*    <option value="">Όλα</option>*/}
+                        {/*    <option value="PENDING">Εκκρεμούν</option>*/}
+                        {/*    <option value="COMPLETED">Ολοκληρωμένα</option>*/}
+                        {/*</select>*/}
+
+                        <CustomSelect
+                            label="Κατάσταση"
                             value={statusFilter}
                             onChange={(e) => onStatusFilterChange(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">Όλα</option>
-                            <option value="PENDING">Εκκρεμούν</option>
-                            <option value="COMPLETED">Ολοκληρωμένα</option>
-                        </select>
+                            options={statusOptions}
+                            placeholder=""
+                        />
+
+
                     </div>
 
                     {/* Date From Filter */}
@@ -152,25 +168,14 @@ const TaskFilterPanel: React.FC<TaskFilterPanelProps> = ({
                     />
 
                     {/* Action Buttons */}
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex items-end">
                         <Button
                             onClick={onClearFilters}
-                            variant="secondary"
-                            size="sm"
-                            className="w-full"
+                            variant="pink"
+                            className="w-full h-14"
                         >
-                            <Filter className="w-4 h-4 mr-2" />
+                            <Filter className="w-5 h-5 mr-2" />
                             Καθαρισμός Φίλτρων
-                        </Button>
-                        <Button
-                            onClick={onRefresh}
-                            variant="purple"
-                            size="sm"
-                            disabled={loading}
-                            className="w-full"
-                        >
-                            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                            Ανανέωση
                         </Button>
                     </div>
                 </div>

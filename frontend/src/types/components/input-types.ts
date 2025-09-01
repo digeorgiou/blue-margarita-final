@@ -13,6 +13,7 @@ export type CustomNumberInputProps = {
     disabled?: boolean;
     className?: string;
     error?: string;
+    autoRoundDecimals?: boolean;
 }
 
 export type CustomTextInputProps = {

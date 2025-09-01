@@ -75,7 +75,7 @@ const Header: React.FC<HeaderProps> = ({
                 icon: <MapPin className="w-9 h-9" />
             },
             'all-tasks': {
-                title: 'Tasks',
+                title: 'Διαχείριση To Do List',
                 icon: <CheckSquare className="w-9 h-9" />
             },
             'low-stock-products': {

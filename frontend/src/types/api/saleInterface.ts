@@ -24,7 +24,7 @@ export interface SaleReadOnlyDTO {
 
 export interface SaleUpdateDTO {
     saleId: number;
-    customerId: number;
+    customerId: number | null;
     locationId: number;
     saleDate: string;
     finalTotalPrice: number;

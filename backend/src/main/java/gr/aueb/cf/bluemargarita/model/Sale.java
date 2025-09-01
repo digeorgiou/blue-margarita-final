@@ -43,7 +43,7 @@ public class Sale extends AbstractEntity {
     @Column(name = "final_total_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal finalTotalPrice;
 
-    @Column(name = "discount_percentage", precision = 5, scale = 2)
+    @Column(name = "discount_percentage", precision = 6, scale = 2)
     private BigDecimal discountPercentage;
 
     @Column(name = "is_whole_sale")

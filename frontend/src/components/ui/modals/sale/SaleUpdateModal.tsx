@@ -300,7 +300,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
 
                         {/* Location */}
                         <CustomSelect
-                            label="Τοποθεσία *"
+                            label="Τοποθεσία "
                             value={formData.locationId}
                             onChange={(value) => handleInputChange('locationId', Number(value))}
                             options={locationOptions}
@@ -315,7 +315,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
 
                         {/* Sale Date */}
                         <CustomDateInput
-                            label="Ημερομηνία Πώλησης *"
+                            label="Ημερομηνία Πώλησης "
                             value={formData.saleDate}
                             onChange={(value) => handleInputChange('saleDate', value)}
                             icon={<Calendar className="w-5 h-5 text-blue-500" />}
@@ -331,7 +331,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                     <div className="space-y-4">
                         {/* Payment Method */}
                         <CustomSelect
-                            label="Τρόπος Πληρωμής *"
+                            label="Τρόπος Πληρωμής "
                             value={formData.paymentMethod}
                             onChange={(value) => handleInputChange('paymentMethod', String(value))}
                             options={paymentMethodOptions}
@@ -346,7 +346,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
 
                         {/* Final Total Price */}
                         <CustomNumberInput
-                            label="Τελικό Σύνολο (€) *"
+                            label="Τελικό Σύνολο (€) "
                             value={formData.finalTotalPrice}
                             onChange={(value) => handleInputChange('finalTotalPrice', value)}
                             placeholder="0.00"

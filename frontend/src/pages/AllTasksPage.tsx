@@ -190,114 +190,112 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
     };
 
     return (
-        <div className="min-h-screen p-4 space-y-6">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl p-6 text-white shadow-lg">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                        <CheckSquare className="w-8 h-8" />
-                        <h1 className="text-2xl md:text-3xl font-bold">Διαχείριση Tasks</h1>
-                    </div>
-                    <div className="flex items-center space-x-3 mt-4 md:mt-0">
+        <div className="min-h-screen p-4">
+            <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header */}
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
+
+                   <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
-                    </div>
-                    <Button
-                        onClick={handleCreateTask}
-                        variant="create"
-                        size="lg"
-                        className="w-full md:w-auto mt-4 md:mt-0"
-                    >
+                   </div>
+                   <Button
+                       onClick={handleCreateTask}
+                       variant="create"
+                       size="lg"
+                       className={"w-full md:w-auto"}
+                   >
                         <Plus className="w-5 h-5 mr-2" />
                         Νέο Task
-                    </Button>
+                   </Button>
+
                 </div>
-            </div>
 
-            {/* Error Display */}
-            {generalError && (
-                <Alert
-                    variant="error"
-                    onClose={clearErrors}
-                />
-            )}
-
-            {/* Filter Panel */}
-            <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                <CustomCard className="shadow-lg">
-                    <TaskFilterPanel
-                        // Filter values
-                        statusFilter={statusFilter}
-                        onStatusFilterChange={setStatusFilter}
-                        dateFromFilter={dateFromFilter}
-                        onDateFromFilterChange={setDateFromFilter}
-                        dateToFilter={dateToFilter}
-                        onDateToFilterChange={setDateToFilter}
-
-                        // Results and actions
-                        searchResults={searchResults?.data || []}
-                        loading={loading}
-                        onCreateTask={handleCreateTask}
-                        onUpdateTask={handleUpdateTask}
-                        onDeleteTask={handleDeleteTask}
-                        onCompleteTask={handleCompleteTask}
-                        onRestoreTask={handleRestoreTask}
-                        onClearFilters={handleClearFilters}
-                        onRefresh={loadData}
-                        onSort={handleSort}
-                        sortBy={sortBy}
-                        sortDirection={sortDirection}
+                {/* Error Display */}
+                {generalError && (
+                    <Alert
+                        variant="error"
+                        onClose={clearErrors}
                     />
-                </CustomCard>
-
-                {/* Pagination */}
-                {searchResults && searchResults.totalElements > 0 && (
-                    <CustomCard title="" className="shadow-lg">
-                        <div className="w-full overflow-x-auto">
-                            <EnhancedPaginationControls
-                                paginationData={{
-                                    currentPage: searchResults.currentPage,
-                                    totalPages: searchResults.totalPages,
-                                    totalElements: searchResults.totalElements,
-                                    pageSize: searchResults.pageSize,
-                                    numberOfElements: searchResults.numberOfElements
-                                }}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
-                                className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                            />
-                        </div>
-                    </CustomCard>
                 )}
+
+                {/* Filter Panel */}
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+                    <CustomCard className="shadow-lg">
+                        <TaskFilterPanel
+                            // Filter values
+                            statusFilter={statusFilter}
+                            onStatusFilterChange={setStatusFilter}
+                            dateFromFilter={dateFromFilter}
+                            onDateFromFilterChange={setDateFromFilter}
+                            dateToFilter={dateToFilter}
+                            onDateToFilterChange={setDateToFilter}
+
+                            // Results and actions
+                            searchResults={searchResults?.data || []}
+                            loading={loading}
+                            onCreateTask={handleCreateTask}
+                            onUpdateTask={handleUpdateTask}
+                            onDeleteTask={handleDeleteTask}
+                            onCompleteTask={handleCompleteTask}
+                            onRestoreTask={handleRestoreTask}
+                            onClearFilters={handleClearFilters}
+                            onRefresh={loadData}
+                            onSort={handleSort}
+                            sortBy={sortBy}
+                            sortDirection={sortDirection}
+                        />
+                    </CustomCard>
+
+                    {/* Pagination */}
+                    {searchResults && searchResults.totalElements > 0 && (
+                        <CustomCard title="" className="shadow-lg">
+                            <div className="w-full overflow-x-auto">
+                                <EnhancedPaginationControls
+                                    paginationData={{
+                                        currentPage: searchResults.currentPage,
+                                        totalPages: searchResults.totalPages,
+                                        totalElements: searchResults.totalElements,
+                                        pageSize: searchResults.pageSize,
+                                        numberOfElements: searchResults.numberOfElements
+                                    }}
+                                    onPageChange={handlePageChange}
+                                    onPageSizeChange={handlePageSizeChange}
+                                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                                />
+                            </div>
+                        </CustomCard>
+                    )}
+                </div>
+
+                {/* Modals */}
+                <TaskModal
+                    isOpen={isTaskModalOpen}
+                    onClose={() => setIsTaskModalOpen(false)}
+                    onSubmit={handleTaskSubmit}
+                    mode={modalMode}
+                    initialData={selectedTask ? {
+                        id: selectedTask.id,
+                        description: selectedTask.description,
+                        date: selectedTask.date
+                    } : undefined}
+                />
+
+                <ConfirmDeleteModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={confirmDeleteTask}
+                    title="Διαγραφή Task"
+                    message={`Είστε βέβαιοι ότι θέλετε να διαγράψετε το task "${selectedTask?.description}"?`}
+                    confirmText="Διαγραφή"
+                />
+
+                <SuccessModal
+                    title="Επιτυχία"
+                    isOpen={isSuccessModalOpen}
+                    onClose={() => setIsSuccessModalOpen(false)}
+                    message={successMessage}
+                />
             </div>
-
-            {/* Modals */}
-            <TaskModal
-                isOpen={isTaskModalOpen}
-                onClose={() => setIsTaskModalOpen(false)}
-                onSubmit={handleTaskSubmit}
-                mode={modalMode}
-                initialData={selectedTask ? {
-                    id: selectedTask.id,
-                    description: selectedTask.description,
-                    date: selectedTask.date
-                } : undefined}
-            />
-
-            <ConfirmDeleteModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={confirmDeleteTask}
-                title="Διαγραφή Task"
-                message={`Είστε βέβαιοι ότι θέλετε να διαγράψετε το task "${selectedTask?.description}"?`}
-                confirmText="Διαγραφή"
-            />
-
-            <SuccessModal
-                title="Επιτυχία"
-                isOpen={isSuccessModalOpen}
-                onClose={() => setIsSuccessModalOpen(false)}
-                message={successMessage}
-            />
         </div>
     );
 };

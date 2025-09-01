@@ -29,7 +29,7 @@ public record PriceCalculationRequestDTO(
         @Digits(integer = 8, fraction = 2, message = "Η τελική τιμή μπορεί να έχει μέχρι 8 ψηφία και 2 δεκαδικά")
         BigDecimal userFinalPrice,
 
-        @DecimalMin(value = "0.00", message = "Η έκπτωση δεν μπορεί να είναι αρνητική")
+        @DecimalMin(value = "-999.99", message = "Η έκπτωση είναι εκτός ορίων")
         @DecimalMax(value = "100.00", message = "Η έκπτωση δεν μπορεί να είναι μεγαλύτερη από 100%")
         @Digits(integer = 3, fraction = 2, message = "Η έκπτωση μπορεί να έχει μέχρι 3 ψηφία και 2 δεκαδικά")
         BigDecimal userDiscountPercentage
