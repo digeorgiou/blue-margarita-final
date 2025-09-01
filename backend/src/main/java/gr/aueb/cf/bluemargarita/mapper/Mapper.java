@@ -645,10 +645,10 @@ public class Mapper {
     public Supplier mapSupplierInsertToModel(SupplierInsertDTO dto){
         return Supplier.builder()
                 .name(dto.name())
-                .address(dto.address())
+                .address(normalizeOptionalStringField(dto.address()))
                 .tin(dto.tin())
-                .phoneNumber(dto.phoneNumber())
-                .email(dto.email())
+                .phoneNumber(normalizeOptionalStringField(dto.phoneNumber()))
+                .email(normalizeOptionalStringField(dto.email()))
                 .isActive(true)
                 .build();
     }

@@ -83,8 +83,8 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                 name: formData.name.trim(),
                 address: formData.address.trim() || '',
                 tin: formData.tin.trim(),
-                phoneNumber: formData.phoneNumber.trim(),
-                email: formData.email.trim(),
+                phoneNumber: formData.phoneNumber.trim() || '',
+                email: formData.email.trim() || '',
                 creatorUserId: currentUserId
             };
 
@@ -113,6 +113,15 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
             isValid={isFormValid}
         >
             <div className="space-y-6">
+
+                {generalError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm text-red-800">
+                            {generalError}
+                        </p>
+                    </div>
+                )}
+
                 {/* Name - Required */}
                 <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
