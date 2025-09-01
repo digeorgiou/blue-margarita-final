@@ -3,9 +3,11 @@ import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
 import SuccessModal from '../components/ui/modals/SuccessModal';
+import TaskCard from '../components/ui/resultCards/TaskCard.tsx';
 import { dashboardService } from '../services/dashboardService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { Plus, CheckSquare } from 'lucide-react';
+import { DEFAULT_PAGE_SIZES} from "../constants/pagination.ts";
+import { Plus } from 'lucide-react';
 import type {
     ToDoTaskReadOnlyDTO,
     Paginated
@@ -27,9 +29,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
 
     // PAGINATION STATE
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(20);
-    const [sortBy, setSortBy] = useState('date');
-    const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('ASC');
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.TASKS);
 
     // DATA STATE
     const [searchResults, setSearchResults] = useState<Paginated<ToDoTaskReadOnlyDTO> | null>(null);
@@ -44,7 +44,10 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<'create' | 'update'>('create');
     const [selectedTask, setSelectedTask] = useState<ToDoTaskReadOnlyDTO | null>(null);
-    const [successMessage, setSuccessMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState({
+        title: '',
+        message: ''
+    });
 
     // LOAD DATA FUNCTION
     const loadData = async () => {
@@ -57,9 +60,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
                 dateFrom: dateFromFilter || undefined,
                 dateTo: dateToFilter || undefined,
                 page: currentPage,
-                pageSize: pageSize,
-                sortBy: sortBy,
-                sortDirection: sortDirection
+                pageSize: pageSize
             };
 
             // Create clean params object (remove empty filters)
@@ -82,7 +83,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
     // EFFECT TO LOAD DATA
     useEffect(() => {
         loadData();
-    }, [currentPage, pageSize, sortBy, sortDirection, statusFilter, dateFromFilter, dateToFilter]);
+    }, [currentPage, pageSize, statusFilter, dateFromFilter, dateToFilter]);
 
     // PAGINATION HANDLERS
     const handlePageChange = (page: number) => {
@@ -100,15 +101,6 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
         setDateFromFilter('');
         setDateToFilter('');
         setCurrentPage(0);
-    };
-
-    const handleSort = (field: string) => {
-        if (sortBy === field) {
-            setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');
-        } else {
-            setSortBy(field);
-            setSortDirection('ASC');
-        }
     };
 
     // TASK CRUD HANDLERS
@@ -132,9 +124,12 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
     const handleCompleteTask = async (taskId: number) => {
         try {
             await dashboardService.completeTask(taskId);
-            setSuccessMessage('Το task ολοκληρώθηκε επιτυχώς!');
+            setSuccessMessage({
+                title: 'Επιτυχής Ολοκλήρωση',
+                message: 'Το task ολοκληρώθηκε επιτυχώς!'
+            });
             setIsSuccessModalOpen(true);
-            loadData(); // Reload tasks after completion
+            await loadData(); // Reload tasks after completion
         } catch (err) {
             handleApiError(err, 'Failed to complete task');
         }
@@ -143,24 +138,30 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
     const handleRestoreTask = async (taskId: number) => {
         try {
             await dashboardService.restoreTask(taskId);
-            setSuccessMessage('Το task επαναφέρθηκε επιτυχώς!');
+            setSuccessMessage({
+                title: 'Επιτυχής Επαναφορά',
+                message: 'Το task επαναφέρθηκε επιτυχώς!'
+            });
             setIsSuccessModalOpen(true);
-            loadData();
+            await loadData();
         } catch (err) {
             handleApiError(err, 'Failed to restore task');
         }
     };
 
-    const confirmDeleteTask = async () => {
+    const handleDeleteTaskConfirm = async () => {
         if (!selectedTask) return;
 
         try {
             await dashboardService.deleteTask(selectedTask.id);
-            setSuccessMessage('Το task διαγράφηκε επιτυχώς!');
-            setIsSuccessModalOpen(true);
             setIsDeleteModalOpen(false);
+            setSuccessMessage({
+                title: 'Επιτυχής Διαγραφή',
+                message: 'Το task διαγράφηκε επιτυχώς!'
+            });
+            setIsSuccessModalOpen(true);
             setSelectedTask(null);
-            loadData(); // Reload tasks after deletion
+            await loadData(); // Reload tasks after deletion
         } catch (err) {
             setIsDeleteModalOpen(false);
             handleApiError(err, 'Failed to delete task');
@@ -171,19 +172,25 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
         try {
             if (modalMode === 'create') {
                 await dashboardService.createTask(taskData);
-                setSuccessMessage('Το task δημιουργήθηκε επιτυχώς!');
+                setSuccessMessage({
+                    title: 'Επιτυχής Δημιουργία',
+                    message: 'Το task δημιουργήθηκε επιτυχώς!'
+                });
             } else if (modalMode === 'update' && selectedTask) {
                 await dashboardService.updateTask(selectedTask.id, {
                     taskId: selectedTask.id,
                     description: taskData.description,
                     date: taskData.date
                 });
-                setSuccessMessage('Το task ενημερώθηκε επιτυχώς!');
+                setSuccessMessage({
+                    title: 'Επιτυχής Ενημέρωση',
+                    message: 'Το task ενημερώθηκε επιτυχώς!'
+                });
             }
 
             setIsTaskModalOpen(false);
             setIsSuccessModalOpen(true);
-            loadData(); // Refresh the task list
+            await loadData(); // Refresh the task list
         } catch (err) {
             handleApiError(err, 'Failed to save task');
         }
@@ -192,23 +199,15 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-8">
-                {/* Header */}
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
-
-                   <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
-                   </div>
-                   <Button
-                       onClick={handleCreateTask}
-                       variant="create"
-                       size="lg"
-                       className={"w-full md:w-auto"}
-                   >
-                        <Plus className="w-5 h-5 mr-2" />
-                        Νέο Task
-                   </Button>
-
-                </div>
+                {/* Success Alert */}
+                {successMessage.title && (
+                    <Alert
+                        variant="success"
+                        title={successMessage.title}
+                        message={successMessage.message}
+                        onClose={() => setSuccessMessage({ title: '', message: '' })}
+                    />
+                )}
 
                 {/* Error Display */}
                 {generalError && (
@@ -218,84 +217,131 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
                     />
                 )}
 
+                {/* Header - Mobile responsive */}
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                        <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
+                    </div>
+                    <Button
+                        onClick={handleCreateTask}
+                        variant="create"
+                        size="lg"
+                        className="w-full md:w-auto"
+                    >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Νέο Task
+                    </Button>
+                </div>
+
                 {/* Filter Panel */}
                 <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                     <CustomCard className="shadow-lg">
                         <TaskFilterPanel
-                            // Filter values
                             statusFilter={statusFilter}
-                            onStatusFilterChange={setStatusFilter}
+                            onStatusFilterChange={(value) => {
+                                setStatusFilter(value);
+                                setCurrentPage(0); // Reset to first page
+                            }}
                             dateFromFilter={dateFromFilter}
-                            onDateFromFilterChange={setDateFromFilter}
+                            onDateFromFilterChange={(value) => {
+                                setDateFromFilter(value);
+                                setCurrentPage(0);
+                            }}
                             dateToFilter={dateToFilter}
-                            onDateToFilterChange={setDateToFilter}
-
-                            // Results and actions
+                            onDateToFilterChange={(value) => {
+                                setDateToFilter(value);
+                                setCurrentPage(0);
+                            }}
+                            onClearFilters={handleClearFilters}
                             searchResults={searchResults?.data || []}
                             loading={loading}
-                            onCreateTask={handleCreateTask}
                             onUpdateTask={handleUpdateTask}
                             onDeleteTask={handleDeleteTask}
                             onCompleteTask={handleCompleteTask}
                             onRestoreTask={handleRestoreTask}
-                            onClearFilters={handleClearFilters}
-                            onRefresh={loadData}
-                            onSort={handleSort}
-                            sortBy={sortBy}
-                            sortDirection={sortDirection}
-                        />
+                        >
+                            {/* Task Results */}
+                            {searchResults && searchResults.totalElements > 0 ? (
+                                <div className="space-y-4">
+                                    <div className="grid gap-4">
+                                        {searchResults.data.map((task) => (
+                                            <TaskCard
+                                                key={task.id}
+                                                task={task}
+                                                onEdit={handleUpdateTask}
+                                                onDelete={handleDeleteTask}
+                                                onComplete={handleCompleteTask}
+                                                onRestore={handleRestoreTask}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : !loading ? (
+                                <div className="text-center py-12">
+                                    <div className="text-6xl mb-4">✨</div>
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Δεν βρέθηκαν tasks</h3>
+                                    <p className="text-gray-600 mb-4">
+                                        {statusFilter !== 'PENDING' || dateFromFilter || dateToFilter
+                                            ? 'Δοκιμάστε να αλλάξετε τα φίλτρα για να δείτε περισσότερα tasks.'
+                                            : 'Είστε ενημερωμένοι! Δεν υπάρχουν tasks για εμφάνιση.'}
+                                    </p>
+                                    <Button onClick={handleClearFilters} variant="secondary">
+                                        Καθαρισμός Φίλτρων
+                                    </Button>
+                                </div>
+                            ) : null}
+                        </TaskFilterPanel>
                     </CustomCard>
 
-                    {/* Pagination */}
+                    {/* Pagination Controls */}
                     {searchResults && searchResults.totalElements > 0 && (
-                        <CustomCard title="" className="shadow-lg">
-                            <div className="w-full overflow-x-auto">
-                                <EnhancedPaginationControls
-                                    paginationData={{
-                                        currentPage: searchResults.currentPage,
-                                        totalPages: searchResults.totalPages,
-                                        totalElements: searchResults.totalElements,
-                                        pageSize: searchResults.pageSize,
-                                        numberOfElements: searchResults.numberOfElements
-                                    }}
-                                    onPageChange={handlePageChange}
-                                    onPageSizeChange={handlePageSizeChange}
-                                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                                />
-                            </div>
+                        <CustomCard className="shadow-lg">
+                            <EnhancedPaginationControls
+                                paginationData={{
+                                    currentPage: searchResults.currentPage,
+                                    totalPages: searchResults.totalPages,
+                                    totalElements: searchResults.totalElements,
+                                    pageSize: searchResults.pageSize,
+                                    numberOfElements: searchResults.numberOfElements
+                                }}
+                                onPageChange={handlePageChange}
+                                onPageSizeChange={handlePageSizeChange}
+                                className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+                            />
                         </CustomCard>
                     )}
                 </div>
-
-                {/* Modals */}
-                <TaskModal
-                    isOpen={isTaskModalOpen}
-                    onClose={() => setIsTaskModalOpen(false)}
-                    onSubmit={handleTaskSubmit}
-                    mode={modalMode}
-                    initialData={selectedTask ? {
-                        id: selectedTask.id,
-                        description: selectedTask.description,
-                        date: selectedTask.date
-                    } : undefined}
-                />
-
-                <ConfirmDeleteModal
-                    isOpen={isDeleteModalOpen}
-                    onClose={() => setIsDeleteModalOpen(false)}
-                    onConfirm={confirmDeleteTask}
-                    title="Διαγραφή Task"
-                    message={`Είστε βέβαιοι ότι θέλετε να διαγράψετε το task "${selectedTask?.description}"?`}
-                    confirmText="Διαγραφή"
-                />
-
-                <SuccessModal
-                    title="Επιτυχία"
-                    isOpen={isSuccessModalOpen}
-                    onClose={() => setIsSuccessModalOpen(false)}
-                    message={successMessage}
-                />
             </div>
+
+            {/* Modals */}
+            <TaskModal
+                isOpen={isTaskModalOpen}
+                onClose={() => setIsTaskModalOpen(false)}
+                onSubmit={handleTaskSubmit}
+                mode={modalMode}
+                initialData={selectedTask ? {
+                    id: selectedTask.id,
+                    description: selectedTask.description,
+                    date: selectedTask.date
+                } : undefined}
+            />
+
+            <ConfirmDeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteTaskConfirm}
+                title="Διαγραφή Task"
+                message={`Είστε βέβαιοι ότι θέλετε να διαγράψετε το task "${selectedTask?.description}"?`}
+                confirmText="Διαγραφή"
+                warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
+            />
+
+            <SuccessModal
+                title={successMessage.title}
+                isOpen={isSuccessModalOpen}
+                onClose={() => setIsSuccessModalOpen(false)}
+                message={successMessage.message}
+            />
         </div>
     );
 };
