@@ -208,19 +208,19 @@ public class CustomerService implements ICustomerService {
 
     private void validateUniqueEmail(String email) throws EntityAlreadyExistsException {
         if (email != null && customerRepository.existsByEmail(email)) {
-            throw new EntityAlreadyExistsException("Customer", "Customer with email " + email + " already exists");
+            throw new EntityAlreadyExistsException("Customer", "Υπάρχει ήδη πελάτης με email " + email);
         }
     }
 
     private void validateUniquePhoneNumber(String phoneNumber) throws EntityAlreadyExistsException {
         if(phoneNumber != null && customerRepository.existsByPhoneNumber(phoneNumber)){
-            throw new EntityAlreadyExistsException("Customer", "Customer with phone number " + phoneNumber + " already exists");
+            throw new EntityAlreadyExistsException("Customer", "Υπάρχει ήδη πελάτης με τηλέφωνο " + phoneNumber);
         }
     }
 
     private void validateUniqueTin(String tin) throws EntityAlreadyExistsException {
         if (tin != null && customerRepository.existsByTin(tin)) {
-            throw new EntityAlreadyExistsException("Customer", "Customer with TIN " + tin + " already exists");
+            throw new EntityAlreadyExistsException("Customer", "Υπάρχει ήδη πελάτης με ΑΦΜ " + tin);
         }
     }
 
