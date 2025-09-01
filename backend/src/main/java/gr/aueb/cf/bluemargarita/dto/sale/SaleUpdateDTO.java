@@ -28,7 +28,5 @@ public record SaleUpdateDTO(
         BigDecimal packagingPrice,
 
         @NotNull(message = "Παρακαλώ επιλέξτε τρόπο πληρωμής")
-        PaymentMethod paymentMethod,
-
-        Long updaterUserId
+        PaymentMethod paymentMethod
 ) {}

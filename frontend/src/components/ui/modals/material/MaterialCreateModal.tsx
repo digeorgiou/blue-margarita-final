@@ -9,20 +9,17 @@ interface MaterialCreateModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: MaterialInsertDTO) => Promise<void>;
-    currentUserId: number;
 }
 
 const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                                                                      isOpen,
                                                                      onClose,
-                                                                     onSubmit,
-                                                                     currentUserId
+                                                                     onSubmit
                                                                  }) => {
     const [formData, setFormData] = useState<MaterialInsertDTO>({
         name: '',
         currentUnitCost: 0,
-        unitOfMeasure: '',
-        creatorUserId: currentUserId
+        unitOfMeasure: ''
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,8 +52,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
         setFormData({
             name: '',
             currentUnitCost: 0,
-            unitOfMeasure: '',
-            creatorUserId: currentUserId
+            unitOfMeasure: ''
         });
         clearErrors();
         onClose();
@@ -88,8 +84,7 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
             const dataToSubmit: MaterialInsertDTO = {
                 name: formData.name.trim(),
                 currentUnitCost: formData.currentUnitCost,
-                unitOfMeasure: formData.unitOfMeasure?.trim() || '',
-                creatorUserId: currentUserId
+                unitOfMeasure: formData.unitOfMeasure?.trim() || ''
             };
 
             await onSubmit(dataToSubmit);

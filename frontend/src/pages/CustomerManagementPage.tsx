@@ -43,9 +43,6 @@ const CustomerManagementPage = () => {
     // Success message state
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
-    // Get current user ID (you'd get this from auth context)
-    const getCurrentUserId = () => 1; // Placeholder
-
     // Simple search function
     const searchCustomers = async (page: number = currentPage, size: number = pageSize) => {
         try {
@@ -240,7 +237,6 @@ const CustomerManagementPage = () => {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onSubmit={handleCreateCustomer}
-                currentUserId={getCurrentUserId()}
             />
 
             <CustomerUpdateModal

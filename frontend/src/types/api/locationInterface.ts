@@ -13,12 +13,10 @@ export interface LocationReadOnlyDTO {
 
 export interface LocationInsertDTO{
     name: string;
-    creatorUserId: number;
 }
 
 export interface LocationUpdateDTO {
     locationId: number;
-    updaterUserId: number;
     name: string;
 }
 

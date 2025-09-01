@@ -47,9 +47,6 @@ const SupplierManagementPage = () => {
     // Success message state
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
-    // Get current user ID (you'd get this from auth context)
-    const getCurrentUserId = () => 1; // Placeholder
-
     // Simple search function
     const searchSuppliers = async (page: number = currentPage, size: number = pageSize) => {
         try {
@@ -148,8 +145,7 @@ const SupplierManagementPage = () => {
     };
 
     const handleUpdateSupplier = async (data: SupplierUpdateDTO) => {
-        // DON'T catch errors here - let them bubble up to the modal!
-        // The modal's useFormErrorHandler will handle them and show backend messages
+
         await supplierService.updateSupplier(data.supplierId, data);
         await searchSuppliers(); // Refresh results
         setSuccessMessage({
@@ -242,7 +238,6 @@ const SupplierManagementPage = () => {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onSubmit={handleCreateSupplier}
-                currentUserId={getCurrentUserId()}
             />
 
             <SupplierUpdateModal

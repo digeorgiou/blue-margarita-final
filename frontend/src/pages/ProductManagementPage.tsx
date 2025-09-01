@@ -253,10 +253,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
             setIsRecalculationConfirmOpen(false); // Close confirm modal
             clearErrors();
 
-            // TODO: Get actual user ID from auth context or pass as prop
-            const updaterUserId = 1;
-
-            const result = await productService.recalculateAllProductPrices(updaterUserId);
+            const result = await productService.recalculateAllProductPrices();
             setRecalculationResult(result);
             setIsRecalculationModalOpen(true);
 

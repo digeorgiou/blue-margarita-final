@@ -4,7 +4,6 @@ import jakarta.validation.constraints.*;
 
 public record SupplierUpdateDTO(
         Long supplierId,
-        Long updaterUserId,
 
         @Size(min = 2, max = 155, message = "Το όνομα πρέπει να έχει από 2 έως 155 χαρακτήρες")
         String name,

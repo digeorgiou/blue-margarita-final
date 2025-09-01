@@ -23,7 +23,6 @@ export interface ProductInsertDTO {
     minutesToMake?: number;
     stock?: number;
     lowStockAlert?: number;
-    creatorUserId: number;
     materials?: { [materialId: number]: number }; // Material ID -> Quantity
     procedures?: { [procedureId: number]: number }; // Procedure ID -> Cost
 }
@@ -38,7 +37,6 @@ export interface ProductUpdateDTO{
     minutesToMake: number;
     stock: number;
     lowStockAlert: number;
-    updaterUserId: number;
 }
 
 export interface ProductDetailedViewDTO{

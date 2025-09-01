@@ -13,12 +13,10 @@ export interface ProcedureReadOnlyDTO {
 
 export interface ProcedureInsertDTO {
     name: string;
-    creatorUserId: number;
 }
 
 export interface ProcedureUpdateDTO {
     procedureId: number;
-    updaterUserId: number;
     name: string;
 }
 

@@ -152,28 +152,12 @@ const ExpenseManagementPage = () => {
         setCurrentPage(0);
     };
 
-    const getCurrentUserId = (): number => {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-            try {
-                const user = JSON.parse(userData);
-                return user.id;
-            } catch (error) {
-                console.error('Error parsing user data:', error);
-            }
-        }
-        return 1;
-    };
-
     // =============================================================================
     // CRUD OPERATIONS
     // =============================================================================
 
     const handleCreateExpense = async (expenseData: ExpenseInsertDTO) => {
-        await expenseService.createExpense({
-            ...expenseData,
-            creatorUserId: getCurrentUserId()
-        });
+        await expenseService.createExpense(expenseData);
         setIsCreateModalOpen(false);
         setSuccessMessage('Το έξοδο δημιουργήθηκε επιτυχώς!');
         setIsSuccessModalOpen(true);
@@ -183,10 +167,7 @@ const ExpenseManagementPage = () => {
     const handleUpdateExpense = async (expenseData: ExpenseUpdateDTO) => {
         if (!selectedExpense) return;
 
-        await expenseService.updateExpense(selectedExpense.id, {
-            ...expenseData,
-            updaterUserId: getCurrentUserId()
-        });
+        await expenseService.updateExpense(selectedExpense.id, expenseData);
         setIsUpdateModalOpen(false);
         setSuccessMessage('Το έξοδο ενημερώθηκε επιτυχώς!');
         setIsSuccessModalOpen(true);

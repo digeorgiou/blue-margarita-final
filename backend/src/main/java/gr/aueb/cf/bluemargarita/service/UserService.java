@@ -2,7 +2,6 @@ package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
-import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserUpdateDTO;
@@ -17,8 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,12 +49,16 @@ public class UserService implements IUserService{
 
         if(userRepository.existsByUsername(dto.username())){
             throw new EntityAlreadyExistsException("User",
-                    "Το email " + dto.username() + " χρησιμοποιείται ήδη");
+                    "Το username " + dto.username() + " χρησιμοποιείται ήδη");
         }
 
         try {
             User user = mapper.mapUserInsertToModel(dto);
             user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+            User creator = getCurrentUserOrThrow();
+            user.setCreatedBy(creator);
+            user.setLastUpdatedBy(creator);
 
             User insertedUser = userRepository.save(user);
 
@@ -81,16 +82,13 @@ public class UserService implements IUserService{
 
         if(! existingUser.getUsername().equals(dto.username()) && userRepository.existsByUsername(dto.username())){
             throw new EntityAlreadyExistsException("User",
-                    "Το email " + dto.username() + " χρησιμοποιείται ήδη");
+                    "Το username " + dto.username() + " χρησιμοποιείται ήδη");
         }
 
         User updatedUser = mapper.mapUserUpdateToModel(dto, existingUser);
 
-        // Set current user as last updated by (if available)
-        User currentUser = getCurrentUser();
-        if (currentUser != null) {
-            updatedUser.setLastUpdatedBy(currentUser);
-        }
+        User updater = getCurrentUserOrThrow();
+        updatedUser.setLastUpdatedBy(updater);
 
         User savedUser = userRepository.save(updatedUser);
 
@@ -107,14 +105,11 @@ public class UserService implements IUserService{
                 .orElseThrow(() -> new EntityNotFoundException("User", "User " +
                         "with id " + id + " not found"));
 
-        user.setIsActive(false);
-        user.setDeletedAt(LocalDateTime.now());
+        User currentUser = getCurrentUserOrThrow();
 
-        // Set current user as last updated by (if available)
-        User currentUser = getCurrentUser();
-        if (currentUser != null) {
-            user.setLastUpdatedBy(currentUser);
-        }
+        user.setIsActive(false);
+        user.setLastUpdatedBy(currentUser);
+        user.setDeletedAt(LocalDateTime.now());
 
         userRepository.save(user);
     }
@@ -158,10 +153,7 @@ public class UserService implements IUserService{
         return userRepository.existsByUsername(username);
     }
 
-    /**
-     * Gets the currently authenticated user from the security context.
-     * Returns null if no user is authenticated (e.g., during registration).
-     */
+
     private User getCurrentUser() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -178,4 +170,13 @@ public class UserService implements IUserService{
 
         return null; // No authenticated user (e.g., during registration)
     }
+
+    public User getCurrentUserOrThrow() throws EntityNotFoundException {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            throw new EntityNotFoundException("User", "No authenticated user found");
+        }
+        return currentUser;
+    }
+
 }

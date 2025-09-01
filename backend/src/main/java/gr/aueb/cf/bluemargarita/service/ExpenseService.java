@@ -31,17 +31,17 @@ public class ExpenseService implements IExpenseService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExpenseService.class);
 
     private final ExpenseRepository expenseRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final PurchaseRepository purchaseRepository;
     private final Mapper mapper;
 
     @Autowired
     public ExpenseService(ExpenseRepository expenseRepository,
-                          UserRepository userRepository,
+                          UserService userService,
                           PurchaseRepository purchaseRepository,
                           Mapper mapper) {
         this.expenseRepository = expenseRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.purchaseRepository = purchaseRepository;
         this.mapper = mapper;
     }
@@ -55,7 +55,7 @@ public class ExpenseService implements IExpenseService {
     public ExpenseReadOnlyDTO createExpense(ExpenseInsertDTO dto) throws EntityNotFoundException, EntityAlreadyExistsException {
 
 
-        User creator = getUserEntityById(dto.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         // Validate purchase if provided
         Purchase purchase = null;
@@ -97,7 +97,7 @@ public class ExpenseService implements IExpenseService {
         Expense existingExpense = getExpenseEntityById(dto.expenseId());
 
         // Validate updater user exists
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         // Handle purchase linking/unlinking
         if (dto.purchaseId() != null) {
@@ -239,9 +239,8 @@ public class ExpenseService implements IExpenseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ExpenseReadOnlyDTO createPurchaseExpense(Long purchaseId, String description,
-                                                        BigDecimal amount, LocalDate expenseDate,
-                                                        Long creatorUserId) throws EntityNotFoundException, EntityAlreadyExistsException {
+    public void createPurchaseExpense(Long purchaseId, String description,
+                                      BigDecimal amount, LocalDate expenseDate) throws EntityNotFoundException, EntityAlreadyExistsException {
 
         // Validate purchase exists
         getPurchaseEntityById(purchaseId);
@@ -255,17 +254,16 @@ public class ExpenseService implements IExpenseService {
                 amount,
                 expenseDate,
                 ExpenseType.PURCHASE_MATERIALS,
-                purchaseId,
-                creatorUserId
+                purchaseId
         );
 
-        return createExpense(dto);
+        createExpense(dto);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updatePurchaseExpense(Long purchaseId, BigDecimal newAmount,
-                                      LocalDate newDate, Long updaterUserId) throws EntityNotFoundException, EntityAlreadyExistsException {
+                                      LocalDate newDate) throws EntityNotFoundException, EntityAlreadyExistsException {
 
         Expense expense = expenseRepository.findByPurchaseId(purchaseId);
         if (expense == null) {
@@ -280,8 +278,7 @@ public class ExpenseService implements IExpenseService {
                 newAmount,
                 newDate,
                 expense.getExpenseType(),
-                purchaseId,
-                updaterUserId
+                purchaseId
         );
 
         updateExpense(dto);
@@ -294,11 +291,6 @@ public class ExpenseService implements IExpenseService {
     Expense getExpenseEntityById(Long expenseId) throws EntityNotFoundException {
         return expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new EntityNotFoundException("Expense", "Expense with id=" + expenseId + " was not found"));
-    }
-
-    User getUserEntityById(Long userId) throws EntityNotFoundException{
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
     }
 
     Purchase getPurchaseEntityById(Long purchaseId) throws EntityNotFoundException{

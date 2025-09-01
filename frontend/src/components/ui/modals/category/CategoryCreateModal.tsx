@@ -70,8 +70,7 @@ const CategoryCreateModal: React.FC<CategoryCreateModalProps> = ({
 
         try {
             const categoryData: CategoryInsertDTO = {
-                name: formData.name.trim(),
-                creatorUserId: 1 // TODO: Get from auth context or pass as prop
+                name: formData.name.trim()
             };
 
             await onSubmit(categoryData);

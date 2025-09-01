@@ -73,7 +73,6 @@ const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
         try {
             const dataToSubmit: LocationUpdateDTO = {
                 locationId: location.locationId,
-                updaterUserId: 1, // TODO: Get from auth context
                 name: formData.name.trim()
             };
 

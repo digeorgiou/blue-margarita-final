@@ -8,22 +8,19 @@ interface SupplierCreateModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: SupplierInsertDTO) => Promise<void>;
-    currentUserId: number;
 }
 
 const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                                                                      isOpen,
                                                                      onClose,
-                                                                     onSubmit,
-                                                                     currentUserId
+                                                                     onSubmit
                                                                  }) => {
     const [formData, setFormData] = useState<SupplierInsertDTO>({
         name: '',
         address: '',
         tin: '',
         phoneNumber: '',
-        email: '',
-        creatorUserId: currentUserId
+        email: ''
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,8 +48,7 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
             address: '',
             tin: '',
             phoneNumber: '',
-            email: '',
-            creatorUserId: currentUserId
+            email: ''
         });
         clearErrors();
         onClose();
@@ -84,8 +80,7 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                 address: formData.address.trim() || '',
                 tin: formData.tin.trim(),
                 phoneNumber: formData.phoneNumber.trim() || '',
-                email: formData.email.trim() || '',
-                creatorUserId: currentUserId
+                email: formData.email.trim() || ''
             };
 
             await onSubmit(dataToSubmit);

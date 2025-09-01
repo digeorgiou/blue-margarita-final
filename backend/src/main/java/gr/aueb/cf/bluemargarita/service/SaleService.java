@@ -39,7 +39,7 @@ public class SaleService implements ISaleService {
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
     private final LocationRepository locationRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     private final IStockManagementService stockManagementService;
 
@@ -51,7 +51,7 @@ public class SaleService implements ISaleService {
                        ProductRepository productRepository,
                        CustomerRepository customerRepository,
                        LocationRepository locationRepository,
-                       UserRepository userRepository,
+                       UserService userService,
                        IStockManagementService stockManagementService,
                        SalePricingService pricingService,
                        Mapper mapper) {
@@ -59,7 +59,7 @@ public class SaleService implements ISaleService {
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
         this.locationRepository = locationRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.stockManagementService = stockManagementService;
         this.pricingService = pricingService;
         this.mapper = mapper;
@@ -77,7 +77,7 @@ public class SaleService implements ISaleService {
         //Validate location , customer and user exist
         Location location = getLocationEntityById(request.locationId());
         Customer customer = getCustomerEntityByIdIfProvided(request.customerId());
-        User creator = getUserEntityById(request.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         //Validate all Products exist and retrieve them
         Map<Product, BigDecimal> productQuantities = validateAndCollectProducts(request.items());
@@ -114,7 +114,7 @@ public class SaleService implements ISaleService {
 
         Location location = getLocationEntityById(dto.locationId());
         Customer customer = getCustomerEntityByIdIfProvided(dto.customerId());
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         // Update basic fields
         updateSaleBasicFields(existingSale, dto, location, customer, updater);
@@ -285,12 +285,6 @@ public class SaleService implements ISaleService {
         return customerRepository.findById(customerId)
                 .orElseThrow(() -> new EntityNotFoundException("Customer",
                         "Customer with id=" + customerId + " was not found"));
-    }
-
-    private User getUserEntityById(Long id) throws EntityNotFoundException {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User",
-                        "User with id=" + id + " was not found"));
     }
 
     private Product getProductEntityById(Long id) throws EntityNotFoundException {

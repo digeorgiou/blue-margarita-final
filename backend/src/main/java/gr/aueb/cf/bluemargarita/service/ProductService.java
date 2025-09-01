@@ -43,7 +43,7 @@ public class ProductService implements IProductService{
     private final MaterialRepository materialRepository;
     private final ProcedureRepository procedureRepository;
     private final ProductProcedureRepository productProcedureRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final SaleProductRepository saleProductRepository;
 
     private final ProductSalesAnalyticsService analyticsService;
@@ -51,13 +51,13 @@ public class ProductService implements IProductService{
 
     @Autowired
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, MaterialRepository materialRepository, ProcedureRepository procedureRepository,
-                          ProductProcedureRepository productProcedureRepository, UserRepository userRepository,SaleProductRepository saleProductRepository, ProductSalesAnalyticsService analyticsService, Mapper mapper) {
+                          ProductProcedureRepository productProcedureRepository, UserService userService,SaleProductRepository saleProductRepository, ProductSalesAnalyticsService analyticsService, Mapper mapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.materialRepository = materialRepository;
         this.procedureRepository = procedureRepository;
         this.productProcedureRepository = productProcedureRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.saleProductRepository = saleProductRepository;
         this.analyticsService = analyticsService;
         this.mapper = mapper;
@@ -78,7 +78,7 @@ public class ProductService implements IProductService{
 
         // Validate category and user exist and is active
         Category category = getCategoryEntityById(dto.categoryId());
-        User creator = getUserEntityById(dto.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         // Create product
         Product product = createBaseProduct(dto, category, creator);
@@ -139,7 +139,7 @@ public class ProductService implements IProductService{
         if (category != null) {
             updatedProduct.setCategory(category);
         }
-        User updaterUser = getUserEntityById(dto.updaterUserId());
+        User updaterUser = userService.getCurrentUserOrThrow();
 
         updateProductFields(existingProduct, dto, category, updaterUser);
 
@@ -164,6 +164,9 @@ public class ProductService implements IProductService{
             // Soft delete - preserve sales history
             product.setIsActive(false);
             product.setDeletedAt(LocalDateTime.now());
+
+            User currentUser = userService.getCurrentUserOrThrow();
+            product.setLastUpdatedBy(currentUser);
 
             productRepository.save(product);
 
@@ -289,7 +292,7 @@ public class ProductService implements IProductService{
 
         Product product = getProductEntityById(productId);
         Material material = getMaterialEntityById(materialId);
-        User updaterUser = getUserEntityById(updaterUserId);
+        User updaterUser = userService.getCurrentUserOrThrow();
 
         // Remove existing if present, then add new
         product.removeMaterial(material);
@@ -314,7 +317,7 @@ public class ProductService implements IProductService{
 
         Product product = getProductEntityById(productId);
         Material material = getMaterialEntityById(materialId);
-        User updaterUser = getUserEntityById(updaterUserId);
+        User updaterUser = userService.getCurrentUserOrThrow();
 
         product.removeMaterial(material);
 
@@ -340,7 +343,7 @@ public class ProductService implements IProductService{
 
         Product product = getProductEntityById(productId);
         Procedure procedure = getProcedureEntityById(procedureId);
-        User updater = getUserEntityById(updaterUserId);
+        User updater = userService.getCurrentUserOrThrow();
 
         // Remove existing if present, then add new
         product.removeProcedure(procedure);
@@ -366,7 +369,7 @@ public class ProductService implements IProductService{
 
         Product product = getProductEntityById(productId);
         Procedure procedure = getProcedureEntityById(procedureId);
-        User updater = getUserEntityById(updaterUserId);
+        User updater = userService.getCurrentUserOrThrow();
 
         product.removeProcedure(procedure);
 
@@ -389,10 +392,10 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public PriceRecalculationResultDTO recalculateAllProductPrices(Long updaterUserId) throws EntityNotFoundException {
+    public PriceRecalculationResultDTO recalculateAllProductPrices() throws EntityNotFoundException {
 
         // Validate updater user exists
-        User updaterUser = getUserEntityById(updaterUserId);
+        User updaterUser = userService.getCurrentUserOrThrow();
 
         // Get all active products
         List<Product> activeProducts = productRepository.findByIsActiveTrue();
@@ -492,7 +495,7 @@ public class ProductService implements IProductService{
     @Transactional(rollbackFor = Exception.class)
     public ProductListItemDTO updateFinalRetailPrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException {
         Product product = getProductEntityById(productId);
-        User updater = getUserEntityById(updaterUserId);
+        User updater = userService.getCurrentUserOrThrow();
 
         product.setFinalSellingPriceRetail(newPrice);
         product.setLastUpdatedBy(updater);
@@ -507,7 +510,7 @@ public class ProductService implements IProductService{
     @Transactional(rollbackFor = Exception.class)
     public ProductListItemDTO updateFinalWholesalePrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException {
         Product product = getProductEntityById(productId);
-        User updater = getUserEntityById(updaterUserId);
+        User updater = userService.getCurrentUserOrThrow();
 
         product.setFinalSellingPriceWholesale(newPrice);
         product.setLastUpdatedBy(updater);
@@ -734,11 +737,6 @@ public class ProductService implements IProductService{
         return productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product",
                         "Product with id=" + id + " was not found"));
-    }
-
-    private User getUserEntityById(Long id) throws EntityNotFoundException {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + id + " was not found"));
     }
 
     private void validateUniqueCode(String code) throws EntityAlreadyExistsException {

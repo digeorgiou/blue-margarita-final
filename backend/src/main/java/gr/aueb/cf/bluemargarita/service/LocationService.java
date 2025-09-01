@@ -30,17 +30,17 @@ public class LocationService implements ILocationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationService.class);
     private final LocationRepository locationRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final SaleRepository saleRepository;
     private final ProductRepository productRepository;
     private final SaleProductRepository saleProductRepository;
     private final Mapper mapper;
 
     @Autowired
-    public LocationService(LocationRepository locationRepository, UserRepository userRepository,
+    public LocationService(LocationRepository locationRepository, UserService userService,
                            SaleRepository saleRepository, ProductRepository productRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
         this.locationRepository = locationRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.saleRepository = saleRepository;
         this.productRepository = productRepository;
         this.saleProductRepository = saleProductRepository;
@@ -55,7 +55,7 @@ public class LocationService implements ILocationService {
 
         Location location = mapper.mapLocationInsertToModel(dto);
 
-        User creator = getUserEntityById(dto.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         location.setCreatedBy(creator);
         location.setLastUpdatedBy(creator);
@@ -77,7 +77,7 @@ public class LocationService implements ILocationService {
             validateUniqueName(dto.name());
         }
 
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         Location updatedLocation = mapper.mapLocationUpdateToModel(dto, existingLocation);
         updatedLocation.setLastUpdatedBy(updater);
@@ -102,6 +102,10 @@ public class LocationService implements ILocationService {
             // Soft Delete if location is used in any sales
             location.setIsActive(false);
             location.setDeletedAt(LocalDateTime.now());
+
+            User currentUser = userService.getCurrentUserOrThrow();
+            location.setLastUpdatedBy(currentUser);
+
             locationRepository.save(location);
 
             LOGGER.info("Location {} soft deleted. Used in {} sales",
@@ -175,11 +179,6 @@ public class LocationService implements ILocationService {
     private Location getLocationEntityById(Long locationId) throws EntityNotFoundException{
         return locationRepository.findById(locationId)
                 .orElseThrow(() -> new EntityNotFoundException("Location", "Location with id=" + locationId + " was not found"));
-    }
-
-    private User getUserEntityById(Long userId) throws EntityNotFoundException {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
     }
 
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {

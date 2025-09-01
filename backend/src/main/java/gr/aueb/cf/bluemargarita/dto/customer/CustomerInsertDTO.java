@@ -28,8 +28,6 @@ public record CustomerInsertDTO(
 
         @Pattern(regexp = "^$|^[0-9]{5,20}$",
                 message = "Το ΑΦΜ πρέπει να έχει 5-20 ψηφία ή να είναι κενό")
-        String tin,
-
-        Long creatorUserId
+        String tin
 )
 {}

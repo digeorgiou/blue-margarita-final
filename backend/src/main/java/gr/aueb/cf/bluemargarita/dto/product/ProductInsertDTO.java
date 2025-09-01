@@ -45,9 +45,6 @@ public record ProductInsertDTO(
         @Max(value = 9999, message = "Το όριο χαμηλού αποθέματος δεν μπορεί να υπερβαίνει τις 9999 μονάδες")
         Integer lowStockAlert,
 
-        @NotNull(message = "Creator user ID is required")
-        Long creatorUserId,
-
         // Map of MaterialId -> Quantity
         @Nullable
         @Valid

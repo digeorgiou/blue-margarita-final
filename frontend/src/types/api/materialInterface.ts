@@ -15,12 +15,10 @@ export interface MaterialInsertDTO {
     name: string;
     currentUnitCost: number;
     unitOfMeasure: string;
-    creatorUserId: number;
 }
 
 export interface MaterialUpdateDTO {
     materialId: number;
-    updaterUserId: number;
     name: string;
     currentUnitCost: number;
     unitOfMeasure: string;

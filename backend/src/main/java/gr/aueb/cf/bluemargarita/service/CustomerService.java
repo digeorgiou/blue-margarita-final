@@ -30,17 +30,17 @@ public class CustomerService implements ICustomerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomerService.class);
     private final CustomerRepository customerRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ProductRepository productRepository;
     private final SaleRepository saleRepository;
     private final SaleProductRepository saleProductRepository;
     private final Mapper mapper;
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, UserRepository userRepository, ProductRepository productRepository,
+    public CustomerService(CustomerRepository customerRepository, UserService userService, ProductRepository productRepository,
                            SaleRepository saleRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
         this.customerRepository = customerRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.productRepository = productRepository;
         this.saleRepository = saleRepository;
         this.saleProductRepository = saleProductRepository;
@@ -61,7 +61,7 @@ public class CustomerService implements ICustomerService {
         validateUniqueTin(customer.getTin());
         validateUniquePhoneNumber(customer.getPhoneNumber());
 
-        User creator = getUserEntityById(dto.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         customer.setCreatedBy(creator);
         customer.setLastUpdatedBy(creator);
@@ -91,7 +91,7 @@ public class CustomerService implements ICustomerService {
             validateUniqueTin(dto.tin());
         }
 
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         Customer updatedCustomer = mapper.mapCustomerUpdateToModel(dto, existingCustomer);
         updatedCustomer.setLastUpdatedBy(updater);
@@ -115,6 +115,10 @@ public class CustomerService implements ICustomerService {
             // Soft Delete if customer has sales history
             customer.setIsActive(false);
             customer.setDeletedAt(LocalDateTime.now());
+
+            User currentUser = userService.getCurrentUserOrThrow();
+            customer.setLastUpdatedBy(currentUser);
+
             customerRepository.save(customer);
 
             LOGGER.info("Customer {} soft deleted. Has {} sales in history",
@@ -199,11 +203,6 @@ public class CustomerService implements ICustomerService {
     private Customer getCustomerEntityById(Long id) throws EntityNotFoundException{
         return customerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Customer", "Customer with id=" + id + " was not found"));
-    }
-
-    private User getUserEntityById(Long userId) throws EntityNotFoundException {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
     }
 
     private void validateUniqueEmail(String email) throws EntityAlreadyExistsException {

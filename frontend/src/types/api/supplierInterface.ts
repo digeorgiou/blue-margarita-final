@@ -12,7 +12,6 @@ export interface SupplierInsertDTO {
     tin: string;
     phoneNumber: string;
     email: string;
-    creatorUserId: number;
 }
 
 export interface SupplierReadOnlyDTO {
@@ -32,7 +31,6 @@ export interface SupplierReadOnlyDTO {
 
 export interface SupplierUpdateDTO {
     supplierId: number;
-    updaterUserId: number;
     name: string;
     address: string;
     tin: string;

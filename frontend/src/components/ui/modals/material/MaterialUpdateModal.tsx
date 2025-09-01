@@ -97,7 +97,6 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
 
             const dataToSubmit: MaterialUpdateDTO = {
                 materialId: material.materialId,
-                updaterUserId: 1, // TODO Replace with actual current user ID
                 name: formData.name.trim(),
                 currentUnitCost: formData.currentUnitCost,
                 unitOfMeasure: formData.unitOfMeasure.trim()

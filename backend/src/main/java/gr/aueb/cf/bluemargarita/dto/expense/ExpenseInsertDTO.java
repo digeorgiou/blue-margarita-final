@@ -23,8 +23,5 @@ public record ExpenseInsertDTO(
         @NotNull(message = "Παρακαλώ επιλέξτε τύπο του εξόδου")
         ExpenseType expenseType,
 
-        Long purchaseId, // Optional - only for purchase-related expenses
-
-        @NotNull(message = "Creator user ID is required")
-        Long creatorUserId
+        Long purchaseId // Optional - only for purchase-related expenses
 ) {}

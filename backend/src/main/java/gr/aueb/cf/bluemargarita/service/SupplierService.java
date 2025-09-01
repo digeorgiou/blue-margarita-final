@@ -33,7 +33,7 @@ public class SupplierService implements ISupplierService {
     private final SupplierRepository supplierRepository;
     private final PurchaseRepository purchaseRepository;
     private final PurchaseMaterialRepository purchaseMaterialRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final MaterialRepository materialRepository;
     private final Mapper mapper;
 
@@ -41,13 +41,13 @@ public class SupplierService implements ISupplierService {
     public SupplierService(SupplierRepository supplierRepository,
                            PurchaseRepository purchaseRepository,
                            PurchaseMaterialRepository purchaseMaterialRepository,
-                           UserRepository userRepository,
+                           UserService userService,
                            MaterialRepository materialRepository,
                            Mapper mapper) {
         this.supplierRepository = supplierRepository;
         this.purchaseRepository = purchaseRepository;
         this.purchaseMaterialRepository = purchaseMaterialRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.materialRepository = materialRepository;
         this.mapper = mapper;
     }
@@ -67,7 +67,7 @@ public class SupplierService implements ISupplierService {
         validateUniqueEmail(supplier.getEmail());
         validateUniquePhoneNumber(supplier.getPhoneNumber());
 
-        User creator = getUserEntityById(dto.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         supplier.setCreatedBy(creator);
         supplier.setLastUpdatedBy(creator);
@@ -101,7 +101,7 @@ public class SupplierService implements ISupplierService {
             validateUniquePhoneNumber(dto.phoneNumber());
         }
 
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         Supplier updatedSupplier = mapper.mapSupplierUpdateToModel(dto, existingSupplier);
         updatedSupplier.setLastUpdatedBy(updater);
@@ -222,12 +222,7 @@ public class SupplierService implements ISupplierService {
         return supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id " + supplierId + " not found"));
     }
-
-    private User getUserEntityById(Long userId) throws EntityNotFoundException {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id " + userId + " not found"));
-    }
-
+    
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {
         if( name != null && supplierRepository.existsByName(name)){
             throw new EntityAlreadyExistsException("Supplier", "Υπάρχει ήδη προμηθευτής με όνομα " + name);

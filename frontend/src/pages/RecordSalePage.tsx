@@ -287,8 +287,7 @@ const RecordSalePage: React.FC<RecordSalePageProps> = ({ onNavigate }) => {
                 items: cart.map(item => ({
                     productId: item.productId,
                     quantity: item.quantity
-                })),
-                creatorUserId: 1 // TODO: Get from auth context
+                }))
             };
 
             const result = await recordSaleService.recordSale(request);

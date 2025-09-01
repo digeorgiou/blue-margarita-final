@@ -17,7 +17,6 @@ export interface RecordSaleRequestDTO {
     finalPrice : number;
     saleDate : string;
     items : SaleItemRequestDTO[];
-    creatorUserId : number;
 }
 
 export interface SaleDetailedViewDTO {

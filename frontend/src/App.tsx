@@ -5,7 +5,6 @@ import { authService } from './services/authService';
 import { LoadingSpinner } from "./components/ui";
 import Layout from "./components/ui/common/Layout.tsx"
 import Dashboard from "./pages/DashboardPage.tsx";
-import LowStockProductsPage from './pages/LowStockProductsPage';
 import MispricedProductsPage from './pages/MispricedProductsPage';
 import AllTasksPage from './pages/AllTasksPage';
 import RecordSalePage from "./pages/RecordSalePage.tsx";
@@ -61,8 +60,6 @@ const App: React.FC = () => {
         switch (navigationState.page) {
             case 'dashboard':
                 return <Dashboard onNavigate={handleNavigation} />;
-            case 'low-stock-products':
-                return <LowStockProductsPage onNavigate={handleNavigation} />;
             case 'mispriced-products':
                 return <MispricedProductsPage onNavigate={handleNavigation} />;
             case 'all-tasks':

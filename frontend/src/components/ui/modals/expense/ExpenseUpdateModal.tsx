@@ -89,7 +89,6 @@ const ExpenseUpdateModal: React.FC<ExpenseUpdateModalProps> = ({
         try {
             const dataToSubmit: ExpenseUpdateDTO = {
                 expenseId: expense.id,
-                updaterUserId: 1, // You'd get this from auth context
                 description: formData.description.trim(),
                 // For purchase expenses, keep original amount and other fields
                 amount: isPurchaseExpense ? expense.amount : formData.amount,

@@ -169,7 +169,6 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
         try {
             const dataToSubmit: SaleUpdateDTO = {
                 saleId: sale.id,
-                updaterUserId: 1, // You'd get this from auth context
                 customerId: selectedCustomer?.id || null,
                 locationId: formData.locationId,
                 saleDate: formData.saleDate,

@@ -10,14 +10,12 @@ interface CustomerCreateModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: CustomerInsertDTO) => Promise<void>;
-    currentUserId: number;
 }
 
 const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                                                                      isOpen,
                                                                      onClose,
-                                                                     onSubmit,
-                                                                     currentUserId
+                                                                     onSubmit
                                                                  }) => {
     const [formData, setFormData] = useState<CustomerInsertDTO>({
         firstname: '',
@@ -26,8 +24,7 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
         phoneNumber: '',
         address: '',
         email: '',
-        tin: '',
-        creatorUserId: currentUserId
+        tin: ''
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,8 +60,7 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
             phoneNumber: '',
             address: '',
             email: '',
-            tin: '',
-            creatorUserId: currentUserId
+            tin: ''
         });
         clearErrors();
         onClose();
@@ -99,8 +95,7 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                 phoneNumber: formData.phoneNumber?.trim() || '',
                 address: formData.address?.trim() || '',
                 email: formData.email?.trim() || '',
-                tin: formData.tin?.trim() || '',
-                creatorUserId: currentUserId
+                tin: formData.tin?.trim() || ''
             };
 
             await onSubmit(dataToSubmit);

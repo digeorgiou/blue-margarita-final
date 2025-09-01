@@ -42,7 +42,6 @@ export interface PurchaseUpdateDTO {
     purchaseId: number;
     supplierId: number;
     purchaseDate: string;
-    updaterUserId: number;
 }
 
 export interface PaginatedFilteredPurchasesWithSummary{

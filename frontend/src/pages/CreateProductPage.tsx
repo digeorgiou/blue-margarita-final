@@ -277,7 +277,6 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                 minutesToMake: minutesToMake || undefined,
                 stock: stock || undefined,
                 lowStockAlert: lowStockAlert || undefined,
-                creatorUserId: 1, // Replace with actual user ID
                 materials: Object.keys(materials).length > 0 ? materials : undefined,
                 procedures: Object.keys(procedures).length > 0 ? procedures : undefined
             };

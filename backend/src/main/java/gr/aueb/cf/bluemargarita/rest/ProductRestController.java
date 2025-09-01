@@ -519,12 +519,10 @@ public class ProductRestController {
             }
     )
     @PostMapping("/recalculate-all-prices")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PriceRecalculationResultDTO> recalculateAllProductPrices(
-            @Parameter(description = "User ID performing the bulk price update", required = true)
-            @RequestParam Long updaterUserId) throws EntityNotFoundException {
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<PriceRecalculationResultDTO> recalculateAllProductPrices() throws EntityNotFoundException {
 
-        PriceRecalculationResultDTO result = productService.recalculateAllProductPrices(updaterUserId);
+        PriceRecalculationResultDTO result = productService.recalculateAllProductPrices();
         return new ResponseEntity<>(result, HttpStatus.OK);
 
     }

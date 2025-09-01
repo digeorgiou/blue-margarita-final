@@ -20,8 +20,6 @@ public record SupplierInsertDTO(
 
         @Email(message = "Παρακαλώ εισάγετε έγκυρο email")
         @Size(max = 100, message = "Το email δεν μπορεί να υπερβαίνει τους 100 χαρακτήρες")
-        String email,
-
-        Long creatorUserId
+        String email
 )
 {}

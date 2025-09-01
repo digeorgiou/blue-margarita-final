@@ -15,12 +15,10 @@ export interface CategoryReadOnlyDTO {
 
 export interface CategoryInsertDTO {
     name : string;
-    creatorUserId: number;
 }
 
 export interface CategoryUpdateDTO {
     categoryId: number;
-    updaterUserId: number;
     name: string;
 }
 

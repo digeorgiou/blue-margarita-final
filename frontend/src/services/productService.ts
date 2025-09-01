@@ -449,12 +449,9 @@ class ProductService {
     // BULK OPERATIONS - PRICE RECALCULATION
     // =============================================================================
 
-    async recalculateAllProductPrices(updaterUserId: number): Promise<PriceRecalculationResultDTO> {
+    async recalculateAllProductPrices(): Promise<PriceRecalculationResultDTO> {
         try {
-            const queryParams = new URLSearchParams();
-            queryParams.append('updaterUserId', updaterUserId.toString());
-
-            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/recalculate-all-prices?${queryParams}`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/recalculate-all-prices`, {
                 method: 'POST',
                 headers: this.getAuthHeaders()
             });

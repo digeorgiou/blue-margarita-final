@@ -89,8 +89,7 @@ const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
         try {
             const expenseData: ExpenseInsertDTO = {
                 ...formData,
-                description: formData.description.trim(),
-                creatorUserId: 1 // You'd get this from auth context
+                description: formData.description.trim()
             };
 
             await onSubmit(expenseData);

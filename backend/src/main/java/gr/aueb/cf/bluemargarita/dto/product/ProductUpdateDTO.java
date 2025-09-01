@@ -43,8 +43,5 @@ public record ProductUpdateDTO(
         @Nullable
         @Min(value = 0, message = "Το όριο χαμηλού αποθέματος δεν μπορεί να είναι αρνητικό")
         @Max(value = 9999, message = "Το όριο χαμηλού αποθέματος δεν μπορεί να υπερβαίνει τις 9999 μονάδες")
-        Integer lowStockAlert,
-
-        @NotNull(message = "Updater user ID is required")
-        Long updaterUserId
+        Integer lowStockAlert
 ) {}

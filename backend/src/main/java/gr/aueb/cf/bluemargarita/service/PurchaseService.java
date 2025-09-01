@@ -30,7 +30,7 @@ public class PurchaseService implements IPurchaseService {
     private final PurchaseRepository purchaseRepository;
     private final SupplierRepository supplierRepository;
     private final MaterialRepository materialRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ExpenseRepository expenseRepository;
     private final IExpenseService expenseService;
     private final Mapper mapper;
@@ -39,14 +39,14 @@ public class PurchaseService implements IPurchaseService {
     public PurchaseService(PurchaseRepository purchaseRepository,
                            SupplierRepository supplierRepository,
                            MaterialRepository materialRepository,
-                           UserRepository userRepository,
+                           UserService userService,
                            ExpenseRepository expenseRepository,
                            IExpenseService expenseService,
                            Mapper mapper) {
         this.purchaseRepository = purchaseRepository;
         this.supplierRepository = supplierRepository;
         this.materialRepository = materialRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.expenseRepository = expenseRepository;
         this.expenseService = expenseService;
         this.mapper = mapper;
@@ -63,7 +63,7 @@ public class PurchaseService implements IPurchaseService {
 
         // Validate supplier and user exists
         Supplier supplier = getSupplierEntityById(request.supplierId());
-        User creator = getUserEntityById(request.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         // Validate all materials exist
         validateMaterialsExist(request.materials());
@@ -88,8 +88,7 @@ public class PurchaseService implements IPurchaseService {
                 savedPurchase.getId(),
                 expenseDescription,
                 totalCost,
-                savedPurchase.getPurchaseDate(),
-                request.creatorUserId()
+                savedPurchase.getPurchaseDate()
         );
 
         LOGGER.info("Purchase recorded with id: {}, total cost: {}", savedPurchase.getId(), totalCost);
@@ -107,7 +106,7 @@ public class PurchaseService implements IPurchaseService {
         // Validate supplier if changed
         Supplier supplier = validateSupplierIfChanged(existingPurchase, dto.supplierId());
 
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         updatePurchaseBasicFields(existingPurchase, dto, supplier, updater);
 
@@ -116,8 +115,7 @@ public class PurchaseService implements IPurchaseService {
         expenseService.updatePurchaseExpense(
                 savedPurchase.getId(),
                 savedPurchase.getTotalCost(),
-                savedPurchase.getPurchaseDate(),
-                dto.updaterUserId()
+                savedPurchase.getPurchaseDate()
         );
 
         LOGGER.info("Purchase {} updated", savedPurchase.getId());
@@ -204,12 +202,6 @@ public class PurchaseService implements IPurchaseService {
         return supplierRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Supplier",
                         "Supplier with id=" + id + " was not found"));
-    }
-
-    private User getUserEntityById(Long id) throws EntityNotFoundException {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User",
-                        "User with id=" + id + " was not found"));
     }
 
     private Material getMaterialEntityById(Long id) throws EntityNotFoundException {

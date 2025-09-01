@@ -13,7 +13,6 @@ import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.CategoryRepository;
 import gr.aueb.cf.bluemargarita.repository.ProductRepository;
 import gr.aueb.cf.bluemargarita.repository.SaleProductRepository;
-import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -36,15 +35,15 @@ public class CategoryService implements ICategoryService{
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CategoryService.class);
     private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ProductRepository productRepository;
     private final SaleProductRepository saleProductRepository;
     private final Mapper mapper;
 
     @Autowired
-    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository, ProductRepository productRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
+    public CategoryService(CategoryRepository categoryRepository, UserService userService, ProductRepository productRepository, SaleProductRepository saleProductRepository, Mapper mapper) {
         this.categoryRepository = categoryRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.productRepository = productRepository;
         this.saleProductRepository = saleProductRepository;
         this.mapper = mapper;
@@ -62,7 +61,10 @@ public class CategoryService implements ICategoryService{
 
         Category category = mapper.mapCategoryInsertToModel(dto);
 
-        User creator = getUserEntityById(dto.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
+        if (creator == null) {
+            throw new EntityNotFoundException("User", "No authenticated user found");
+        }
 
         category.setCreatedBy(creator);
         category.setLastUpdatedBy(creator);
@@ -85,7 +87,10 @@ public class CategoryService implements ICategoryService{
             validateUniqueName(dto.name());
         }
 
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
+        if (updater == null) {
+            throw new EntityNotFoundException("User", "No authenticated user found");
+        }
 
         Category updatedCategory = mapper.mapCategoryUpdateToModel(dto,
                 existingCategory);
@@ -112,6 +117,12 @@ public class CategoryService implements ICategoryService{
             //Soft Delete if category is used in any products
             category.setIsActive(false);
             category.setDeletedAt(LocalDateTime.now());
+
+            User currentUser = userService.getCurrentUserOrThrow();
+            if (currentUser != null) {
+                category.setLastUpdatedBy(currentUser);
+            }
+
             categoryRepository.save(category);
 
             LOGGER.info("Category {} soft deleted. Used in {} products",
@@ -182,11 +193,6 @@ public class CategoryService implements ICategoryService{
     private Category getCategoryEntityById(Long id) throws EntityNotFoundException {
         return categoryRepository.findById(id).orElseThrow(()->
                 new EntityNotFoundException("Category", "Category with id " + id + " was not found"));
-    }
-
-    private User getUserEntityById(Long userId) throws EntityNotFoundException {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
     }
 
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {

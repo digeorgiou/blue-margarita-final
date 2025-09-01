@@ -38,9 +38,6 @@ const CategoryManagementPage  = () => {
     // Success message state
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
-    // Get current user ID (you'd get this from auth context)
-    const getCurrentUserId = () => 1; // Placeholder
-
     // Load categories
     const loadCategories = async () => {
         try {
@@ -84,8 +81,7 @@ const CategoryManagementPage  = () => {
     // Handle create category
     const handleCreateCategory = async (data: { name: string }) => {
         await categoryService.createCategory({
-            name: data.name,
-            creatorUserId: getCurrentUserId()
+            name: data.name
         });
         await loadCategories();
         setSuccessMessage({
@@ -101,7 +97,6 @@ const CategoryManagementPage  = () => {
 
         await categoryService.updateCategory({
             categoryId: selectedCategory.id,
-            updaterUserId: getCurrentUserId(),
             name: data.name
         });
         await loadCategories();

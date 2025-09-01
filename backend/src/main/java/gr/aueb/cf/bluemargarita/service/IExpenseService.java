@@ -106,17 +106,14 @@ public interface IExpenseService {
      * Creates an expense automatically when a purchase is recorded
      * This method is called by PurchaseService when recording purchases
      *
-     * @param purchaseId Purchase ID to link
+     * @param purchaseId  Purchase ID to link
      * @param description Expense description
-     * @param amount Expense amount (usually same as purchase total cost)
+     * @param amount      Expense amount (usually same as purchase total cost)
      * @param expenseDate Expense date (usually same as purchase date)
-     * @param creatorUserId User creating the expense
-     * @return Created expense
      * @throws EntityNotFoundException if purchase or user not found
      */
-    ExpenseReadOnlyDTO createPurchaseExpense(Long purchaseId, String description,
-                                             BigDecimal amount, LocalDate expenseDate,
-                                             Long creatorUserId) throws EntityNotFoundException, EntityAlreadyExistsException;
+    void createPurchaseExpense(Long purchaseId, String description,
+                               BigDecimal amount, LocalDate expenseDate) throws EntityNotFoundException, EntityAlreadyExistsException;
 
     /**
      * Updates an expense when its linked purchase is updated
@@ -125,9 +122,8 @@ public interface IExpenseService {
      * @param purchaseId Purchase ID
      * @param newAmount New expense amount
      * @param newDate New expense date
-     * @param updaterUserId User updating the expense
      * @throws EntityNotFoundException if purchase or user not found
      */
     void updatePurchaseExpense(Long purchaseId, java.math.BigDecimal newAmount,
-                               java.time.LocalDate newDate, Long updaterUserId) throws EntityNotFoundException, EntityAlreadyExistsException;
+                               java.time.LocalDate newDate) throws EntityNotFoundException, EntityAlreadyExistsException;
 }

@@ -1,7 +1,6 @@
 export interface RecordPurchaseRequestDTO {
     supplierId: number;
     purchaseDate: string;
-    creatorUserId?: number;
     materials: PurchaseMaterialRequestDTO[];
 }
 

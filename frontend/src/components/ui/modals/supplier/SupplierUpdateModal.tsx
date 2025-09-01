@@ -95,7 +95,6 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
         try {
             const dataToSubmit : SupplierUpdateDTO = {
                 supplierId: supplier.supplierId,
-                updaterUserId: 1, // TODO get this from auth context
                 name: formData.name.trim(),
                 address: formData.address.trim() || '',
                 tin: formData.tin.trim(),

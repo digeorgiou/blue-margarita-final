@@ -101,7 +101,6 @@ const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
         try {
             const dataToSubmit: CustomerUpdateDTO = {
                 customerId: customer.customerId,
-                updaterUserId: 1, // TODO get this from auth context
                 firstname: formData.firstname.trim(),
                 lastname: formData.lastname.trim(),
                 gender: formData.gender,

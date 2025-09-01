@@ -89,15 +89,6 @@ export interface PurchaseMaterialDTO {
     lineTotal : number;
 }
 
-export interface ProductListItemDTO {
-    id: number;
-    name: string;
-    description: string;
-    currentStock: number;
-    price: number;
-    // Add other fields based on your DTO
-}
-
 export interface BaseProduct {
     productId : number;
     productName : string;

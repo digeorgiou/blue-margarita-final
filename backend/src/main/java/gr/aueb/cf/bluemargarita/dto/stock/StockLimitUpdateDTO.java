@@ -10,6 +10,5 @@ public record StockLimitUpdateDTO(
         @NotNull(message = "Παρακαλώ εισάγετε ποσότητα")
         @Min(value = 0, message = "Η ποσότητα δεν μπορεί να είναι αρνητική")
         @Max(value = 999, message = "Η ποσότητα δεν μπορεί να υπερβαίνει τις 999 μονάδες")
-        Integer quantity,
-        Long updaterUserId
+        Integer quantity
 ){};

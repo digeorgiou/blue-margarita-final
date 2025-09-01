@@ -9,7 +9,6 @@ import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.Product;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.ProductRepository;
-import gr.aueb.cf.bluemargarita.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,13 +30,13 @@ public class StockManagementService implements IStockManagementService{
     private static final Logger LOGGER = LoggerFactory.getLogger(StockManagementService.class);
 
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final Mapper mapper;
 
     @Autowired
-    public StockManagementService(ProductRepository productRepository, UserRepository userRepository, Mapper mapper) {
+    public StockManagementService(ProductRepository productRepository, UserService userService, Mapper mapper) {
         this.productRepository = productRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.mapper = mapper;
     }
 
@@ -52,7 +50,7 @@ public class StockManagementService implements IStockManagementService{
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(updateDTO.productId());
-        User updater = getUserEntityById(updateDTO.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         //Calculate stock changes
         StockCalculationResult result = calculateStockChange(product, updateDTO);
@@ -96,7 +94,7 @@ public class StockManagementService implements IStockManagementService{
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(updateDTO.productId());
-        User updater = getUserEntityById(updateDTO.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         //Calculate stock changes
         StockCalculationResult result = calculateStockChange(product, updateDTO);
@@ -258,12 +256,6 @@ public class StockManagementService implements IStockManagementService{
         return productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product",
                         "Product with id=" + id + " was not found"));
-    }
-
-    private User getUserEntityById(Long id) throws EntityNotFoundException {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User",
-                        "User with id=" + id + " was not found"));
     }
 
 

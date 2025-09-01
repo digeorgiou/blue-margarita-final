@@ -35,8 +35,6 @@ const PurchaseUpdateModal: React.FC<PurchaseUpdateModalProps> = ({
         if (isOpen && purchase) {
             setPurchaseDate(purchase.purchaseDate);
             setSupplierSearchTerm(purchase.supplierName);
-            // You might want to set the selected supplier if you have the supplier ID
-            // This would require additional data or API call
         }
     }, [isOpen, purchase]);
 
@@ -73,19 +71,12 @@ const PurchaseUpdateModal: React.FC<PurchaseUpdateModalProps> = ({
             return;
         }
 
-        const currentUser = authService.getCurrentUser();
-        if (!currentUser) {
-            await handleApiError(new Error('User not authenticated'));
-            return;
-        }
-
         setLoading(true);
         try {
             const updateData: PurchaseUpdateDTO = {
                 purchaseId: purchase.id,
                 supplierId: selectedSupplier.supplierId,
-                purchaseDate: purchaseDate,
-                updaterUserId: currentUser.id
+                purchaseDate: purchaseDate
             };
 
             await onUpdate(updateData);
@@ -205,7 +196,7 @@ const PurchaseUpdateModal: React.FC<PurchaseUpdateModalProps> = ({
                         >
                             {loading ? (
                                 <>
-                                    <LoadingSpinner size="sm" className="mr-2" />
+                                    <LoadingSpinner />
                                     Ενημέρωση...
                                 </>
                             ) : (

@@ -1,5 +1,21 @@
-// services/authService.ts
 import { AuthenticationRequest, AuthenticationResponse } from '../types/api/auth';
+
+const decodeJwt = (token: string): any => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error('Error decoding JWT:', error);
+        return null;
+    }
+};
 
 const API_BASE_URL = '/api';
 
@@ -39,6 +55,19 @@ class AuthService {
         }
 
         return headers;
+    }
+
+    getCurrentUser(): { id: number; username: string } | null {
+        const token = this.getStoredToken();
+        if (!token) return null;
+
+        const decoded = decodeJwt(token);
+        if (!decoded) return null;
+
+        return {
+            id: decoded.userId || decoded.sub,
+            username: decoded.username || decoded.sub
+        };
     }
 
     // Authenticate user and get JWT token

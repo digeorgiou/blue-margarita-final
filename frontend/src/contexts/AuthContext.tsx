@@ -1,5 +1,3 @@
-// Authentication context for managing global auth state
-
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { AuthContextType, AuthenticationRequest, UserReadOnly } from '../types/api/auth.ts'
 import { authService } from '../services/authService';
@@ -10,11 +8,45 @@ interface AuthProviderProps {
     children: ReactNode;
 }
 
+const decodeJwt = (token: string): any => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error('Error decoding JWT:', error);
+        return null;
+    }
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<UserReadOnly | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const extractUserFromToken = (token: string): UserReadOnly | null => {
+        const decoded = decodeJwt(token);
+        if (!decoded) return null;
+
+        return {
+            id: decoded.userId || decoded.sub, // Check both userId and sub (subject) claims
+            username: decoded.username || decoded.sub,
+            role: decoded.role || 'USER',
+            isActive: true,
+            deletedAt: null,
+            createdAt: new Date(decoded.iat * 1000).toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdBy: decoded.username || decoded.sub,
+            lastUpdatedBy: decoded.username || decoded.sub,
+        };
+    };
 
     // Initialize auth state on app start
     useEffect(() => {
@@ -25,8 +57,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     const isValid = await authService.validateToken();
                     if (isValid) {
                         setToken(storedToken);
-                        // Note: You might want to decode the JWT to get user info
-                        // or make an API call to get current user details
+                        const userInfo = extractUserFromToken(storedToken);
+                        setUser(userInfo);
                     } else {
                         // Token is invalid, clear it
                         await authService.logout();
@@ -51,21 +83,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const response = await authService.authenticate(credentials);
             setToken(response.token);
 
-            // Create a basic user object from the response
-            // In a real app, you might want to fetch full user details
-            const basicUser: UserReadOnly = {
-                id: 0, // You'll need to get this from the JWT or another API call
-                username: response.username,
-                role: 'USER', // Default role, should be extracted from JWT
-                isActive: true,
-                deletedAt: null,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                createdBy: response.username,
-                lastUpdatedBy: response.username,
-            };
+            const userInfo = extractUserFromToken(response.token);
+            setUser(userInfo);
 
-            setUser(basicUser);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Login failed';
             setError(errorMessage);

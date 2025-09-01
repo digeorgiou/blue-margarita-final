@@ -16,8 +16,6 @@ public record MaterialInsertDTO(
 
         @NotEmpty(message = "Παρακαλώ εισάγετε μονάδα μέτρησης")
         @Size(min = 1, max = 20, message = "Η μονάδα μέτρησης πρέπει να έχει 1 ως 20 χαρακτήρες")
-        String unitOfMeasure,
-
-        Long creatorUserId
+        String unitOfMeasure
 )
 {}

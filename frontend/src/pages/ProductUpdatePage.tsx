@@ -430,8 +430,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                 finalSellingPriceWholesale: finalWholesalePrice,
                 minutesToMake: minutesToMake,
                 stock: currentStock,
-                lowStockAlert: lowStockAlert,
-                updaterUserId: getCurrentUserId()
+                lowStockAlert: lowStockAlert
             };
 
             await productService.updateProduct(productId, productData);

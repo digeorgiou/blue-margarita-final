@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 
 public record CustomerUpdateDTO(
         Long customerId,
-        Long updaterUserId,
 
         @Size(min = 2, max = 55, message = "Το όνομα πρεπει να περιέχει απο 2 εως 55 χαρακτήρες")
         String firstname,

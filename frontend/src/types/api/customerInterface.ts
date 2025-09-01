@@ -19,12 +19,10 @@ export interface CustomerInsertDTO {
     address: string | null;
     email: string | null;
     tin: string | null;
-    creatorUserId: number;
 }
 
 export interface CustomerUpdateDTO {
     customerId: number;
-    updaterUserId: number;
     firstname: string;
     lastname: string;
     gender: GenderType | undefined;

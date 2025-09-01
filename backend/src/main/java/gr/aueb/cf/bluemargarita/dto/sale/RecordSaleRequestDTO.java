@@ -39,7 +39,5 @@ public record RecordSaleRequestDTO(
 
         @NotEmpty(message = "Εισάγετε τουλάχιστον ένα προϊόν")
         @Valid
-        List<SaleItemRequestDTO> items,
-
-        Long creatorUserId
+        List<SaleItemRequestDTO> items
 ) {}

@@ -123,8 +123,7 @@ const StockManagementPage: React.FC<StockManagementPageProps> = ({ stockFilter }
             const updateData: StockUpdateDTO = {
                 productId: product.productId,
                 updateType: 'SET',
-                quantity: newStock,
-                updaterUserId: 1 // TODO: Get from auth context
+                quantity: newStock
             };
 
             await stockManagementService.updateProductStock(updateData);
@@ -143,8 +142,7 @@ const StockManagementPage: React.FC<StockManagementPageProps> = ({ stockFilter }
 
             const updateData: StockLimitUpdateDTO = {
                 productId: product.productId,
-                quantity: newStockLimit,
-                updaterUserId: 1
+                quantity: newStockLimit
             };
 
             await stockManagementService.updateProductStockLimit(updateData);

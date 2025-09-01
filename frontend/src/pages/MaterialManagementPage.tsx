@@ -53,12 +53,6 @@ const MaterialManagementPage = () => {
 
     const [isProductUsageModalOpen, setIsProductUsageModalOpen] = useState(false);
 
-    // Get current user ID (following customer pattern)
-    const getCurrentUserId = (): number => {
-        // This should match how you get current user ID in CustomerManagementPage
-        return 1; // Replace with actual user ID logic
-    };
-
     // Search function
     const searchMaterials = async (page: number = currentPage, size: number = pageSize) => {
 
@@ -256,7 +250,6 @@ const MaterialManagementPage = () => {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onSubmit={handleCreateMaterial}
-                currentUserId={getCurrentUserId()}
             />
 
             <MaterialUpdateModal

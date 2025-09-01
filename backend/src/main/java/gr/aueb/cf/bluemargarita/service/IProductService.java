@@ -221,11 +221,10 @@ public interface IProductService {
      * Used when material costs change or markup factors are updated
      * This is a bulk administrative operation that can affect many products
      *
-     * @param updaterUserId User performing the bulk price update
      * @return Results of the recalculation operation including success/failure counts and failed product codes
      * @throws EntityNotFoundException if updater user not found
      */
-    PriceRecalculationResultDTO recalculateAllProductPrices(Long updaterUserId) throws EntityNotFoundException;
+    PriceRecalculationResultDTO recalculateAllProductPrices() throws EntityNotFoundException;
 
     ProductListItemDTO updateFinalRetailPrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException;
     ProductListItemDTO updateFinalWholesalePrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException;

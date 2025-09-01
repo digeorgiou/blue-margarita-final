@@ -8,18 +8,15 @@ interface ProcedureCreateModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: ProcedureInsertDTO) => Promise<void>;
-    currentUserId: number;
 }
 
 const ProcedureCreateModal: React.FC<ProcedureCreateModalProps> = ({
                                                                        isOpen,
                                                                        onClose,
-                                                                       onSubmit,
-                                                                       currentUserId
+                                                                       onSubmit
                                                                    }) => {
     const [formData, setFormData] = useState<ProcedureInsertDTO>({
-        name: '',
-        creatorUserId: currentUserId
+        name: ''
     });
 
     const {
@@ -41,8 +38,7 @@ const ProcedureCreateModal: React.FC<ProcedureCreateModalProps> = ({
 
     const handleClose = () => {
         setFormData({
-            name: '',
-            creatorUserId: currentUserId
+            name: ''
         });
         clearErrors();
         onClose();

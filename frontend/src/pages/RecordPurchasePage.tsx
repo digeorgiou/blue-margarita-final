@@ -203,8 +203,7 @@ const RecordPurchasePage: React.FC<RecordPurchasePageProps> = () => {
                     materialId: item.materialId,
                     quantity: item.quantity,
                     pricePerUnit: item.pricePerUnit
-                })),
-                creatorUserId: 1 // TODO: Get from auth context
+                }))
             };
 
             const result = await recordPurchaseService.recordPurchase(request);

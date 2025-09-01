@@ -49,12 +49,6 @@ const ProcedureManagementPage = () => {
         message: string;
     } | null>(null);
 
-    // Helper to get current user ID
-    const getCurrentUserId = (): number => {
-        // TODO: Get from auth context or service
-        return 1; // Placeholder
-    };
-
     // Search function
     const searchProcedures = async (page = currentPage, size = pageSize) => {
         try {
@@ -140,8 +134,6 @@ const ProcedureManagementPage = () => {
 
     // CRUD operations
     const handleCreateProcedure = async (data: ProcedureInsertDTO) => {
-        // DON'T catch errors here - let them bubble up to the modal!
-        // The modal's useFormErrorHandler will handle them and show backend messages
         await procedureService.createProcedure(data);
         await searchProcedures(); // Refresh results
         setSuccessMessage({
@@ -246,7 +238,6 @@ const ProcedureManagementPage = () => {
                     isOpen={isCreateModalOpen}
                     onClose={() => setIsCreateModalOpen(false)}
                     onSubmit={handleCreateProcedure}
-                    currentUserId={getCurrentUserId()}
                 />
 
                 <ProcedureUpdateModal

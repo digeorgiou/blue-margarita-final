@@ -40,13 +40,11 @@ export interface StockUpdateDTO {
     productId: number;
     updateType: StockUpdateType;
     quantity: number;
-    updaterUserId: number;
 }
 
 export interface StockLimitUpdateDTO {
     productId: number;
     quantity: number;
-    updaterUserId: number;
 }
 
 export interface StockAlertDTO {

@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Size;
 
 public record LocationUpdateDTO(
         Long locationId,
-        Long updaterUserId,
         @NotEmpty(message = "Παρακαλώ εισάγετε περιγραφή τοποθεσίας")
         @Size(min = 2, max = 55, message = "Το όνομα της τοποθεσίας πρεπει να περιέχει απο 2 εως 55 χαρακτήρες")
         String name

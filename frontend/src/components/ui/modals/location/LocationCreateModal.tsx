@@ -70,8 +70,7 @@ const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
         try {
             // Create the proper LocationInsertDTO with the required structure
             const locationData: LocationInsertDTO = {
-                name: formData.name.trim(),
-                creatorUserId: 1 // TODO: Get from auth context or pass as prop
+                name: formData.name.trim()
             };
 
             await onSubmit(locationData);

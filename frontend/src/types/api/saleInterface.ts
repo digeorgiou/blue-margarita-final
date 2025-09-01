@@ -30,7 +30,6 @@ export interface SaleUpdateDTO {
     finalTotalPrice: number;
     packagingPrice: number;
     paymentMethod: string;
-    updaterUserId: number;
 }
 
 export interface PaginatedFilteredSalesWithSummary {

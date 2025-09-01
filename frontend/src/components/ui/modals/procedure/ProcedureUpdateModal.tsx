@@ -17,7 +17,7 @@ const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
                                                                        onSubmit,
                                                                        procedure
                                                                    }) => {
-    const [formData, setFormData] = useState<Omit<ProcedureUpdateDTO, 'procedureId' | 'updaterUserId'>>({
+    const [formData, setFormData] = useState<Omit<ProcedureUpdateDTO, 'procedureId'>>({
         name: ''
     });
 
@@ -28,11 +28,7 @@ const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
         handleApiError,
         clearErrors,
         clearFieldError
-    } = useFormErrorHandler({
-        businessErrorToFieldMap: {
-            'PROCEDURE_NAME_EXISTS': 'name'
-        }
-    });
+    } = useFormErrorHandler();
 
     // Initialize form data when procedure changes
     useEffect(() => {
@@ -61,7 +57,7 @@ const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
         onClose();
     };
 
-    const handleInputChange = (field: keyof Omit<ProcedureUpdateDTO, 'procedureId' | 'updaterUserId'>, value: string) => {
+    const handleInputChange = (field: keyof Omit<ProcedureUpdateDTO, 'procedureId'>, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
         // Clear field error when user starts typing
@@ -85,7 +81,6 @@ const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
         try {
             const updateData: ProcedureUpdateDTO = {
                 procedureId: procedure.procedureId,
-                updaterUserId: 1, // Replace with actual current user ID
                 ...formData
             };
 

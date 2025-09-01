@@ -16,8 +16,6 @@ import gr.aueb.cf.bluemargarita.model.Product;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.*;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +38,7 @@ public class MaterialService implements IMaterialService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaterialService.class);
     private final MaterialRepository materialRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ProductRepository productRepository;
     private final ProductMaterialRepository productMaterialRepository;
     private final SaleProductRepository saleProductRepository;
@@ -49,12 +47,12 @@ public class MaterialService implements IMaterialService {
     private final Mapper mapper;
 
     @Autowired
-    public MaterialService(MaterialRepository materialRepository, UserRepository userRepository,
+    public MaterialService(MaterialRepository materialRepository, UserService userService,
                            ProductRepository productRepository, ProductMaterialRepository productMaterialRepository,
                            SaleProductRepository saleProductRepository, CategoryRepository categoryRepository,
                            PurchaseMaterialRepository purchaseMaterialRepository, Mapper mapper) {
         this.materialRepository = materialRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.productRepository = productRepository;
         this.productMaterialRepository = productMaterialRepository;
         this.saleProductRepository = saleProductRepository;
@@ -75,7 +73,7 @@ public class MaterialService implements IMaterialService {
 
         Material material = mapper.mapMaterialInsertToModel(dto);
 
-        User creator = getUserEntityById(dto.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         material.setCreatedBy(creator);
         material.setLastUpdatedBy(creator);
@@ -97,7 +95,7 @@ public class MaterialService implements IMaterialService {
             validateUniqueName(dto.name());
         }
 
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         Material updatedMaterial = mapper.mapMaterialUpdateToModel(dto, existingMaterial);
         updatedMaterial.setLastUpdatedBy(updater);
@@ -122,6 +120,10 @@ public class MaterialService implements IMaterialService {
             // Soft Delete if material is used in any purchases or products
             material.setIsActive(false);
             material.setDeletedAt(LocalDateTime.now());
+
+            User currentUser = userService.getCurrentUserOrThrow();
+            material.setLastUpdatedBy(currentUser);
+
             materialRepository.save(material);
 
             LOGGER.info("Material {} soft deleted. Used in {} purchases and {} products",
@@ -263,11 +265,6 @@ public class MaterialService implements IMaterialService {
             throw new EntityAlreadyExistsException("Material", "Υπάρχει ήδη υλικό με όνομα "
                     + name);
         }
-    }
-
-    private User getUserEntityById(Long userId) throws EntityNotFoundException {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
     }
 
     // =============================================================================

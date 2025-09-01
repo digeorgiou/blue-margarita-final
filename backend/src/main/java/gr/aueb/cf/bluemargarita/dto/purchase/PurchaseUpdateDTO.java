@@ -15,8 +15,6 @@ public record PurchaseUpdateDTO(
 
         @NotNull(message = "Παρακαλώ εισάγετε ημερομηνία αγοράς")
         @PastOrPresent(message = "Η ημερομηνία δεν μπορεί να είναι μελλοντική")
-        LocalDate purchaseDate,
-
-        Long updaterUserId
+        LocalDate purchaseDate
 ) {
 }

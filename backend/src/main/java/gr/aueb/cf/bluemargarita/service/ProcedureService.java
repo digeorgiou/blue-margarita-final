@@ -1,6 +1,5 @@
 package gr.aueb.cf.bluemargarita.service;
 
-import gr.aueb.cf.bluemargarita.core.enums.PricingIssueType;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -10,14 +9,11 @@ import gr.aueb.cf.bluemargarita.core.specifications.ProcedureSpecification;
 import gr.aueb.cf.bluemargarita.core.specifications.ProductSpecification;
 import gr.aueb.cf.bluemargarita.dto.category.CategoryUsageDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.*;
-import gr.aueb.cf.bluemargarita.dto.product.MispricedProductAlertDTO;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
 import gr.aueb.cf.bluemargarita.model.*;
 import gr.aueb.cf.bluemargarita.repository.*;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,7 +34,7 @@ public class ProcedureService implements IProcedureService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcedureService.class);
     private final ProcedureRepository procedureRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductProcedureRepository productProcedureRepository;
@@ -47,11 +42,11 @@ public class ProcedureService implements IProcedureService {
     private final Mapper mapper;
 
     @Autowired
-    public ProcedureService(ProcedureRepository procedureRepository, UserRepository userRepository, ProductRepository productRepository,
+    public ProcedureService(ProcedureRepository procedureRepository, UserService userService, ProductRepository productRepository,
                             CategoryRepository categoryRepository, ProductProcedureRepository productProcedureRepository,
                             SaleProductRepository saleProductRepository, Mapper mapper) {
         this.procedureRepository = procedureRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productProcedureRepository = productProcedureRepository;
@@ -71,7 +66,7 @@ public class ProcedureService implements IProcedureService {
 
         Procedure procedure = mapper.mapProcedureInsertToModel(dto);
 
-        User creator = getUserEntityById(dto.creatorUserId());
+        User creator = userService.getCurrentUserOrThrow();
 
         procedure.setCreatedBy(creator);
         procedure.setLastUpdatedBy(creator);
@@ -93,7 +88,7 @@ public class ProcedureService implements IProcedureService {
             validateUniqueName(dto.name());
         }
 
-        User updater = getUserEntityById(dto.updaterUserId());
+        User updater = userService.getCurrentUserOrThrow();
 
         Procedure updatedProcedure = mapper.mapProcedureUpdateToModel(dto, existingProcedure);
         updatedProcedure.setLastUpdatedBy(updater);
@@ -117,6 +112,10 @@ public class ProcedureService implements IProcedureService {
             // Soft Delete if procedure is used in any products
             procedure.setIsActive(false);
             procedure.setDeletedAt(LocalDateTime.now());
+
+            User currentUser = userService.getCurrentUserOrThrow();
+            procedure.setLastUpdatedBy(currentUser);
+
             procedureRepository.save(procedure);
 
             LOGGER.info("Procedure {} soft deleted. Used in {} products",
@@ -258,11 +257,6 @@ public class ProcedureService implements IProcedureService {
     private Procedure getProcedureEntityById(Long procedureId) throws EntityNotFoundException{
         return procedureRepository.findById(procedureId)
                 .orElseThrow(() -> new EntityNotFoundException("Procedure", "Procedure with id=" + procedureId + " was not found"));
-    }
-
-    private User getUserEntityById(Long userId) throws EntityNotFoundException {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", "User with id=" + userId + " was not found"));
     }
 
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {

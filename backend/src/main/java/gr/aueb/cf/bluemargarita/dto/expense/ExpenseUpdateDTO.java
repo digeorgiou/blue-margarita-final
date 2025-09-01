@@ -26,8 +26,6 @@ public record ExpenseUpdateDTO(
         @NotNull(message = "Παρακαλώ επιλέξτε τύπο του εξόδου")
         ExpenseType expenseType,
 
-        Long purchaseId, // Optional - can be null to unlink from purchase
+        Long purchaseId // Optional - can be null to unlink from purchase
 
-        @NotNull(message = "Updater user ID is required")
-        Long updaterUserId
 ) {}

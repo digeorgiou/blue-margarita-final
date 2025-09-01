@@ -21,7 +21,6 @@ export interface ExpenseInsertDTO {
     expenseDate: string;
     expenseType: string;
     purchaseId?: number;
-    creatorUserId?: number;
 }
 
 export interface ExpenseUpdateDTO {
@@ -31,7 +30,6 @@ export interface ExpenseUpdateDTO {
     expenseDate: string;
     expenseType: string;
     purchaseId?: number;
-    updaterUserId?: number;
 }
 
 export interface PaginatedFilteredExpensesWithSummary {

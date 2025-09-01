@@ -22,8 +22,6 @@ public record RecordPurchaseRequestDTO(
         @PastOrPresent(message = "Η ημερομηνία δεν μπορεί να είναι μελλοντική")
         LocalDate purchaseDate,
 
-        Long creatorUserId,
-
         @NotEmpty(message = "Παρακαλώ προσθέστε τουλάχιστον ένα υλικό")
         @Valid
         List<PurchaseMaterialRequestDTO> materials

@@ -7,8 +7,6 @@ public record CategoryUpdateDTO(
 
         Long categoryId,
 
-        Long updaterUserId,
-
         @NotEmpty(message = "Παρακαλώ εισάγετε ονομα κατηγοριας")
         @Size(min = 2, max = 55, message = "Το όνομα της κατηγορίας πρέπει να έχει 2 ως 55" +
                 " χαρακτήρες")
