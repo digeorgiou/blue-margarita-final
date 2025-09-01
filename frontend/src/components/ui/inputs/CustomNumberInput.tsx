@@ -13,7 +13,8 @@ const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
                                                                  step = 0.01,
                                                                  required = false,
                                                                  disabled = false,
-                                                                 className = ""
+                                                                 className = "",
+                                                                 error
                                                              }) => {
     return (
         <div className={`relative ${className}`}>
@@ -41,9 +42,19 @@ const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
                     className={`
                         ${baseInputClasses}
                         ${icon ? 'pl-10' : 'pl-4'}
+                        ${error
+                        ? 'border-red-500/80 focus:border-red-500 focus:ring-red-100/50 hover:border-red-400'
+                        : 'border-gray-200/60 focus:border-blue-300 focus:ring-blue-100/50 hover:border-purple-200'
+                        }
                     `}
                 />
             </div>
+            {error && (
+                <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <span className="mr-1">⚠️</span>
+                    {error}
+                </p>
+            )}
         </div>
     );
 };

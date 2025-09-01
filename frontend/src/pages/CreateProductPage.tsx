@@ -49,7 +49,13 @@ const WHOLESALE_MARKUP_FACTOR = 1.86;
 const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => {
     // Loading and error states
     const [submitting, setSubmitting] = useState(false);
-    const { generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
+    const {
+        fieldErrors,
+        generalError,
+        handleApiError,
+        clearErrors,
+        clearFieldError
+    } = useFormErrorHandler();
 
     // Form data
     const [productName, setProductName] = useState('');
@@ -276,12 +282,53 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                 procedures: Object.keys(procedures).length > 0 ? procedures : undefined
             };
 
-            await productService.createProduct(productData);
-            onNavigate('manage-products', undefined, `SUCCESS_CREATE:${productName.trim()}`);
+            const createdProduct = await productService.createProduct(productData);
+
+            onNavigate('manage-products', undefined, `SUCCESS_CREATE:${createdProduct.name.trim()}`);
         } catch (err) {
             await handleApiError(err);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleInputChange = (field: string, value: string | number) => {
+        // Update the appropriate state based on field
+        switch (field) {
+            case 'name':
+                setProductName(value as string);
+                break;
+            case 'code':
+                setProductCode(value as string);
+                break;
+            case 'categoryId':
+                setSelectedCategoryId(value as number);
+                break;
+            case 'stock':
+                setStock(value as number);
+                break;
+            case 'lowStockAlert':
+                setLowStockAlert(value as number);
+                break;
+            case 'minutesToMake':
+                setMinutesToMake(value as number);
+                break;
+            case 'finalSellingPriceRetail':
+                setFinalSellingPriceRetail(value as number);
+                break;
+            case 'finalSellingPriceWholesale':
+                setFinalSellingPriceWholesale(value as number);
+                break;
+        }
+
+        // Clear field error when user starts typing (like in your modals)
+        if (fieldErrors[field]) {
+            clearFieldError(field);
+        }
+
+        // Clear general error when user makes changes (like in your modals)
+        if (generalError) {
+            clearErrors();
         }
     };
 
@@ -308,6 +355,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-6">
+
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center space-x-3 mb-4 md:mb-0">
@@ -344,38 +392,34 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                 <CustomTextInput
                                     label="Όνομα Προϊόντος"
                                     value={productName}
-                                    onChange={(value) => {
-                                        setProductName(value);
-                                        clearFieldError('name');
-                                    }}
+                                    onChange={(value) => handleInputChange('name', value)}
                                     placeholder="Εισάγετε όνομα..."
+                                    error={fieldErrors.name}
                                     icon={<Package className="w-4 h-4" />}
                                     required
+                                    disabled={submitting}
                                 />
 
                                 <CustomTextInput
                                     label="Κωδικός Προϊόντος"
                                     value={productCode}
-                                    onChange={(value) => {
-                                        setProductCode(value);
-                                        clearFieldError('code');
-                                    }}
+                                    onChange={(value) => handleInputChange('code', value)}
                                     placeholder="Εισάγετε μοναδικό κωδικό προϊόντος..."
                                     icon={<Settings className="w-4 h-4" />}
                                     required
+                                    error={fieldErrors.code} // Show validation error
+                                    disabled={submitting}
                                 />
 
                                 <CustomSelect
                                     label="Κατηγορία"
                                     value={selectedCategoryId || ''}
-                                    onChange={(value) => {
-                                        setSelectedCategoryId(value ? Number(value) : undefined);
-                                        clearFieldError('categoryId');
-                                    }}
+                                    onChange={(value) => handleInputChange('categoryId', value)}
                                     options={categoryOptions}
                                     placeholder="Επιλογή Κατηγορίας"
                                     icon={<Package className="w-4 h-4" />}
                                     required
+                                    disabled={submitting}
                                 />
                             </CustomCard>
 
@@ -445,31 +489,37 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                 <CustomNumberInput
                                     label="Αρχικό Απόθεμα"
                                     value={stock}
-                                    onChange={setStock}
+                                    onChange={(value) => handleInputChange('stock', value)}
                                     placeholder="Εισάγετε Απόθεμα..."
                                     icon={<Package className="w-4 h-4" />}
                                     min={0}
                                     step={1}
+                                    error={fieldErrors.stock} // Show validation error
+                                    disabled={submitting}
                                 />
 
                                 <CustomNumberInput
                                     label="Οριακό Απόθεμα"
                                     value={lowStockAlert}
-                                    onChange={setLowStockAlert}
+                                    onChange={(value) => handleInputChange('lowStockAlert', value)}
                                     placeholder="Εισάγετε οριακό απόθεμα..."
                                     icon={<Package className="w-4 h-4" />}
                                     min={0}
                                     step={1}
+                                    error={fieldErrors.lowStockAlert} // Show validation error
+                                    disabled={submitting}
                                 />
 
                                 <CustomNumberInput
                                     label="Χρόνος Κατασκευής (Λεπτά)"
                                     value={minutesToMake}
-                                    onChange={setMinutesToMake}
+                                    onChange={(value) => handleInputChange('minutesToMake', value)}
                                     placeholder="Εισάγετε χρόνο κατασκευής σε λεπτά..."
                                     icon={<Clock className="w-4 h-4" />}
                                     min={0}
                                     step={1}
+                                    error={fieldErrors.minutesToMake} // Show validation error
+                                    disabled={submitting}
                                 />
                             </CustomCard>
 
@@ -570,7 +620,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                 <CustomNumberInput
                                     label="Τελική Λιανική Τιμή (€)"
                                     value={finalSellingPriceRetail}
-                                    onChange={setFinalSellingPriceRetail}
+                                    onChange={(value) => handleInputChange('finalSellingPriceRetail', value)}
                                     placeholder="Εισάγετε τελική λιανική..."
                                     icon={<Euro className="w-4 h-4" />}
                                     min={0}
@@ -580,7 +630,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                                 <CustomNumberInput
                                     label="Τελική Χονδρική Τιμή (€)"
                                     value={finalSellingPriceWholesale}
-                                    onChange={setFinalSellingPriceWholesale}
+                                    onChange={(value) => handleInputChange('finalSellingPriceWholesale', value)}
                                     placeholder="Εισάγετε τελική Χονδρική..."
                                     icon={<Euro className="w-4 h-4" />}
                                     min={0}

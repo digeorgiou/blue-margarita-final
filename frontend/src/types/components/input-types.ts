@@ -12,6 +12,7 @@ export type CustomNumberInputProps = {
     required?: boolean;
     disabled?: boolean;
     className?: string;
+    error?: string;
 }
 
 export type CustomTextInputProps = {
@@ -30,6 +31,7 @@ export type CustomTextInputProps = {
     onFocus?: () => void;
     onBlur?: () => void;
     onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    error?: string;
 }
 
 export type CustomSelectProps = {

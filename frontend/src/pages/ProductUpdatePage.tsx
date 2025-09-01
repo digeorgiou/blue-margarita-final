@@ -4,10 +4,9 @@ import { procedureService } from '../services/procedureService';
 import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
 import { CustomTextInput, CustomNumberInput, CustomSelect, CustomSearchDropdown } from '../components/ui/inputs';
-import { Button, LoadingSpinner, Alert } from '../components/ui';
+import { Button, LoadingSpinner } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import {
-    Package,
     Trash2,
     Settings,
     ArrowLeft,
@@ -51,7 +50,13 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
     // Loading and error states
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const { generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
+    const {
+        fieldErrors,
+        generalError,
+        handleApiError,
+        clearErrors,
+        clearFieldError
+    } = useFormErrorHandler();
 
     // Basic product fields
     const [name, setName] = useState('');
@@ -363,6 +368,46 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         setSelectedProcedures(prev => prev.filter(p => p.procedureId !== procedureId));
     };
 
+    const handleInputChange = (field: string, value: string | number) => {
+        // Update the appropriate state based on field
+        switch (field) {
+            case 'name':
+                setName(value as string);
+                break;
+            case 'code':
+                setCode(value as string);
+                break;
+            case 'categoryId':
+                setCategoryId(value as number);
+                break;
+            case 'currentStock':
+                setCurrentStock(value as number);
+                break;
+            case 'lowStockAlert':
+                setLowStockAlert(value as number);
+                break;
+            case 'minutesToMake':
+                setMinutesToMake(value as number);
+                break;
+            case 'finalRetailPrice':
+                setFinalRetailPrice(value as number);
+                break;
+            case 'finalWholesalePrice':
+                setFinalWholesalePrice(value as number);
+                break;
+        }
+
+        // Clear field error when user starts typing (like in your modals)
+        if (fieldErrors[field]) {
+            clearFieldError(field);
+        }
+
+        // Clear general error when user makes changes (like in your modals)
+        if (generalError) {
+            clearErrors();
+        }
+    };
+
     // Handle form submission - Save all changes at once
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -375,8 +420,6 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         clearErrors();
 
         try {
-            console.log('Starting product update with all changes...');
-
             // 1. Update basic product information
             const productData: ProductUpdateDTO = {
                 productId: productId,
@@ -498,6 +541,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                             )}
                         </div>
                     </div>
+
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <Button
                             onClick={() => onNavigate('manage-products')}
@@ -525,9 +569,11 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
 
                 {/* Error Display */}
                 {generalError && (
-                    <Alert variant="error" className="mb-6">
-                        {generalError}
-                    </Alert>
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+                        <p className="text-sm text-red-800">
+                            {generalError}
+                        </p>
+                    </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -537,27 +583,21 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                             {/* Basic Product Information */}
                             <CustomCard title="Basic Information" className="space-y-4">
                                 <CustomTextInput
-                                    label="Όνομα Προϊόντος"
+                                    label="Όνομα Προϊόντος *"
                                     value={name}
-                                    onChange={(value) => {
-                                        setName(value);
-                                        clearFieldError('name');
-                                    }}
-                                    placeholder="Εισάγετε όνομα..."
-                                    required
-                                    icon={<Package className="w-4 h-4" />}
+                                    onChange={(value) => handleInputChange('name', value)}
+                                    placeholder="π.χ. Χρυσό Δαχτυλίδι"
+                                    error={fieldErrors.name} // Show validation error
+                                    disabled={submitting}
                                 />
 
                                 <CustomTextInput
-                                    label="Κωδικός Προϊόντος"
+                                    label="Κωδικός Προϊόντος *"
                                     value={code}
-                                    onChange={(value) => {
-                                        setCode(value);
-                                        clearFieldError('code');
-                                    }}
-                                    placeholder="Εισάγετε μοναδικό κωδικό προϊόντος..."
-                                    required
-                                    icon={<Settings className="w-4 h-4" />}
+                                    onChange={(value) => handleInputChange('code', value)}
+                                    placeholder="π.χ. RING-001"
+                                    error={fieldErrors.code} // Show validation error
+                                    disabled={submitting}
                                 />
 
                                 <CustomSelect
@@ -570,6 +610,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                     options={categoryOptions}
                                     placeholder=""
                                     required
+                                    disabled={submitting}
                                 />
                             </CustomCard>
 
@@ -658,32 +699,37 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                             {/* Stock Information */}
                             <CustomCard title="Stock Information" className="space-y-4">
                                 <CustomNumberInput
-                                    label="Απόθεμα"
+                                    label="Τρέχον Απόθεμα"
                                     value={currentStock}
-                                    onChange={setCurrentStock}
+                                    onChange={(value) => handleInputChange('currentStock', value)}
                                     placeholder="0"
                                     min={0}
-                                    icon={<Package className="w-4 h-4" />}
                                     step={1}
+                                    error={fieldErrors.stock} // Show validation error (backend might return 'stock')
+                                    disabled={submitting}
                                 />
 
                                 <CustomNumberInput
                                     label="Οριακό Απόθεμα"
                                     value={lowStockAlert}
-                                    onChange={setLowStockAlert}
+                                    onChange={(value) => handleInputChange('lowStockAlert', value)}
                                     placeholder="0"
                                     min={0}
                                     step={1}
+                                    error={fieldErrors.lowStockAlert} // Show validation error
+                                    disabled={submitting}
                                 />
 
                                 <CustomNumberInput
                                     label="Χρόνος Κατασκευής (Λεπτά)"
                                     value={minutesToMake}
-                                    onChange={setMinutesToMake}
+                                    onChange={(value) => handleInputChange('minutesToMake', value)}
                                     placeholder="0"
                                     min={0}
                                     icon={<Clock className="w-4 h-4" />}
                                     step={1}
+                                    error={fieldErrors.minutesToMake}
+                                    disabled={submitting}
                                 />
                             </CustomCard>
 
@@ -803,6 +849,8 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                     min={0}
                                     step={1}
                                     icon={<Euro className="w-4 h-4" />}
+                                    error={fieldErrors.finalSellingPriceRetail}
+                                    disabled={submitting}
                                 />
 
                                 <CustomNumberInput
@@ -814,6 +862,8 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                                     min={0}
                                     step={1}
                                     icon={<Euro className="w-4 h-4" />}
+                                    error={fieldErrors.finalSellingPriceWholesale}
+                                    disabled={submitting}
                                 />
                             </CustomCard>
 
