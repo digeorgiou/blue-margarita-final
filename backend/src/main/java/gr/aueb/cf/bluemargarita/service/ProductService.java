@@ -744,14 +744,14 @@ public class ProductService implements IProductService{
     private void validateUniqueCode(String code) throws EntityAlreadyExistsException {
         if (productRepository.existsByCode(code)) {
             throw new EntityAlreadyExistsException("Product",
-                    "Product with productCode " + code + " already exists");
+                    "Υπάρχει ήδη προϊόν με κωδικό " + code);
         }
     }
 
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {
         if(productRepository.existsByName(name)) {
             throw new EntityAlreadyExistsException("Product",
-                    "Product with name " + name + " already exists");
+                    "Υπάρχει ήδη προϊόν με όνομα " + name);
         }
     }
 

@@ -10,11 +10,11 @@ import java.util.Map;
 // ProductInsertDTO - for creating new products
 public record ProductInsertDTO(
         @NotBlank(message = "Παρακαλώ εισάγετε όνομα προϊόντος")
-        @Size(max = 100, message = "Η περιγραφή δεν μπορεί να υπερβαίνει τους 100 χαρακτήρες")
+        @Size(max = 50, message = "Η περιγραφή δεν μπορεί να υπερβαίνει τους 50 χαρακτήρες")
         String name,
 
         @NotBlank(message = "Παρακαλώ εισάγετε κωδικό προϊόντος")
-        @Size(max = 10, message = "Ο κωδικός δεν μπορεί να υπερβαίνει τους 10 χαρακτήρες")
+        @Size(max = 6, message = "Ο κωδικός δεν μπορεί να υπερβαίνει τους 6 χαρακτήρες")
         String code,
 
         @NotNull(message = "Παρακαλώ επιλέξτε κατηγορία")
@@ -22,12 +22,12 @@ public record ProductInsertDTO(
 
         @Nullable
         @DecimalMin(value = "0.01", message = "Η τιμή λιανικής πρέπει να είναι μεγαλύτερη από 0")
-        @Digits(integer = 5, fraction = 2, message = "Η τιμή λιανικής μπορεί να έχει μέχρι 5 ψηφία και 2 δεκαδικά")
+        @Digits(integer = 4, fraction = 2, message = "Η τιμή λιανικής μπορεί να έχει μέχρι 4 ψηφία και 2 δεκαδικά")
         BigDecimal finalSellingPriceRetail,
 
         @Nullable
         @DecimalMin(value = "0.01", message = "Η τιμή χονδρικής πρέπει να είναι μεγαλύτερη από 0")
-        @Digits(integer = 5, fraction = 2, message = "Η τιμή χονδρικής μπορεί να έχει μέχρι 5 ψηφία και 2 δεκαδικά")
+        @Digits(integer = 4, fraction = 2, message = "Η τιμή χονδρικής μπορεί να έχει μέχρι 4 ψηφία και 2 δεκαδικά")
         BigDecimal finalSellingPriceWholesale,
 
         @Nullable
