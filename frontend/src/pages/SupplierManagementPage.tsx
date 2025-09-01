@@ -137,8 +137,7 @@ const SupplierManagementPage = () => {
 
     // CRUD operations
     const handleCreateSupplier = async (data: SupplierInsertDTO) => {
-        // DON'T catch errors here - let them bubble up to the modal!
-        // The modal's useFormErrorHandler will handle them and show backend messages
+
         await supplierService.createSupplier(data);
         await searchSuppliers(); // Refresh results
         setSuccessMessage({

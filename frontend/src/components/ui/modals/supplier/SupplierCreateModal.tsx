@@ -26,21 +26,15 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
         creatorUserId: currentUserId
     });
 
-    // Use the reusable error handler hook
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const {
         fieldErrors,
         generalError,
         handleApiError,
         clearErrors,
         clearFieldError
-    } = useFormErrorHandler({
-        // Map specific business errors to field errors
-        businessErrorToFieldMap: {
-            'SUPPLIER_TIN_EXISTS': 'tin',
-            'SUPPLIER_EMAIL_EXISTS': 'email',
-            'SUPPLIER_PHONE_EXISTS': 'phoneNumber'
-        }
-    });
+    } = useFormErrorHandler();
 
     // Minimal client-side validation - let backend handle all the real validation
     const validateForm = (): boolean => {
@@ -82,17 +76,32 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
         if (!validateForm()) {
             return;
         }
-
+        setIsSubmitting(true);
         clearErrors();
-
         try {
-            await onSubmit(formData);
-            handleClose(); // Close modal on success
-        } catch (error) {
+            const dataToSubmit: SupplierInsertDTO = {
+                name: formData.name.trim(),
+                address: formData.address.trim() || '',
+                tin: formData.tin.trim(),
+                phoneNumber: formData.phoneNumber.trim(),
+                email: formData.email.trim(),
+                creatorUserId: currentUserId
+            };
+
+            await onSubmit(dataToSubmit);
+            handleClose();
+        }
+        catch (error) {
             // The hook will handle displaying the error
             await handleApiError(error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
+
+    const isFormValid = formData.name.trim().length > 0 &&
+        formData.tin.trim().length > 0 &&
+        !isSubmitting;
 
     return (
         <BaseFormModal
@@ -100,8 +109,8 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
             onClose={handleClose}
             onSubmit={handleSubmit}
             title="Δημιουργία Νέου Προμηθευτή"
-            submitText="Δημιουργία"
-            isValid={validateForm()}
+            submitText={isSubmitting ? "Δημιουργία..." : "Δημιουργία Προμηθευτή"}
+            isValid={isFormValid}
         >
             <div className="space-y-6">
                 {/* Name - Required */}
@@ -116,6 +125,7 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                         onChange={(e) => handleInputChange('name', e.target.value)}
                         placeholder="π.χ. ΧΡΥΣΟΣ Α.Ε."
                         error={fieldErrors.name}
+                        disabled={isSubmitting}
                         required
                     />
                 </div>
@@ -132,6 +142,7 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                         onChange={(e) => handleInputChange('address', e.target.value)}
                         placeholder="π.χ. Ερμού 123, Αθήνα"
                         error={fieldErrors.address}
+                        disabled={isSubmitting}
                     />
                 </div>
 
@@ -147,6 +158,7 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                         onChange={(e) => handleInputChange('tin', e.target.value)}
                         placeholder="π.χ. 123456789"
                         error={fieldErrors.tin}
+                        disabled={isSubmitting}
                         maxLength={20}
                     />
                 </div>
@@ -163,6 +175,7 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                         placeholder="π.χ. 210-1234567"
                         error={fieldErrors.phoneNumber}
+                        disabled={isSubmitting}
                         maxLength={20}
                     />
                 </div>
@@ -179,6 +192,7 @@ const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="π.χ. info@chrysos.gr"
                         error={fieldErrors.email}
+                        disabled={isSubmitting}
                         maxLength={100}
                     />
                 </div>

@@ -39,13 +39,7 @@ const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
         handleApiError,
         clearErrors,
         clearFieldError
-    } = useFormErrorHandler({
-        // Map specific business errors to field errors
-        businessErrorToFieldMap: {
-            'CUSTOMER_EMAIL_EXISTS': 'email',
-            'CUSTOMER_TIN_EXISTS': 'tin'
-        }
-    });
+    } = useFormErrorHandler();
 
     // Minimal client-side validation - let backend handle all the real validation
     const validateForm = (): boolean => {

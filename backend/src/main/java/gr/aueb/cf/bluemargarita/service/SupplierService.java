@@ -226,19 +226,19 @@ public class SupplierService implements ISupplierService {
 
     private void validateUniqueEmail(String email) throws EntityAlreadyExistsException {
         if (email != null && supplierRepository.existsByEmail(email)) {
-            throw new EntityAlreadyExistsException("Supplier", "Supplier with email " + email + " already exists");
+            throw new EntityAlreadyExistsException("Supplier", "Υπάρχει ήδη προμηθευτής με email " + email);
         }
     }
 
     private void validateUniquePhoneNumber(String phoneNumber) throws EntityAlreadyExistsException {
         if(phoneNumber != null && supplierRepository.existsByPhoneNumber(phoneNumber)){
-            throw new EntityAlreadyExistsException("Supplier", "Supplier with phone number " + phoneNumber + " already exists");
+            throw new EntityAlreadyExistsException("Supplier", "Υπάρχει ήδη προμηθευτής με τηλέφωνο " + phoneNumber);
         }
     }
 
     private void validateUniqueTin(String tin) throws EntityAlreadyExistsException {
         if (tin != null && supplierRepository.existsByTin(tin)) {
-            throw new EntityAlreadyExistsException("Supplier", "Supplier with TIN " + tin + " already exists");
+            throw new EntityAlreadyExistsException("Supplier", "Υπάρχει ήδη προμηθευτής με ΑΦΜ " + tin);
         }
     }
 
