@@ -147,7 +147,7 @@ export type SaleFilterPanelProps = {
 
     // Payment method filter
     paymentMethodFilter: string;
-    onPaymentMethodFilterChange: (value: string | number) => void;
+    onPaymentMethodFilterChange: (value: string) => void;
     paymentMethods: PaymentMethodDTO[];
 
     // Wholesale filter
@@ -218,7 +218,7 @@ export type MispricedProductFilterPanelProps = {
     selectedCategoryId: number | undefined;
     onCategoryIdChange: (value: number | undefined) => void;
     selectedIssueType: string | undefined;
-    onIssueTypeChange: (value: string | number | undefined) => void;
+    onIssueTypeChange: (value: string | undefined) => void;
     thresholdPercentage: number;
     onThresholdPercentageChange: (value: number) => void;
 
@@ -242,7 +242,7 @@ export type MispricedProductFilterPanelProps = {
 export type TaskFilterPanelProps = {
     // Filter states
     statusFilter: string;
-    onStatusFilterChange: (value: string | number) => void;
+    onStatusFilterChange: (value: string) => void;
     dateFromFilter: string;
     onDateFromFilterChange: (value: string) => void;
     dateToFilter: string;

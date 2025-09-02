@@ -10,7 +10,11 @@ import { TaskModal } from "../components/ui/modals";
 import { formatDate, formatMoney} from "../utils/formatters.ts";
 
 interface DashboardProps {
-    onNavigate: (page: string) => void;
+    onNavigate: (page: string, options?: {
+        productId?: string;
+        stockFilter?: string;
+        successMessage?: string;
+    }) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
@@ -80,7 +84,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
 
     // Navigation handlers
-    const handleViewAllLowStock = () => onNavigate('stock-management', undefined, 'LOW');
+    const handleViewAllLowStock = () => onNavigate('stock-management', { stockFilter: 'LOW' });
     const handleViewAllMispriced = () => onNavigate('mispriced-products');
     const handleViewAllTasks = () => onNavigate('all-tasks');
     const handleRecordSale = () => onNavigate('record-sale');

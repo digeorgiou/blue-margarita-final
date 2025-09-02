@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, LocationList, LoadingSpinner, CustomCard } from '../components/ui/common';
+import { Button, Alert, LoadingSpinner, CustomCard } from '../components/ui/common';
+import { LocationList } from "../components/ui/viewAll";
 import { ConfirmDeleteModal, LocationCreateModal, LocationUpdateModal, LocationDetailModal, SuccessModal } from '../components/ui/modals';
 import { locationService } from '../services/locationService';
 import { MapPin, Plus } from 'lucide-react';

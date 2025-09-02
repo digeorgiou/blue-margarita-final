@@ -13,12 +13,13 @@ import type {
     ProcedureUpdateDTO
 } from '../types/api/procedureInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 const ProcedureManagementPage = () => {
     // Search and pagination state - simplified (following material pattern)
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(12);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.PROCEDURES);
     const [searchResults, setSearchResults] = useState<Paginated<ProcedureReadOnlyDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -83,18 +84,6 @@ const ProcedureManagementPage = () => {
 
         return () => clearTimeout(timeoutId);
     }, [searchTerm]);
-
-    // Simple pagination handlers
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-        searchProcedures(page, pageSize);
-    };
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize);
-        setCurrentPage(0); // Reset to first page
-        searchProcedures(0, newPageSize);
-    };
 
     // Modal handlers
     const handleViewDetails = async (procedure: ProcedureReadOnlyDTO) => {
@@ -220,8 +209,8 @@ const ProcedureManagementPage = () => {
                                     pageSize: searchResults.pageSize,
                                     numberOfElements: searchResults.numberOfElements
                                 }}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
+                                setCurrentPage={setCurrentPage}
+                                setPageSize={setPageSize}
                                 className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                             />
                         </CustomCard>

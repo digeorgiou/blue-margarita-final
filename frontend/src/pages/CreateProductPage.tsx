@@ -28,7 +28,11 @@ import { PriceCalculation } from "../types/api/productInterface";
 import { HOURLY_LABOR_RATE, MINUTES_PER_HOUR, RETAIL_MARKUP_FACTOR, WHOLESALE_MARKUP_FACTOR } from "../constants/pricing.ts";
 
 interface CreateProductPageProps {
-    onNavigate: (page: string, productId?: string, successMessage?: string) => void;
+    onNavigate: (page: string, options?: {
+        productId?: string;
+        stockFilter?: string;
+        successMessage?: string;
+    }) => void;
 }
 
 const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => {
@@ -155,6 +159,9 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
         return () => clearTimeout(timeoutId);
     }, [procedureSearchTerm]);
 
+    const handleBackToProducts = () => {
+        onNavigate('manage-products');
+    };
 
     // Add material to selection
     const addMaterial = (material: MaterialSearchResultDTO) => {
@@ -268,7 +275,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
 
             const createdProduct = await productService.createProduct(productData);
 
-            onNavigate('manage-products', undefined, `SUCCESS_CREATE:${createdProduct.name.trim()}`);
+            onNavigate('manage-products', { successMessage : `SUCCESS_CREATE:${createdProduct.name.trim()}`});
         } catch (err) {
             await handleApiError(err);
         } finally {
@@ -350,7 +357,7 @@ const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => 
                     </div>
 
                         <Button
-                            onClick={() => onNavigate('manage-products')}
+                            onClick={handleBackToProducts}
                             variant="yellow"
                             className="flex items-center"
                         >

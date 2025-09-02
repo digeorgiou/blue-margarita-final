@@ -29,7 +29,11 @@ import { PriceCalculation } from "../types/api/productInterface";
 
 interface UpdateProductPageProps {
     productId: number;
-    onNavigate: (page: string, productId?: string, successMessage?: string) => void;
+    onNavigate: (page: string, options?: {
+        productId?: string;
+        stockFilter?: string;
+        successMessage?: string;
+    }) => void;
 }
 
 const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavigate }) => {
@@ -192,6 +196,10 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleBackToProducts = () => {
+        onNavigate('manage-products');
     };
 
     const loadDropdownData = async () => {
@@ -463,7 +471,9 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
             }
 
             console.log('All changes saved successfully');
-            onNavigate('manage-products', undefined, `SUCCESS_UPDATE:${name.trim()}`);
+            onNavigate('manage-products', {
+                successMessage: `SUCCESS_UPDATE:${productData.name.trim()}`
+            });
         } catch (err) {
             console.error('Error saving changes:', err);
             await handleApiError(err);
@@ -524,7 +534,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
 
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <Button
-                            onClick={() => onNavigate('manage-products')}
+                            onClick={handleBackToProducts}
                             variant="yellow"
                             className="flex items-center justify-center w-full sm:w-[200px]"
                         >

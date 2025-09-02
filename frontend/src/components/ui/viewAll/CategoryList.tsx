@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, LoadingSpinner } from '../../common';
+import { Button, LoadingSpinner } from '../common';
 import { Gem, Edit, Trash2, Eye } from 'lucide-react';
 import type { CategoryDropdownListProps } from "../../../types/components/dropdown-types.ts";
 

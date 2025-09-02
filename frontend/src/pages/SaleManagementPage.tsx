@@ -16,11 +16,14 @@ import type {
     PaginatedFilteredSalesWithSummary,
     SaleFilters
 } from '../types/api/saleInterface';
-import type { PaymentMethodDTO, SaleDetailedViewDTO } from '../types/api/recordSaleInterface';
+import type { PaymentMethodDTO } from '../types/api/recordSaleInterface';
+import { SaleDetailedViewDTO } from '../types/api/saleInterface.ts';
 import type { LocationForDropdownDTO } from '../types/api/locationInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 import type { CustomerSearchResultDTO } from '../types/api/customerInterface';
 import type { ProductSearchResultDTO } from '../types/api/productInterface';
+import { formatCurrency, formatNumber, formatDate } from "../utils/formatters.ts";
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 interface SaleManagementPageProps {
     onNavigate: (page: string) => void;
@@ -40,7 +43,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
 
     const [locationFilter, setLocationFilter] = useState<number | undefined>(undefined);
     const [categoryFilter, setCategoryFilter] = useState<number | undefined>(undefined);
-    const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
+    const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('');
     const [isWholesaleFilter, setIsWholesaleFilter] = useState<boolean | undefined>(undefined);
     const [dateFromFilter, setDateFromFilter] = useState('');
     const [dateToFilter, setDateToFilter] = useState('');
@@ -56,7 +59,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
 
     // PAGINATION STATE
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.SALES);
 
     // MODAL STATE
     const [selectedSale, setSelectedSale] = useState<SaleReadOnlyDTO | null>(null);
@@ -162,6 +165,10 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
         }
     };
 
+    const handlePaymentMethodFilterChange = (value: string) => {
+        setPaymentMethodFilter(value);
+    };
+
     // PRODUCT SEARCH
     useEffect(() => {
         if (productSearchTerm.trim().length >= 2) {
@@ -257,36 +264,6 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
         }
     };
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(0);
-    };
-
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatNumber = (num: number): string => {
-        return new Intl.NumberFormat('el-GR').format(num);
-    };
-
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     return (
             <div className="min-h-screen p-4">
                 <div className="max-w-7xl mx-auto space-y-8">
@@ -295,7 +272,6 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                         <Alert
                             variant="success"
                             title={successMessage.title}
-                            message={successMessage.message}
                             onClose={() => setSuccessMessage(null)}
                         />
                     )}
@@ -350,7 +326,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
 
                             // Payment method filter
                             paymentMethodFilter={paymentMethodFilter}
-                            onPaymentMethodFilterChange={setPaymentMethodFilter}
+                            onPaymentMethodFilterChange={handlePaymentMethodFilterChange}
                             paymentMethods={paymentMethods}
 
                             isWholesaleFilter={isWholesaleFilter}
@@ -443,8 +419,8 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                                         pageSize: searchResults.pageSize,
                                         numberOfElements: searchResults.numberOfElements
                                     }}
-                                    onPageChange={handlePageChange}
-                                    onPageSizeChange={handlePageSizeChange}
+                                    setCurrentPage={setCurrentPage}
+                                    setPageSize={setPageSize}
                                     className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                                 />
                             </div>

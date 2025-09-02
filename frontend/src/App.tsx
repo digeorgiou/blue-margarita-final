@@ -1,4 +1,3 @@
-// App.tsx
 import React, { useState, useEffect } from 'react';
 import Login from './pages/LoginPage';
 import { authService } from './services/authService';
@@ -46,13 +45,17 @@ const App: React.FC = () => {
     });
 
     // Navigation handler
-    const handleNavigation = (page: string, productId?: string, successMessage?: string) => {
-        // Handle success messages for product operations
-        if (successMessage && successMessage.startsWith('SUCCESS_')) {
-            setNavigationState({ page, productId, successMessage });
-        } else {
-            setNavigationState({ page, productId, stockFilter: successMessage }); // Backwards compatibility
-        }
+    const handleNavigation = (page: string, options?: {
+        productId?: string;
+        stockFilter?: string;
+        successMessage?: string;
+    }) => {
+        setNavigationState({
+            page,
+            productId: options?.productId,
+            stockFilter: options?.stockFilter,
+            successMessage: options?.successMessage
+        });
     };
 
     // Render page content based on currentPage

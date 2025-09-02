@@ -16,10 +16,15 @@ import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
 import {ProductDetailModal} from "../components/ui/modals";
 import { PriceRecalculationResultDTO } from "../types/api/productInterface";
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 interface ProductManagementPageProps {
-    onNavigate: (page: string, productId?: string, successMessage?: string) => void;
-    successMessage?: string; // Add this line
+    onNavigate: (page: string, options?: {
+        productId?: string;
+        stockFilter?: string;
+        successMessage?: string;
+    }) => void;
+    successMessage?: string;
 }
 
 const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
@@ -41,7 +46,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(12);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.PRODUCTS);
     const [searchResults, setSearchResults] = useState<Paginated<ProductListItemDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -231,11 +236,15 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
     };
 
     const handleAnalytics = (product: ProductListItemDTO) => {
-        onNavigate('product-sales-analytics', product.id);
+        onNavigate('product-sales-analytics', { productId: product.id });
     };
 
     const handleEdit = (product: ProductListItemDTO) => {
-        onNavigate('update-product', product.id);
+        onNavigate('update-product', { productId: product.id });
+    };
+
+    const handleCreateProduct = () => {
+        onNavigate('create-product');
     };
 
     const handleDelete = (product: ProductListItemDTO) => {
@@ -262,15 +271,6 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
 
     const showRecalculationConfirm = () => {
         setIsRecalculationConfirmOpen(true);
-    };
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(0);
     };
 
     const handleDeleteProduct = async () => {
@@ -320,7 +320,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
                     </Button>
 
                     <Button
-                        onClick={() => onNavigate('create-product')}
+                        onClick={handleCreateProduct}
                         variant="create"
                         size="lg">
                         <Plus className="w-5 h-5" />
@@ -399,8 +399,8 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
                                     pageSize: searchResults.pageSize,
                                     numberOfElements: searchResults.numberOfElements
                                 }}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
+                                setCurrentPage={setCurrentPage}
+                                setPageSize={setPageSize}
                                 className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                             />
                         </CustomCard>

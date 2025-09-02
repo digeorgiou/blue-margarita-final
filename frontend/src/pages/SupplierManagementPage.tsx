@@ -13,11 +13,12 @@ import type {
     SupplierUpdateDTO
 } from '../types/api/supplierInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 const SupplierManagementPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(12);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.SUPPLIERS);
     const [searchResults, setSearchResults] = useState<Paginated<SupplierReadOnlyDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -85,18 +86,6 @@ const SupplierManagementPage = () => {
 
         return () => clearTimeout(timeoutId);
     }, [searchTerm]);
-
-    // Simple pagination handlers
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-        searchSuppliers(page, pageSize);
-    };
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize);
-        setCurrentPage(0); // Reset to first page
-        searchSuppliers(0, newPageSize);
-    };
 
     // Modal handlers
     const handleViewDetails = async (supplier: SupplierReadOnlyDTO) => {
@@ -216,8 +205,8 @@ const SupplierManagementPage = () => {
                                     pageSize: searchResults.pageSize,
                                     numberOfElements: searchResults.numberOfElements
                                 }}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
+                                setCurrentPage={setCurrentPage}
+                                setPageSize={setPageSize}
                                 className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                             />
                         </CustomCard>

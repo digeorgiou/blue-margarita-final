@@ -18,6 +18,7 @@ import type {
 } from '../types/api/expenseInterface';
 import { formatCurrency, formatNumber } from "../utils/formatters.ts";
 import { getExpenseTypeDisplayName } from "../utils/EnumUtils.ts";
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 const ExpenseManagementPage = () => {
     // Toggle state for switching between main page and analytics
@@ -30,7 +31,7 @@ const ExpenseManagementPage = () => {
     const [dateFromFilter, setDateFromFilter] = useState('');
     const [dateToFilter, setDateToFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(12);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.EXPENSES);
     const [searchResults, setSearchResults] = useState<PaginatedFilteredExpensesWithSummary | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -130,19 +131,6 @@ const ExpenseManagementPage = () => {
         } finally {
             setAnalyticsLoading(false);
         }
-    };
-
-    // =============================================================================
-    // EVENT HANDLERS
-    // =============================================================================
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(0);
     };
 
     // =============================================================================
@@ -347,8 +335,8 @@ const ExpenseManagementPage = () => {
                                         pageSize: searchResults.pageSize,
                                         numberOfElements: searchResults.numberOfElements
                                     }}
-                                    onPageChange={handlePageChange}
-                                    onPageSizeChange={handlePageSizeChange}
+                                    setPageSize={setPageSize}
+                                    setCurrentPage={setCurrentPage}
                                     className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                                 />
                             </CustomCard>

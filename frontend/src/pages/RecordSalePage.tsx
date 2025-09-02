@@ -6,8 +6,9 @@ import {
     ProductSearchResultDTO,
     CartItemDTO,
     PriceCalculationRequestDTO,
-    PriceCalculationResponseDTO, SaleDetailedViewDTO,
+    PriceCalculationResponseDTO,
 } from "../types/api/recordSaleInterface.ts";
+import { SaleDetailedViewDTO } from "../types/api/saleInterface.ts";
 import { SaleSuccessModal } from '../components/ui/modals';
 import { CustomerSearchResultDTO } from "../types/api/customerInterface.ts";
 import { Button, LoadingSpinner, Alert, CustomCard, FlexibleHeightCard } from '../components/ui/common';

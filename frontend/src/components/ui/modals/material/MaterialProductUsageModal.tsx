@@ -5,8 +5,6 @@ import {
     Hash,
     Tag,
     X,
-    ChevronLeft,
-    ChevronRight
 } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../common';
 import { ProductUsageDTO } from '../../../../types/api/materialInterface';
@@ -15,6 +13,7 @@ import { materialService } from '../../../../services/materialService';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import { MaterialProductUsageModalProps } from '../../../../types/components/modal-types';
 import { formatCurrency, formatNumber } from "../../../../utils/formatters.ts";
+import { EnhancedPaginationControls } from "../../pagination";
 
 const MaterialProductUsageModal: React.FC<MaterialProductUsageModalProps> = ({
                                                                  isOpen,
@@ -82,15 +81,6 @@ const MaterialProductUsageModal: React.FC<MaterialProductUsageModalProps> = ({
         return () => clearTimeout(timeoutId);
     }, [searchTerm]);
 
-    const handlePageChange = (newPage: number) => {
-        setCurrentPage(newPage);
-    };
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize);
-        setCurrentPage(0);
-    };
-
     if (!isOpen) return null;
 
     return (
@@ -132,21 +122,6 @@ const MaterialProductUsageModal: React.FC<MaterialProductUsageModalProps> = ({
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
-                        </div>
-
-                        {/* Page Size Selector */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600 whitespace-nowrap">Ανά σελίδα:</span>
-                            <select
-                                value={pageSize}
-                                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                                <option value={5}>5</option>
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
-                                <option value={50}>50</option>
-                            </select>
                         </div>
                     </div>
                 </div>
@@ -260,42 +235,20 @@ const MaterialProductUsageModal: React.FC<MaterialProductUsageModalProps> = ({
                     )}
                 </div>
 
-                {/* Pagination Footer */}
-                {products && products.totalPages > 1 && (
+                {/* Enhanced Pagination Controls */}
+                {products && products.totalElements > 0 && (
                     <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-600">
-                                Σελίδα {products.currentPage + 1} από {products.totalPages}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    onClick={() => handlePageChange(products.currentPage - 1)}
-                                    disabled={products.currentPage === 0}
-                                    variant="outline-secondary"
-                                    size="sm"
-                                    className="flex items-center gap-1"
-                                >
-                                    <ChevronLeft className="w-4 h-4" />
-                                    Προηγούμενη
-                                </Button>
-
-                                <span className="px-3 py-1 bg-white border border-gray-200 rounded text-sm">
-                                    {products.currentPage + 1}
-                                </span>
-
-                                <Button
-                                    onClick={() => handlePageChange(products.currentPage + 1)}
-                                    disabled={products.currentPage >= products.totalPages - 1}
-                                    variant="outline-secondary"
-                                    size="sm"
-                                    className="flex items-center gap-1"
-                                >
-                                    Επόμενη
-                                    <ChevronRight className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
+                        <EnhancedPaginationControls
+                            paginationData={{
+                                currentPage: products.currentPage,
+                                totalPages: products.totalPages,
+                                totalElements: products.totalElements,
+                                pageSize: products.pageSize,
+                                numberOfElements: products.numberOfElements
+                            }}
+                            setCurrentPage={setCurrentPage}
+                            setPageSize={setPageSize}
+                        />
                     </div>
                 )}
 

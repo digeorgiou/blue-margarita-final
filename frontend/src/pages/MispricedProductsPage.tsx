@@ -9,6 +9,7 @@ import type {
     MispricedProductAlertDTO
 } from '../types/api/dashboardInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 interface MispricedProductsPageProps {
     onNavigate: (page: string) => void;
@@ -30,7 +31,7 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
 
     // Pagination states (for frontend pagination)
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(9);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.MISPRICED);
 
     // Error handling
     const { generalError, clearErrors, handleApiError } = useFormErrorHandler();
@@ -138,16 +139,6 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
         setCurrentPage(0);
     };
 
-    // Pagination handlers
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(0);
-    };
-
     // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(0);
@@ -159,7 +150,7 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
             setUpdatingRetailPrice(true);
             clearErrors();
 
-            await productService.updateFinalRetailPrice(product.productId, newPrice, 1);
+            await productService.updateFinalRetailPrice(product.productId, newPrice);
 
             // Refresh all data after update
             await loadAllMispricedProducts();
@@ -176,7 +167,7 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
             setUpdatingWholesalePrice(true);
             clearErrors();
 
-            await productService.updateFinalWholesalePrice(product.productId, newPrice, 1);
+            await productService.updateFinalWholesalePrice(product.productId, newPrice);
 
             // Refresh all data after update
             await loadAllMispricedProducts();
@@ -255,8 +246,8 @@ const MispricedProductsPage: React.FC<MispricedProductsPageProps> = () => {
                                         pageSize: pageSize,
                                         numberOfElements: paginatedProducts.length
                                     }}
-                                    onPageChange={handlePageChange}
-                                    onPageSizeChange={handlePageSizeChange}
+                                    setPageSize={setPageSize}
+                                    setCurrentPage={setCurrentPage}
                                     className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                                 />
                             </div>

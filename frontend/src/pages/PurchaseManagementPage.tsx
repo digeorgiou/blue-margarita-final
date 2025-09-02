@@ -17,6 +17,7 @@ import type {
 } from '../types/api/purchaseInterface';
 import type { SupplierSearchResultDTO } from '../types/api/supplierInterface';
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 interface PurchaseManagementPageProps {
     onNavigate: (page: string) => void;
@@ -40,7 +41,7 @@ const PurchaseManagementPage: React.FC<PurchaseManagementPageProps> = ({ onNavig
 
     // PAGINATION STATE
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.PURCHASES);
 
     // PURCHASE RESULTS AND MODAL STATE
     const [searchResults, setSearchResults] = useState<PaginatedFilteredPurchasesWithSummary | null>(null);
@@ -209,15 +210,6 @@ const PurchaseManagementPage: React.FC<PurchaseManagementPageProps> = ({ onNavig
         }
     };
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
-        setCurrentPage(0);
-    };
-
     const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('el-GR', {
             style: 'currency',
@@ -346,8 +338,8 @@ const PurchaseManagementPage: React.FC<PurchaseManagementPageProps> = ({ onNavig
                                         pageSize: searchResults.pageSize,
                                         numberOfElements: searchResults.numberOfElements
                                     }}
-                                    onPageChange={handlePageChange}
-                                    onPageSizeChange={handlePageSizeChange}
+                                    setCurrentPage={setCurrentPage}
+                                    setPageSize={setPageSize}
                                     className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                                 />
                             </div>

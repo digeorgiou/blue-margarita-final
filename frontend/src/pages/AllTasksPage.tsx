@@ -81,16 +81,6 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
         loadData();
     }, [currentPage, pageSize, statusFilter, dateFromFilter, dateToFilter]);
 
-    // PAGINATION HANDLERS
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize);
-        setCurrentPage(0); // Reset to first page when changing page size
-    };
-
     // FILTER HANDLERS
     const handleClearFilters = () => {
         setStatusFilter('PENDING');
@@ -127,7 +117,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
             setIsSuccessModalOpen(true);
             await loadData(); // Reload tasks after completion
         } catch (err) {
-            handleApiError(err, 'Failed to complete task');
+            handleApiError(err);
         }
     };
 
@@ -141,7 +131,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
             setIsSuccessModalOpen(true);
             await loadData();
         } catch (err) {
-            handleApiError(err, 'Failed to restore task');
+            handleApiError(err);
         }
     };
 
@@ -160,7 +150,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
             await loadData(); // Reload tasks after deletion
         } catch (err) {
             setIsDeleteModalOpen(false);
-            handleApiError(err, 'Failed to delete task');
+            handleApiError(err);
         }
     };
 
@@ -188,7 +178,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
             setIsSuccessModalOpen(true);
             await loadData(); // Refresh the task list
         } catch (err) {
-            handleApiError(err, 'Failed to save task');
+            handleApiError(err);
         }
     };
 
@@ -200,7 +190,6 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
                     <Alert
                         variant="success"
                         title={successMessage.title}
-                        message={successMessage.message}
                         onClose={() => setSuccessMessage({ title: '', message: '' })}
                     />
                 )}
@@ -300,8 +289,8 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
                                     pageSize: searchResults.pageSize,
                                     numberOfElements: searchResults.numberOfElements
                                 }}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
+                                setCurrentPage={setCurrentPage}
+                                setPageSize={setPageSize}
                                 className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                             />
                         </CustomCard>

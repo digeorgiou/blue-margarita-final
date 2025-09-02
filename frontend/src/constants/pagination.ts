@@ -1,6 +1,13 @@
 export const DEFAULT_PAGE_SIZES = {
     TASKS: 12,
-    SALES: 10,
-    PURCHASES: 10,
-    CUSTOMERS: 15,
+    SALES: 12,
+    PURCHASES: 12,
+    CUSTOMERS: 6,
+    EXPENSES: 12,
+    MATERIALS: 6,
+    MISPRICED: 6,
+    PROCEDURES: 12,
+    PRODUCTS: 12,
+    STOCK: 12,
+    SUPPLIERS: 6
 };

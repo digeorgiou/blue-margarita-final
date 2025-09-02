@@ -8,8 +8,8 @@ export type PaginationData = {
 
 export type EnhancedPaginationControlsProps = {
     paginationData: PaginationData;
-    onPageChange: (page: number) => void;
-    onPageSizeChange: (pageSize: number) => void;
+    setCurrentPage: (page: number) => void;
+    setPageSize: (pageSize: number) => void;
     className?: string;
 }
 

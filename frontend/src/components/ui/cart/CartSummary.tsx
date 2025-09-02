@@ -1,4 +1,3 @@
-// Replace your CartSummary.tsx with this mobile-fixed version
 import React, { useState, useEffect } from 'react';
 import {Percent, ShoppingCart, Euro} from 'lucide-react';
 import { Button, LoadingSpinner } from '../common';

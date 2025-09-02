@@ -16,5 +16,5 @@ export interface ProfitLossPageInitData {
     currentMonthReport: ProfitLossReportDTO;
     lastMonthReport: ProfitLossReportDTO;
     currentYearReport: ProfitLossReportDTO;
-    lastYearReport?: ProfitLossReportDTO;
+    lastYearReport: ProfitLossReportDTO;
 }

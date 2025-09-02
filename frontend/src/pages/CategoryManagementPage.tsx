@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, CategoryList, LoadingSpinner, CustomCard } from '../components/ui/common';
+import { Button, Alert, LoadingSpinner, CustomCard } from '../components/ui/common';
+import { CategoryList }  from "../components/ui/viewAll"
 import { CategoryCreateModal, CategoryUpdateModal, CategoryDetailModal, ConfirmDeleteModal, SuccessModal } from '../components/ui/modals';
 import { categoryService } from '../services/categoryService';
 import { Gem, Plus } from 'lucide-react';

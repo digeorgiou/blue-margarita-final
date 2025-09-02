@@ -13,12 +13,13 @@ import type {
     MaterialUpdateDTO
 } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 const MaterialManagementPage = () => {
     // Search and pagination state - simplified (following customer pattern)
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(12);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.MATERIALS);
     const [searchResults, setSearchResults] = useState<Paginated<MaterialReadOnlyDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -94,16 +95,6 @@ const MaterialManagementPage = () => {
     useEffect(() => {
         searchMaterials();
     }, [currentPage, pageSize]);
-
-    // Simple pagination handlers
-    const handlePageChange = (newPage: number) => {
-        setCurrentPage(newPage);
-    };
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize);
-        setCurrentPage(0);
-    };
 
     // Modal handlers
     const handleViewDetails = async (material: MaterialReadOnlyDTO) => {
@@ -228,8 +219,8 @@ const MaterialManagementPage = () => {
                                     pageSize: searchResults.pageSize,
                                     numberOfElements: searchResults.numberOfElements
                                 }}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
+                                setCurrentPage={setCurrentPage}
+                                setPageSize={setPageSize}
                                 className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                             />
                         </CustomCard>

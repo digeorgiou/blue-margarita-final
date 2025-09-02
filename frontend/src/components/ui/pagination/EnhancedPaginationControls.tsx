@@ -5,16 +5,22 @@ import { EnhancedPaginationControlsProps } from "../../../types/components/pagin
 
 const EnhancedPaginationControls: React.FC<EnhancedPaginationControlsProps> = ({
                                                                                    paginationData,
-                                                                                   onPageChange,
-                                                                                   onPageSizeChange,
+                                                                                   setCurrentPage,
+                                                                                   setPageSize,
                                                                                    className = ""
                                                                                }) => {
     const { currentPage, totalPages, totalElements, pageSize } = paginationData;
 
+    // Internal handlers that implement the common logic
     const handlePageChange = (newPage: number) => {
         if (newPage >= 0 && newPage < totalPages) {
-            onPageChange(newPage);
+            setCurrentPage(newPage);
         }
+    };
+
+    const handlePageSizeChange = (newPageSize: number) => {
+        setPageSize(newPageSize);
+        setCurrentPage(0); // Reset to first page when page size changes
     };
 
     const generatePageNumbers = () => {
@@ -57,8 +63,7 @@ const EnhancedPaginationControls: React.FC<EnhancedPaginationControlsProps> = ({
                 </div>
                 <PageSizeSelector
                     currentPageSize={pageSize}
-                    onPageSizeChange={onPageSizeChange}
-                    totalElements={totalElements}
+                    onPageSizeChange={handlePageSizeChange}
                 />
             </div>
         );
@@ -97,7 +102,7 @@ const EnhancedPaginationControls: React.FC<EnhancedPaginationControlsProps> = ({
                 </button>
 
                 {/* Page numbers */}
-                <div className="flex space-x-1">
+                <div className="flex items-center space-x-1">
                     {pageNumbers.map((pageNum, index) => {
                         if (pageNum === -1) {
                             return (
@@ -111,7 +116,7 @@ const EnhancedPaginationControls: React.FC<EnhancedPaginationControlsProps> = ({
                             <button
                                 key={pageNum}
                                 onClick={() => handlePageChange(pageNum)}
-                                className={`px-3 py-2 text-sm rounded-lg border ${
+                                className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
                                     pageNum === currentPage
                                         ? 'bg-blue-600 text-white border-blue-600'
                                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -147,7 +152,7 @@ const EnhancedPaginationControls: React.FC<EnhancedPaginationControlsProps> = ({
             {/* Page size selector */}
             <PageSizeSelector
                 currentPageSize={pageSize}
-                onPageSizeChange={onPageSizeChange}
+                onPageSizeChange={handlePageSizeChange}
             />
         </div>
     );

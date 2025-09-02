@@ -14,6 +14,7 @@ import type {
 } from '../types/api/stockManagementInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 
 interface StockManagementPageProps {
     onNavigate: (page: string, ) => void;
@@ -32,7 +33,7 @@ const StockManagementPage: React.FC<StockManagementPageProps> = ({ stockFilter }
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(12);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.STOCK);
     const [products, setProducts] = useState<Paginated<StockManagementDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -100,16 +101,6 @@ const StockManagementPage: React.FC<StockManagementPageProps> = ({ stockFilter }
         setSelectedStatus(undefined);
         setMinStock(0);
         setMaxStock(0);
-        setCurrentPage(0);
-    };
-
-    // Pagination handlers
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handlePageSizeChange = (size: number) => {
-        setPageSize(size);
         setCurrentPage(0);
     };
 
@@ -198,10 +189,9 @@ const StockManagementPage: React.FC<StockManagementPageProps> = ({ stockFilter }
                                         pageSize: products.pageSize,
                                         numberOfElements: products.numberOfElements
                                     }}
-                                    onPageChange={handlePageChange}
-                                    onPageSizeChange={handlePageSizeChange}
+                                    setCurrentPage={setCurrentPage}
+                                    setPageSize={setPageSize}
                                     className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
-                                    loading={loading}
                                 />
                             </div>
                         )}

@@ -6,6 +6,7 @@ import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { customerService } from '../services/customerService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { UserPlus } from 'lucide-react';
+import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
 import type {
     CustomerListItemDTO,
     CustomerDetailedViewDTO,
@@ -19,7 +20,7 @@ const CustomerManagementPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [tinOnlyFilter, setTinOnlyFilter] = useState(false); // Changed from wholesaleOnly to tinOnlyFilter
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(12);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.CUSTOMERS);
     const [searchResults, setSearchResults] = useState<Paginated<CustomerListItemDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -87,18 +88,6 @@ const CustomerManagementPage = () => {
 
         return () => clearTimeout(timeoutId);
     }, [searchTerm, tinOnlyFilter]);
-
-    // Simple pagination handlers
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-        searchCustomers(page, pageSize);
-    };
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize);
-        setCurrentPage(0); // Reset to first page
-        searchCustomers(0, newPageSize);
-    };
 
     // Modal handlers
     const handleViewDetails = async (customer: CustomerListItemDTO) => {
@@ -220,8 +209,8 @@ const CustomerManagementPage = () => {
                                     pageSize: searchResults.pageSize,
                                     numberOfElements: searchResults.numberOfElements
                                 }}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
+                                setPageSize={setPageSize}
+                                setCurrentPage={setCurrentPage}
                                 className="bg-white rounded-xl shadow-lg border border-gray-100 p-6"
                             />
                         </CustomCard>

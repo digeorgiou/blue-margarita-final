@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, CustomCard } from '../components/ui/common';
-import { profitLossService, ProfitLossReportDTO, ProfitLossPageInitData } from '../services/profitLossService';
+import { profitLossService } from '../services/profitLossService';
+import { ProfitLossReportDTO, ProfitLossPageInitData } from '../types/api/profitLossInterface.ts'
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Search, ChevronDown, ChevronUp  } from 'lucide-react';
 import { getExpenseTypeDisplayName } from "../utils/EnumUtils.ts";
@@ -35,7 +36,7 @@ const ProfitLossPage = () => {
             const data = await profitLossService.getProfitLossPageInitData();
             setPageData(data);
         } catch (error) {
-            handleApiError(error, 'Failed to load profit and loss data');
+            handleApiError(error);
         } finally {
             setLoading(false);
         }
@@ -47,12 +48,12 @@ const ProfitLossPage = () => {
 
     const handleGenerateCustomReport = async () => {
         if (!dateFrom || !dateTo) {
-            handleApiError(new Error('Please select both start and end dates'), 'Date Selection Required');
+            handleApiError(new Error('Please select both start and end dates'));
             return;
         }
 
         if (new Date(dateFrom) > new Date(dateTo)) {
-            handleApiError(new Error('Start date cannot be after end date'), 'Invalid Date Range');
+            handleApiError(new Error('Start date cannot be after end date'));
             return;
         }
 
@@ -63,7 +64,7 @@ const ProfitLossPage = () => {
             const report = await profitLossService.generateCustomReport(dateFrom, dateTo);
             setCustomReport(report);
         } catch (error) {
-            handleApiError(error, 'Failed to generate custom report');
+            handleApiError(error);
         } finally {
             setCustomReportLoading(false);
         }
@@ -257,10 +258,10 @@ const ProfitLossPage = () => {
                     </div>
 
                     {/* Toggle Component */}
-                    {duration === 'month' && (
+                    {duration === 'month' && toggleView && onToggle && (
                         <MonthlyToggle currentView={toggleView} onToggle={onToggle} />
                     )}
-                    {duration === 'year' && (
+                    {duration === 'year' && toggleView && onToggle && (
                         <YearlyToggle currentView={toggleView} onToggle={onToggle} />
                     )}
                 </div>
