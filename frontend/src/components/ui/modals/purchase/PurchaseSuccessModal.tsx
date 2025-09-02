@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle, X, User, Package, Calendar, Phone } from 'lucide-react';
-import { PurchaseDetailedViewDTO } from '../../../types/api/purchaseInterface';
+import { PurchaseDetailedViewDTO } from '../../../../types/api/purchaseInterface.ts';
 
 interface PurchaseSuccessModalProps {
     purchase: PurchaseDetailedViewDTO;

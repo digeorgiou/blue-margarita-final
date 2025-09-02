@@ -3,7 +3,7 @@ import { Button, Alert, CustomerDetailModal, CustomerUpdateModal, CustomerCreate
 import { CustomerFilterPanel } from '../components/ui/filterPanels'
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/SuccessModal';
+import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { customerService } from '../services/customerService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';

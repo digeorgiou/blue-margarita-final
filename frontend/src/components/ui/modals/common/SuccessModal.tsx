@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle, X } from 'lucide-react';
-import { Button } from '../index';
+import { Button } from '../../index.ts';
 
 interface SuccessModalProps {
     isOpen: boolean;

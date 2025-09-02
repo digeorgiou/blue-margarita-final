@@ -1,13 +1,8 @@
 import React from 'react';
 import { X, CheckCircle, AlertCircle, Clock, User, TrendingUp } from 'lucide-react';
-import { Button } from '../';
-import { PriceRecalculationResultDTO, PriceRecalculationUtils } from '../../../types/api/productInterface.ts';
-
-interface PriceRecalculationResultModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    result: PriceRecalculationResultDTO | null;
-}
+import { Button } from '../../index.ts';
+import { PriceRecalculationUtils } from '../../../../types/api/productInterface.ts';
+import { PriceRecalculationResultModalProps } from "../../../../types/components/modal-types.ts";
 
 const PriceRecalculationResultModal: React.FC<PriceRecalculationResultModalProps> = ({
                                                                                          isOpen,

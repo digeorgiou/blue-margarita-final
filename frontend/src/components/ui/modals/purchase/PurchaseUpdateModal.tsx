@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Edit } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../';
+import { Button, LoadingSpinner } from '../../common';
 import { CustomSearchDropdown, CustomDateInput } from '../../inputs';
-import type { PurchaseReadOnlyDTO, PurchaseUpdateDTO } from '../../../../types/api/purchaseInterface';
+import type { PurchaseUpdateDTO } from '../../../../types/api/purchaseInterface';
 import type { SupplierSearchResultDTO } from '../../../../types/api/supplierInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import { supplierService } from '../../../../services/supplierService';
-
-interface PurchaseUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    purchase: PurchaseReadOnlyDTO;
-    onUpdate: (updateData: PurchaseUpdateDTO) => Promise<void>;
-}
+import type { PurchaseUpdateModalProps } from "../../../../types/components/modal-types.ts";
 
 const PurchaseUpdateModal: React.FC<PurchaseUpdateModalProps> = ({
                                                                      isOpen,

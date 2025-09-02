@@ -8,7 +8,7 @@ import {
     PriceCalculationRequestDTO,
     PriceCalculationResponseDTO, SaleDetailedViewDTO,
 } from "../types/api/recordSaleInterface.ts";
-import { SaleSuccessModal } from '../components/ui/modals/SaleSuccessModal';
+import { SaleSuccessModal } from '../components/ui/modals/sale/SaleSuccessModal.tsx';
 import { CustomerSearchResultDTO } from "../types/api/customerInterface.ts";
 import { Button, LoadingSpinner, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';

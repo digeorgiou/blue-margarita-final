@@ -1,23 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, MapPin, CreditCard, Calendar, Lock, Package } from 'lucide-react';
-import { BaseFormModal } from '../../index';
+import { BaseFormModal } from '..';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import { CustomSelect, CustomDateInput, CustomNumberInput, CustomSearchDropdown } from '../../inputs';
 import { customerService } from '../../../../services/customerService';
-import type { SaleReadOnlyDTO, SaleUpdateDTO } from '../../../../types/api/saleInterface';
-import type { PaymentMethodDTO } from '../../../../types/api/recordSaleInterface';
-import type { LocationForDropdownDTO } from '../../../../types/api/locationInterface';
+import type { SaleUpdateDTO } from '../../../../types/api/saleInterface';
 import type { CustomerSearchResultDTO } from '../../../../types/api/customerInterface';
 import { FaEuroSign } from "react-icons/fa6";
-
-interface SaleUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onUpdate: (saleData: SaleUpdateDTO) => Promise<void>;
-    sale: SaleReadOnlyDTO;
-    locations: LocationForDropdownDTO[];
-    paymentMethods: PaymentMethodDTO[];
-}
+import { SaleUpdateModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency } from "../../../../utils/formatters.ts";
+import { transformCustomersForDropdown, transformSelectedCustomerForDropdown } from '../../../../utils/searchDropdownTransformations';
 
 const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                                                              isOpen,
@@ -28,7 +20,7 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
                                                              paymentMethods
                                                          }) => {
     // Form state
-    const [formData, setFormData] = useState<Omit<SaleUpdateDTO, 'saleId' | 'updaterUserId'>>({
+    const [formData, setFormData] = useState<Omit<SaleUpdateDTO, 'saleId'>>({
         customerId: null,
         locationId: 0,
         saleDate: '',
@@ -45,21 +37,8 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Transform customer data to match SearchResult interface (like other components do)
-    const transformedCustomerResults = customerSearchResults.map(customer => ({
-        id: customer.id,
-        name: customer.fullName,
-        subtitle: customer.email || 'No email',
-        additionalInfo: undefined
-    }));
-
-// Transform selected customer for display
-    const selectedCustomerForDropdown = selectedCustomer ? {
-        id: selectedCustomer.id,
-        name: selectedCustomer.fullName,
-        subtitle: selectedCustomer.email || 'No email',
-        additionalInfo: undefined
-    } : null;
+    const transformedCustomerResults = transformCustomersForDropdown(customerSearchResults);
+    const selectedCustomerForDropdown = transformSelectedCustomerForDropdown(selectedCustomer);
 
     // Error handling
     const { fieldErrors, generalError, handleApiError, clearErrors, clearFieldError } = useFormErrorHandler();
@@ -195,16 +174,8 @@ const SaleUpdateModal: React.FC<SaleUpdateModalProps> = ({
         formData.finalTotalPrice !== sale.finalTotalPrice ||
         formData.packagingPrice !== sale.packagingPrice ||
         formData.paymentMethod !== sale.paymentMethod ||
-        (selectedCustomer?.id || null) !== (sale.customerName !== 'Περαστικός Πελάτης' ? sale.customerId : null)
+        (selectedCustomer?.fullName || 'Περαστικός Πελάτης') !== sale.customerName
     ) : false;
-
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
 
     // Create options for viewAll
     const locationOptions = locations.map(location => ({

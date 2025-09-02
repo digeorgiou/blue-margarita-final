@@ -5,7 +5,7 @@ import CategoryCreateModal from '../components/ui/modals/category/CategoryCreate
 import CategoryUpdateModal from '../components/ui/modals/category/CategoryUpdateModal.tsx';
 import CategoryDetailModal from '../components/ui/modals/category/CategoryDetailModal.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/SuccessModal';
+import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
 import { categoryService } from '../services/categoryService';
 import { Gem, Plus } from 'lucide-react';
 import type {

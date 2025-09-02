@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle, X, User, MapPin, CreditCard, Package, Calendar } from 'lucide-react';
-import { SaleDetailedViewDTO } from '../../../types/api/recordSaleInterface';
-import { getPaymentMethodDisplayName } from '../../../utils/EnumUtils.ts';
+import { SaleDetailedViewDTO } from '../../../../types/api/recordSaleInterface.ts';
+import { getPaymentMethodDisplayName } from '../../../../utils/EnumUtils.ts';
 
 interface SaleSuccessModalProps {
     sale: SaleDetailedViewDTO;

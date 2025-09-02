@@ -12,15 +12,9 @@ import {
     Euro,
     X
 } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index';
-import { SupplierDetailedViewDTO } from '../../../../types/api/supplierInterface';
-
-interface SupplierDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    supplier: SupplierDetailedViewDTO | null;
-    loading: boolean;
-}
+import { Button, LoadingSpinner } from '../../common';
+import { SupplierDetailModalProps } from '../../../../types/components/modal-types';
+import { formatCurrency, formatNumber, formatDate } from "../../../../utils/formatters.ts";
 
 const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                                                                      isOpen,
@@ -29,23 +23,6 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                                                                      loading
                                                                  }) => {
     if (!isOpen) return null;
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        if (!dateString) return 'Δεν υπάρχει';
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
-
-    const formatNumber = (num: number) => {
-        return new Intl.NumberFormat('el-GR').format(num);
-    };
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">

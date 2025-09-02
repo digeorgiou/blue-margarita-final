@@ -1,5 +1,7 @@
 import {SaleProductDTO, SalesSummaryDTO} from "./dashboardInterface.ts";
 import { PaymentMethod } from "./dashboardInterface.ts";
+import { CustomerSearchResultDTO } from "./customerInterface.ts";
+import { LocationForDropdownDTO } from "./locationInterface.ts";
 
 export interface SaleReadOnlyDTO {
     id: number;
@@ -20,6 +22,36 @@ export interface SaleReadOnlyDTO {
     updatedAt: string;
     createdBy: string;
     lastUpdatedBy: string;
+}
+
+export interface SaleDetailedViewDTO {
+    saleId : number;
+    saleDate : string;
+    customer? : CustomerSearchResultDTO;
+    location : LocationForDropdownDTO;
+    paymentMethod : string;
+    subtotal : number;
+    packagingCost : number;
+    suggestedTotal : number;
+    finalTotal : number;
+    discountAmount : number;
+    discountPercentage : number;
+    items : SaleItemDetailsDTO[];
+    isWholesale : boolean;
+    totalItemCount : number;
+    averageItemPrice : number;
+}
+
+export interface SaleItemDetailsDTO{
+    productId : number;
+    productName : string;
+    productCode : string;
+    categoryName : string;
+    quantity : number;
+    priceAtTime : number;
+    originalPrice : number;
+    totalPrice : number;
+    totalDiscount : number;
 }
 
 export interface SaleUpdateDTO {

@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { Building2, Phone, CreditCard, Mail, MapPin } from 'lucide-react';
-import { BaseFormModal, Input } from '../../index';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
 import { SupplierInsertDTO } from '../../../../types/api/supplierInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface SupplierCreateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: SupplierInsertDTO) => Promise<void>;
-}
+import { SupplierCreateModalProps } from "../../../../types/components/modal-types.ts";
 
 const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
                                                                      isOpen,

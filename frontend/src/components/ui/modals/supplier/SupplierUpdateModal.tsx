@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Phone, CreditCard, Mail, MapPin } from 'lucide-react';
-import { BaseFormModal, Input } from '../../index';
-import { SupplierReadOnlyDTO, SupplierUpdateDTO } from '../../../../types/api/supplierInterface';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
+import { SupplierUpdateDTO } from '../../../../types/api/supplierInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface SupplierUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: SupplierUpdateDTO) => Promise<void>;
-    supplier: SupplierReadOnlyDTO | null;
-}
+import { SupplierUpdateModalProps } from "../../../../types/components/modal-types.ts";
 
 const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
                                                                      isOpen,
@@ -17,7 +12,7 @@ const SupplierUpdateModal: React.FC<SupplierUpdateModalProps> = ({
                                                                      onSubmit,
                                                                      supplier
                                                                  }) => {
-    const [formData, setFormData] = useState<Omit<SupplierUpdateDTO, 'supplierId' | 'updaterUserId'>>({
+    const [formData, setFormData] = useState<Omit<SupplierUpdateDTO, 'supplierId'>>({
         name: '',
         address: '',
         tin: '',

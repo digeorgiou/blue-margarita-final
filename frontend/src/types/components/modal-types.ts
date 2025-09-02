@@ -24,10 +24,10 @@ import {
     ProcedureReadOnlyDTO,
     ProcedureUpdateDTO
 } from "../api/procedureInterface.ts";
-import {ProductDetailedViewDTO} from "../api/productInterface.ts";
+import {PriceRecalculationResultDTO, ProductDetailedViewDTO} from "../api/productInterface.ts";
 import type {PurchaseDetailedViewDTO, PurchaseReadOnlyDTO, PurchaseUpdateDTO} from "../api/purchaseInterface.ts";
-import type {SaleReadOnlyDTO, SaleUpdateDTO} from "../api/saleInterface.ts";
-import type {PaymentMethodDTO, SaleDetailedViewDTO} from "../api/recordSaleInterface.ts";
+import type {SaleReadOnlyDTO, SaleUpdateDTO, SaleDetailedViewDTO} from "../api/saleInterface.ts";
+import type { PaymentMethodDTO } from "../api/recordSaleInterface.ts";
 import {
     SupplierDetailedViewDTO,
     SupplierInsertDTO,
@@ -223,4 +223,17 @@ export type SupplierUpdateModalProps = {
     onClose: () => void;
     onSubmit: (data: SupplierUpdateDTO) => Promise<void>;
     supplier: SupplierReadOnlyDTO | null;
+}
+
+export type PriceRecalculationConfirmModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    isLoading?: boolean;
+}
+
+export type PriceRecalculationResultModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    result: PriceRecalculationResultDTO | null;
 }

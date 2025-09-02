@@ -3,7 +3,7 @@ import { Package, Plus, Calculator } from 'lucide-react';
 import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/SuccessModal';
+import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
 import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { ProductFilterPanel } from '../components/ui/filterPanels'
 import { productService } from '../services/productService';

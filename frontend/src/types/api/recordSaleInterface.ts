@@ -1,6 +1,5 @@
 import {LocationForDropdownDTO} from "./locationInterface.ts";
 import {CategoryForDropdownDTO} from "./categoryInterface.ts";
-import {CustomerSearchResultDTO} from "./customerInterface.ts";
 
 export interface RecordPageDataDTO {
     paymentMethods : PaymentMethodDTO[];
@@ -17,24 +16,6 @@ export interface RecordSaleRequestDTO {
     finalPrice : number;
     saleDate : string;
     items : SaleItemRequestDTO[];
-}
-
-export interface SaleDetailedViewDTO {
-    saleId : number;
-    saleDate : string;
-    customer? : CustomerSearchResultDTO;
-    location : LocationForDropdownDTO;
-    paymentMethod : string;
-    subtotal : number;
-    packagingCost : number;
-    suggestedTotal : number;
-    finalTotal : number;
-    discountAmount : number;
-    discountPercentage : number;
-    items : SaleItemDetailsDTO[];
-    isWholesale : boolean;
-    totalItemCount : number;
-    averageItemPrice : number;
 }
 
 export interface SaleItemDetailsDTO{

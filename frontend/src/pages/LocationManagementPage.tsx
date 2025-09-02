@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button, Alert, LocationList, LoadingSpinner, LocationCreateModal, LocationUpdateModal, LocationDetailModal } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/SuccessModal';
+import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
 import { locationService } from '../services/locationService';
 import { MapPin, Plus } from 'lucide-react';
 import type {

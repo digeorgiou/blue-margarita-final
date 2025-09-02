@@ -1,13 +1,7 @@
 import React from 'react';
 import { AlertTriangle, Calculator, Clock, Database } from 'lucide-react';
-import { Button } from '../'
-
-interface PriceRecalculationConfirmModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-    isLoading?: boolean;
-}
+import { Button } from '../../common';
+import { PriceRecalculationConfirmModalProps } from "../../../../types/components/modal-types.ts";
 
 const PriceRecalculationConfirmModal: React.FC<PriceRecalculationConfirmModalProps> = ({
                                                                                            isOpen,

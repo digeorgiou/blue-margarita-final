@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Package, Truck, Calendar, ShoppingCart } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../common';
 import { FaEuroSign } from "react-icons/fa6";
-import { PurchaseDetailModalProps } from "../../../../types/components/modal-types.ts";
+import type { PurchaseDetailModalProps } from "../../../../types/components/modal-types.ts";
 import { formatCurrency, formatDate, formatDateTime } from "../../../../utils/formatters.ts";
 
 const PurchaseDetailModal: React.FC<PurchaseDetailModalProps> = ({

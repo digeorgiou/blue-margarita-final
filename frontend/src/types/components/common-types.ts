@@ -6,6 +6,11 @@ export type AlertProps = {
     title?: string;
 }
 
+export type LoadingSpinnerProps = {
+    size?: 'sm' | 'md' | 'lg';
+    message?: string;
+}
+
 export type ButtonProps = {
     children?: React.ReactNode;
     onClick?: ()=> void;

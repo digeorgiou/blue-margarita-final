@@ -10,7 +10,7 @@ import { Button, LoadingSpinner, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
 import { FlexibleHeightCard } from "../components/ui";
 import { ShoppingCart, Package, Calendar, Trash2, Truck, Mail, X } from 'lucide-react';
-import { PurchaseSuccessModal } from '../components/ui/modals/PurchaseSuccessModal';
+import { PurchaseSuccessModal } from '../components/ui/modals/purchase/PurchaseSuccessModal.tsx';
 import { materialService } from "../services/materialService.ts";
 import { CustomNumberInput, CustomDateInput, CustomSearchDropdown  } from "../components/ui/inputs";
 import { IoHammerOutline } from "react-icons/io5";

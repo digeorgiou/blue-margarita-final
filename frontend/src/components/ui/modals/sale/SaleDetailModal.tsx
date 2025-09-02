@@ -2,17 +2,12 @@ import React from 'react';
 import {
     ShoppingCart, Users, MapPin, CreditCard, Package,
     X } from 'lucide-react';
-import { LoadingSpinner, Button } from "../../index";
-import type { SaleDetailedViewDTO } from '../../../types/api/recordSaleInterface';
+import { LoadingSpinner, Button } from '../../common';
 import { getPaymentMethodDisplayName } from '../../../../utils/EnumUtils.ts';
 import { FaEuroSign } from "react-icons/fa6";
-
-interface SaleDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    saleDetails: SaleDetailedViewDTO | null;
-    loading: boolean;
-}
+import { SaleDetailModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency, formatDate, formatNumber } from "../../../../utils/formatters.ts";
+import {SaleItemDetailsDTO} from "../../../../types/api/saleInterface.ts";
 
 const SaleDetailModal: React.FC<SaleDetailModalProps> = ({
                                                              isOpen,
@@ -21,27 +16,6 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({
                                                              loading
                                                          }) => {
     if (!isOpen) return null;
-
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    const formatNumber = (num: number): string => {
-        return new Intl.NumberFormat('el-GR').format(num);
-    };
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -192,7 +166,7 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({
                                     </h3>
                                 </div>
                                 <div className="divide-y divide-gray-200">
-                                    {saleDetails.items.map((item, index) => (
+                                    {saleDetails.items.map((item : SaleItemDetailsDTO, index : number) => (
                                         <div key={index} className="p-4 hover:bg-gray-50">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex-1">
