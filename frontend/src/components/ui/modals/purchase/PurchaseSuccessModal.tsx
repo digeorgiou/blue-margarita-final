@@ -162,3 +162,5 @@ export const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purc
         </div>
     );
 };
+
+export default PurchaseSuccessModal;

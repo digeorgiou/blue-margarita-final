@@ -196,3 +196,5 @@ export const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({ sale, onClos
         </div>
     );
 };
+
+export default SaleSuccessModal;
