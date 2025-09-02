@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert } from '../components/ui';
 import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
+import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import TaskCard from '../components/ui/resultCards/TaskCard.tsx';
 import { dashboardService } from '../services/dashboardService';

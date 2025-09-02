@@ -9,15 +9,9 @@ import {
     Activity,
     X
 } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index';
-import { MaterialDetailedViewDTO } from '../../../../types/api/materialInterface';
-
-interface MaterialDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    material: MaterialDetailedViewDTO | null;
-    loading: boolean;
-}
+import { Button, LoadingSpinner } from '../../common';
+import { MaterialDetailModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency, formatDate, formatNumber, formatQuantity } from "../../../../utils/formatters.ts";
 
 const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                                                      isOpen,
@@ -26,27 +20,6 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                                                      loading
                                                                  }) => {
     if (!isOpen) return null;
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        if (!dateString) return 'Δεν υπάρχει';
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
-
-    const formatNumber = (num: number) => {
-        return new Intl.NumberFormat('el-GR').format(num);
-    };
-
-    const formatQuantity = (quantity: number, unit: string) => {
-        return `${formatNumber(quantity)} ${unit}`;
-    };
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">

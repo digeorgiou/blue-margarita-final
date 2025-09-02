@@ -1,7 +1,7 @@
 import React from "react";
 
 import { baseLabelClasses} from "../styles/input-styles.ts";
-import {CustomRadioGroupProps} from "../../../types/components/input-types.ts";
+import { CustomRadioGroupProps } from "../../../types/components/input-types.ts";
 
 const CustomRadioGroup: React.FC<CustomRadioGroupProps> = ({
                                                                label,

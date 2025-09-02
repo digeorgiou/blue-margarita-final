@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { User, Phone } from 'lucide-react';
-import { BaseFormModal, Input } from '../../index';
-import { GenderType, GenderTypeLabels, CustomerListItemDTO, CustomerUpdateDTO } from '../../../../types/api/customerInterface';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
+import { GenderType, GenderTypeLabels, CustomerUpdateDTO } from '../../../../types/api/customerInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface CustomerUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: CustomerUpdateDTO) => Promise<void>;
-    customer: CustomerListItemDTO | null;
-}
+import { CustomerUpdateModalProps } from "../../../../types/components/modal-types.ts";
 
 const CustomerUpdateModal: React.FC<CustomerUpdateModalProps> = ({
                                                                      isOpen,

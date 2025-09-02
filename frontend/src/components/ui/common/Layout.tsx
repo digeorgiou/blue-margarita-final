@@ -1,5 +1,6 @@
 import { Header , Sidebar } from "./";
 import {LayoutProps} from "../../../types/components/common-types.ts";
+import React from "react";
 
 const Layout: React.FC<LayoutProps> = ({
                                            children,

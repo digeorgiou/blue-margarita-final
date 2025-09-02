@@ -1,15 +1,13 @@
 import React from 'react';
 import { Search, Package, Filter } from 'lucide-react';
-import { Button, LoadingSpinner } from '../';
-import CustomTextInput from '../inputs/CustomTextInput.tsx';
-import CustomSelect from '../inputs/CustomSelect.tsx';
+import { Button, LoadingSpinner } from '../common';
+import { CustomTextInput, CustomSelect, CustomNumberInput } from '../inputs';
 import type {
     StockManagementDTO,
     StockStatus
 } from '../../../types/api/stockManagementInterface';
 import type { CategoryForDropdownDTO } from '../../../types/api/categoryInterface';
 import { StockProductCard} from '../resultCards';
-import {CustomNumberInput} from "../inputs";
 
 interface StockManagementFilterPanelProps {
     // Filter states

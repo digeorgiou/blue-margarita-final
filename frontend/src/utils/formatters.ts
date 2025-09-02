@@ -7,6 +7,10 @@ export const formatCurrency = (amount: number) => {
     }).format(amount);
 };
 
+export const formatMoney = (amount: number): string => {
+    return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 export const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('el-GR', {
         year: 'numeric',
@@ -27,6 +31,22 @@ export const formatDateTime = (dateString: string) => {
 
 export const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('el-GR').format(num);
+};
+
+export const getTodayDateString = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+export const formatQuantity = (quantity: number, unit: string) => {
+    return `${formatNumber(quantity)} ${unit}`;
+};
+
+export const formatPercentage = (num: number) => {
+    return `${num.toFixed(1)}%`;
 };
 
 export const formatTaskDate = (task: { date: string; daysFromToday: number }): string => {

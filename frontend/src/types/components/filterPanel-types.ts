@@ -212,27 +212,29 @@ export type PurchaseFilterPanelProps = {
 }
 
 export type MispricedProductFilterPanelProps = {
-    // Filter values
+    // Filter states
+    searchTerm: string;
+    onSearchTermChange: (value: string) => void;
+    selectedCategoryId: number | undefined;
+    onCategoryIdChange: (value: number | undefined) => void;
+    selectedIssueType: string | undefined;
+    onIssueTypeChange: (value: string | number | undefined) => void;
     thresholdPercentage: number;
     onThresholdPercentageChange: (value: number) => void;
-    nameOrCodeFilter: string;
-    onNameOrCodeFilterChange: (value: string) => void;
-    categoryIdFilter: number | undefined;
-    onCategoryIdFilterChange: (value: number | undefined) => void;
-    categories: CategoryForDropdownDTO[];
-    issueTypeFilter: string;
-    onIssueTypeFilterChange: (value: string) => void;
-    locationIdFilter: number | undefined;
-    onLocationIdFilterChange: (value: number | undefined) => void;
-    locations: LocationForDropdownDTO[];
 
-    // Results and actions
+    // Data
+    categories: CategoryForDropdownDTO[];
     searchResults: MispricedProductAlertDTO[];
     loading: boolean;
+
+    // Actions
     onClearFilters: () => void;
-    onRefresh: () => void;
-    onSort: (field: string) => void;
-    sortBy: string;
-    sortDirection: 'ASC' | 'DESC';
-    onNavigateToProduct: (productId: number) => void;
+    onUpdateRetailPrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
+    onUpdateWholesalePrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
+    updatingRetailPrice: boolean;
+    updatingWholesalePrice: boolean;
+
+    // Utility functions
+    formatMoney: (amount: number) => string;
+    getPricingIssueTypeLabel: (issueType: string) => string;
 }

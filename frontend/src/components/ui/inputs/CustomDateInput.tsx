@@ -1,7 +1,6 @@
 import React from "react";
-import {CustomDateInputProps} from "../../../types/components/input-types.ts";
+import { CustomDateInputProps } from "../../../types/components/input-types.ts";
 import { baseInputClasses , baseLabelClasses} from "../styles/input-styles.ts";
-
 
 const CustomDateInput: React.FC<CustomDateInputProps> = ({
                                                              label,

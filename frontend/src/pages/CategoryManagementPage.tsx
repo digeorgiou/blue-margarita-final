@@ -4,7 +4,7 @@ import CustomCard from '../components/ui/common/CustomCard.tsx';
 import CategoryCreateModal from '../components/ui/modals/category/CategoryCreateModal.tsx';
 import CategoryUpdateModal from '../components/ui/modals/category/CategoryUpdateModal.tsx';
 import CategoryDetailModal from '../components/ui/modals/category/CategoryDetailModal.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/ConfirmDeleteModal';
+import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
 import SuccessModal from '../components/ui/modals/SuccessModal';
 import { categoryService } from '../services/categoryService';
 import { Gem, Plus } from 'lucide-react';

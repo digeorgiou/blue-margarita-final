@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import { BaseFormModal, Input } from '../../index';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
 import { LocationInsertDTO } from '../../../../types/api/locationInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface LocationCreateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: LocationInsertDTO) => Promise<void>;
-}
+import type { LocationCreateModalProps } from "../../../../types/components/modal-types.ts";
 
 const LocationCreateModal: React.FC<LocationCreateModalProps> = ({
                                                                      isOpen,

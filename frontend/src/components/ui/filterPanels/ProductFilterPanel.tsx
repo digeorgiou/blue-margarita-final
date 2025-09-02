@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, Filter } from 'lucide-react';
-import { Button, LoadingSpinner } from '../index';
+import { Button, LoadingSpinner } from '../common';
 import { CustomTextInput, CustomSelect, CustomSearchDropdown, CustomToggleOption, CustomNumberInput } from '../inputs';
 import type { SearchResult } from '../../../types/components/input-types';
 import { ProductFilterPanelProps } from "../../../types/components/filterPanel-types.ts";

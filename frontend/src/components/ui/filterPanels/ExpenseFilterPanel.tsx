@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, Calendar, Filter } from 'lucide-react';
-import { Button, LoadingSpinner } from '../index';
+import { Button, LoadingSpinner } from '../common';
 import { CustomTextInput, CustomSelect, CustomDateInput } from '../inputs';
 import { FaEuroSign } from "react-icons/fa6";
 import { ExpenseFilterPanelProps } from "../../../types/components/filterPanel-types.ts";

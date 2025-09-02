@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, Users } from 'lucide-react';
-import { LoadingSpinner } from './../index';
+import { LoadingSpinner } from '../common';
 import type { CustomerListItemDTO } from '../../../types/api/customerInterface';
 import { CustomTextInput, CustomToggleOption } from "../inputs";
 import { CustomerFilterPanelProps } from "../../../types/components/filterPanel-types.ts";

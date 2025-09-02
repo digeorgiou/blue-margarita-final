@@ -1,5 +1,5 @@
 import React from "react";
-import {CustomNumberInputProps} from "../../../types/components/input-types.ts";
+import { CustomNumberInputProps } from "../../../types/components/input-types.ts";
 import { baseInputClasses , baseLabelClasses} from "../styles/input-styles.ts";
 
 /**

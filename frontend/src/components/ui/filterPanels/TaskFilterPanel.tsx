@@ -1,8 +1,7 @@
 import React from 'react';
 import { Calendar, Filter } from 'lucide-react';
-import { Button, LoadingSpinner } from '../';
-import CustomSelect from '../inputs/CustomSelect.tsx';
-import CustomDateInput from '../inputs/CustomDateInput.tsx';
+import { Button, LoadingSpinner } from '../common';
+import { CustomSelect, CustomDateInput } from '../inputs';
 import type { ToDoTaskReadOnlyDTO } from '../../../types/api/dashboardInterface';
 
 interface TaskFilterPanelProps {

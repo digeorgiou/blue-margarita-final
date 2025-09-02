@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, Package } from 'lucide-react';
-import { LoadingSpinner } from './../index';
+import { LoadingSpinner } from '../common';
 import { CustomTextInput } from "../inputs";
 import { MaterialFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 import { MaterialCard } from '../resultCards'

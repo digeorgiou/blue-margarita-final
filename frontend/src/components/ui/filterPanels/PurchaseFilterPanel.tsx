@@ -1,6 +1,6 @@
 import React from 'react';
 import {Calendar, ShoppingCart, Filter} from 'lucide-react';
-import { Button, LoadingSpinner } from '../index';
+import { Button, LoadingSpinner } from '../common';
 import { CustomSearchDropdown, CustomDateInput } from '../inputs';
 import { PurchaseFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 import { transformSuppliersForDropdown, transformSelectedSupplierForDropdown, transformMaterialsForDropdown, transformSelectedMaterialForDropdown } from "../../../utils/searchDropdownTransformations.ts";

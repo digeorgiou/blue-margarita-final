@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Euro, Ruler, AlertTriangle, Calculator } from 'lucide-react';
 import { IoHammerOutline } from "react-icons/io5";
-import { BaseFormModal, Input } from '../../index';
-import { MaterialReadOnlyDTO, MaterialUpdateDTO } from '../../../../types/api/materialInterface';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
+import { MaterialUpdateDTO } from '../../../../types/api/materialInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface MaterialUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: MaterialUpdateDTO) => Promise<void>;
-    material: MaterialReadOnlyDTO | null;
-}
+import { MaterialUpdateModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency } from "../../../../utils/formatters.ts";
 
 const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
                                                                      isOpen,
@@ -110,14 +106,6 @@ const MaterialUpdateModal: React.FC<MaterialUpdateModalProps> = ({
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
     };
 
     const priceHasChanged = originalPrice !== formData.currentUnitCost;

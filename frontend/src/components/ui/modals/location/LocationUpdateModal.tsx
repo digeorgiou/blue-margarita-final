@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BaseFormModal, Input } from '../../index';
-import { LocationReadOnlyDTO, LocationUpdateDTO } from '../../../../types/api/locationInterface';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
+import { LocationUpdateDTO } from '../../../../types/api/locationInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface LocationUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: LocationUpdateDTO) => Promise<void>;
-    location: LocationReadOnlyDTO | null;
-}
+import { LocationUpdateModalProps } from '../../../../types/components/modal-types';
 
 const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
                                                                      isOpen,

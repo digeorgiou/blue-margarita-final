@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BaseFormModal, Input } from '../../index';
-import { CategoryReadOnlyDTO } from '../../../../types/api/categoryInterface';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface CategoryUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: { name: string }) => Promise<void>; // Match what CategoryManagementPage expects
-    category: CategoryReadOnlyDTO | null;
-}
+import { CategoryUpdateModalProps } from '../../../../types/components/modal-types.ts';
 
 const CategoryUpdateModal: React.FC<CategoryUpdateModalProps> = ({
                                                                      isOpen,

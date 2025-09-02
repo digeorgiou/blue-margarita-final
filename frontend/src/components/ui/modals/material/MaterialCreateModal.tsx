@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { Euro, Ruler } from 'lucide-react';
 import { IoHammerOutline } from "react-icons/io5";
-import { BaseFormModal, Input } from '../../index';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
 import { MaterialInsertDTO } from '../../../../types/api/materialInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface MaterialCreateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: MaterialInsertDTO) => Promise<void>;
-}
+import { MaterialCreateModalProps } from "../../../../types/components/modal-types.ts";
 
 const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
                                                                      isOpen,
@@ -42,10 +38,8 @@ const MaterialCreateModal: React.FC<MaterialCreateModalProps> = ({
         if (!formData.unitOfMeasure.trim()) {
             return false;
         }
-        if (formData.currentUnitCost <= 0) {
-            return false;
-        }
-        return true;
+        return formData.currentUnitCost > 0;
+
     };
 
     const handleClose = () => {

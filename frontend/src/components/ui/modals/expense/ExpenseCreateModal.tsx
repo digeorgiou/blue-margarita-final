@@ -1,25 +1,12 @@
 import React, { useState } from 'react';
 import { FileText, Calendar, Tag } from 'lucide-react';
-import { BaseFormModal, Input } from '../../index';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-import type { ExpenseInsertDTO, ExpenseTypeDTO } from '../../../../types/api/expenseInterface';
+import type { ExpenseInsertDTO } from '../../../../types/api/expenseInterface';
 import { FaEuroSign } from "react-icons/fa6";
-
-interface ExpenseCreateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (expenseData: ExpenseInsertDTO) => Promise<void>;
-    expenseTypes: ExpenseTypeDTO[];
-}
-
-// Helper function to get today's date in YYYY-MM-DD format
-const getTodayDateString = (): string => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
+import { ExpenseCreateModalProps } from "../../../../types/components/modal-types.ts";
+import { getTodayDateString } from "../../../../utils/formatters.ts";
 
 const ExpenseCreateModal: React.FC<ExpenseCreateModalProps> = ({
                                                                    isOpen,

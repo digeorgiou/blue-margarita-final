@@ -1,16 +1,10 @@
-// CustomerCreateModal.tsx using the useFormErrorHandler hook
-
 import React, { useState } from 'react';
 import { User, Phone } from 'lucide-react';
-import { BaseFormModal, Input } from '../../index';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
 import { CustomerInsertDTO, GenderType, GenderTypeLabels } from '../../../../types/api/customerInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface CustomerCreateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: CustomerInsertDTO) => Promise<void>;
-}
+import { CustomerCreateModalProps } from "../../../../types/components/modal-types.ts";
 
 const CustomerCreateModal: React.FC<CustomerCreateModalProps> = ({
                                                                      isOpen,

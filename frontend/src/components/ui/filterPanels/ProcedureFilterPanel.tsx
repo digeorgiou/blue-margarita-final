@@ -1,9 +1,9 @@
 import React from 'react';
-import {Cog, Search} from 'lucide-react';
-import {LoadingSpinner} from './../index';
-import {CustomTextInput} from "../inputs";
-import {ProcedureFilterPanelProps} from "../../../types/components/filterPanel-types.ts";
-import {ProcedureCard} from '../resultCards';
+import { Cog, Search } from 'lucide-react';
+import { LoadingSpinner } from '../common';
+import { CustomTextInput } from "../inputs";
+import { ProcedureFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
+import { ProcedureCard } from '../resultCards';
 
 const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
                                                                    searchTerm,

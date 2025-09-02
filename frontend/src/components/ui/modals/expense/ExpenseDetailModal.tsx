@@ -1,16 +1,9 @@
 import React from 'react';
 import { X, Calendar, FileText, Tag, Package, User, Clock } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index';
-import type { ExpenseReadOnlyDTO, ExpenseTypeDTO } from '../../../../types/api/expenseInterface';
+import { Button, LoadingSpinner } from '../../common';
 import { FaEuroSign } from "react-icons/fa6";
-
-interface ExpenseDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    expense: ExpenseReadOnlyDTO | null;
-    loading: boolean;
-    expenseTypes: ExpenseTypeDTO[];
-}
+import { ExpenseDetailModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency, formatDate, formatDateTime } from "../../../../utils/formatters.ts";
 
 const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                                                                    isOpen,
@@ -24,32 +17,6 @@ const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
     const getExpenseTypeDisplayName = (expenseTypeValue: string): string => {
         const expenseType = expenseTypes.find(type => type.value === expenseTypeValue);
         return expenseType ? expenseType.displayName : expenseTypeValue;
-    };
-
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    const formatDateTime = (dateString: string): string => {
-        return new Date(dateString).toLocaleString('el-GR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     };
 
     if (!isOpen) return null;

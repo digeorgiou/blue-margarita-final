@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { Button, LoadingSpinner } from '../index';
+import { Button, LoadingSpinner } from '../../index.ts';
 
 interface BaseFormModalProps {
     isOpen: boolean;

@@ -14,7 +14,7 @@ export { default as CartItem } from './cart/CartItem.tsx';
 export { default as CartSummary } from './cart/CartSummary.tsx';
 export { default as DashboardCard } from './common/CustomCard.tsx';
 
-export { default as BaseFormModal } from './modals/BaseFormModal.tsx'
+export { default as BaseFormModal } from './modals/common/BaseFormModal.tsx'
 
 export { default as CategoryList } from './viewAll/CategoryList.tsx'
 export { default as LocationList } from './viewAll/LocationList.tsx'

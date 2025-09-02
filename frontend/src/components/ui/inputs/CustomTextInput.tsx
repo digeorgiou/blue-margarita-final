@@ -1,5 +1,6 @@
 import { baseInputClasses , baseLabelClasses} from "../styles/input-styles.ts";
 import { CustomTextInputProps } from "../../../types/components/input-types.ts";
+import React from "react";
 
 const CustomTextInput: React.FC<CustomTextInputProps> = ({
                                                              label,

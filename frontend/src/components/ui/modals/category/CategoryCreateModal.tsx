@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import { BaseFormModal, Input } from '../../index';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
 import { CategoryInsertDTO } from '../../../../types/api/categoryInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface CategoryCreateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: CategoryInsertDTO) => Promise<void>;
-}
+import type { CategoryCreateModalProps } from '../../../../types/components/modal-types.ts'
 
 const CategoryCreateModal: React.FC<CategoryCreateModalProps> = ({
                                                                      isOpen,

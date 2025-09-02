@@ -8,15 +8,9 @@ import {
     Activity,
     X
 } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index';
-import { ProcedureDetailedViewDTO } from '../../../../types/api/procedureInterface';
-
-interface ProcedureDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    procedure: ProcedureDetailedViewDTO | null;
-    loading: boolean;
-}
+import { Button, LoadingSpinner } from '../../common';
+import { ProcedureDetailModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency, formatDate, formatNumber } from "../../../../utils/formatters.ts";
 
 const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                                                        isOpen,
@@ -25,23 +19,6 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                                                        loading
                                                                    }) => {
     if (!isOpen) return null;
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        if (!dateString) return 'Δεν υπάρχει';
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
-
-    const formatNumber = (num: number) => {
-        return new Intl.NumberFormat('el-GR').format(num);
-    };
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">

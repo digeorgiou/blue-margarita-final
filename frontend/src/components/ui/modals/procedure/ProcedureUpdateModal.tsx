@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Cog } from 'lucide-react';
-import { BaseFormModal, Input } from '../../index';
-import { ProcedureReadOnlyDTO, ProcedureUpdateDTO } from '../../../../types/api/procedureInterface';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
+import { ProcedureUpdateDTO } from '../../../../types/api/procedureInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface ProcedureUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: ProcedureUpdateDTO) => Promise<void>;
-    procedure: ProcedureReadOnlyDTO | null;
-}
+import { ProcedureUpdateModalProps } from "../../../../types/components/modal-types.ts";
 
 const ProcedureUpdateModal: React.FC<ProcedureUpdateModalProps> = ({
                                                                        isOpen,

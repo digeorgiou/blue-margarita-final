@@ -1,5 +1,3 @@
-// Create this file: frontend/src/components/ui/modals/procedure/ProcedureProductUsageModal.tsx
-
 import React, { useState, useEffect } from 'react';
 import {
     Cog,
@@ -11,18 +9,13 @@ import {
     ChevronRight,
     Package
 } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index';
-import { ProcedureReadOnlyDTO } from '../../../../types/api/procedureInterface';
+import { Button, LoadingSpinner } from '../../common';
 import { ProductUsageDTO } from '../../../../types/api/materialInterface';
 import { Paginated } from '../../../../types/api/dashboardInterface';
 import { procedureService } from '../../../../services/procedureService';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-interface ProcedureProductUsageModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    procedure: ProcedureReadOnlyDTO | null;
-}
+import { ProcedureProductUsageModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency, formatNumber } from "../../../../utils/formatters.ts";
 
 const ProcedureProductUsageModal: React.FC<ProcedureProductUsageModalProps> = ({
                                                                                    isOpen,
@@ -98,18 +91,6 @@ const ProcedureProductUsageModal: React.FC<ProcedureProductUsageModalProps> = ({
     const handlePageSizeChange = (newPageSize: number) => {
         setPageSize(newPageSize);
         setCurrentPage(0);
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatNumber = (num: number) => {
-        return new Intl.NumberFormat('el-GR').format(num);
     };
 
     if (!isOpen) return null;

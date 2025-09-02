@@ -13,15 +13,9 @@ import {
     AlertTriangle,
     Ruler
 } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index';
-import { ProductDetailedViewDTO } from '../../../../types/api/productInterface';
-
-interface ProductDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    product: ProductDetailedViewDTO | null;
-    loading: boolean;
-}
+import { Button, LoadingSpinner } from '../../common';
+import { ProductDetailModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency, formatPercentage, formatDate, formatNumber } from "../../../../utils/formatters.ts";
 
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                                                    isOpen,
@@ -30,27 +24,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                                                    loading
                                                                }) => {
     if (!isOpen) return null;
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (timestamp: number) => {
-        if (!timestamp) return 'Δεν υπάρχει';
-        return new Date(timestamp).toLocaleDateString('el-GR');
-    };
-
-    const formatNumber = (num: number) => {
-        return new Intl.NumberFormat('el-GR').format(num);
-    };
-
-    const formatPercentage = (num: number) => {
-        return `${num.toFixed(1)}%`;
-    };
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">

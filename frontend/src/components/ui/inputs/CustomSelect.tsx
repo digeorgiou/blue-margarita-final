@@ -1,6 +1,6 @@
 import React from "react";
-import {ChevronDown} from "lucide-react";
-import {CustomSelectProps} from "../../../types/components/input-types.ts";
+import { ChevronDown } from "lucide-react";
+import { CustomSelectProps } from "../../../types/components/input-types.ts";
 import { baseInputClasses , baseLabelClasses} from "../styles/input-styles.ts";
 
 

@@ -1,13 +1,8 @@
 import React from 'react';
 import { X, Gem, TrendingUp, ShoppingBag, Euro, Calendar, Package } from 'lucide-react';
-import { Button } from '../../index.ts';
-import type { CategoryDetailedViewDTO } from '../../../../types/api/categoryInterface.ts';
-
-interface CategoryDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    category: CategoryDetailedViewDTO;
-}
+import { Button } from '../../common';
+import type { CategoryDetailModalProps } from "../../../../types/components/modal-types.ts";
+import { formatMoney, formatDate } from "../../../../utils/formatters.ts";
 
 const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
                                                                      isOpen,
@@ -15,15 +10,6 @@ const CategoryDetailModal: React.FC<CategoryDetailModalProps> = ({
                                                                      category
                                                                  }) => {
     if (!isOpen) return null;
-
-    const formatMoney = (amount: number): string => {
-        return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
-
-    const formatDate = (dateString: string | null): string => {
-        if (!dateString) return 'Ποτέ';
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -1,39 +1,9 @@
 import React from 'react';
 import { Search, DollarSign, Filter, Package, AlertTriangle } from 'lucide-react';
-import { Button, LoadingSpinner } from '../';
-import CustomTextInput from '../inputs/CustomTextInput.tsx';
-import CustomSelect from '../inputs/CustomSelect.tsx';
-import type { MispricedProductAlertDTO } from '../../../types/api/dashboardInterface';
-import type { CategoryForDropdownDTO } from '../../../types/api/categoryInterface';
-import MispricedProductCard from '../resultCards/MispricedProductCard';
-
-interface MispricedProductFilterPanelProps {
-    // Filter states
-    searchTerm: string;
-    onSearchTermChange: (value: string) => void;
-    selectedCategoryId: number | undefined;
-    onCategoryIdChange: (value: number | undefined) => void;
-    selectedIssueType: string | undefined;
-    onIssueTypeChange: (value: string | number | undefined) => void;
-    thresholdPercentage: number;
-    onThresholdPercentageChange: (value: number) => void;
-
-    // Data
-    categories: CategoryForDropdownDTO[];
-    searchResults: MispricedProductAlertDTO[];
-    loading: boolean;
-
-    // Actions
-    onClearFilters: () => void;
-    onUpdateRetailPrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
-    onUpdateWholesalePrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
-    updatingRetailPrice: boolean;
-    updatingWholesalePrice: boolean;
-
-    // Utility functions
-    formatMoney: (amount: number) => string;
-    getPricingIssueTypeLabel: (issueType: string) => string;
-}
+import { Button, LoadingSpinner } from '../common';
+import { CustomTextInput, CustomSelect } from "../inputs";
+import { MispricedProductCard } from '../resultCards';
+import { MispricedProductFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 
 const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = ({
                                                                                      searchTerm,

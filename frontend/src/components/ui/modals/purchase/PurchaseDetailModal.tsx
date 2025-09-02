@@ -1,15 +1,9 @@
 import React from 'react';
 import { X, Package, Truck, Calendar, ShoppingCart } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../';
-import type { PurchaseDetailedViewDTO } from '../../../../types/api/purchaseInterface';
+import { Button, LoadingSpinner } from '../../common';
 import { FaEuroSign } from "react-icons/fa6";
-
-interface PurchaseDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    purchaseDetails: PurchaseDetailedViewDTO | null;
-    loading: boolean;
-}
+import { PurchaseDetailModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency, formatDate, formatDateTime } from "../../../../utils/formatters.ts";
 
 const PurchaseDetailModal: React.FC<PurchaseDetailModalProps> = ({
                                                                      isOpen,
@@ -18,34 +12,6 @@ const PurchaseDetailModal: React.FC<PurchaseDetailModalProps> = ({
                                                                      loading
                                                                  }) => {
     if (!isOpen) return null;
-
-    const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    const formatDateTime = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('el-GR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -198,7 +164,7 @@ const PurchaseDetailModal: React.FC<PurchaseDetailModalProps> = ({
 
                 {/* Footer */}
                 <div className="flex justify-end p-6 border-t border-gray-200 bg-gray-50">
-                    <Button onClick={onClose} variant="outline">
+                    <Button onClick={onClose} variant="secondary">
                         Κλείσιμο
                     </Button>
                 </div>

@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Tag, Package, Lock } from 'lucide-react';
-import { BaseFormModal, Input } from '../../index';
+import { BaseFormModal } from '..';
+import { Input } from '../../common';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-import type { ExpenseReadOnlyDTO, ExpenseUpdateDTO, ExpenseTypeDTO } from '../../../../types/api/expenseInterface';
+import type { ExpenseUpdateDTO } from '../../../../types/api/expenseInterface';
 import { FaEuroSign } from "react-icons/fa6";
-
-interface ExpenseUpdateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (expenseData: ExpenseUpdateDTO) => Promise<void>;
-    expense: ExpenseReadOnlyDTO | null;
-    expenseTypes: ExpenseTypeDTO[];
-}
+import { ExpenseUpdateModalProps } from "../../../../types/components/modal-types.ts";
 
 const ExpenseUpdateModal: React.FC<ExpenseUpdateModalProps> = ({
                                                                    isOpen,

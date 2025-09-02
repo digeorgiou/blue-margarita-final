@@ -1,14 +1,9 @@
 import React from 'react';
 import { X, User, Calendar, TrendingUp, Package, Eye, Phone, Mail, MapPin, CreditCard, Euro } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index';
-import { CustomerDetailedViewDTO, getGenderTypeLabel } from '../../../../types/api/customerInterface';
-
-interface CustomerDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    customer: CustomerDetailedViewDTO | null;
-    loading: boolean;
-}
+import { Button, LoadingSpinner } from '../../common';
+import { getGenderTypeLabel } from '../../../../types/api/customerInterface';
+import { CustomerDetailModalProps } from '../../../../types/components/modal-types.ts';
+import { formatCurrency, formatDate, formatNumber } from "../../../../utils/formatters.ts";
 
 const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                                                                      isOpen,
@@ -17,26 +12,6 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                                                                      loading
                                                                  }) => {
     if (!isOpen) return null;
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR'
-        }).format(amount);
-    };
-
-    const formatDate = (dateString: string) => {
-        if (!dateString) return 'Δεν υπάρχει';
-        return new Intl.DateTimeFormat('el-GR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        }).format(new Date(dateString));
-    };
-
-    const formatNumber = (num: number) => {
-        return new Intl.NumberFormat('el-GR').format(num);
-    };
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">

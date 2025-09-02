@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
-import { Button, LoadingSpinner } from '../index';
+import { Button, LoadingSpinner } from '../../index.ts';
 
 interface ConfirmDeleteModalProps {
     isOpen: boolean;

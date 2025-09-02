@@ -64,10 +64,10 @@ export interface ProductDetailedViewDTO{
     profitMarginRetail: number;
     profitMarginWholesale: number;
     isActive: boolean;
-    createdAt: number;
-    updatedAt: number;
-    createdBy: number;
-    lastUpdatedBy: number;
+    createdAt: string;
+    updatedAt: string;
+    createdBy: string;
+    lastUpdatedBy: string;
 
 }
 

@@ -1,13 +1,8 @@
 import React from 'react';
 import { X, MapPin, TrendingUp, ShoppingBag, Euro, Calendar, Package } from 'lucide-react';
-import { Button } from '../../index.ts';
-import type { LocationDetailedViewDTO } from '../../../../types/api/locationInterface';
-
-interface LocationDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    location: LocationDetailedViewDTO;
-}
+import { Button } from '../../common';
+import type { LocationDetailModalProps } from '../../../../types/components/modal-types';
+import { formatMoney, formatDate } from "../../../../utils/formatters.ts";
 
 const LocationDetailModal: React.FC<LocationDetailModalProps> = ({
                                                                      isOpen,
@@ -15,15 +10,6 @@ const LocationDetailModal: React.FC<LocationDetailModalProps> = ({
                                                                      location
                                                                  }) => {
     if (!isOpen) return null;
-
-    const formatMoney = (amount: number): string => {
-        return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
-
-    const formatDate = (dateString: string | null): string => {
-        if (!dateString) return 'Ποτέ';
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">

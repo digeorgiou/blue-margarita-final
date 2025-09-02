@@ -1,4 +1,5 @@
 import {InputProps} from "../../../types/components/common-types.ts";
+import React from "react";
 
 const Input: React.FC<InputProps> = ({
                                          label,
