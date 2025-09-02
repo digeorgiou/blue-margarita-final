@@ -7,6 +7,7 @@ import type {PurchaseReadOnlyDTO} from "../api/purchaseInterface.ts";
 import type {SaleReadOnlyDTO} from "../api/saleInterface.ts";
 import { StockManagementDTO, StockStatus } from "../api/stockManagementInterface.ts";
 import type {SupplierReadOnlyDTO} from "../api/supplierInterface.ts";
+import type {MispricedProductAlertDTO, ToDoTaskReadOnlyDTO} from "../api/dashboardInterface.ts";
 
 export type CustomerCardProps = {
     customer: CustomerListItemDTO;
@@ -28,6 +29,16 @@ export type MaterialCardProps = {
     onEdit: (material: MaterialReadOnlyDTO) => void;
     onDelete: (material: MaterialReadOnlyDTO) => void;
     onViewProducts: (material: MaterialReadOnlyDTO) => void;
+}
+
+export type MispricedProductCardProps = {
+    product: MispricedProductAlertDTO;
+    onUpdateRetailPrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
+    onUpdateWholesalePrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
+    updatingRetailPrice: boolean;
+    updatingWholesalePrice: boolean;
+    formatMoney: (amount: number) => string;
+    getPricingIssueTypeLabel: (issueType: string) => string;
 }
 
 export type ProcedureCardProps = {
@@ -75,4 +86,13 @@ export type SupplierCardProps = {
     onViewDetails: (supplier: SupplierReadOnlyDTO) => void;
     onEdit: (supplier: SupplierReadOnlyDTO) => void;
     onDelete: (supplier: SupplierReadOnlyDTO) => void;
+}
+
+export type TaskCardProps = {
+    task: ToDoTaskReadOnlyDTO;
+    onViewDetails?: (task: ToDoTaskReadOnlyDTO) => void;
+    onEdit: (task: ToDoTaskReadOnlyDTO) => void;
+    onDelete: (task: ToDoTaskReadOnlyDTO) => void;
+    onComplete: (taskId: number) => void;
+    onRestore: (taskId: number) => void;
 }

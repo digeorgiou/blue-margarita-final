@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
-import StockManagementFilterPanel from '../components/ui/filterPanels/StockManagementFilterPanel.tsx';
+import { Alert, CustomCard } from '../components/ui/common';
+import { EnhancedPaginationControls } from '../components/ui/pagination';
+import { StockManagementFilterPanel } from '../components/ui/filterPanels';
 import { stockManagementService } from '../services/stockManagementService';
 import { categoryService } from '../services/categoryService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';

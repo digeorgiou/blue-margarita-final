@@ -197,3 +197,12 @@ export class PriceRecalculationUtils {
         });
     }
 }
+
+export interface PriceCalculation {
+    materialCost: number;
+    laborCost: number;
+    procedureCost: number;
+    totalCost: number;
+    suggestedRetailPrice: number;
+    suggestedWholesalePrice: number;
+}

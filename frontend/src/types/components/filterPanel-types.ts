@@ -11,7 +11,7 @@ import type {SaleReadOnlyDTO} from "../api/saleInterface.ts";
 import type {SupplierReadOnlyDTO} from "../api/supplierInterface.ts";
 import { PurchaseReadOnlyDTO } from "../api/purchaseInterface";
 import { SupplierSearchResultDTO } from "../api/supplierInterface";
-import type { MispricedProductAlertDTO } from "../api/dashboardInterface";
+import type {MispricedProductAlertDTO, ToDoTaskReadOnlyDTO} from "../api/dashboardInterface";
 
 export type CustomerFilterPanelProps = {
     searchTerm: string;
@@ -237,4 +237,28 @@ export type MispricedProductFilterPanelProps = {
     // Utility functions
     formatMoney: (amount: number) => string;
     getPricingIssueTypeLabel: (issueType: string) => string;
+}
+
+export type TaskFilterPanelProps = {
+    // Filter states
+    statusFilter: string;
+    onStatusFilterChange: (value: string | number) => void;
+    dateFromFilter: string;
+    onDateFromFilterChange: (value: string) => void;
+    dateToFilter: string;
+    onDateToFilterChange: (value: string) => void;
+
+    // Actions
+    onClearFilters: () => void;
+
+    // Results
+    searchResults: ToDoTaskReadOnlyDTO[];
+    loading: boolean;
+    onUpdateTask: (task: ToDoTaskReadOnlyDTO) => void;
+    onDeleteTask: (task: ToDoTaskReadOnlyDTO) => void;
+    onCompleteTask: (taskId: number) => void;
+    onRestoreTask: (taskId: number) => void;
+
+    // Children (for rendering task results)
+    children?: React.ReactNode;
 }

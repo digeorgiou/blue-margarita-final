@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
+import { Button, Alert, CustomCard } from '../components/ui/common';
 import { profitLossService, ProfitLossReportDTO, ProfitLossPageInitData } from '../services/profitLossService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Search, ChevronDown, ChevronUp  } from 'lucide-react';
@@ -248,7 +247,7 @@ const ProfitLossPage = () => {
         onToggle?: (view: 'current' | 'last') => void;
         expenseToggleState?: boolean;
         onExpenseToggle?: () => void;
-    }> = ({ title, report, showExpenseBreakdown = false, hasToggle = false, duration, toggleView, onToggle, expenseToggleState = false,
+    }> = ({ title, report, showExpenseBreakdown = false, duration, toggleView, onToggle, expenseToggleState = false,
                                     onExpenseToggle }) => (
         <CustomCard className="h-full">
             <div className="p-6">

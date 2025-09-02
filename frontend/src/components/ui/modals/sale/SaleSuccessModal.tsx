@@ -1,19 +1,10 @@
 import React from 'react';
 import { CheckCircle, X, User, MapPin, CreditCard, Package, Calendar } from 'lucide-react';
-import { SaleDetailedViewDTO } from '../../../../types/api/recordSaleInterface.ts';
 import { getPaymentMethodDisplayName } from '../../../../utils/EnumUtils.ts';
-
-interface SaleSuccessModalProps {
-    sale: SaleDetailedViewDTO;
-    onClose: () => void;
-}
+import { SaleSuccessModalProps } from "../../../../types/components/modal-types.ts";
+import { formatMoney } from "../../../../utils/formatters.ts";
 
 export const SaleSuccessModal: React.FC<SaleSuccessModalProps> = ({ sale, onClose }) => {
-    // Format money helper
-    const formatMoney = (amount: number): string => {
-        return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">

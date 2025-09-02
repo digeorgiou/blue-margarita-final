@@ -1,22 +1,9 @@
 import React from 'react';
-import { CheckCircle, X, User, Package, Calendar, Phone } from 'lucide-react';
-import { PurchaseDetailedViewDTO } from '../../../../types/api/purchaseInterface.ts';
-
-interface PurchaseSuccessModalProps {
-    purchase: PurchaseDetailedViewDTO;
-    onClose: () => void;
-}
+import { CheckCircle, X, User, Package, Calendar } from 'lucide-react';
+import { PurchaseSuccessModalProps } from "../../../../types/components/modal-types.ts";
+import { formatDate, formatMoney } from "../../../../utils/formatters.ts";
 
 export const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchase, onClose }) => {
-    // Format money helper
-    const formatMoney = (amount: number): string => {
-        return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
-
-    // Format date helper
-    const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleDateString('el-GR');
-    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -73,12 +60,6 @@ export const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purc
                                 <div className="text-blue-900 font-semibold text-lg">
                                     {purchase.supplierName}
                                 </div>
-                                {purchase.supplierContact && (
-                                    <div className="flex items-center text-sm text-blue-700">
-                                        <Phone className="w-4 h-4 mr-2" />
-                                        {purchase.supplierContact}
-                                    </div>
-                                )}
                             </div>
                         </div>
 

@@ -8,18 +8,14 @@ import {
     PriceCalculationRequestDTO,
     PriceCalculationResponseDTO, SaleDetailedViewDTO,
 } from "../types/api/recordSaleInterface.ts";
-import { SaleSuccessModal } from '../components/ui/modals/sale/SaleSuccessModal.tsx';
+import { SaleSuccessModal } from '../components/ui/modals';
 import { CustomerSearchResultDTO } from "../types/api/customerInterface.ts";
-import { Button, LoadingSpinner, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import { FlexibleHeightCard } from "../components/ui";
+import { Button, LoadingSpinner, Alert, CustomCard, FlexibleHeightCard } from '../components/ui/common';
 import CartSummary from '../components/ui/cart/CartSummary.tsx';
 import CartItem from '../components/ui/cart/CartItem.tsx';
 import { ShoppingCart, User, MapPin, CreditCard, Package, Calculator, Mail, X, Calendar } from 'lucide-react';
 import {transformCustomersForDropdown, transformProductsForDropdown } from "../utils/searchDropdownTransformations.ts";
-
 import { CustomNumberInput, CustomDateInput, CustomRadioGroup, CustomSelect, CustomSearchDropdown } from "../components/ui/inputs";
-
 
 interface RecordSalePageProps {
     onNavigate: (page: string) => void;

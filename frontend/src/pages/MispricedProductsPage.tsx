@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
-import MispricedProductFilterPanel from '../components/ui/filterPanels/MispricedProductFilterPanel.tsx';
+import { Alert, CustomCard } from '../components/ui/common';
+import { EnhancedPaginationControls } from '../components/ui/pagination';
+import { MispricedProductFilterPanel } from '../components/ui/filterPanels';
 import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';

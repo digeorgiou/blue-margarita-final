@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, Edit, Trash2, Package, Ruler, AlertTriangle } from 'lucide-react';
 import { IoHammerOutline } from 'react-icons/io5';
-import { Button } from '../';
+import { Button } from '../../common';
 import type { MaterialCardProps } from "../../../types/components/resultCard-types.ts";
 import { formatCurrency, formatDate } from "../../../utils/formatters.ts";
 

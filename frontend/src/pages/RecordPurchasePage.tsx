@@ -6,11 +6,9 @@ import {
 import { PurchaseDetailedViewDTO } from "../types/api/purchaseInterface";
 import { SupplierSearchResultDTO } from "../types/api/supplierInterface";
 import { MaterialSearchResultDTO } from "../types/api/materialInterface";
-import { Button, LoadingSpinner, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import { FlexibleHeightCard } from "../components/ui";
+import { Button, LoadingSpinner, Alert, CustomCard, FlexibleHeightCard } from '../components/ui/common';
 import { ShoppingCart, Package, Calendar, Trash2, Truck, Mail, X } from 'lucide-react';
-import { PurchaseSuccessModal } from '../components/ui/modals/purchase/PurchaseSuccessModal.tsx';
+import { PurchaseSuccessModal } from '../components/ui/modals';
 import { materialService } from "../services/materialService.ts";
 import { CustomNumberInput, CustomDateInput, CustomSearchDropdown  } from "../components/ui/inputs";
 import { IoHammerOutline } from "react-icons/io5";

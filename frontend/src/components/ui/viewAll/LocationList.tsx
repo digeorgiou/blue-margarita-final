@@ -1,7 +1,6 @@
 import { LocationDropdownListProps } from "../../../types/components/dropdown-types.ts";
-import { LoadingSpinner, Button } from "../index.ts";
+import { LoadingSpinner, Button } from '../../common';
 import {Package, Eye, Trash2, Edit, MapPin} from 'lucide-react';
-
 
 const LocationList: React.FC<LocationDropdownListProps> = ({
                                                                            locations,

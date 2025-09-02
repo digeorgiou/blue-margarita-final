@@ -1,23 +1,7 @@
-// src/components/ui/EnhancedPaginationControls.tsx
-
 import React from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import PageSizeSelector from './PageSizeSelector.tsx';
-
-interface PaginationData {
-    currentPage: number;
-    totalPages: number;
-    totalElements: number;
-    pageSize: number;
-    numberOfElements: number;
-}
-
-interface EnhancedPaginationControlsProps {
-    paginationData: PaginationData;
-    onPageChange: (page: number) => void;
-    onPageSizeChange: (pageSize: number) => void;
-    className?: string;
-}
+import { PageSizeSelector } from '.';
+import { EnhancedPaginationControlsProps } from "../../../types/components/pagination-types.ts";
 
 const EnhancedPaginationControls: React.FC<EnhancedPaginationControlsProps> = ({
                                                                                    paginationData,

@@ -11,8 +11,7 @@ import {
     PieChart,
     Target,
 } from 'lucide-react';
-import { Button, Alert, LoadingSpinner } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
+import { Button, Alert, LoadingSpinner, CustomCard } from '../components/ui/common';
 import { CustomDateInput } from '../components/ui/inputs';
 import { productService } from '../services/productService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';

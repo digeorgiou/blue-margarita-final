@@ -1,6 +1,6 @@
 import React from 'react';
 import { Eye, Edit, Trash2, BarChart3 } from 'lucide-react';
-import { Button } from '../index.ts';
+import { Button } from '../../common';
 import { GiDiamondRing } from "react-icons/gi";
 import type { ProductCardProps } from "../../../types/components/resultCard-types.ts";
 import { formatCurrency } from "../../../utils/formatters.ts";

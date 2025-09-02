@@ -13,10 +13,10 @@ import { ProductUsageDTO } from '../../../../types/api/materialInterface';
 import { Paginated } from '../../../../types/api/dashboardInterface';
 import { materialService } from '../../../../services/materialService';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-import { ProductUsageModalProps } from '../../../../types/components/modal-types';
+import { MaterialProductUsageModalProps } from '../../../../types/components/modal-types';
 import { formatCurrency, formatNumber } from "../../../../utils/formatters.ts";
 
-const MaterialProductUsageModal: React.FC<ProductUsageModalProps> = ({
+const MaterialProductUsageModal: React.FC<MaterialProductUsageModalProps> = ({
                                                                  isOpen,
                                                                  onClose,
                                                                  material

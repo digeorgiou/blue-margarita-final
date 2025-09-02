@@ -34,6 +34,7 @@ import {
     SupplierReadOnlyDTO,
     SupplierUpdateDTO
 } from "../api/supplierInterface.ts";
+import React from "react";
 
 export type CategoryCreateModalProps = {
     isOpen: boolean;
@@ -129,7 +130,7 @@ export type MaterialDetailModalProps = {
     loading: boolean;
 }
 
-export type ProductUsageModalProps = {
+export type MaterialProductUsageModalProps = {
     isOpen: boolean;
     onClose: () => void;
     material: MaterialReadOnlyDTO | null;
@@ -182,6 +183,11 @@ export type PurchaseDetailModalProps = {
     loading: boolean;
 }
 
+export type PurchaseSuccessModalProps = {
+    purchase: PurchaseDetailedViewDTO;
+    onClose: () => void;
+}
+
 export type PurchaseUpdateModalProps = {
     isOpen: boolean;
     onClose: () => void;
@@ -194,6 +200,11 @@ export type SaleDetailModalProps = {
     onClose: () => void;
     saleDetails: SaleDetailedViewDTO | null;
     loading: boolean;
+}
+
+export type SaleSuccessModalProps = {
+    sale: SaleDetailedViewDTO;
+    onClose: () => void;
 }
 
 export type SaleUpdateModalProps = {
@@ -225,6 +236,18 @@ export type SupplierUpdateModalProps = {
     supplier: SupplierReadOnlyDTO | null;
 }
 
+export type TaskModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (taskData: { description: string; date: string }) => Promise<void>;
+    mode: 'create' | 'update';
+    initialData?: {
+        id?: number;
+        description?: string;
+        date?: string;
+    };
+}
+
 export type PriceRecalculationConfirmModalProps = {
     isOpen: boolean;
     onClose: () => void;
@@ -236,4 +259,43 @@ export type PriceRecalculationResultModalProps = {
     isOpen: boolean;
     onClose: () => void;
     result: PriceRecalculationResultDTO | null;
+}
+
+export type BaseFormModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    onSubmit: () => Promise<void>;
+    children: React.ReactNode;
+    submitText?: string;
+    cancelText?: string;
+    isValid?: boolean;
+}
+
+export type ConfirmDeleteModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => Promise<void>;
+    title: string;
+    message: string;
+    warningMessage?: string;
+    confirmText?: string;
+    cancelText?: string;
+}
+
+type UsageEntity = MaterialReadOnlyDTO | ProcedureReadOnlyDTO;
+
+export type ProductUsageModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    entity: UsageEntity | null;
+    entityType: 'material' | 'procedure';
+}
+
+export type SuccessModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    message: string;
+    actionText?: string;
 }

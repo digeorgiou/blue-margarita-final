@@ -1,16 +1,6 @@
 import React, { useState } from "react";
 import { Check, X } from 'lucide-react';
-import type { MispricedProductAlertDTO } from "../../../types/api/dashboardInterface";
-
-interface MispricedProductCardProps {
-    product: MispricedProductAlertDTO;
-    onUpdateRetailPrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
-    onUpdateWholesalePrice: (product: MispricedProductAlertDTO, newPrice: number) => Promise<void>;
-    updatingRetailPrice: boolean;
-    updatingWholesalePrice: boolean;
-    formatMoney: (amount: number) => string;
-    getPricingIssueTypeLabel: (issueType: string) => string;
-}
+import type { MispricedProductCardProps } from "../../../types/components/resultCard-types.ts";
 
 const MispricedProductCard: React.FC<MispricedProductCardProps> = ({
                                                                        product,

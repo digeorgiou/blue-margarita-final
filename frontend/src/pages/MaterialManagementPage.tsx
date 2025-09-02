@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, ProductUsageModal } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import { Button, Alert, CustomCard } from '../components/ui/common';
+import { ConfirmDeleteModal, ProductUsageModal, SuccessModal, MaterialCreateModal, MaterialDetailModal,MaterialUpdateModal } from '../components/ui/modals';
+import { MaterialFilterPanel } from '../components/ui/filterPanels'
+import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { materialService } from '../services/materialService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Plus } from 'lucide-react';
@@ -14,13 +13,6 @@ import type {
     MaterialUpdateDTO
 } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
-
-import { MaterialFilterPanel } from '../components/ui/filterPanels'
-
-
-import MaterialDetailModal from "../components/ui/modals/material/MaterialDetailModal.tsx";
-import MaterialUpdateModal from '../components/ui/modals/material/MaterialUpdateModal';
-import MaterialCreateModal from '../components/ui/modals/material/MaterialCreateModal';
 
 const MaterialManagementPage = () => {
     // Search and pagination state - simplified (following customer pattern)

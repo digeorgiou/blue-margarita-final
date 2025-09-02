@@ -4,8 +4,7 @@ import { procedureService } from '../services/procedureService';
 import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
 import { CustomTextInput, CustomNumberInput, CustomSelect, CustomSearchDropdown } from '../components/ui/inputs';
-import { Button, LoadingSpinner } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
+import { Button, LoadingSpinner, CustomCard } from '../components/ui/common';
 import {
     Trash2,
     Settings,
@@ -25,26 +24,13 @@ import type {
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
 import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
+import { HOURLY_LABOR_RATE, MINUTES_PER_HOUR, RETAIL_MARKUP_FACTOR, WHOLESALE_MARKUP_FACTOR } from "../constants/pricing.ts";
+import { PriceCalculation } from "../types/api/productInterface";
 
 interface UpdateProductPageProps {
     productId: number;
     onNavigate: (page: string, productId?: string, successMessage?: string) => void;
 }
-
-interface PriceCalculation {
-    materialCost: number;
-    laborCost: number;
-    procedureCost: number;
-    totalCost: number;
-    suggestedRetailPrice: number;
-    suggestedWholesalePrice: number;
-}
-
-// Constants matching backend exactly
-const HOURLY_LABOR_RATE = 7.0;
-const MINUTES_PER_HOUR = 60.0;
-const RETAIL_MARKUP_FACTOR = 3.0;
-const WHOLESALE_MARKUP_FACTOR = 1.86;
 
 const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavigate }) => {
     // Loading and error states

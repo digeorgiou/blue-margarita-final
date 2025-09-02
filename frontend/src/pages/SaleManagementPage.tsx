@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
+import { Button, Alert, CustomCard } from '../components/ui/common';
+import { ConfirmDeleteModal, SuccessModal, SaleDetailModal, SaleUpdateModal } from '../components/ui/modals';
+import { SaleFilterPanel } from '../components/ui/filterPanels'
+import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { saleService } from '../services/saleService';
 import { locationService } from '../services/locationService';
 import { categoryService } from '../services/categoryService';
@@ -21,13 +21,6 @@ import type { LocationForDropdownDTO } from '../types/api/locationInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 import type { CustomerSearchResultDTO } from '../types/api/customerInterface';
 import type { ProductSearchResultDTO } from '../types/api/productInterface';
-
-import { SaleFilterPanel } from '../components/ui/filterPanels'
-
-
-import SaleDetailModal from '../components/ui/modals/sale/SaleDetailModal';
-import SaleUpdateModal from '../components/ui/modals/sale/SaleUpdateModal';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 
 interface SaleManagementPageProps {
     onNavigate: (page: string) => void;

@@ -2,31 +2,7 @@ import React from 'react';
 import { Calendar, Filter } from 'lucide-react';
 import { Button, LoadingSpinner } from '../common';
 import { CustomSelect, CustomDateInput } from '../inputs';
-import type { ToDoTaskReadOnlyDTO } from '../../../types/api/dashboardInterface';
-
-interface TaskFilterPanelProps {
-    // Filter states
-    statusFilter: string;
-    onStatusFilterChange: (value: string | number) => void;
-    dateFromFilter: string;
-    onDateFromFilterChange: (value: string) => void;
-    dateToFilter: string;
-    onDateToFilterChange: (value: string) => void;
-
-    // Actions
-    onClearFilters: () => void;
-
-    // Results
-    searchResults: ToDoTaskReadOnlyDTO[];
-    loading: boolean;
-    onUpdateTask: (task: ToDoTaskReadOnlyDTO) => void;
-    onDeleteTask: (task: ToDoTaskReadOnlyDTO) => void;
-    onCompleteTask: (taskId: number) => void;
-    onRestoreTask: (taskId: number) => void;
-
-    // Children (for rendering task results)
-    children?: React.ReactNode;
-}
+import { TaskFilterPanelProps } from "../../../types/components/filterPanel-types.ts";
 
 const TaskFilterPanel: React.FC<TaskFilterPanelProps> = ({
                                                              statusFilter,

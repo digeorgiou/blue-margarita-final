@@ -4,9 +4,7 @@ import { procedureService } from '../services/procedureService';
 import { categoryService } from '../services/categoryService';
 import { materialService } from '../services/materialService';
 import { CustomTextInput, CustomNumberInput, CustomSelect, CustomSearchDropdown } from '../components/ui/inputs';
-import { Button, LoadingSpinner, Alert } from '../components/ui';
-import { FlexibleHeightCard } from "../components/ui";
-import CustomCard from '../components/ui/common/CustomCard.tsx';
+import { Button, LoadingSpinner, Alert, FlexibleHeightCard, CustomCard } from '../components/ui/common';
 import {
     Package,
     Trash2,
@@ -26,25 +24,12 @@ import type {
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
 import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
+import { PriceCalculation } from "../types/api/productInterface";
+import { HOURLY_LABOR_RATE, MINUTES_PER_HOUR, RETAIL_MARKUP_FACTOR, WHOLESALE_MARKUP_FACTOR } from "../constants/pricing.ts";
 
 interface CreateProductPageProps {
     onNavigate: (page: string, productId?: string, successMessage?: string) => void;
 }
-
-interface PriceCalculation {
-    materialCost: number;
-    laborCost: number;
-    procedureCost: number;
-    totalCost: number;
-    suggestedRetailPrice: number;
-    suggestedWholesalePrice: number;
-}
-
-// Constants matching backend exactly
-const HOURLY_LABOR_RATE = 7.0;
-const MINUTES_PER_HOUR = 60.0;
-const RETAIL_MARKUP_FACTOR = 3.0;
-const WHOLESALE_MARKUP_FACTOR = 1.86;
 
 const CreateProductPage: React.FC<CreateProductPageProps> = ({ onNavigate }) => {
     // Loading and error states

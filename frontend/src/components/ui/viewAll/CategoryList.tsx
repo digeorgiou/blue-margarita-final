@@ -1,8 +1,7 @@
 import React from 'react';
-import { Button, LoadingSpinner} from "../index.ts";
+import { Button, LoadingSpinner } from '../../common';
 import { Gem, Edit, Trash2, Eye } from 'lucide-react';
-import type { CategoryDropdownListProps} from "../../../types/components/dropdown-types.ts";
-
+import type { CategoryDropdownListProps } from "../../../types/components/dropdown-types.ts";
 
 const CategoryList: React.FC<CategoryDropdownListProps> = ({
                                                                            categories,

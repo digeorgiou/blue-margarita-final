@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Login from './pages/LoginPage';
 import { authService } from './services/authService';
-import { LoadingSpinner } from "./components/ui";
+import { LoadingSpinner } from "./components/ui/common";
 import Layout from "./components/ui/common/Layout.tsx"
 import Dashboard from "./pages/DashboardPage.tsx";
 import MispricedProductsPage from './pages/MispricedProductsPage';

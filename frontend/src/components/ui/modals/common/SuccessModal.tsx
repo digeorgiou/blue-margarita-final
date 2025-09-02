@@ -1,14 +1,7 @@
 import React from 'react';
 import { CheckCircle, X } from 'lucide-react';
-import { Button } from '../../index.ts';
-
-interface SuccessModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    title: string;
-    message: string;
-    actionText?: string;
-}
+import { Button } from '../../common';
+import { SuccessModalProps } from "../../../../types/components/modal-types.ts";
 
 const SuccessModal: React.FC<SuccessModalProps> = ({
                                                        isOpen,

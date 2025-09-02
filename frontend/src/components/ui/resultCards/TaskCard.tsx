@@ -1,17 +1,7 @@
 import React from 'react';
 import { Eye, Edit, Trash2, Calendar, CheckCircle, RotateCcw, Clock } from 'lucide-react';
-import { Button } from '../';
+import { Button } from '../../common';
 import { formatDate } from '../../../utils/formatters';
-import type { ToDoTaskReadOnlyDTO } from '../../../types/api/dashboardInterface';
-
-interface TaskCardProps {
-    task: ToDoTaskReadOnlyDTO;
-    onViewDetails?: (task: ToDoTaskReadOnlyDTO) => void;
-    onEdit: (task: ToDoTaskReadOnlyDTO) => void;
-    onDelete: (task: ToDoTaskReadOnlyDTO) => void;
-    onComplete: (taskId: number) => void;
-    onRestore: (taskId: number) => void;
-}
 
 const TaskCard: React.FC<TaskCardProps> = ({
                                                task,

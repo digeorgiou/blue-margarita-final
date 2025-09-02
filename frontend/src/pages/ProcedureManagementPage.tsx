@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, ProductUsageModal } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import { Button, Alert, CustomCard  } from '../components/ui/common';
+import { ConfirmDeleteModal, ProductUsageModal, SuccessModal, ProcedureCreateModal, ProcedureDetailModal, ProcedureUpdateModal } from '../components/ui/modals';
+import { EnhancedPaginationControls } from '../components/ui/pagination';
+import { ProcedureFilterPanel } from '../components/ui/filterPanels'
 import { procedureService } from '../services/procedureService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Plus } from 'lucide-react';
@@ -14,10 +13,6 @@ import type {
     ProcedureUpdateDTO
 } from '../types/api/procedureInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
-import { ProcedureFilterPanel } from '../components/ui/filterPanels'
-import ProcedureDetailModal from '../components/ui/modals/procedure/ProcedureDetailModal';
-import ProcedureUpdateModal from '../components/ui/modals/procedure/ProcedureUpdateModal';
-import ProcedureCreateModal from '../components/ui/modals/procedure/ProcedureCreateModal';
 
 const ProcedureManagementPage = () => {
     // Search and pagination state - simplified (following material pattern)

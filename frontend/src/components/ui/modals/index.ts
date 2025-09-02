@@ -41,6 +41,8 @@ export { default as SupplierCreateModal } from './supplier/SupplierCreateModal'
 export { default as SupplierDetailModal } from './supplier/SupplierDetailModal'
 export { default as SupplierUpdateModal } from './supplier/SupplierUpdateModal'
 
+export { default as TaskModal } from './task/TaskModal'
+
 export { default as BaseFormModal } from './common/BaseFormModal'
 export { default as ConfirmDeleteModal } from './common/ConfirmDeleteModal'
 export { default as ProductUsageModal } from './common/ProductUsageModal'

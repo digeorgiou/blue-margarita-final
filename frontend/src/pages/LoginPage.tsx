@@ -1,6 +1,5 @@
-// pages/Login/Login.tsx
 import React, { useState } from 'react';
-import { Button, Input, Alert, LoadingSpinner, Card } from '../components/ui';
+import { Button, Input, Alert, LoadingSpinner, Card } from '../components/ui/common';
 import { authService } from '../services/authService';
 
 interface LoginFormData {

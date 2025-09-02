@@ -5,9 +5,9 @@ import {
     ToDoTaskReadOnlyDTO,
     getPaymentMethodLabel,
 } from "../types/api/dashboardInterface.ts";
-import { Button, ListItem, LoadingSpinner, StatCard, TaskItem, QuickActions } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import TaskModal from "../components/ui/modals/TaskModal.tsx";
+import { Button, ListItem, LoadingSpinner, StatCard, TaskItem, QuickActions, CustomCard } from '../components/ui/common';
+import { TaskModal } from "../components/ui/modals";
+import { formatDate, formatMoney} from "../utils/formatters.ts";
 
 interface DashboardProps {
     onNavigate: (page: string) => void;
@@ -24,17 +24,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     const[isModalOpen, setIsModalOpen] = useState(false);
     const[modalMode, setModalMode] = useState<'create' | 'update'> ('create');
     const[selectedTask, setSelectedTask] = useState<ToDoTaskReadOnlyDTO | null>(null);
-
-    // Function to format money
-    const formatMoney = (amount: number): string => {
-        return `€${amount.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
-
-    // Function to format dates
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('el-GR');
-    };
 
     // Function to format task date with status
     const formatTaskDate = (task: ToDoTaskReadOnlyDTO): string => {

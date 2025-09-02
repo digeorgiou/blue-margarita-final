@@ -1,12 +1,5 @@
-// src/components/ui/PageSizeSelector.tsx
-
 import React from 'react';
-
-interface PageSizeSelectorProps {
-    currentPageSize: number;
-    onPageSizeChange: (newPageSize: number) => void;
-    className?: string;
-}
+import { PageSizeSelectorProps } from "../../../types/components/pagination-types.ts";
 
 const PageSizeSelector: React.FC<PageSizeSelectorProps> = ({
                                                                currentPageSize,

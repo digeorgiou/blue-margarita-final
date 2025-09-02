@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, CustomerDetailModal, CustomerUpdateModal, CustomerCreateModal} from '../components/ui';
+import { Button, Alert, CustomCard } from '../components/ui/common';
 import { CustomerFilterPanel } from '../components/ui/filterPanels'
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import { ConfirmDeleteModal, CustomerDetailModal, CustomerUpdateModal, CustomerCreateModal, SuccessModal } from '../components/ui/modals';
+import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { customerService } from '../services/customerService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { UserPlus } from 'lucide-react';

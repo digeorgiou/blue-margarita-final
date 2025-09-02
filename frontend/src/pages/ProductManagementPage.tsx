@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Calculator } from 'lucide-react';
-import { Button, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import { Button, Alert, CustomCard } from '../components/ui/common';
+import { ConfirmDeleteModal, SuccessModal, PriceRecalculationResultModal, PriceRecalculationConfirmModal } from '../components/ui/modals';
+import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { ProductFilterPanel } from '../components/ui/filterPanels'
 import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
@@ -16,9 +14,7 @@ import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
 import type { ProcedureForDropdownDTO } from '../types/api/procedureInterface';
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
-import {ProductDetailModal} from "../components/ui";
-import { PriceRecalculationResultModal } from '../components/ui';
-import { PriceRecalculationConfirmModal} from "../components/ui";
+import {ProductDetailModal} from "../components/ui/modals";
 import { PriceRecalculationResultDTO } from "../types/api/productInterface";
 
 interface ProductManagementPageProps {

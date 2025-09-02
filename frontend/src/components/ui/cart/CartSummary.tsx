@@ -1,7 +1,7 @@
 // Replace your CartSummary.tsx with this mobile-fixed version
 import React, { useState, useEffect } from 'react';
 import {Percent, ShoppingCart, Euro} from 'lucide-react';
-import { Button, LoadingSpinner } from '../index.ts';
+import { Button, LoadingSpinner } from '../common';
 import { CustomNumberInput } from "../inputs";
 import { CartSummaryProps } from "../../../types/components/cart-types.ts";
 

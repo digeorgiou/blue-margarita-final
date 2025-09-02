@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
-import TaskCard from '../components/ui/resultCards/TaskCard.tsx';
+import { Button, Alert, CustomCard } from '../components/ui/common';
+import { ConfirmDeleteModal, SuccessModal, TaskModal } from '../components/ui/modals';
+import { TaskFilterPanel } from '../components/ui/filterPanels';
+import { TaskCard } from '../components/ui/resultCards';
+import { EnhancedPaginationControls } from "../components/ui/pagination";
 import { dashboardService } from '../services/dashboardService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { DEFAULT_PAGE_SIZES} from "../constants/pagination.ts";
@@ -12,10 +12,6 @@ import type {
     ToDoTaskReadOnlyDTO,
     Paginated
 } from '../types/api/dashboardInterface';
-
-import TaskFilterPanel from '../components/ui/filterPanels/TaskFilterPanel';
-import TaskModal from '../components/ui/modals/TaskModal';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 
 interface AllTasksPageProps {
     onNavigate: (page: string) => void;

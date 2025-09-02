@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert, CategoryList, LoadingSpinner } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import CategoryCreateModal from '../components/ui/modals/category/CategoryCreateModal.tsx';
-import CategoryUpdateModal from '../components/ui/modals/category/CategoryUpdateModal.tsx';
-import CategoryDetailModal from '../components/ui/modals/category/CategoryDetailModal.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
+import { Button, Alert, CategoryList, LoadingSpinner, CustomCard } from '../components/ui/common';
+import { CategoryCreateModal, CategoryUpdateModal, CategoryDetailModal, ConfirmDeleteModal, SuccessModal } from '../components/ui/modals';
 import { categoryService } from '../services/categoryService';
 import { Gem, Plus } from 'lucide-react';
 import type {
@@ -13,8 +8,6 @@ import type {
     CategoryReadOnlyDTO,
     CategoryDetailedViewDTO
 } from '../types/api/categoryInterface';
-
-
 
 const CategoryManagementPage  = () => {
     // State management
@@ -299,5 +292,4 @@ const CategoryManagementPage  = () => {
     );
 };
 
-// Export both the page and the reusable components
 export default CategoryManagementPage;

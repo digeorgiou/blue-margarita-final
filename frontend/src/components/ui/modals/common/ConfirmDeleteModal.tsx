@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index.ts';
-
-interface ConfirmDeleteModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: () => Promise<void>;
-    title: string;
-    message: string;
-    warningMessage?: string;
-    confirmText?: string;
-    cancelText?: string;
-}
+import { Button, LoadingSpinner } from '../../common';
+import { ConfirmDeleteModalProps } from "../../../../types/components/modal-types.ts";
 
 const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                                                                    isOpen,

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
+import { Button, Alert, CustomCard } from '../components/ui/common';
+import { ConfirmDeleteModal, SuccessModal, SupplierCreateModal, SupplierDetailModal, SupplierUpdateModal } from '../components/ui/modals';
+import { EnhancedPaginationControls } from '../components/ui/pagination';
+import { SupplierFilterPanel } from '../components/ui/filterPanels'
 import { supplierService } from '../services/supplierService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { UserPlus } from 'lucide-react';
@@ -14,13 +13,6 @@ import type {
     SupplierUpdateDTO
 } from '../types/api/supplierInterface';
 import type { Paginated } from '../types/api/dashboardInterface';
-
-import { SupplierFilterPanel } from '../components/ui/filterPanels'
-
-
-import SupplierDetailModal from '../components/ui/modals/supplier/SupplierDetailModal';
-import SupplierUpdateModal from '../components/ui/modals/supplier/SupplierUpdateModal';
-import SupplierCreateModal from '../components/ui/modals/supplier/SupplierCreateModal';
 
 const SupplierManagementPage = () => {
     const [searchTerm, setSearchTerm] = useState('');

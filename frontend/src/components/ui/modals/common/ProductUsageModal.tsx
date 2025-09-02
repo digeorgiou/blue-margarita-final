@@ -9,7 +9,7 @@ import {
     ChevronRight,
     Cog
 } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index';
+import { Button, LoadingSpinner } from '../../common';
 import { MaterialReadOnlyDTO } from '../../../../types/api/materialInterface';
 import { ProcedureReadOnlyDTO } from '../../../../types/api/procedureInterface';
 import { ProductUsageDTO } from '../../../../types/api/materialInterface';
@@ -17,16 +17,8 @@ import { Paginated } from '../../../../types/api/dashboardInterface';
 import { materialService } from '../../../../services/materialService';
 import { procedureService } from '../../../../services/procedureService';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
-
-// Union type for the entity that can use products
-type UsageEntity = MaterialReadOnlyDTO | ProcedureReadOnlyDTO;
-
-interface ProductUsageModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    entity: UsageEntity | null;
-    entityType: 'material' | 'procedure';
-}
+import { ProductUsageModalProps } from "../../../../types/components/modal-types.ts";
+import { formatCurrency, formatNumber } from "../../../../utils/formatters.ts";
 
 const ProductUsageModal: React.FC<ProductUsageModalProps> = ({
                                                                  isOpen,
@@ -130,18 +122,6 @@ const ProductUsageModal: React.FC<ProductUsageModalProps> = ({
     const handlePageSizeChange = (newPageSize: number) => {
         setPageSize(newPageSize);
         setCurrentPage(0);
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('el-GR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
-
-    const formatNumber = (num: number) => {
-        return new Intl.NumberFormat('el-GR').format(num);
     };
 
     // Get styling based on entity type

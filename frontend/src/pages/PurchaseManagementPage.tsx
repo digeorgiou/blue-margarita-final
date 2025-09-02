@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
+import { Button, Alert, CustomCard } from '../components/ui/common';
+import { ConfirmDeleteModal, SuccessModal, PurchaseDetailModal, PurchaseUpdateModal } from '../components/ui/modals';
+import { PurchaseFilterPanel } from '../components/ui/filterPanels';
+import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { purchaseService } from '../services/purchaseService';
 import { supplierService } from '../services/supplierService';
 import { materialService } from '../services/materialService';
@@ -17,11 +17,6 @@ import type {
 } from '../types/api/purchaseInterface';
 import type { SupplierSearchResultDTO } from '../types/api/supplierInterface';
 import type { MaterialSearchResultDTO } from '../types/api/materialInterface';
-
-import PurchaseFilterPanel from '../components/ui/filterPanels/PurchaseFilterPanel';
-import PurchaseDetailModal from '../components/ui/modals/purchase/PurchaseDetailModal';
-import PurchaseUpdateModal from '../components/ui/modals/purchase/PurchaseUpdateModal';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 
 interface PurchaseManagementPageProps {
     onNavigate: (page: string) => void;

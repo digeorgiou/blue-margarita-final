@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { Button, LoadingSpinner } from '../../index.ts';
-
-interface BaseFormModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    title: string;
-    onSubmit: () => Promise<void>;
-    children: React.ReactNode;
-    submitText?: string;
-    cancelText?: string;
-    isValid?: boolean;
-}
+import { Button, LoadingSpinner } from '../../common';
+import { BaseFormModalProps } from "../../../../types/components/modal-types.ts";
 
 const BaseFormModal: React.FC<BaseFormModalProps> = ({
                                                          isOpen,

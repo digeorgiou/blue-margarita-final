@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input } from "../"
-
-interface TaskModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (taskData: { description: string; date: string }) => Promise<void>;
-    mode: 'create' | 'update';
-    initialData?: {
-        id?: number;
-        description?: string;
-        date?: string;
-    };
-}
+import { Button, Input } from '../../common';
+import { TaskModalProps } from "../../../../types/components/modal-types.ts";
 
 const TaskModal: React.FC<TaskModalProps> = ({
                                                  isOpen,

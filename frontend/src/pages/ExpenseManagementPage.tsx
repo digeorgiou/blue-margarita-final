@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Button, Alert } from '../components/ui';
-import CustomCard from '../components/ui/common/CustomCard.tsx';
-import ConfirmDeleteModal from '../components/ui/modals/common/ConfirmDeleteModal.tsx';
-import SuccessModal from '../components/ui/modals/common/SuccessModal.tsx';
+import { Button, Alert, CustomCard } from '../components/ui/common';
+import { ConfirmDeleteModal, SuccessModal, ExpenseCreateModal, ExpenseUpdateModal, ExpenseDetailModal } from '../components/ui/modals';
+import { ExpenseFilterPanel } from '../components/ui/filterPanels'
+import { CustomDateInput } from '../components/ui/inputs';
+import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { expenseService } from '../services/expenseService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Plus, BarChart3, Calendar, Filter } from 'lucide-react';
@@ -16,14 +17,6 @@ import type {
     ExpenseTypeDTO
 } from '../types/api/expenseInterface';
 import { formatCurrency, formatNumber } from "../utils/formatters.ts";
-
-// Import custom components
-import { ExpenseFilterPanel } from '../components/ui/filterPanels'
-import { CustomDateInput } from '../components/ui/inputs';
-import ExpenseDetailModal from '../components/ui/modals/expense/ExpenseDetailModal';
-import ExpenseUpdateModal from '../components/ui/modals/expense/ExpenseUpdateModal';
-import ExpenseCreateModal from '../components/ui/modals/expense/ExpenseCreateModal';
-import EnhancedPaginationControls from '../components/ui/pagination/EnhancedPaginationControls.tsx';
 import { getExpenseTypeDisplayName } from "../utils/EnumUtils.ts";
 
 const ExpenseManagementPage = () => {
