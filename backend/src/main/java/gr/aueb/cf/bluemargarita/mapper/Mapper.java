@@ -117,10 +117,10 @@ public class Mapper {
         existingCustomer.setFirstname(dto.firstname());
         existingCustomer.setLastname(dto.lastname());
         existingCustomer.setGender(dto.gender());
-        existingCustomer.setPhoneNumber(dto.phoneNumber());
-        existingCustomer.setAddress(dto.address());
-        existingCustomer.setEmail(dto.email());
-        existingCustomer.setTin(dto.tin());
+        existingCustomer.setPhoneNumber(normalizeOptionalStringField(dto.phoneNumber()));
+        existingCustomer.setAddress(normalizeOptionalStringField(dto.address()));
+        existingCustomer.setEmail(normalizeOptionalStringField(dto.email()));
+        existingCustomer.setTin(normalizeOptionalStringField(dto.tin()));
         return existingCustomer;
     }
 

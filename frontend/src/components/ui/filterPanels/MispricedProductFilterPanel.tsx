@@ -14,7 +14,7 @@ interface MispricedProductFilterPanelProps {
     selectedCategoryId: number | undefined;
     onCategoryIdChange: (value: number | undefined) => void;
     selectedIssueType: string | undefined;
-    onIssueTypeChange: (value: string | undefined) => void;
+    onIssueTypeChange: (value: string | number | undefined) => void;
     thresholdPercentage: number;
     onThresholdPercentageChange: (value: number) => void;
 

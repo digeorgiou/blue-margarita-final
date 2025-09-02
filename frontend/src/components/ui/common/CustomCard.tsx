@@ -1,7 +1,8 @@
 import React from 'react';
-import {DashboardCardProps} from "../../../types/components/dashboardCard.ts";
+import {CustomCardProps} from "../../../types/components/common-types.ts";
+import { heightClassesCustomCard } from "./config.tsx";
 
-const CustomCard: React.FC<DashboardCardProps> = ({
+const CustomCard: React.FC<CustomCardProps> = ({
                                                          title,
                                                          icon,
                                                          children,
@@ -11,15 +12,8 @@ const CustomCard: React.FC<DashboardCardProps> = ({
                                                          contentClassName = '',
                                                          height
                                                      }) => {
-    const heightClasses = {
-        sm: 'h-64',   // 256px
-        md: 'h-82',   // 320px
-        lg: 'h-96',   // 384px
-        xl: 'h-[28rem]' // 448px
-    };
-
     return (
-        <div className={`bg-gradient-to-br from-purple-200 to-blue-200 border border-blue-100/30 rounded-xl p-6 ${height ? heightClasses[height] : ''} flex flex-col ${className}`}>
+        <div className={`bg-gradient-to-br from-purple-200 to-blue-200 border border-blue-100/30 rounded-xl p-6 ${height ? heightClassesCustomCard[height] : ''} flex flex-col ${className}`}>
             {/* Header */}
             {title && icon && (
                 <div className="flex items-center justify-between mb-4 flex-shrink-0">

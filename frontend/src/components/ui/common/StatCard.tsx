@@ -1,4 +1,4 @@
-import type {StatCardProps} from "../../../types/components/statcard.ts";
+import type {StatCardProps} from "../../../types/components/common-types.ts";
 
 const StatCard= ({label, value , isBig = false, color = 'blue'} : StatCardProps)=>{
 

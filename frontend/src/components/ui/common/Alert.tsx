@@ -1,4 +1,5 @@
-import {AlertProps} from "../../../types/components/alert.ts";
+import {AlertProps} from "../../../types/components/common-types.ts";
+import { variantClassesAlert } from "./config.tsx";
 
 const Alert = ({
     children,
@@ -8,30 +9,7 @@ const Alert = ({
     title
                }: AlertProps) => {
 
-    const variantClasses = {
-        success: {
-            container: "bg-green-50 border-green-200 text-green-800",
-            icon: "✅",
-            iconColor: "text-green-500"
-        },
-        error: {
-            container: "bg-red-50 border-red-200 text-red-800",
-            icon: "❌",
-            iconColor: "text-red-500"
-        },
-        warning: {
-            container: "bg-yellow-50 border-yellow-200 text-yellow-800",
-            icon: "⚠️",
-            iconColor: "text-yellow-500"
-        },
-        info: {
-            container: "bg-blue-50 border-blue-200 text-blue-800",
-            icon: "ℹ️",
-            iconColor: "text-blue-500"
-        }
-    };
-
-    const config = variantClasses[variant];
+    const config = variantClassesAlert[variant];
 
     return (
         <div className={`

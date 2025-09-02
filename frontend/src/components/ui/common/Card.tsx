@@ -1,4 +1,4 @@
-import type {CardProps} from "../../../types/components/card.ts";
+import type {CardProps} from "../../../types/components/common-types.ts";
 
 const Card = ({ children, title, icon, className = ''} : CardProps) => {
     return (

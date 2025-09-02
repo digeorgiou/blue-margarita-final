@@ -306,11 +306,9 @@ public class ProductRestController {
             @RequestParam
             @DecimalMin(value = "0.001", message = "Quantity must be greater than 0")
             @Digits(integer = 4, fraction = 2, message = "Quantity can have up to 4 digits and 2 decimals")
-            BigDecimal quantity,
-            @Parameter(description = "User performing the operation")
-            @RequestParam Long updaterUserId) throws EntityNotFoundException, EntityInvalidArgumentException {
+            BigDecimal quantity) throws EntityNotFoundException, EntityInvalidArgumentException {
 
-        ProductListItemDTO product = productService.addMaterialToProduct(productId, materialId, quantity, updaterUserId);
+        ProductListItemDTO product = productService.addMaterialToProduct(productId, materialId, quantity);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
@@ -337,11 +335,9 @@ public class ProductRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ProductListItemDTO> removeMaterialFromProduct(
             @PathVariable Long productId,
-            @PathVariable Long materialId,
-            @Parameter(description = "User performing the operation")
-            @RequestParam Long updaterUserId) throws EntityNotFoundException {
+            @PathVariable Long materialId) throws EntityNotFoundException {
 
-        ProductListItemDTO product = productService.removeMaterialFromProduct(productId, materialId, updaterUserId);
+        ProductListItemDTO product = productService.removeMaterialFromProduct(productId, materialId);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
@@ -382,11 +378,9 @@ public class ProductRestController {
             @RequestParam
             @DecimalMin(value = "0.01", message = "Cost must be greater than 0")
             @Digits(integer = 4, fraction = 2, message = "Cost can have up to 4 digits and 2 decimals")
-            BigDecimal cost,
-            @Parameter(description = "User performing the operation")
-            @RequestParam Long updaterUserId) throws EntityNotFoundException, EntityInvalidArgumentException {
+            BigDecimal cost) throws EntityNotFoundException, EntityInvalidArgumentException {
 
-        ProductListItemDTO product = productService.addProcedureToProduct(productId, procedureId, cost, updaterUserId);
+        ProductListItemDTO product = productService.addProcedureToProduct(productId, procedureId, cost);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
@@ -413,11 +407,9 @@ public class ProductRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ProductListItemDTO> removeProcedureFromProduct(
             @PathVariable Long productId,
-            @PathVariable Long procedureId,
-            @Parameter(description = "User performing the operation")
-            @RequestParam Long updaterUserId) throws EntityNotFoundException {
+            @PathVariable Long procedureId) throws EntityNotFoundException {
 
-        ProductListItemDTO product = productService.removeProcedureFromProduct(productId, procedureId, updaterUserId);
+        ProductListItemDTO product = productService.removeProcedureFromProduct(productId, procedureId);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
@@ -552,10 +544,9 @@ public class ProductRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ProductListItemDTO> updateFinalRetailPrice(
             @PathVariable Long productId,
-            @RequestParam @DecimalMin("0.01") @Digits(integer = 8, fraction = 2) BigDecimal newPrice,
-            @RequestParam Long updaterUserId) throws EntityNotFoundException {
+            @RequestParam @DecimalMin("0.01") @Digits(integer = 8, fraction = 2) BigDecimal newPrice) throws EntityNotFoundException {
 
-        ProductListItemDTO result = productService.updateFinalRetailPrice(productId, newPrice, updaterUserId);
+        ProductListItemDTO result = productService.updateFinalRetailPrice(productId, newPrice);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -563,10 +554,9 @@ public class ProductRestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ProductListItemDTO> updateFinalWholesalePrice(
             @PathVariable Long productId,
-            @RequestParam @DecimalMin("0.01") @Digits(integer = 8, fraction = 2) BigDecimal newPrice,
-            @RequestParam Long updaterUserId) throws EntityNotFoundException {
+            @RequestParam @DecimalMin("0.01") @Digits(integer = 8, fraction = 2) BigDecimal newPrice) throws EntityNotFoundException {
 
-        ProductListItemDTO result = productService.updateFinalWholesalePrice(productId, newPrice, updaterUserId);
+        ProductListItemDTO result = productService.updateFinalWholesalePrice(productId, newPrice);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

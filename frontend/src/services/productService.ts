@@ -177,10 +177,10 @@ class ProductService {
     // MATERIAL RELATIONSHIP MANAGEMENT
     // =============================================================================
 
-    async addMaterialToProduct(productId: number, materialId: number, quantity: number, updaterUserId: number): Promise<ProductListItemDTO> {
+    async addMaterialToProduct(productId: number, materialId: number, quantity: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/materials/${materialId}?quantity=${quantity}&updaterUserId=${updaterUserId}`,
+                `${API_BASE_URL}/${productId}/materials/${materialId}?quantity=${quantity}`,
                 {
                     method: 'POST',
                     headers: this.getAuthHeaders()
@@ -194,10 +194,10 @@ class ProductService {
         }
     }
 
-    async removeMaterialFromProduct(productId: number, materialId: number, updaterUserId: number): Promise<ProductListItemDTO> {
+    async removeMaterialFromProduct(productId: number, materialId: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/materials/${materialId}?updaterUserId=${updaterUserId}`,
+                `${API_BASE_URL}/${productId}/materials/${materialId}`,
                 {
                     method: 'DELETE',
                     headers: this.getAuthHeaders()
@@ -215,10 +215,10 @@ class ProductService {
     // PROCEDURE RELATIONSHIP MANAGEMENT
     // =============================================================================
 
-    async addProcedureToProduct(productId: number, procedureId: number, cost: number, updaterUserId: number): Promise<ProductListItemDTO> {
+    async addProcedureToProduct(productId: number, procedureId: number, cost: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/procedures/${procedureId}?cost=${cost}&updaterUserId=${updaterUserId}`,
+                `${API_BASE_URL}/${productId}/procedures/${procedureId}?cost=${cost}`,
                 {
                     method: 'POST',
                     headers: this.getAuthHeaders()
@@ -232,10 +232,10 @@ class ProductService {
         }
     }
 
-    async removeProcedureFromProduct(productId: number, procedureId: number, updaterUserId: number): Promise<ProductListItemDTO> {
+    async removeProcedureFromProduct(productId: number, procedureId: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/procedures/${procedureId}?updaterUserId=${updaterUserId}`,
+                `${API_BASE_URL}/${productId}/procedures/${procedureId}`,
                 {
                     method: 'DELETE',
                     headers: this.getAuthHeaders()
@@ -463,10 +463,10 @@ class ProductService {
         }
     }
 
-    async updateFinalRetailPrice(productId: number, newPrice: number, updaterUserId: number): Promise<ProductListItemDTO> {
+    async updateFinalRetailPrice(productId: number, newPrice: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/final-retail-price?newPrice=${newPrice}&updaterUserId=${updaterUserId}`,
+                `${API_BASE_URL}/${productId}/final-retail-price?newPrice=${newPrice}`,
                 {
                     method: 'PUT',
                     headers: this.getAuthHeaders()
@@ -480,10 +480,10 @@ class ProductService {
         }
     }
 
-    async updateFinalWholesalePrice(productId: number, newPrice: number, updaterUserId: number): Promise<ProductListItemDTO> {
+    async updateFinalWholesalePrice(productId: number, newPrice: number): Promise<ProductListItemDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(
-                `${API_BASE_URL}/${productId}/final-wholesale-price?newPrice=${newPrice}&updaterUserId=${updaterUserId}`,
+                `${API_BASE_URL}/${productId}/final-wholesale-price?newPrice=${newPrice}`,
                 {
                     method: 'PUT',
                     headers: this.getAuthHeaders()

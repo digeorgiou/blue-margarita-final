@@ -1,6 +1,5 @@
-import Sidebar from "./Sidebar.tsx";
-import Header from "./Header.tsx";
-import {LayoutProps} from "../../../types/components/layout.ts";
+import { Header , Sidebar } from "./";
+import {LayoutProps} from "../../../types/components/common-types.ts";
 
 const Layout: React.FC<LayoutProps> = ({
                                            children,

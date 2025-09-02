@@ -110,11 +110,6 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
     // Track unsaved changes
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    // Current user ID (get from auth context)
-    const getCurrentUserId = (): number => {
-        return 1; // Replace with actual user ID logic
-    };
-
     // Load initial data and refresh when productId changes
     useEffect(() => {
         loadProductData();
@@ -448,7 +443,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
             for (const currentMaterial of currentMaterials) {
                 if (!selectedMaterials.some(m => m.materialId === currentMaterial.materialId)) {
                     console.log('Removing material:', currentMaterial.materialId);
-                    await productService.removeMaterialFromProduct(productId, currentMaterial.materialId, getCurrentUserId());
+                    await productService.removeMaterialFromProduct(productId, currentMaterial.materialId);
                 }
             }
 
@@ -457,7 +452,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                 const existingMaterial = currentMaterials.find(m => m.materialId === selectedMaterial.materialId);
                 if (!existingMaterial || existingMaterial.quantity !== selectedMaterial.quantity) {
                     console.log('Adding/updating material:', selectedMaterial.materialId, 'quantity:', selectedMaterial.quantity);
-                    await productService.addMaterialToProduct(productId, selectedMaterial.materialId, selectedMaterial.quantity, getCurrentUserId());
+                    await productService.addMaterialToProduct(productId, selectedMaterial.materialId, selectedMaterial.quantity);
                 }
             }
 
@@ -468,7 +463,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
             for (const currentProcedure of currentProcedures) {
                 if (!selectedProcedures.some(p => p.procedureId === currentProcedure.procedureId)) {
                     console.log('Removing procedure:', currentProcedure.procedureId);
-                    await productService.removeProcedureFromProduct(productId, currentProcedure.procedureId, getCurrentUserId());
+                    await productService.removeProcedureFromProduct(productId, currentProcedure.procedureId);
                 }
             }
 
@@ -477,7 +472,7 @@ const UpdateProductPage: React.FC<UpdateProductPageProps> = ({ productId, onNavi
                 const existingProcedure = currentProcedures.find(p => p.procedureId === selectedProcedure.procedureId);
                 if (!existingProcedure || existingProcedure.cost !== selectedProcedure.cost) {
                     console.log('Adding/updating procedure:', selectedProcedure.procedureId, 'cost:', selectedProcedure.cost);
-                    await productService.addProcedureToProduct(productId, selectedProcedure.procedureId, selectedProcedure.cost, getCurrentUserId());
+                    await productService.addProcedureToProduct(productId, selectedProcedure.procedureId, selectedProcedure.cost);
                 }
             }
 

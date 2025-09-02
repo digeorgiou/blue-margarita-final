@@ -285,7 +285,7 @@ public class ProductService implements IProductService{
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ProductListItemDTO addMaterialToProduct(Long productId, Long materialId,
-                                                   BigDecimal quantity, Long updaterUserId)
+                                                   BigDecimal quantity)
             throws EntityNotFoundException , EntityInvalidArgumentException {
 
         validateMaterialQuantity(quantity);
@@ -312,7 +312,7 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductListItemDTO  removeMaterialFromProduct(Long productId, Long materialId, Long updaterUserId)
+    public ProductListItemDTO  removeMaterialFromProduct(Long productId, Long materialId)
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(productId);
@@ -336,7 +336,7 @@ public class ProductService implements IProductService{
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ProductListItemDTO  addProcedureToProduct(Long productId, Long procedureId,
-                                                     BigDecimal cost, Long updaterUserId)
+                                                     BigDecimal cost)
             throws EntityNotFoundException , EntityInvalidArgumentException {
 
         validateProcedureCost(cost);
@@ -364,7 +364,7 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductListItemDTO  removeProcedureFromProduct(Long productId, Long procedureId, Long updaterUserId)
+    public ProductListItemDTO  removeProcedureFromProduct(Long productId, Long procedureId)
             throws EntityNotFoundException {
 
         Product product = getProductEntityById(productId);
@@ -493,7 +493,7 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductListItemDTO updateFinalRetailPrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException {
+    public ProductListItemDTO updateFinalRetailPrice(Long productId, BigDecimal newPrice) throws EntityNotFoundException {
         Product product = getProductEntityById(productId);
         User updater = userService.getCurrentUserOrThrow();
 
@@ -508,7 +508,7 @@ public class ProductService implements IProductService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductListItemDTO updateFinalWholesalePrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException {
+    public ProductListItemDTO updateFinalWholesalePrice(Long productId, BigDecimal newPrice) throws EntityNotFoundException {
         Product product = getProductEntityById(productId);
         User updater = userService.getCurrentUserOrThrow();
 

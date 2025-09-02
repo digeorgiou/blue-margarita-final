@@ -78,9 +78,7 @@ const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
         onChange(finalValue);
     };
 
-    const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        // On blur, ensure the value is properly rounded
-        // This handles cases where user types many decimal places
+    const handleInputBlur = () => {
         if (autoRoundDecimals && value) {
             const roundedValue = roundToDecimals(value, decimalPlaces);
             if (roundedValue !== value) {

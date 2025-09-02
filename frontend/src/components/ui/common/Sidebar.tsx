@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import {SidebarProps, NavigationItem} from "../../../types/components/sidebar.ts";
-
+import {SidebarProps, NavigationItem} from "../../../types/components/common-types.ts";
 import {
     ShoppingCart,
     Users,

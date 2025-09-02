@@ -163,12 +163,11 @@ public interface IProductService {
      * @param productId Product ID
      * @param materialId Material ID to add
      * @param quantity Quantity of material needed for this product
-     * @param updaterUserId User performing the operation
      * @return Updated product with new material relationship
      * @throws EntityNotFoundException if product, material, or user not found
      */
     ProductListItemDTO addMaterialToProduct(Long productId, Long materialId,
-                                            BigDecimal quantity, Long updaterUserId)
+                                            BigDecimal quantity)
             throws EntityNotFoundException , EntityInvalidArgumentException;
 
     /**
@@ -177,11 +176,10 @@ public interface IProductService {
      *
      * @param productId Product ID
      * @param materialId Material ID to remove
-     * @param updaterUserId User performing the operation
      * @return Updated product without the material relationship
      * @throws EntityNotFoundException if product, material, or user not found
      */
-    ProductListItemDTO removeMaterialFromProduct(Long productId, Long materialId, Long updaterUserId)
+    ProductListItemDTO removeMaterialFromProduct(Long productId, Long materialId)
             throws EntityNotFoundException;
 
     /**
@@ -191,12 +189,11 @@ public interface IProductService {
      * @param productId Product ID
      * @param procedureId Procedure ID to add
      * @param cost Cost of the procedure for this specific product
-     * @param updaterUserId User performing the operation
      * @return Updated product with new procedure relationship
      * @throws EntityNotFoundException if product, procedure, or user not found
      */
     ProductListItemDTO addProcedureToProduct(Long productId, Long procedureId,
-                                             BigDecimal cost, Long updaterUserId)
+                                             BigDecimal cost)
             throws EntityNotFoundException , EntityInvalidArgumentException;
 
     /**
@@ -205,11 +202,10 @@ public interface IProductService {
      *
      * @param productId Product ID
      * @param procedureId Procedure ID to remove
-     * @param updaterUserId User performing the operation
      * @return Updated product without the procedure relationship
      * @throws EntityNotFoundException if product, procedure, or user not found
      */
-    ProductListItemDTO removeProcedureFromProduct(Long productId, Long procedureId, Long updaterUserId)
+    ProductListItemDTO removeProcedureFromProduct(Long productId, Long procedureId)
             throws EntityNotFoundException;
 
     // =============================================================================
@@ -226,8 +222,8 @@ public interface IProductService {
      */
     PriceRecalculationResultDTO recalculateAllProductPrices() throws EntityNotFoundException;
 
-    ProductListItemDTO updateFinalRetailPrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException;
-    ProductListItemDTO updateFinalWholesalePrice(Long productId, BigDecimal newPrice, Long updaterUserId) throws EntityNotFoundException;
+    ProductListItemDTO updateFinalRetailPrice(Long productId, BigDecimal newPrice) throws EntityNotFoundException;
+    ProductListItemDTO updateFinalWholesalePrice(Long productId, BigDecimal newPrice) throws EntityNotFoundException;
 
     /**
      * Retrieves products where final selling prices are significantly different from suggested prices

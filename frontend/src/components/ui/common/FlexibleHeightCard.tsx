@@ -1,7 +1,7 @@
 import React from 'react';
-import {DashboardCardProps} from "../../../types/components/dashboardCard.ts";
+import {CustomCardProps} from "../../../types/components/common-types.ts";
 
-const FlexibleHeightCard: React.FC<DashboardCardProps> = ({
+const FlexibleHeightCard: React.FC<CustomCardProps> = ({
                                                               title,
                                                               icon,
                                                               children,

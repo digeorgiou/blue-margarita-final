@@ -2,20 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import {Percent, ShoppingCart, Euro} from 'lucide-react';
 import { Button, LoadingSpinner } from '../index.ts';
-import { PriceCalculationResponseDTO } from '../../../types/api/recordSaleInterface.ts';
 import { CustomNumberInput } from "../inputs";
-
-interface CartSummaryProps {
-    pricing: PriceCalculationResponseDTO;
-    userFinalPrice: number;
-    userDiscountPercentage: number;
-    onFinalPriceChange: (price: number) => void;
-    onDiscountPercentageChange: (percentage: number) => void;
-    formatMoney: (amount: number) => string;
-    onRecordSale: () => void;
-    submitting: boolean;
-    cartItemsCount: number;
-}
+import { CartSummaryProps } from "../../../types/components/cart-types.ts";
 
 const CartSummary: React.FC<CartSummaryProps> = ({
                                                      pricing,

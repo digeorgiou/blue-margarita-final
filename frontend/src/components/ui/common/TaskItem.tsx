@@ -1,5 +1,5 @@
-import type {TaskItemProps} from "../../types/components/taskitem";
-import {Button} from "./index.ts";
+import type {TaskItemProps} from "../../../types/components/common-types.ts";
+import { Button } from "./";
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete }) => {
     // Determine if task is overdue (assuming date format includes overdue info)

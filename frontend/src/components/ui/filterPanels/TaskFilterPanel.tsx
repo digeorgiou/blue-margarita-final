@@ -8,7 +8,7 @@ import type { ToDoTaskReadOnlyDTO } from '../../../types/api/dashboardInterface'
 interface TaskFilterPanelProps {
     // Filter states
     statusFilter: string;
-    onStatusFilterChange: (value: string) => void;
+    onStatusFilterChange: (value: string | number) => void;
     dateFromFilter: string;
     onDateFromFilterChange: (value: string) => void;
     dateToFilter: string;

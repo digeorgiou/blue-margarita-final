@@ -106,7 +106,7 @@ public class ProcedureService implements IProcedureService {
 
         Procedure procedure = getProcedureEntityById(id);
 
-        Integer productCount = productProcedureRepository.countByProductId(id);
+        Integer productCount = productProcedureRepository.countByProcedureId(id);
 
         if (productCount > 0) {
             // Soft Delete if procedure is used in any products

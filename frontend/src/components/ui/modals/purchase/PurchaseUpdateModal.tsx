@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Truck, Calendar, Edit } from 'lucide-react';
+import { X, Edit } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../';
 import { CustomSearchDropdown, CustomDateInput } from '../../inputs';
 import type { PurchaseReadOnlyDTO, PurchaseUpdateDTO } from '../../../../types/api/purchaseInterface';
 import type { SupplierSearchResultDTO } from '../../../../types/api/supplierInterface';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import { supplierService } from '../../../../services/supplierService';
-import { authService } from '../../../../services/authService';
 
 interface PurchaseUpdateModalProps {
     isOpen: boolean;
@@ -120,11 +119,8 @@ const PurchaseUpdateModal: React.FC<PurchaseUpdateModalProps> = ({
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {/* Supplier Selection */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            <Truck className="w-4 h-4 inline mr-1" />
-                            Προμηθευτής *
-                        </label>
                         <CustomSearchDropdown
+                            label={`Προμηθευτής`}
                             searchTerm={supplierSearchTerm}
                             onSearchTermChange={setSupplierSearchTerm}
                             searchResults={supplierSearchResults.map(supplier => ({
@@ -156,14 +152,11 @@ const PurchaseUpdateModal: React.FC<PurchaseUpdateModalProps> = ({
 
                     {/* Purchase Date */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            <Calendar className="w-4 h-4 inline mr-1" />
-                            Ημερομηνία Αγοράς *
-                        </label>
+
                         <CustomDateInput
+                            label={`Ημερομηνία Αγοράς`}
                             value={purchaseDate}
                             onChange={setPurchaseDate}
-                            placeholder="Επιλέξτε ημερομηνία..."
                             className="w-full"
                             required
                         />
@@ -182,7 +175,7 @@ const PurchaseUpdateModal: React.FC<PurchaseUpdateModalProps> = ({
                         <Button
                             type="button"
                             onClick={handleClose}
-                            variant="outline"
+                            variant="secondary"
                             className="flex-1"
                             disabled={loading}
                         >

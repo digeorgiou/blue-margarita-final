@@ -5,13 +5,9 @@ export { default as Card } from './common/Card.tsx';
 export { default as LoadingSpinner } from './common/LoadingSpinner.tsx';
 export { default as ListItem } from './common/ListItem.tsx';
 export { default as StatCard } from './common/StatCard.tsx';
-export { default as TaskItem } from './TaskItem';
-export { default as TaskStat } from './TaskStat';
+export { default as TaskItem } from './common/TaskItem.tsx';
 export { default as Sidebar } from './common/Sidebar.tsx';
 export { default as QuickActions } from './common/QuickActions.tsx';
-export { default as Logo } from './common/LogoImage.tsx';
-export { default as ErrorDisplay } from './common/ErrorDisplay.tsx';
-export { default as LowStockProductItem } from './LowStockProductItem';
 export { default as FlexibleHeightCard } from './common/FlexibleHeightCard.tsx'
 
 export { default as CartItem } from './cart/CartItem.tsx';

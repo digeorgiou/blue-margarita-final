@@ -79,15 +79,15 @@ public class CustomerService implements ICustomerService {
 
         Customer existingCustomer = getCustomerEntityById(dto.customerId());
 
-        if(!dto.email().equals(existingCustomer.getEmail())){
+        if(dto.email()!= null && !dto.email().trim().isEmpty() && !dto.email().equals(existingCustomer.getEmail())){
             validateUniqueEmail(dto.email());
         }
 
-        if(!dto.phoneNumber().equals(existingCustomer.getPhoneNumber())){
+        if(dto.phoneNumber()!= null && !dto.phoneNumber().trim().isEmpty() && !dto.phoneNumber().equals(existingCustomer.getPhoneNumber())){
             validateUniquePhoneNumber(dto.phoneNumber());
         }
 
-        if(!dto.tin().equals(existingCustomer.getTin())){
+        if(dto.tin()!= null && !dto.tin().trim().isEmpty() && !dto.tin().equals(existingCustomer.getTin())){
             validateUniqueTin(dto.tin());
         }
 

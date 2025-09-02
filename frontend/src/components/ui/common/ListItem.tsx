@@ -1,4 +1,4 @@
-import type {ListItemProps} from "../../../types/components/listitem.ts";
+import type {ListItemProps} from "../../../types/components/common-types.ts";
 
 const ListItem = ({
                       primaryText,

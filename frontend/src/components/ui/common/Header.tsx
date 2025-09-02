@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from './Button.tsx';
+import { Button } from './';
 import {
     LogOut,
     Home,
@@ -18,7 +18,7 @@ import {
 import { GiDiamondRing, GiPayMoney } from 'react-icons/gi';
 import { FaEuroSign } from "react-icons/fa6";
 import { IoHammerOutline } from "react-icons/io5";
-import {HeaderProps} from "../../../types/components/header.ts";
+import {HeaderProps} from "../../../types/components/common-types.ts";
 
 const Header: React.FC<HeaderProps> = ({
                                            onLogout,

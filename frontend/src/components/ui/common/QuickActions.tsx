@@ -1,7 +1,7 @@
 import React from 'react';
-import Button from './Button.tsx';
+import { Button } from './';
 import { HandCoins, Package, BarChart3 } from 'lucide-react';
-import {QuickActionsProps} from "../../../types/components/quickAction.ts";
+import {QuickActionsProps} from "../../../types/components/common-types.ts";
 
 const QuickActions: React.FC<QuickActionsProps> = ({
                                                        onRecordSale,

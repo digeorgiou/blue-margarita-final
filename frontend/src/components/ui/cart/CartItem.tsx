@@ -1,14 +1,6 @@
-// Replace your CartItem.tsx with this - it just fixes the problematic horizontal price line
 import React, { useState } from 'react';
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import { CartItemDTO } from '../../../types/api/recordSaleInterface.ts';
-
-interface CartItemProps {
-    item: CartItemDTO;
-    onUpdateQuantity: (quantity: number) => void;
-    onRemove: () => void;
-    formatMoney: (amount: number) => string;
-}
+import { CartItemProps } from "../../../types/components/cart-types.ts";
 
 const CartItem: React.FC<CartItemProps> = ({
                                                item,
