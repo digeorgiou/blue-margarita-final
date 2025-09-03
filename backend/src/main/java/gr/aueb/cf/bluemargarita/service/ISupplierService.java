@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.SupplierFilters;
@@ -42,6 +43,20 @@ public interface ISupplierService {
      * @throws EntityNotFoundException if supplier not found
      */
     void deleteSupplier(Long id) throws EntityNotFoundException;
+
+    /**
+     * Restores a soft-deleted supplier by making it active again
+     * Business Logic:
+     * 1. Validates supplier exists and is currently soft-deleted (isActive=false)
+     * 2. Sets isActive=true and deletedAt=null
+     * 3. Updates audit fields with current user and timestamp
+     *
+     * @param id Supplier ID to restore
+     * @return Restored supplier as DTO
+     * @throws EntityNotFoundException if supplier not found
+     * @throws IllegalStateException if supplier is already active
+     */
+    SupplierReadOnlyDTO restoreSupplier(Long id) throws EntityNotFoundException, EntityInvalidArgumentException;
 
     /**
      * Retrieves a supplier by ID

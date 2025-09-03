@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
@@ -112,6 +113,33 @@ public class UserService implements IUserService{
         user.setDeletedAt(LocalDateTime.now());
 
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserReadOnlyDTO restoreUser(Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User", "User with id " + id + " was not found"));
+
+        // Check if user is actually soft-deleted
+        if (user.getIsActive()) {
+            throw new EntityInvalidArgumentException("User", "User is already active and cannot be restored");
+        }
+
+        // Restore the user
+        user.setIsActive(true);
+        user.setDeletedAt(null);
+
+        User currentUser = getCurrentUserOrThrow();
+        user.setLastUpdatedBy(currentUser);
+
+        User restoredUser = userRepository.save(user);
+
+        LOGGER.info("User {} restored by user {}",
+                restoredUser.getUsername(),
+                currentUser.getUsername());
+
+        return mapper.mapToUserReadOnlyDTO(restoredUser);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -69,6 +70,20 @@ public interface IMaterialService {
      * @throws EntityNotFoundException if material not found
      */
     void deleteMaterial(Long id) throws EntityNotFoundException;
+
+    /**
+     * Restores a soft-deleted material by making it active again
+     * Business Logic:
+     * 1. Validates material exists and is currently soft-deleted (isActive=false)
+     * 2. Sets isActive=true and deletedAt=null
+     * 3. Updates audit fields with current user and timestamp
+     *
+     * @param id Material ID to restore
+     * @return Restored material as DTO
+     * @throws EntityNotFoundException if material not found
+     * @throws IllegalStateException if material is already active
+     */
+    MaterialReadOnlyDTO restoreMaterial(Long id) throws EntityNotFoundException, EntityInvalidArgumentException;
 
     /**
      * Retrieves a material by ID with basic information

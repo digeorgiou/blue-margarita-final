@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -73,6 +74,20 @@ public interface ILocationService {
      * @throws EntityNotFoundException if location not found
      */
     void deleteLocation(Long id) throws EntityNotFoundException;
+
+    /**
+     * Restores a soft-deleted location by making it active again
+     * Business Logic:
+     * 1. Validates location exists and is currently soft-deleted (isActive=false)
+     * 2. Sets isActive=true and deletedAt=null
+     * 3. Updates audit fields with current user and timestamp
+     *
+     * @param id Location ID to restore
+     * @return Restored location as DTO
+     * @throws EntityNotFoundException if location not found
+     * @throws IllegalStateException if location is already active
+     */
+    LocationReadOnlyDTO restoreLocation(Long id) throws EntityNotFoundException, EntityInvalidArgumentException;
 
     /**
      * Retrieves a location by ID with basic information

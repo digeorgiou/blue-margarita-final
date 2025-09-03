@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -116,6 +117,33 @@ public class LocationService implements ILocationService {
             LOGGER.info("Location {} hard deleted (not used in any sales)",
                     location.getName());
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public LocationReadOnlyDTO restoreLocation(Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        Location location = getLocationEntityById(id);
+
+        // Check if location is actually soft-deleted
+        if (location.getIsActive()) {
+            throw new EntityInvalidArgumentException("Location", "Location is already active and cannot be restored");
+        }
+
+        // Restore the location
+        location.setIsActive(true);
+        location.setDeletedAt(null);
+
+        User currentUser = userService.getCurrentUserOrThrow();
+        location.setLastUpdatedBy(currentUser);
+
+        Location restoredLocation = locationRepository.save(location);
+
+        LOGGER.info("Location {} restored by user {}",
+                restoredLocation.getName(),
+                currentUser.getUsername());
+
+        return mapper.mapToLocationReadOnlyDTO(restoredLocation);
     }
 
     @Override

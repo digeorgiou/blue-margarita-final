@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.SupplierFilters;
@@ -137,6 +138,33 @@ public class SupplierService implements ISupplierService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public SupplierReadOnlyDTO restoreSupplier(Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        Supplier supplier = getSupplierEntityById(id);
+
+        // Check if supplier is actually soft-deleted
+        if (supplier.getIsActive()) {
+            throw new EntityInvalidArgumentException("Supplier", "Supplier is already active and cannot be restored");
+        }
+
+        // Restore the supplier
+        supplier.setIsActive(true);
+        supplier.setDeletedAt(null);
+
+        User currentUser = userService.getCurrentUserOrThrow();
+        supplier.setLastUpdatedBy(currentUser);
+
+        Supplier restoredSupplier = supplierRepository.save(supplier);
+
+        LOGGER.info("Supplier {} restored by user {}",
+                restoredSupplier.getName(),
+                currentUser.getUsername());
+
+        return mapper.mapToSupplierReadOnlyDTO(restoredSupplier);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public SupplierReadOnlyDTO getSupplierById(Long id) throws EntityNotFoundException {
 
@@ -222,7 +250,7 @@ public class SupplierService implements ISupplierService {
         return supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new EntityNotFoundException("Supplier", "Supplier with id " + supplierId + " not found"));
     }
-    
+
     private void validateUniqueName(String name) throws EntityAlreadyExistsException {
         if( name != null && supplierRepository.existsByName(name)){
             throw new EntityAlreadyExistsException("Supplier", "Υπάρχει ήδη προμηθευτής με όνομα " + name);

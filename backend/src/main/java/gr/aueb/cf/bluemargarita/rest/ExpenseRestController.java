@@ -168,7 +168,7 @@ public class ExpenseRestController {
 
     @Operation(
             summary = "Delete an expense",
-            description = "Completely deletes an expense record. If the expense is linked to a purchase, it will be unlinked first. Requires ADMIN role.",
+            description = "Completely deletes an expense record. If the expense is linked to a purchase, it will be unlinked first.",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
@@ -182,7 +182,7 @@ public class ExpenseRestController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteExpense(@PathVariable Long id) throws EntityNotFoundException {
         expenseService.deleteExpense(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

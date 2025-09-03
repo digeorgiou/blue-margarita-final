@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CustomerFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -44,6 +45,20 @@ public interface ICustomerService {
      * @throws EntityNotFoundException if customer not found
      */
     void deleteCustomer(Long id) throws EntityNotFoundException;
+
+    /**
+     * Restores a soft-deleted customer by making it active again
+     * Business Logic:
+     * 1. Validates customer exists and is currently soft-deleted (isActive=false)
+     * 2. Sets isActive=true and deletedAt=null
+     * 3. Updates audit fields with current user and timestamp
+     *
+     * @param id Customer ID to restore
+     * @return Restored customer as DTO
+     * @throws EntityNotFoundException if customer not found
+     * @throws IllegalStateException if customer is already active
+     */
+    CustomerListItemDTO restoreCustomer(Long id) throws EntityNotFoundException, EntityInvalidArgumentException;
 
     // =============================================================================
     // CUSTOMER LISTING AND FILTERING (View Customers Page)

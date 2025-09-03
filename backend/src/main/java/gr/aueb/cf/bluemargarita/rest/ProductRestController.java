@@ -6,6 +6,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
+import gr.aueb.cf.bluemargarita.dto.procedure.ProcedureReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.product.*;
 import gr.aueb.cf.bluemargarita.service.IProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -134,7 +135,7 @@ public class ProductRestController {
 
     @Operation(
             summary = "Delete product",
-            description = "Deletes a product. Performs soft delete if product has sales history, hard delete otherwise. Requires ADMIN role.",
+            description = "Deletes a product. Performs soft delete if product has sales history, hard delete otherwise.",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
@@ -148,11 +149,37 @@ public class ProductRestController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) throws EntityNotFoundException {
         productService.deleteProduct(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @Operation(
+            summary = "Restore a soft-deleted product",
+            description = "Restores a soft-deleted product by making it active again. Only accessible by admins.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "product restored successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = ProductListItemDTO.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "product not found"
+                    ),
+                    @ApiResponse(responseCode = "400", description = "product is already active"
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"
+                    )
+            }
+    )
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductListItemDTO> restoreProduct(@PathVariable Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        ProductListItemDTO restoredProduct = productService.restoreProduct(id);
+        return ResponseEntity.ok(restoredProduct);
+    }
+
 
     // =============================================================================
     // PRODUCT VIEWING AND LISTING - FOR PRODUCT MANAGEMENT PAGE

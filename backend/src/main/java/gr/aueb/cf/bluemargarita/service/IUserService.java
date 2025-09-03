@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
@@ -38,6 +39,20 @@ public interface IUserService {
      * @throws EntityNotFoundException if user not found
      */
     void deleteUser(Long id) throws EntityNotFoundException;
+
+    /**
+     * Restores a soft-deleted user by making it active again
+     * Business Logic:
+     * 1. Validates user exists and is currently soft-deleted (isActive=false)
+     * 2. Sets isActive=true and deletedAt=null
+     * 3. Updates audit fields with current user and timestamp
+     *
+     * @param id User ID to restore
+     * @return Restored user as DTO
+     * @throws EntityNotFoundException if user not found
+     * @throws IllegalStateException if user is already active
+     */
+    UserReadOnlyDTO restoreUser(Long id) throws EntityNotFoundException, EntityInvalidArgumentException;
 
     /**
      * Retrieves a user by ID

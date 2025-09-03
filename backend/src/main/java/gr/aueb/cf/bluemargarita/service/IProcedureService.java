@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
@@ -73,6 +74,20 @@ public interface IProcedureService {
      * @throws EntityNotFoundException if procedure not found
      */
     void deleteProcedure(Long id) throws EntityNotFoundException;
+
+    /**
+     * Restores a soft-deleted procedure by making it active again
+     * Business Logic:
+     * 1. Validates procedure exists and is currently soft-deleted (isActive=false)
+     * 2. Sets isActive=true and deletedAt=null
+     * 3. Updates audit fields with current user and timestamp
+     *
+     * @param id Procedure ID to restore
+     * @return Restored procedure as DTO
+     * @throws EntityNotFoundException if procedure not found
+     * @throws IllegalStateException if procedure is already active
+     */
+    ProcedureReadOnlyDTO restoreProcedure(Long id) throws EntityNotFoundException, EntityInvalidArgumentException;
 
     /**
      * Retrieves a procedure by ID with basic information

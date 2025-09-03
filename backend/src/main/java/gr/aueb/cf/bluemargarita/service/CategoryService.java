@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -134,6 +135,33 @@ public class CategoryService implements ICategoryService{
                     category.getName());
         }
 
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CategoryReadOnlyDTO restoreCategory(Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        Category category = getCategoryEntityById(id);
+
+        // Check if category is actually soft-deleted
+        if (category.getIsActive()) {
+            throw new EntityInvalidArgumentException("Category", "Category is already active and cannot be restored");
+        }
+
+        // Restore the category
+        category.setIsActive(true);
+        category.setDeletedAt(null);
+
+        User currentUser = userService.getCurrentUserOrThrow();
+        category.setLastUpdatedBy(currentUser);
+
+        Category restoredCategory = categoryRepository.save(category);
+
+        LOGGER.info("Category {} restored by user {}",
+                restoredCategory.getName(),
+                currentUser.getUsername());
+
+        return mapper.mapToCategoryReadOnlyDTO(restoredCategory);
     }
 
     @Override

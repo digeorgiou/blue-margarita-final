@@ -6,6 +6,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.SupplierFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.dto.product.ProductListItemDTO;
 import gr.aueb.cf.bluemargarita.dto.supplier.*;
 import gr.aueb.cf.bluemargarita.service.SupplierService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -129,7 +130,7 @@ public class SupplierRestController {
 
     @Operation(
             summary = "Delete supplier",
-            description = "Deletes a supplier. Performs soft delete if supplier has purchases, hard delete otherwise. Requires ADMIN role.",
+            description = "Deletes a supplier. Performs soft delete if supplier has purchases, hard delete otherwise.",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
@@ -143,10 +144,35 @@ public class SupplierRestController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteSupplier(@PathVariable Long id) throws EntityNotFoundException {
         supplierService.deleteSupplier(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Operation(
+            summary = "Restore a soft-deleted supplier",
+            description = "Restores a soft-deleted supplier by making it active again. Only accessible by admins.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "supplier restored successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = SupplierReadOnlyDTO.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "supplier not found"
+                    ),
+                    @ApiResponse(responseCode = "400", description = "supplier is already active"
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"
+                    )
+            }
+    )
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SupplierReadOnlyDTO> restoreSupplier(@PathVariable Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        SupplierReadOnlyDTO restoredSupplier = supplierService.restoreSupplier(id);
+        return ResponseEntity.ok(restoredSupplier);
     }
 
     @Operation(

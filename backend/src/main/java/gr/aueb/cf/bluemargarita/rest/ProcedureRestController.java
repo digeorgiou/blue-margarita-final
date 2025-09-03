@@ -1,11 +1,13 @@
 package gr.aueb.cf.bluemargarita.rest;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
+import gr.aueb.cf.bluemargarita.dto.material.MaterialReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.material.MaterialSearchResultDTO;
 import gr.aueb.cf.bluemargarita.dto.procedure.*;
 import gr.aueb.cf.bluemargarita.dto.product.PriceRecalculationResultDTO;
@@ -131,7 +133,7 @@ public class ProcedureRestController {
 
     @Operation(
             summary = "Delete procedure",
-            description = "Deletes a procedure. Performs soft delete if procedure is used in products, hard delete otherwise. Requires ADMIN role.",
+            description = "Deletes a procedure. Performs soft delete if procedure is used in products, hard delete otherwise.",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
@@ -145,10 +147,35 @@ public class ProcedureRestController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteProcedure(@PathVariable Long id) throws EntityNotFoundException {
         procedureService.deleteProcedure(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Operation(
+            summary = "Restore a soft-deleted procedure",
+            description = "Restores a soft-deleted procedure by making it active again. Only accessible by admins.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "procedure restored successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = ProcedureReadOnlyDTO.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "procedure not found"
+                    ),
+                    @ApiResponse(responseCode = "400", description = "procedure is already active"
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"
+                    )
+            }
+    )
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProcedureReadOnlyDTO> restoreProcedure(@PathVariable Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        ProcedureReadOnlyDTO restoredProcedure = procedureService.restoreProcedure(id);
+        return ResponseEntity.ok(restoredProcedure);
     }
 
     @Operation(

@@ -1,10 +1,8 @@
 package gr.aueb.cf.bluemargarita.rest;
 
 import gr.aueb.cf.bluemargarita.core.enums.Role;
-import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
-import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotAuthorizedException;
-import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
-import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
+import gr.aueb.cf.bluemargarita.core.exceptions.*;
+import gr.aueb.cf.bluemargarita.dto.supplier.SupplierReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserUpdateDTO;
@@ -20,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -196,8 +195,33 @@ public class UserRestController {
             }
     )
     @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) throws EntityNotFoundException {
         userService.deleteUser(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Operation(
+            summary = "Restore a soft-deleted user",
+            description = "Restores a soft-deleted user by making it active again. Only accessible by admins.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "user restored successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = UserReadOnlyDTO.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "user not found"
+                    ),
+                    @ApiResponse(responseCode = "400", description = "user is already active"
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"
+                    )
+            }
+    )
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserReadOnlyDTO> restoreUser(@PathVariable Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+        UserReadOnlyDTO restoredUser = userService.restoreUser(id);
+        return ResponseEntity.ok(restoredUser);
     }
 }

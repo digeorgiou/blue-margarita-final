@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -135,6 +136,33 @@ public class MaterialService implements IMaterialService {
             materialRepository.delete(material);
             LOGGER.info("Material {} hard deleted (not used in any purchases or products)", material.getName());
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MaterialReadOnlyDTO restoreMaterial(Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        Material material = getMaterialEntityById(id);
+
+        // Check if material is actually soft-deleted
+        if (material.getIsActive()) {
+            throw new EntityInvalidArgumentException( "Material", "Material is already active and cannot be restored");
+        }
+
+        // Restore the material
+        material.setIsActive(true);
+        material.setDeletedAt(null);
+
+        User currentUser = userService.getCurrentUserOrThrow();
+        material.setLastUpdatedBy(currentUser);
+
+        Material restoredMaterial = materialRepository.save(material);
+
+        LOGGER.info("Material {} restored by user {}",
+                restoredMaterial.getName(),
+                currentUser.getUsername());
+
+        return mapper.mapToMaterialReadOnlyDTO(restoredMaterial);
     }
 
     @Override

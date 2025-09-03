@@ -1,11 +1,14 @@
 package gr.aueb.cf.bluemargarita.rest;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.CustomerDetailedViewDTO;
+import gr.aueb.cf.bluemargarita.dto.customer.CustomerListItemDTO;
 import gr.aueb.cf.bluemargarita.dto.location.*;
 import gr.aueb.cf.bluemargarita.service.ILocationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -123,7 +126,7 @@ public class LocationRestController {
 
     @Operation(
             summary = "Delete location",
-            description = "Deletes a location. Performs soft delete if location has sales history, hard delete otherwise. Requires ADMIN role.",
+            description = "Deletes a location. Performs soft delete if location has sales history, hard delete otherwise.",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
@@ -137,10 +140,35 @@ public class LocationRestController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) throws EntityNotFoundException {
         locationService.deleteLocation(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Operation(
+            summary = "Restore a soft-deleted location",
+            description = "Restores a soft-deleted location by making it active again. Only accessible by admins.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "location restored successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = LocationReadOnlyDTO.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "location not found"
+                    ),
+                    @ApiResponse(responseCode = "400", description = "location is already active"
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"
+                    )
+            }
+    )
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<LocationReadOnlyDTO> restoreLocation(@PathVariable Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        LocationReadOnlyDTO restoredLocation = locationService.restoreLocation(id);
+        return ResponseEntity.ok(restoredLocation);
     }
 
     @Operation(

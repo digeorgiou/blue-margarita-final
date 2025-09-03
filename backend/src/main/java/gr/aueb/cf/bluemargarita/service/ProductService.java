@@ -190,6 +190,36 @@ public class ProductService implements IProductService{
         }
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProductListItemDTO restoreProduct(Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        Product product = getProductEntityById(id);
+
+        // Check if product is actually soft-deleted
+        if (product.getIsActive()) {
+            throw new EntityInvalidArgumentException("Product", "Product is already active and cannot be restored");
+        }
+
+        // Restore the product
+        product.setIsActive(true);
+        product.setDeletedAt(null);
+
+        User currentUser = userService.getCurrentUserOrThrow();
+        product.setLastUpdatedBy(currentUser);
+
+        Product restoredProduct = productRepository.save(product);
+
+        // Get product data for enhanced DTO
+        ProductCostDataDTO data = getDataDTOForProduct(restoredProduct);
+
+        LOGGER.info("Product {} restored by user {}",
+                restoredProduct.getCode(),
+                currentUser.getUsername());
+
+        return mapper.mapToProductListItemDTO(restoredProduct, data);
+    }
+
     // =============================================================================
     // PRODUCT MANAGEMENT AND DETAILED VIEW
     // =============================================================================

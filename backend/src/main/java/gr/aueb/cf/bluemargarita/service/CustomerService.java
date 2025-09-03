@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CustomerFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -128,6 +129,34 @@ public class CustomerService implements ICustomerService {
             customerRepository.delete(customer);
             LOGGER.info("Customer {} hard deleted (no sales history)", customer.getFullName());
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CustomerListItemDTO restoreCustomer(Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        Customer customer = getCustomerEntityById(id);
+
+        // Check if customer is actually soft-deleted
+        if (customer.getIsActive()) {
+            throw new EntityInvalidArgumentException("Customer", "Customer is already active and cannot be restored");
+        }
+
+        // Restore the customer
+        customer.setIsActive(true);
+        customer.setDeletedAt(null);
+
+        User currentUser = userService.getCurrentUserOrThrow();
+        customer.setLastUpdatedBy(currentUser);
+
+        Customer restoredCustomer = customerRepository.save(customer);
+
+        LOGGER.info("Customer {} {} restored by user {}",
+                restoredCustomer.getFirstname(),
+                restoredCustomer.getLastname(),
+                currentUser.getUsername());
+
+        return mapper.mapToCustomerListItemDTO(restoredCustomer);
     }
 
     @Override

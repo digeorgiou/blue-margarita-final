@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.CategoryFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
@@ -42,6 +43,20 @@ public interface ICategoryService {
      * @throws EntityNotFoundException if category not found
      */
     void deleteCategory(Long id) throws EntityNotFoundException;
+
+    /**
+     * Restores a soft-deleted category by making it active again
+     * Business Logic:
+     * 1. Validates category exists and is currently soft-deleted (isActive=false)
+     * 2. Sets isActive=true and deletedAt=null
+     * 3. Updates audit fields with current user and timestamp
+     *
+     * @param id Category ID to restore
+     * @return Restored category as DTO
+     * @throws EntityNotFoundException if category not found
+     * @throws IllegalStateException if category is already active
+     */
+    CategoryReadOnlyDTO restoreCategory(Long id) throws EntityNotFoundException, EntityInvalidArgumentException;
 
     /**
      * Retrieves a category by ID

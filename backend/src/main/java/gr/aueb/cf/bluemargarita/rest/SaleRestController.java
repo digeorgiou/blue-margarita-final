@@ -90,7 +90,7 @@ public class SaleRestController {
 
     @Operation(
             summary = "Delete a sale",
-            description = "Completely deletes a sale and restores stock for all products. This is a hard delete operation. Requires ADMIN role.",
+            description = "Completely deletes a sale and restores stock for all products. This is a hard delete operation.",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
@@ -104,7 +104,7 @@ public class SaleRestController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteSale(@PathVariable Long id) throws EntityNotFoundException {
         saleService.deleteSale(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

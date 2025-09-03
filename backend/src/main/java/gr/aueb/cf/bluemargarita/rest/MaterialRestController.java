@@ -1,11 +1,13 @@
 package gr.aueb.cf.bluemargarita.rest;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.MaterialFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProductFilters;
+import gr.aueb.cf.bluemargarita.dto.location.LocationReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.material.*;
 import gr.aueb.cf.bluemargarita.dto.product.PriceRecalculationResultDTO;
 import gr.aueb.cf.bluemargarita.dto.product.ProductUsageDTO;
@@ -130,7 +132,7 @@ public class MaterialRestController {
 
     @Operation(
             summary = "Delete material",
-            description = "Deletes a material. Performs soft delete if material is used in purchases or products, hard delete otherwise. Requires ADMIN role.",
+            description = "Deletes a material. Performs soft delete if material is used in purchases or products, hard delete otherwise.",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
@@ -144,10 +146,35 @@ public class MaterialRestController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteMaterial(@PathVariable Long id) throws EntityNotFoundException {
         materialService.deleteMaterial(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Operation(
+            summary = "Restore a soft-deleted material",
+            description = "Restores a soft-deleted material by making it active again. Only accessible by admins.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "material restored successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MaterialReadOnlyDTO.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "material not found"
+                    ),
+                    @ApiResponse(responseCode = "400", description = "material is already active"
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"
+                    )
+            }
+    )
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MaterialReadOnlyDTO> restoreMaterial(@PathVariable Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        MaterialReadOnlyDTO restoredMaterial = materialService.restoreMaterial(id);
+        return ResponseEntity.ok(restoredMaterial);
     }
 
     @Operation(

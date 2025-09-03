@@ -1,6 +1,7 @@
 package gr.aueb.cf.bluemargarita.service;
 
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
+import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
 import gr.aueb.cf.bluemargarita.core.filters.ProcedureFilters;
@@ -125,6 +126,33 @@ public class ProcedureService implements IProcedureService {
             procedureRepository.delete(procedure);
             LOGGER.info("Procedure {} hard deleted (not used in any products)", procedure.getName());
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProcedureReadOnlyDTO restoreProcedure(Long id) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        Procedure procedure = getProcedureEntityById(id);
+
+        // Check if procedure is actually soft-deleted
+        if (procedure.getIsActive()) {
+            throw new EntityInvalidArgumentException("Procedure", "Procedure is already active and cannot be restored");
+        }
+
+        // Restore the procedure
+        procedure.setIsActive(true);
+        procedure.setDeletedAt(null);
+
+        User currentUser = userService.getCurrentUserOrThrow();
+        procedure.setLastUpdatedBy(currentUser);
+
+        Procedure restoredProcedure = procedureRepository.save(procedure);
+
+        LOGGER.info("Procedure {} restored by user {}",
+                restoredProcedure.getName(),
+                currentUser.getUsername());
+
+        return mapper.mapToProcedureReadOnlyDTO(restoredProcedure);
     }
 
     @Override

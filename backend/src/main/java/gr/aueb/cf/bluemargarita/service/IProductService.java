@@ -69,6 +69,21 @@ public interface IProductService {
      */
     void deleteProduct(Long id) throws EntityNotFoundException;
 
+    /**
+     * Restores a soft-deleted product by making it active again
+     * Business Logic:
+     * 1. Validates product exists and is currently soft-deleted (isActive=false)
+     * 2. Sets isActive=true and deletedAt=null
+     * 3. Updates audit fields with current user and timestamp
+     * 4. Recalculates product data for return DTO
+     *
+     * @param id Product ID to restore
+     * @return Restored product as enhanced list item DTO
+     * @throws EntityNotFoundException if product not found
+     * @throws IllegalStateException if product is already active
+     */
+    ProductListItemDTO restoreProduct(Long id) throws EntityNotFoundException, EntityInvalidArgumentException;
+
     // =============================================================================
     // PRODUCT LISTING AND FILTERING (View Products Page)
     // =============================================================================

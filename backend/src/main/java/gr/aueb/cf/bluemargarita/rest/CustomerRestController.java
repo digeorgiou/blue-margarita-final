@@ -6,6 +6,7 @@ import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
 import gr.aueb.cf.bluemargarita.core.exceptions.ValidationException;
 import gr.aueb.cf.bluemargarita.core.filters.CustomerFilters;
 import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.dto.category.CategoryReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.customer.*;
 import gr.aueb.cf.bluemargarita.service.CustomerService;
 import gr.aueb.cf.bluemargarita.service.ICustomerService;
@@ -142,7 +143,7 @@ public class CustomerRestController {
 
     @Operation(
             summary = "Delete customer",
-            description = "Deletes a customer. Performs soft delete if customer has sales history, hard delete otherwise. Requires ADMIN role.",
+            description = "Deletes a customer. Performs soft delete if customer has sales history, hard delete otherwise.",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
@@ -166,11 +167,37 @@ public class CustomerRestController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) throws EntityNotFoundException {
         customerService.deleteCustomer(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @Operation(
+            summary = "Restore a soft-deleted customer",
+            description = "Restores a soft-deleted customer by making it active again. Only accessible by admins.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Customer restored successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = CustomerListItemDTO.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "Customer not found"
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Customer is already active"
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"
+                    )
+            }
+    )
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CustomerListItemDTO > restoreCustomer(@PathVariable Long id) throws EntityNotFoundException, EntityInvalidArgumentException{
+
+        CustomerListItemDTO restoredCustomer = customerService.restoreCustomer(id);
+        return ResponseEntity.ok(restoredCustomer);
+    }
+
 
     @Operation(
             summary = "Get customer by ID",
