@@ -12,7 +12,9 @@ const SupplierFilterPanel: React.FC<SupplierFilterPanelProps> = ({
                                                                  loading,
                                                                  onViewDetails,
                                                                  onEdit,
-                                                                 onDelete
+                                                                 onDelete,
+                                                                 showInactiveOnly = false,
+                                                                 onRestore
                                                              }) => {
     return (
         <div className="space-y-6">
@@ -60,6 +62,8 @@ const SupplierFilterPanel: React.FC<SupplierFilterPanelProps> = ({
                                 onViewDetails={onViewDetails}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
+                                showInactiveOnly={showInactiveOnly}
+                                onRestore={onRestore}
                             />
                         ))}
                     </div>

@@ -42,6 +42,8 @@ const ProductFilterPanel: React.FC<ProductFilterPanelProps> = ({
                                                                    onEdit,
                                                                    onDelete,
                                                                    onAnalytics,
+                                                                   showInactiveOnly = false,
+                                                                   onRestore,
                                                                    children
                                                                }) => {
 
@@ -243,6 +245,8 @@ const ProductFilterPanel: React.FC<ProductFilterPanelProps> = ({
                                 onEdit={onEdit}
                                 onDelete={onDelete}
                                 onAnalytics={onAnalytics}
+                                showInactiveOnly={showInactiveOnly}
+                                onRestore={onRestore}
                             />
                         ))}
                     </div>

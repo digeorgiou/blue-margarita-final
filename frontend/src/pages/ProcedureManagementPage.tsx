@@ -4,6 +4,8 @@ import { ConfirmDeleteModal, ProductUsageModal, SuccessModal, ProcedureCreateMod
 import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { ProcedureFilterPanel } from '../components/ui/filterPanels'
 import { procedureService } from '../services/procedureService';
+import { authService } from '../services/authService';
+import { CustomToggleOption } from '../components/ui/inputs';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Plus } from 'lucide-react';
 import type {
@@ -23,6 +25,8 @@ const ProcedureManagementPage = () => {
     const [searchResults, setSearchResults] = useState<Paginated<ProcedureReadOnlyDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
+    const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+
     // Error handling
     const { generalError, handleApiError, clearErrors } = useFormErrorHandler();
 
@@ -39,6 +43,8 @@ const ProcedureManagementPage = () => {
     const [procedureDetails, setProcedureDetails] = useState<ProcedureDetailedViewDTO | null>(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
 
+    const [isAdmin, setIsAdmin] = useState(false);
+
     // Success message
     const [successMessage, setSuccessMessage] = useState<{
         title: string;
@@ -53,7 +59,7 @@ const ProcedureManagementPage = () => {
 
             const response = await procedureService.getProceduresFilteredPaginated({
                 name: searchTerm.trim() || undefined,
-                isActive: undefined, // Show all procedures (active and inactive)
+                isActive: showInactiveOnly ? false : true,
                 page,
                 pageSize: size,
                 sortBy: 'name',
@@ -67,6 +73,11 @@ const ProcedureManagementPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleToggleChange = (checked: boolean) => {
+        setShowInactiveOnly(checked);
+        setCurrentPage(0); // Reset to first page when toggle changes
     };
 
     // Initial load
@@ -84,6 +95,15 @@ const ProcedureManagementPage = () => {
 
         return () => clearTimeout(timeoutId);
     }, [searchTerm]);
+
+    useEffect(() => {
+        const userRole = authService.getCurrentUserRole();
+        setIsAdmin(userRole === 'ADMIN');
+    }, []);
+
+    useEffect(() => {
+        searchProcedures(0, pageSize);
+    }, [showInactiveOnly]);
 
     // Modal handlers
     const handleViewDetails = async (procedure: ProcedureReadOnlyDTO) => {
@@ -154,6 +174,20 @@ const ProcedureManagementPage = () => {
         }
     };
 
+    const handleRestoreProcedure = async (procedure: ProcedureReadOnlyDTO) => {
+        try {
+            await procedureService.restoreProcedure(procedure.procedureId);
+            await searchProcedures(); // Reload the list
+            setSuccessMessage({
+                title: 'Επιτυχής Επαναφορά',
+                message: `Η διαδικασία "${procedure.name}" επαναφέρθηκε επιτυχώς.`
+            });
+            setIsSuccessModalOpen(true);
+        } catch (error) {
+            await handleApiError(error);
+        }
+    };
+
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-6">
@@ -162,6 +196,16 @@ const ProcedureManagementPage = () => {
                     <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
+
+                    {isAdmin && (
+                        <CustomToggleOption
+                            value={showInactiveOnly}
+                            onChange={handleToggleChange}
+                            optionLabel="Προβολή Ανενεργών"
+                            className=""
+                            textClassName="text-white"
+                        />
+                    )}
 
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
@@ -195,6 +239,8 @@ const ProcedureManagementPage = () => {
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             onViewProducts={handleViewProducts}
+                            showInactiveOnly={showInactiveOnly}
+                            onRestore={showInactiveOnly ? handleRestoreProcedure : undefined}
                         />
                     </CustomCard>
 

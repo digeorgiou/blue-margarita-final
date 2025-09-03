@@ -9,7 +9,9 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({
                                                          onViewDetails,
                                                          onEdit,
                                                          onDelete,
-                                                         onViewProducts
+                                                         onViewProducts,
+                                                         showInactiveOnly = false,
+                                                         onRestore
                                                      }) => {
 
     return (
@@ -65,28 +67,41 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({
                             <Package className="w-4 h-4" />
                             <span>Προϊόντα</span>
                         </Button>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                        <Button
-                            variant="teal"
-                            size="sm"
-                            onClick={() => onEdit(procedure)}
-                            disabled={!procedure.isActive}
-                        >
-                            <Edit className="w-4 h-4" />
-                            <span>Επεξεργασία</span>
-                        </Button>
 
-                        <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => onDelete(procedure)}
-                            disabled={!procedure.isActive}
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            <span>Διαγραφή</span>
-                        </Button>
+                        {!showInactiveOnly && (
+                            <>
+                                <Button
+                                    variant="teal"
+                                    size="sm"
+                                    onClick={() => onEdit(procedure)}
+                                    disabled={!procedure.isActive}
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    <span>Επεξεργασία</span>
+                                </Button>
+
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => onDelete(procedure)}
+                                    disabled={!procedure.isActive}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    <span>Διαγραφή</span>
+                                </Button>
+                            </>
+                        )}
+
+                        {showInactiveOnly && onRestore && (
+                            <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => onRestore(procedure)}
+                            >
+                                <span>Επαναφορά</span>
+                            </Button>
+                        )}
                     </div>
                 </div>
 

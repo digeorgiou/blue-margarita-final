@@ -10,7 +10,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
                                                      onViewDetails,
                                                      onEdit,
                                                      onDelete,
-                                                     onAnalytics
+                                                     onAnalytics,
+                                                     showInactiveOnly = false,
+                                                     onRestore
                                                  }) => {
 
     const getStockStatusColor = () => {
@@ -104,15 +106,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         </Button>
 
                         <Button
-                            variant="teal"
-                            size="sm"
-                            onClick={() => onEdit(product)}
-                        >
-                            <Edit className="w-4 h-4" />
-                            <span>Επεξεργασία</span>
-                        </Button>
-
-                        <Button
                             variant="purple"
                             size="sm"
                             onClick={() => onAnalytics(product)}
@@ -121,14 +114,39 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             <span>Στατιστικά</span>
                         </Button>
 
-                        <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => onDelete(product)}
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            <span>Διαγραφή</span>
-                        </Button>
+                        {!showInactiveOnly && (
+                            <>
+                                <Button
+                                    variant="teal"
+                                    size="sm"
+                                    onClick={() => onEdit(product)}
+                                    disabled={!product.isActive}
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    <span>Επεξεργασία</span>
+                                </Button>
+
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => onDelete(product)}
+                                    disabled={!product.isActive}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    <span>Διαγραφή</span>
+                                </Button>
+                            </>
+                        )}
+
+                        {showInactiveOnly && onRestore && (
+                            <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => onRestore(product)}
+                            >
+                                <span>Επαναφορά</span>
+                            </Button>
+                        )}
                     </div>
                 </div>
 

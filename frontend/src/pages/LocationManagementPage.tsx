@@ -4,6 +4,7 @@ import { LocationList } from "../components/ui/viewAll";
 import { ConfirmDeleteModal, LocationCreateModal, LocationUpdateModal, LocationDetailModal, SuccessModal } from '../components/ui/modals';
 import { locationService } from '../services/locationService';
 import { authService } from "../services/authService.ts";
+import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { MapPin, Plus } from 'lucide-react';
 import type {
     LocationForDropdownDTO,
@@ -13,6 +14,9 @@ import type {
 import {CustomToggleOption} from "../components/ui/inputs";
 
 const LocationManagementPage = () => {
+
+    const { handleApiError } = useFormErrorHandler();
+
     // State management
     const [locations, setLocations] = useState<LocationForDropdownDTO[]>([]);
     const [loading, setLoading] = useState(true);
@@ -143,7 +147,7 @@ const LocationManagementPage = () => {
             });
             setIsSuccessModalOpen(true);
         } catch (error) {
-            handleApiError(error);
+            await handleApiError(error);
         }
     };
 

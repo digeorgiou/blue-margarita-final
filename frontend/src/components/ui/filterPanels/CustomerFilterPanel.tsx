@@ -15,7 +15,9 @@ const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
                                                                  loading,
                                                                  onViewDetails,
                                                                  onEdit,
-                                                                 onDelete
+                                                                 onDelete,
+                                                                 showInactiveOnly = false,
+                                                                 onRestore
                                                              }) => {
     // Helper function to determine if customer has TIN
     const customerHasTin = (customer: CustomerListItemDTO) => {
@@ -80,6 +82,8 @@ const CustomerFilterPanel: React.FC<CustomerFilterPanelProps> = ({
                                 onViewDetails={onViewDetails}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
+                                showInactiveOnly={showInactiveOnly}
+                                onRestore={onRestore}
                             />
                         ))}
                     </div>

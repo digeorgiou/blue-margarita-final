@@ -13,7 +13,9 @@ const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
                                                                    onViewDetails,
                                                                    onEdit,
                                                                    onDelete,
-                                                                   onViewProducts
+                                                                   onViewProducts,
+                                                                   showInactiveOnly = false,
+                                                                   onRestore
                                                                }) => {
 
     // Show all procedures (active and inactive)
@@ -63,6 +65,8 @@ const ProcedureFilterPanel: React.FC<ProcedureFilterPanelProps> = ({
                                 onEdit={onEdit}
                                 onDelete={onDelete}
                                 onViewProducts={onViewProducts}
+                                showInactiveOnly={showInactiveOnly}
+                                onRestore={onRestore}
                             />
                         ))}
                     </div>

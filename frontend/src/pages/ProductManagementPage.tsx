@@ -8,6 +8,8 @@ import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
 import { procedureService } from '../services/procedureService';
 import { materialService } from '../services/materialService';
+import { authService } from '../services/authService';
+import { CustomToggleOption } from '../components/ui/inputs';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import type {ProductDetailedViewDTO, ProductListItemDTO} from '../types/api/productInterface';
 import type { CategoryForDropdownDTO } from '../types/api/categoryInterface';
@@ -50,6 +52,8 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
     const [searchResults, setSearchResults] = useState<Paginated<ProductListItemDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
+    const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+
     // Dropdown data
     const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
     const [materialSearchResults, setMaterialSearchResults] = useState<MaterialSearchResultDTO[]>([]);
@@ -70,6 +74,8 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
     const [isRecalculationConfirmOpen, setIsRecalculationConfirmOpen] = useState(false);
     const [isRecalculationModalOpen, setIsRecalculationModalOpen] = useState(false);
     const [recalculationResult, setRecalculationResult] = useState<PriceRecalculationResultDTO | null>(null);
+
+    const [isAdmin, setIsAdmin] = useState(false);
 
 
     // Error handling
@@ -135,7 +141,7 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
                 maxPrice > 0 ? maxPrice : undefined,
                 minStock > 0 ? minStock : undefined,
                 maxStock > 0 ? maxStock : undefined,
-                undefined,
+                showInactiveOnly ? false : true,
                 lowStockOnly || undefined,
                 'name', // sortBy
                 'ASC', // sortDirection
@@ -169,6 +175,11 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
         } finally {
             setLoadingMaterials(false);
         }
+    };
+
+    const handleToggleChange = (checked: boolean) => {
+        setShowInactiveOnly(checked);
+        setCurrentPage(0); // Reset to first page when toggle changes
     };
 
     // Search for procedures
@@ -217,6 +228,16 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
 
         return () => clearTimeout(timeoutId);
     }, [procedureSearchTerm]);
+
+    useEffect(() => {
+        const userRole = authService.getCurrentUserRole();
+        setIsAdmin(userRole === 'ADMIN');
+    }, []);
+
+// 6. Add this useEffect to reload when toggle changes (add after existing useEffects):
+    useEffect(() => {
+        performSearch();
+    }, [showInactiveOnly]);
 
     // Handle view details - Load detailed product data and open modal
     const handleViewDetails = async (product: ProductListItemDTO) => {
@@ -291,6 +312,20 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
         }
     };
 
+    const handleRestoreProduct = async (product: ProductListItemDTO) => {
+        try {
+            await productService.restoreProduct(Number(product.id));
+            await performSearch(); // Reload the list
+            setSuccessMessage({
+                title: 'Επιτυχής Επαναφορά',
+                message: `Το προϊόν "${product.name}" επαναφέρθηκε επιτυχώς.`
+            });
+            setIsSuccessModalOpen(true);
+        } catch (error) {
+            await handleApiError(error);
+        }
+    };
+
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-8">
@@ -305,6 +340,15 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
                     <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
+                        {isAdmin && (
+                            <CustomToggleOption
+                                value={showInactiveOnly}
+                                onChange={handleToggleChange}
+                                optionLabel="Προβολή Ανενεργών"
+                                className=""
+                                textClassName="text-white"
+                            />
+                        )}
                     </div>
 
                     <Button
@@ -383,6 +427,8 @@ const ProductManagementPage: React.FC<ProductManagementPageProps> = ({
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             onAnalytics={handleAnalytics}
+                            showInactiveOnly={showInactiveOnly}
+                            onRestore={showInactiveOnly ? handleRestoreProduct : undefined}
                         >
                         </ProductFilterPanel>
                     </CustomCard>

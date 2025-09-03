@@ -10,7 +10,9 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                                                        onViewDetails,
                                                        onEdit,
                                                        onDelete,
-                                                       onViewProducts
+                                                       onViewProducts,
+                                                       showInactiveOnly = false,
+                                                       onRestore
                                                    }) => {
 
     return (
@@ -71,6 +73,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                             <span>Λεπτομέρειες</span>
                         </Button>
 
+
                         <Button
                             variant="orange"
                             size="sm"
@@ -81,6 +84,17 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                             <span>Προϊόντα</span>
                         </Button>
 
+                        {showInactiveOnly && onRestore && (
+                            <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => onRestore(material)}
+                            >
+                                <span>Επαναφορά</span>
+                            </Button>
+                        )}
+
+                        {!showInactiveOnly && (
                         <Button
                             variant="teal"
                             size="sm"
@@ -90,7 +104,9 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                             <Edit className="w-4 h-4" />
                             <span>Επεξεργασία</span>
                         </Button>
+                        )}
 
+                        {!showInactiveOnly && (
                         <Button
                             variant="danger"
                             size="sm"
@@ -100,6 +116,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                             <Trash2 className="w-4 h-4" />
                             <span>Διαγραφή</span>
                         </Button>
+                        )}
                     </div>
                 </div>
 

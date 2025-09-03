@@ -23,6 +23,8 @@ export type CustomerFilterPanelProps = {
     onViewDetails: (customer: CustomerListItemDTO) => void;
     onEdit: (customer: CustomerListItemDTO) => void;
     onDelete: (customer: CustomerListItemDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (customer: CustomerListItemDTO) => void;
 }
 
 export type ExpenseFilterPanelProps = {
@@ -52,6 +54,8 @@ export type MaterialFilterPanelProps = {
     onEdit: (material: MaterialReadOnlyDTO) => void;
     onDelete: (material: MaterialReadOnlyDTO) => void;
     onViewProducts: (material: MaterialReadOnlyDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (material: MaterialReadOnlyDTO) => void;
 }
 
 export type ProcedureFilterPanelProps = {
@@ -63,6 +67,8 @@ export type ProcedureFilterPanelProps = {
     onEdit: (procedure: ProcedureReadOnlyDTO) => void;
     onDelete: (procedure: ProcedureReadOnlyDTO) => void;
     onViewProducts: (procedure: ProcedureReadOnlyDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (procedure: ProcedureReadOnlyDTO) => void;
 }
 
 
@@ -115,6 +121,8 @@ export type ProductFilterPanelProps = {
     onEdit: (product: ProductListItemDTO) => void;
     onDelete: (product: ProductListItemDTO) => void;
     onAnalytics: (product: ProductListItemDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (product: ProductListItemDTO) => void;
     children?: React.ReactNode;
 }
 
@@ -177,6 +185,8 @@ export type SupplierFilterPanelProps = {
     onViewDetails: (supplier: SupplierReadOnlyDTO) => void;
     onEdit: (supplier: SupplierReadOnlyDTO) => void;
     onDelete: (supplier: SupplierReadOnlyDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (supplier: SupplierReadOnlyDTO) => void;
 }
 
 export type PurchaseFilterPanelProps = {
@@ -242,7 +252,7 @@ export type MispricedProductFilterPanelProps = {
 export type TaskFilterPanelProps = {
     // Filter states
     statusFilter: string;
-    onStatusFilterChange: (value: string) => void;
+    onStatusFilterChange: (value: string | number ) => void;
     dateFromFilter: string;
     onDateFromFilterChange: (value: string) => void;
     dateToFilter: string;

@@ -4,6 +4,8 @@ import { ConfirmDeleteModal, SuccessModal, SupplierCreateModal, SupplierDetailMo
 import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { SupplierFilterPanel } from '../components/ui/filterPanels'
 import { supplierService } from '../services/supplierService';
+import { authService } from '../services/authService';
+import { CustomToggleOption } from '../components/ui/inputs';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { UserPlus } from 'lucide-react';
 import type {
@@ -25,6 +27,8 @@ const SupplierManagementPage = () => {
     // Error handling
     const { generalError, handleApiError, clearErrors } = useFormErrorHandler();
 
+    const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+
     // Modal states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -40,6 +44,8 @@ const SupplierManagementPage = () => {
     // Success message state
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
+    const [isAdmin, setIsAdmin] = useState(false);
+
     // Simple search function
     const searchSuppliers = async (page: number = currentPage, size: number = pageSize) => {
         try {
@@ -54,7 +60,7 @@ const SupplierManagementPage = () => {
 
             const filters = {
                 name: searchTerm.trim() || undefined,
-                isActive: true,
+                isActive: showInactiveOnly ? false : true,
                 page,
                 pageSize: size,
                 sortBy: 'name',
@@ -69,6 +75,11 @@ const SupplierManagementPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleToggleChange = (checked: boolean) => {
+        setShowInactiveOnly(checked);
+        setCurrentPage(0); // Reset to first page when toggle changes
     };
 
     // Load initial data
@@ -86,6 +97,16 @@ const SupplierManagementPage = () => {
 
         return () => clearTimeout(timeoutId);
     }, [searchTerm]);
+
+    useEffect(() => {
+        const userRole = authService.getCurrentUserRole();
+        setIsAdmin(userRole === 'ADMIN');
+    }, []);
+
+// 6. Add this useEffect to reload when toggle changes (add after existing useEffects):
+    useEffect(() => {
+        searchSuppliers(0, pageSize);
+    }, [showInactiveOnly]);
 
     // Modal handlers
     const handleViewDetails = async (supplier: SupplierReadOnlyDTO) => {
@@ -152,6 +173,20 @@ const SupplierManagementPage = () => {
         }
     };
 
+    const handleRestoreSupplier = async (supplier: SupplierReadOnlyDTO) => {
+        try {
+            await supplierService.restoreSupplier(supplier.supplierId);
+            await searchSuppliers(); // Reload the list
+            setSuccessMessage({
+                title: 'Επιτυχής Επαναφορά',
+                message: `Ο προμηθευτής "${supplier.name}" επαναφέρθηκε επιτυχώς.`
+            });
+            setIsSuccessModalOpen(true);
+        } catch (error) {
+            await handleApiError(error);
+        }
+    };
+
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-6">
@@ -161,6 +196,15 @@ const SupplierManagementPage = () => {
                     <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
+                    {isAdmin && (
+                        <CustomToggleOption
+                            value={showInactiveOnly}
+                            onChange={handleToggleChange}
+                            optionLabel="Προβολή Ανενεργών"
+                            className=""
+                            textClassName="text-white"
+                        />
+                    )}
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
                         variant="create"
@@ -191,6 +235,8 @@ const SupplierManagementPage = () => {
                             onViewDetails={handleViewDetails}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            showInactiveOnly={showInactiveOnly}
+                            onRestore={showInactiveOnly ? handleRestoreSupplier : undefined}
                         />
                     </CustomCard>
 

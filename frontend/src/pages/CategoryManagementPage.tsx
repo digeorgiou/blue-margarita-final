@@ -5,6 +5,7 @@ import { CategoryCreateModal, CategoryUpdateModal, CategoryDetailModal, ConfirmD
 import { CustomToggleOption } from "../components/ui/inputs";
 import { categoryService } from '../services/categoryService';
 import { authService } from "../services/authService.ts";
+import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Gem, Plus } from 'lucide-react';
 import type {
     CategoryForDropdownDTO,
@@ -13,6 +14,9 @@ import type {
 } from '../types/api/categoryInterface';
 
 const CategoryManagementPage  = () => {
+
+    const { handleApiError } = useFormErrorHandler();
+
     // State management
     const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
     const [loading, setLoading] = useState(true);

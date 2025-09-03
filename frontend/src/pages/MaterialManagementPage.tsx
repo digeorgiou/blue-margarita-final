@@ -3,7 +3,9 @@ import { Button, Alert, CustomCard } from '../components/ui/common';
 import { ConfirmDeleteModal, ProductUsageModal, SuccessModal, MaterialCreateModal, MaterialDetailModal,MaterialUpdateModal } from '../components/ui/modals';
 import { MaterialFilterPanel } from '../components/ui/filterPanels'
 import { EnhancedPaginationControls } from '../components/ui/pagination';
+import { CustomToggleOption } from "../components/ui/inputs";
 import { materialService } from '../services/materialService';
+import { authService } from '../services/authService';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { Plus } from 'lucide-react';
 import type {
@@ -22,6 +24,8 @@ const MaterialManagementPage = () => {
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZES.MATERIALS);
     const [searchResults, setSearchResults] = useState<Paginated<MaterialReadOnlyDTO> | null>(null);
     const [loading, setLoading] = useState(false);
+
+    const [showInactiveOnly, setShowInactiveOnly] = useState(false);
 
     // Error handling
     const { generalError, handleApiError, clearErrors } = useFormErrorHandler();
@@ -46,6 +50,9 @@ const MaterialManagementPage = () => {
 
     const [isProductUsageModalOpen, setIsProductUsageModalOpen] = useState(false);
 
+    // Admin state
+    const [isAdmin, setIsAdmin] = useState(false);
+
     // Search function
     const searchMaterials = async (page: number = currentPage, size: number = pageSize) => {
 
@@ -60,7 +67,7 @@ const MaterialManagementPage = () => {
 
             const filters = {
                 name: searchTerm.trim() || undefined,
-                isActive: true,
+                isActive: showInactiveOnly ? false : true,
                 page,
                 pageSize: size,
                 sortBy: 'name',
@@ -76,10 +83,22 @@ const MaterialManagementPage = () => {
             setLoading(false);
         }
     };
+
+    const handleToggleChange = (checked: boolean) => {
+        setShowInactiveOnly(checked);
+        setCurrentPage(0); // Reset to first page when toggle changes
+    };
+
+
     // Load initial data
     useEffect(() => {
         searchMaterials();
     }, []);
+
+    // Reload when toggle changes
+    useEffect(() => {
+        searchMaterials(0, pageSize);
+    }, [showInactiveOnly]);
 
     // Debounced search when search term changes
     useEffect(() => {
@@ -95,6 +114,11 @@ const MaterialManagementPage = () => {
     useEffect(() => {
         searchMaterials();
     }, [currentPage, pageSize]);
+
+    useEffect(() => {
+        const userRole = authService.getCurrentUserRole();
+        setIsAdmin(userRole === 'ADMIN');
+    }, []);
 
     // Modal handlers
     const handleViewDetails = async (material: MaterialReadOnlyDTO) => {
@@ -124,6 +148,20 @@ const MaterialManagementPage = () => {
     const handleDelete = (material: MaterialReadOnlyDTO) => {
         setSelectedMaterial(material);
         setIsDeleteModalOpen(true);
+    };
+
+    const handleRestoreMaterial = async (material: MaterialReadOnlyDTO) => {
+        try {
+            await materialService.restoreMaterial(material.materialId);
+            await searchMaterials(); // Reload the list
+            setSuccessMessage({
+                title: 'Επιτυχής Επαναφορά',
+                message: `Το υλικό "${material.name}" επαναφέρθηκε επιτυχώς.`
+            });
+            setIsSuccessModalOpen(true);
+        } catch (error) {
+            await handleApiError(error);
+        }
     };
 
     // CRUD operations
@@ -173,6 +211,15 @@ const MaterialManagementPage = () => {
                     <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
+                    {isAdmin && (
+                        <CustomToggleOption
+                            value={showInactiveOnly}
+                            onChange={handleToggleChange}
+                            optionLabel="Προβολή Ανενεργών"
+                            className=""
+                            textClassName="text-white"
+                        />
+                    )}
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
                         variant="create"
@@ -205,6 +252,8 @@ const MaterialManagementPage = () => {
                                 onEdit={handleEdit}
                                 onDelete={handleDelete}
                                 onViewProducts={handleViewProducts}
+                                showInactiveOnly={showInactiveOnly}
+                                onRestore={showInactiveOnly ? handleRestoreMaterial : undefined}
                             />
                     </CustomCard>
 

@@ -13,11 +13,13 @@ const MaterialFilterPanel: React.FC<MaterialFilterPanelProps> = ({
                                                                  onViewDetails,
                                                                  onEdit,
                                                                  onDelete,
-                                                                 onViewProducts
+                                                                 onViewProducts,
+                                                                 showInactiveOnly = false,
+                                                                 onRestore
                                                              }) => {
 
     // Filter results based on active only filter
-    const filteredResults = searchResults.filter(material => material.isActive);
+    const filteredResults = searchResults;
 
     return (
         <div className="space-y-6">
@@ -65,6 +67,8 @@ const MaterialFilterPanel: React.FC<MaterialFilterPanelProps> = ({
                                 onEdit={onEdit}
                                 onDelete={onDelete}
                                 onViewProducts={onViewProducts}
+                                showInactiveOnly={showInactiveOnly}
+                                onRestore={onRestore}
                             />
                         ))}
                     </div>

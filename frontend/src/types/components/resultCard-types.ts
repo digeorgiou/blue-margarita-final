@@ -14,6 +14,8 @@ export type CustomerCardProps = {
     onViewDetails: (customer: CustomerListItemDTO) => void;
     onEdit: (customer: CustomerListItemDTO) => void;
     onDelete: (customer: CustomerListItemDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (customer: CustomerListItemDTO) => void;
 }
 
 export type ExpenseCardProps = {
@@ -29,6 +31,8 @@ export type MaterialCardProps = {
     onEdit: (material: MaterialReadOnlyDTO) => void;
     onDelete: (material: MaterialReadOnlyDTO) => void;
     onViewProducts: (material: MaterialReadOnlyDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (material: MaterialReadOnlyDTO) => void;
 }
 
 export type MispricedProductCardProps = {
@@ -47,6 +51,8 @@ export type ProcedureCardProps = {
     onEdit: (procedure: ProcedureReadOnlyDTO) => void;
     onDelete: (procedure: ProcedureReadOnlyDTO) => void;
     onViewProducts: (procedure: ProcedureReadOnlyDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (procedure: ProcedureReadOnlyDTO) => void;
 }
 
 export type ProductCardProps = {
@@ -55,6 +61,8 @@ export type ProductCardProps = {
     onEdit: (product: ProductListItemDTO) => void;
     onDelete: (product: ProductListItemDTO) => void;
     onAnalytics: (product: ProductListItemDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (product: ProductListItemDTO) => void;
 }
 
 export type PurchaseCardProps = {
@@ -86,6 +94,8 @@ export type SupplierCardProps = {
     onViewDetails: (supplier: SupplierReadOnlyDTO) => void;
     onEdit: (supplier: SupplierReadOnlyDTO) => void;
     onDelete: (supplier: SupplierReadOnlyDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (supplier: SupplierReadOnlyDTO) => void;
 }
 
 export type TaskCardProps = {

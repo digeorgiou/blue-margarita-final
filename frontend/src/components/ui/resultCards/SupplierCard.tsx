@@ -7,7 +7,9 @@ const SupplierCard: React.FC<SupplierCardProps> = ({
                                                        supplier,
                                                        onViewDetails,
                                                        onEdit,
-                                                       onDelete
+                                                       onDelete,
+                                                       showInactiveOnly = false,
+                                                       onRestore
                                                    }) => {
 
     return (
@@ -56,6 +58,14 @@ const SupplierCard: React.FC<SupplierCardProps> = ({
                             <span className="text-sm text-gray-600">ΑΦΜ: {supplier.tin}</span>
                         </div>
                     )}
+
+                    {!supplier.isActive && (
+                        <div className="pt-2">
+                            <p className="text-xs text-gray-500 italic">
+                                Ανενεργός προμηθευτής
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
@@ -69,25 +79,39 @@ const SupplierCard: React.FC<SupplierCardProps> = ({
                             <span>Λεπτομέρειες</span>
                         </Button>
 
-                        <Button
-                            variant="teal"
-                            size="sm"
-                            onClick={() => onEdit(supplier)}
-                            disabled={!supplier.isActive}
-                        >
-                            <Edit className="w-4 h-4" />
-                            <span>Επεξεργασία</span>
-                        </Button>
+                        {!showInactiveOnly && (
+                            <>
+                                <Button
+                                    variant="teal"
+                                    size="sm"
+                                    onClick={() => onEdit(supplier)}
+                                    disabled={!supplier.isActive}
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    <span>Επεξεργασία</span>
+                                </Button>
 
-                        <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => onDelete(supplier)}
-                            disabled={!supplier.isActive}
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            <span>Διαγραφή</span>
-                        </Button>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => onDelete(supplier)}
+                                    disabled={!supplier.isActive}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    <span>Διαγραφή</span>
+                                </Button>
+                            </>
+                        )}
+
+                        {showInactiveOnly && onRestore && (
+                            <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => onRestore(supplier)}
+                            >
+                                <span>Επαναφορά</span>
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>

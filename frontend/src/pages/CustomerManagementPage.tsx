@@ -4,6 +4,8 @@ import { CustomerFilterPanel } from '../components/ui/filterPanels'
 import { ConfirmDeleteModal, CustomerDetailModal, CustomerUpdateModal, CustomerCreateModal, SuccessModal } from '../components/ui/modals';
 import { EnhancedPaginationControls } from '../components/ui/pagination';
 import { customerService } from '../services/customerService';
+import { authService } from '../services/authService';
+import { CustomToggleOption } from '../components/ui/inputs';
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
 import { UserPlus } from 'lucide-react';
 import { DEFAULT_PAGE_SIZES } from "../constants/pagination.ts";
@@ -24,6 +26,8 @@ const CustomerManagementPage = () => {
     const [searchResults, setSearchResults] = useState<Paginated<CustomerListItemDTO> | null>(null);
     const [loading, setLoading] = useState(false);
 
+    const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+
     // Error handling
     const { generalError, handleApiError, clearErrors } = useFormErrorHandler();
 
@@ -42,6 +46,8 @@ const CustomerManagementPage = () => {
     // Success message state
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
+    const [isAdmin, setIsAdmin] = useState(false);
+
     // Simple search function
     const searchCustomers = async (page: number = currentPage, size: number = pageSize) => {
         try {
@@ -56,7 +62,7 @@ const CustomerManagementPage = () => {
 
             const filters = {
                 searchTerm: searchTerm.trim() || undefined,
-                isActive: true,
+                isActive: showInactiveOnly ? false : true,
                 page,
                 pageSize: size,
                 sortBy: 'lastname',
@@ -71,6 +77,11 @@ const CustomerManagementPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleToggleChange = (checked: boolean) => {
+        setShowInactiveOnly(checked);
+        setCurrentPage(0); // Reset to first page when toggle changes
     };
 
     // Load initial data
@@ -88,6 +99,15 @@ const CustomerManagementPage = () => {
 
         return () => clearTimeout(timeoutId);
     }, [searchTerm, tinOnlyFilter]);
+
+    useEffect(() => {
+        const userRole = authService.getCurrentUserRole();
+        setIsAdmin(userRole === 'ADMIN');
+    }, []);
+
+    useEffect(() => {
+        searchCustomers(0, pageSize);
+    }, [showInactiveOnly]);
 
     // Modal handlers
     const handleViewDetails = async (customer: CustomerListItemDTO) => {
@@ -154,6 +174,20 @@ const CustomerManagementPage = () => {
         }
     };
 
+    const handleRestoreCustomer = async (customer: CustomerListItemDTO) => {
+        try {
+            await customerService.restoreCustomer(customer.customerId);
+            await searchCustomers(); // Reload the list
+            setSuccessMessage({
+                title: 'Επιτυχής Επαναφορά',
+                message: `Ο πελάτης "${customer.firstname} ${customer.lastname}" επαναφέρθηκε επιτυχώς.`
+            });
+            setIsSuccessModalOpen(true);
+        } catch (error) {
+            await handleApiError(error);
+        }
+    };
+
     return (
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-8">
@@ -162,6 +196,15 @@ const CustomerManagementPage = () => {
                     <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-bold text-white">Φίλτρα Αναζήτησης</h3>
                     </div>
+                    {isAdmin && (
+                        <CustomToggleOption
+                            value={showInactiveOnly}
+                            onChange={handleToggleChange}
+                            optionLabel="Προβολή Ανενεργών"
+                            className=""
+                            textClassName="text-white"
+                        />
+                    )}
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
                         variant="create"
@@ -195,6 +238,8 @@ const CustomerManagementPage = () => {
                             onViewDetails={handleViewDetails}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            showInactiveOnly={showInactiveOnly}
+                            onRestore={showInactiveOnly ? handleRestoreCustomer : undefined}
                         />
                     </CustomCard>
 

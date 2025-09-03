@@ -7,7 +7,9 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
                                                        customer,
                                                        onViewDetails,
                                                        onEdit,
-                                                       onDelete
+                                                       onDelete,
+                                                       showInactiveOnly = false,
+                                                       onRestore
                                                    }) => {
     // Helper function to determine if customer has TIN
     const customerHasTin = () => {
@@ -84,23 +86,37 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
                             <span>Προβολή</span>
                         </Button>
 
-                        <Button
-                            variant="teal"
-                            size="sm"
-                            onClick={() => onEdit(customer)}
-                        >
-                            <Edit className="w-4 h-4" />
-                            <span>Επεξεργασία</span>
-                        </Button>
+                        {!showInactiveOnly && (
+                            <>
+                                <Button
+                                    variant="teal"
+                                    size="sm"
+                                    onClick={() => onEdit(customer)}
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    <span>Επεξεργασία</span>
+                                </Button>
 
-                        <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => onDelete(customer)}
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            <span>Διαγραφή</span>
-                        </Button>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => onDelete(customer)}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    <span>Διαγραφή</span>
+                                </Button>
+                            </>
+                        )}
+
+                        {showInactiveOnly && onRestore && (
+                            <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => onRestore(customer)}
+                            >
+                                <span>Επαναφορά</span>
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>
