@@ -295,4 +295,25 @@ public class LocationRestController {
         return new ResponseEntity<>(locations, HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Get inactive locations for dropdown",
+            description = "Retrieves inactive locations formatted for dropdown selection with ID and name only.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of locations for dropdown",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = LocationForDropdownDTO.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/inactive-locations")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<List<LocationForDropdownDTO>> getInactiveLocations() {
+        List<LocationForDropdownDTO> locations = locationService.getInactiveLocations();
+        return new ResponseEntity<>(locations, HttpStatus.OK);
+    }
+
 }

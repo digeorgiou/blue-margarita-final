@@ -1,7 +1,8 @@
 import React from 'react';
 import { Eye, Edit, Trash2, Calendar, CheckCircle, RotateCcw, Clock } from 'lucide-react';
-import { Button } from '../../common';
+import { Button } from '../common';
 import { formatDate } from '../../../utils/formatters';
+import { TaskCardProps } from "../../../types/components/resultCard-types.ts";
 
 const TaskCard: React.FC<TaskCardProps> = ({
                                                task,

@@ -195,10 +195,18 @@ public class LocationService implements ILocationService {
                 .map(location -> new LocationForDropdownDTO(location.getId(), location.getName()))
                 .sorted((l1, l2) -> l1.name().compareToIgnoreCase(l2.name()))
                 .collect(Collectors.toList());
-
-
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocationForDropdownDTO> getInactiveLocations() {
+        return locationRepository.findByIsActiveFalse()
+                .stream()
+                .map(location -> new LocationForDropdownDTO(location.getId(), location.getName()))
+                .sorted((l1, l2) -> l1.name().compareToIgnoreCase(l2.name()))
+                .collect(Collectors.toList());
+    }
 
     // =============================================================================
     // PRIVATE HELPER METHODS - Entity Validation and Retrieval

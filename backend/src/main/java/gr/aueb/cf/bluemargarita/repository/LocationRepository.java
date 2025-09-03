@@ -14,6 +14,7 @@ public interface LocationRepository extends JpaRepository<Location, Long>,
         JpaSpecificationExecutor<Location> {
     boolean existsByName(String name);
     List<Location> findByIsActiveTrue();
+    List<Location> findByIsActiveFalse();
 
     @Query("SELECT l.name FROM Location l WHERE l.id = :locationId")
     String findLocationNameById(@Param("locationId") Long locationId);

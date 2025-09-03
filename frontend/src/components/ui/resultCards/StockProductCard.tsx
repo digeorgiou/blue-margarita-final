@@ -12,11 +12,11 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                                                            }) => {
     const [editingStock, setEditingStock] = useState(false);
     const [editingStockLimit, setEditingStockLimit] = useState(false);
-    const [newStockValue, setNewStockValue] = useState(product.currentStock.toString());
+    const [newStockValue, setNewStockValue] = useState(product.currentStock);
     const [newLimitValue, setNewLimitValue] = useState(product.lowStockAlert);
 
     const handleStockUpdate = async () => {
-        const newStock = Number(newStockValue);
+        const newStock = newStockValue;
         if (newStock >= 0 && newStock !== product.currentStock) {
             await onUpdateStock(product, newStock);
         }
@@ -24,7 +24,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
     };
 
     const handleStockLimitUpdate = async () => {
-        const newLimit = Number(newLimitValue);
+        const newLimit = newLimitValue;
         if (newLimit >= 0 && newLimit !== product.lowStockAlert) {
             await onUpdateStockLimit(product, newLimit);
         }
@@ -32,12 +32,12 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
     }
 
     const handleCancelEdit = () => {
-        setNewStockValue(product.currentStock.toString());
+        setNewStockValue(product.currentStock);
         setEditingStock(false);
     };
 
     const handleCancelLimitEdit = () => {
-        setNewLimitValue(product.lowStockAlert.toString());
+        setNewLimitValue(product.lowStockAlert);
         setEditingStockLimit(false);
     }
 
@@ -91,7 +91,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                                 <input
                                     type="number"
                                     value={newStockValue}
-                                    onChange={(e) => setNewStockValue(e.target.value)}
+                                    onChange={(e) => setNewStockValue(Number(e.target.value))}
                                     onKeyPress={handleKeyPress}
                                     className="w-16 px-2 py-1 border border-blue-300 rounded text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     min="0"
@@ -101,7 +101,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                                 <div className="flex space-x-2 sm:space-x-1 w-full sm:w-auto">
                                     <button
                                         onClick={handleStockUpdate}
-                                        disabled={updating || newStockValue === product.currentStock.toString()}
+                                        disabled={updating || newStockValue === product.currentStock}
                                         className="p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded transition-colors disabled:opacity-50"
                                         title="Αποθήκευση (Enter)"
                                     >
@@ -147,7 +147,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                                     <input
                                         type="number"
                                         value={newLimitValue}
-                                        onChange={(e) => setNewLimitValue(e.target.value)}
+                                        onChange={(e) => setNewLimitValue(Number(e.target.value))}
                                         onKeyPress={handleKeyPress}
                                         className="w-16 px-2 py-1 border border-blue-300 rounded text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         min="0"
@@ -157,7 +157,7 @@ const StockProductCard: React.FC<StockProductCardProps> = ({
                                     <div className="flex space-x-2 sm:space-x-1 w-full sm:w-auto">
                                         <button
                                             onClick={handleStockLimitUpdate}
-                                            disabled={updatingLimit || newLimitValue === product.lowStockAlert.toString()}
+                                            disabled={updatingLimit || newLimitValue === product.lowStockAlert}
                                             className="p-1 text-green-600 hover:text-green-800 hover:bg-green-100 rounded transition-colors disabled:opacity-50"
                                             title="Αποθήκευση (Enter)"
                                         >

@@ -8,7 +8,8 @@ const CustomToggleOption: React.FC<CustomToggleOptionProps> = ({
                                                                    value,
                                                                    onChange,
                                                                    optionLabel,
-                                                                   className = ""
+                                                                   className = "",
+                                                                   textClassName
                                                                }) => {
     return (
         <div className={className}>
@@ -37,7 +38,7 @@ const CustomToggleOption: React.FC<CustomToggleOptionProps> = ({
                             <div className="absolute inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-sm"></div>
                         )}
                     </div>
-                    <span className="ml-3 text-sm font-medium text-gray-700">
+                    <span className={` ${textClassName} ml-3 text-sm font-medium text-gray-700 `}>
                         {optionLabel}
                     </span>
                 </label>

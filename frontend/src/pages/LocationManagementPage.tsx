@@ -3,18 +3,22 @@ import { Button, Alert, LoadingSpinner, CustomCard } from '../components/ui/comm
 import { LocationList } from "../components/ui/viewAll";
 import { ConfirmDeleteModal, LocationCreateModal, LocationUpdateModal, LocationDetailModal, SuccessModal } from '../components/ui/modals';
 import { locationService } from '../services/locationService';
+import { authService } from "../services/authService.ts";
 import { MapPin, Plus } from 'lucide-react';
 import type {
     LocationForDropdownDTO,
     LocationReadOnlyDTO,
     LocationDetailedViewDTO
 } from '../types/api/locationInterface';
+import {CustomToggleOption} from "../components/ui/inputs";
 
 const LocationManagementPage = () => {
     // State management
     const [locations, setLocations] = useState<LocationForDropdownDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [showInactiveOnly, setShowInactiveOnly] = useState(false);
 
     // Modal states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -32,19 +36,34 @@ const LocationManagementPage = () => {
     // Success message state
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
+    const [isAdmin, setIsAdmin] = useState(false);
+
     // Load locations
     const loadLocations = async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await locationService.getActiveLocationsForDropdown();
-            setLocations(data);
+
+            if (showInactiveOnly) {
+                // Load inactive categories using the filtered paginated endpoint
+                const result = await locationService.getInactiveLocations();
+                setLocations(result);
+            } else {
+                // Load active categories (default behavior)
+                const data = await locationService.getActiveLocationsForDropdown();
+                setLocations(data);
+            }
+
         } catch (err) {
             console.error('Failed to load locations:', err);
             setError('Αποτυχία φόρτωσης τοποθεσιών');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleToggleChange = (checked: boolean) => {
+        setShowInactiveOnly(checked);
     };
 
     // Load location details for modals
@@ -114,9 +133,28 @@ const LocationManagementPage = () => {
         setIsSuccessModalOpen(true);
     };
 
+    const handleRestoreLocation = async (location: LocationForDropdownDTO) => {
+        try {
+            await locationService.restoreLocation(location.id);
+            await loadLocations();
+            setSuccessMessage({
+                title: 'Επιτυχής Επαναφορά',
+                message: `Η τοποθεσία "${location.name}" επαναφέρθηκε επιτυχώς.`
+            });
+            setIsSuccessModalOpen(true);
+        } catch (error) {
+            handleApiError(error);
+        }
+    };
+
     // Load locations on component mount
     useEffect(() => {
         loadLocations();
+    }, [showInactiveOnly]);
+
+    useEffect(() => {
+        const userRole = authService.getCurrentUserRole();
+        setIsAdmin(userRole === 'ADMIN');
     }, []);
 
     return (
@@ -125,7 +163,13 @@ const LocationManagementPage = () => {
                 {/* Header */}
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
                     <div className="flex items-center space-x-3">
-
+                        {isAdmin && (<CustomToggleOption
+                            value={showInactiveOnly}
+                            onChange={handleToggleChange}
+                            optionLabel="Προβολή Ανενεργών"
+                            className=""
+                            textClassName="text-white"
+                        />)}
                     </div>
 
                     <Button
@@ -167,6 +211,8 @@ const LocationManagementPage = () => {
                                 setSelectedLocation(location);
                                 setIsDeleteModalOpen(true);
                             }}
+                            onRestore={showInactiveOnly ? handleRestoreLocation : undefined}
+                            showSoftDeleted={showInactiveOnly}
                         />
                     </CustomCard>
                 </div>

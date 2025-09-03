@@ -72,6 +72,20 @@ class MaterialService {
         }
     }
 
+    async restoreMaterial(materialId: number): Promise<MaterialReadOnlyDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${materialId}/restore`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Restore material error:', error);
+            throw error;
+        }
+    }
+
     async getMaterialById(materialId: number): Promise<MaterialReadOnlyDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${materialId}`, {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Eye, Edit, Trash2, ShoppingCart, Truck } from 'lucide-react';
-import { Button } from '../../common';
+import { Button } from '../common';
 import type { PurchaseCardProps } from "../../../types/components/resultCard-types.ts";
 import { formatCurrency, formatDate } from "../../../utils/formatters.ts";
 

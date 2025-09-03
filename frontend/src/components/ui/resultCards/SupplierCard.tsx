@@ -1,6 +1,6 @@
 import React from 'react';
 import { Eye, Edit, Trash2, Phone, Mail, MapPin, Hash } from 'lucide-react';
-import { Button } from '../../common';
+import { Button } from '../common';
 import type { SupplierCardProps } from "../../../types/components/resultCard-types.ts";
 
 const SupplierCard: React.FC<SupplierCardProps> = ({

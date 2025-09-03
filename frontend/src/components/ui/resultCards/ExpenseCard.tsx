@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import { FaEuroSign } from 'react-icons/fa6';
-import { Button } from '../../common';
+import { Button } from '../common';
 import { getExpenseTypeDisplayName } from '../../../utils/EnumUtils';
 import { ExpenseCardProps } from "../../../types/components/resultCard-types.ts";
 import { formatCurrency, formatDate } from "../../../utils/formatters.ts";

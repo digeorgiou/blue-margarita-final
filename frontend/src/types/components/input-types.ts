@@ -53,6 +53,7 @@ export type CustomToggleOptionProps = {
     onChange: (value: boolean) => void;
     optionLabel?: string;
     className?: string;
+    textClassName?: string;
 }
 
 export type RadioOption = {

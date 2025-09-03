@@ -70,6 +70,36 @@ class AuthService {
         };
     }
 
+    getCurrentUserRole(): string | null {
+        const token = this.getStoredToken();
+        if (!token) return null;
+
+        const decoded = decodeJwt(token);
+        if (!decoded) return null;
+
+        // For Spring Security, check authorities array first
+        if (decoded.authorities && Array.isArray(decoded.authorities)) {
+            // Find the role authority (starts with "ROLE_")
+            const roleAuthority = decoded.authorities.find((auth: string) =>
+                auth.startsWith('ROLE_')
+            );
+
+            if (roleAuthority) {
+                // Extract just the role name without "ROLE_" prefix
+                const role = roleAuthority.replace('ROLE_', '');
+                console.log('User role from authorities:', role);
+                return role;
+            }
+        }
+
+        // Fallback: check for other possible claim names
+        const role = decoded.role ||
+            decoded.scope;
+
+        console.log('User role from token:', role);
+        return role || null;
+    }
+
     // Authenticate user and get JWT token
     async authenticate(credentials: AuthenticationRequest): Promise<AuthenticationResponse> {
         try {

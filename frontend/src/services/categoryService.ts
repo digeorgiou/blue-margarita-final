@@ -6,7 +6,6 @@ import {
     CategoryUpdateDTO,
     CategoryForDropdownDTO,
     CategoryDetailedViewDTO,
-    Paginated
 } from "../types/api/categoryInterface.ts";
 
 const API_BASE_URL = '/api/categories';
@@ -71,6 +70,20 @@ class CategoryService {
         }
     }
 
+    async restoreCategory(categoryId: number): Promise<CategoryReadOnlyDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${categoryId}/restore`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Restore category error:', error);
+            throw error;
+        }
+    }
+
     async getCategoryById(categoryId: number): Promise<CategoryReadOnlyDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${categoryId}`, {
@@ -92,20 +105,12 @@ class CategoryService {
     async getCategoriesFilteredPaginated(filters: {
         name?: string;
         isActive?: boolean;
-        page?: number;
-        pageSize?: number;
-        sortBy?: string;
-        sortDirection?: string;
-    } = {}): Promise<Paginated<CategoryReadOnlyDTO>> {
+    } = {}): Promise<CategoryForDropdownDTO[]> {
         try {
             const params = new URLSearchParams();
 
             if (filters.name) params.append('name', filters.name);
             if (filters.isActive !== undefined) params.append('isActive', filters.isActive.toString());
-            if (filters.page !== undefined) params.append('page', filters.page.toString());
-            if (filters.pageSize !== undefined) params.append('pageSize', filters.pageSize.toString());
-            if (filters.sortBy) params.append('sortBy', filters.sortBy);
-            if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
 
             const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}?${params}`, {
                 method: 'GET',

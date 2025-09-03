@@ -74,6 +74,20 @@ class CustomerService {
         }
     }
 
+    async restoreCustomer(customerId: number): Promise<CustomerListItemDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${customerId}/restore`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Restore customer error:', error);
+            throw error;
+        }
+    }
+
     async getCustomerById(customerId: number): Promise<CustomerDetailedViewDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${customerId}`, {

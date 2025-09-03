@@ -74,6 +74,20 @@ class ProductService {
         }
     }
 
+    async restoreProduct(productId: number): Promise<ProductListItemDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${productId}/restore`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Restore product error:', error);
+            throw error;
+        }
+    }
+
     // =============================================================================
     // PRODUCT VIEWING AND LISTING - FOR PRODUCT MANAGEMENT PAGE
     // =============================================================================

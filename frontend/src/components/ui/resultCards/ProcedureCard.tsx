@@ -1,6 +1,6 @@
 import React from 'react';
 import { Eye, Edit, Trash2, Package, Settings, AlertTriangle } from 'lucide-react';
-import { Button } from '../../common';
+import { Button } from '../common';
 import type { ProcedureCardProps } from "../../../types/components/resultCard-types.ts";
 import { formatDateTime, formatDate } from "../../../utils/formatters.ts";
 

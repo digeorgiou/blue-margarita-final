@@ -73,6 +73,20 @@ class SupplierService {
         }
     }
 
+    async restoreSupplier(supplierId: number): Promise<SupplierReadOnlyDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${supplierId}/restore`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Restore supplier error:', error);
+            throw error;
+        }
+    }
+
     async getSupplierById(supplierId: number): Promise<SupplierReadOnlyDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${supplierId}`, {

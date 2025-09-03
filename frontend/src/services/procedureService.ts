@@ -74,6 +74,20 @@ class ProcedureService {
         }
     }
 
+    async restoreProcedure(procedureId: number): Promise<ProcedureReadOnlyDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${procedureId}/restore`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Restore procedure error:', error);
+            throw error;
+        }
+    }
+
     async getProcedureById(procedureId: number): Promise<ProcedureReadOnlyDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${procedureId}`, {

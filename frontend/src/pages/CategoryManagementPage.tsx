@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Button, Alert, LoadingSpinner, CustomCard } from '../components/ui/common';
 import { CategoryList }  from "../components/ui/viewAll"
 import { CategoryCreateModal, CategoryUpdateModal, CategoryDetailModal, ConfirmDeleteModal, SuccessModal } from '../components/ui/modals';
+import { CustomToggleOption } from "../components/ui/inputs";
 import { categoryService } from '../services/categoryService';
+import { authService } from "../services/authService.ts";
 import { Gem, Plus } from 'lucide-react';
 import type {
     CategoryForDropdownDTO,
@@ -15,6 +17,9 @@ const CategoryManagementPage  = () => {
     const [categories, setCategories] = useState<CategoryForDropdownDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Toggle state for showing only inactive categories
+    const [showInactiveOnly, setShowInactiveOnly] = useState(false);
 
     // Modal states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -32,19 +37,35 @@ const CategoryManagementPage  = () => {
     // Success message state
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
+    const [isAdmin, setIsAdmin] = useState(false);
+
     // Load categories
     const loadCategories = async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await categoryService.getCategoriesForDropdown();
-            setCategories(data);
+
+            if (showInactiveOnly) {
+                // Load inactive categories using the filtered paginated endpoint
+                const result = await categoryService.getCategoriesFilteredPaginated({
+                    isActive: false,
+                });
+                setCategories(result);
+            } else {
+                // Load active categories (default behavior)
+                const data = await categoryService.getCategoriesForDropdown();
+                setCategories(data);
+            }
         } catch (err) {
             console.error('Failed to load categories:', err);
             setError('Αποτυχία φόρτωσης κατηγοριών');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleToggleChange = (checked: boolean) => {
+        setShowInactiveOnly(checked);
     };
 
     // Load category details for modals
@@ -114,6 +135,21 @@ const CategoryManagementPage  = () => {
         setIsSuccessModalOpen(true);
     };
 
+    // Handle restore category (for soft-deleted categories)
+    const handleRestoreCategory = async (category: CategoryForDropdownDTO) => {
+        try {
+            await categoryService.restoreCategory(category.id);
+            await loadCategories();
+            setSuccessMessage({
+                title: 'Επιτυχής Επαναφορά',
+                message: `Η κατηγορία "${category.name}" επαναφέρθηκε επιτυχώς.`
+            });
+            setIsSuccessModalOpen(true);
+        } catch (error) {
+            handleApiError(error);
+        }
+    };
+
     // Handle view details
     const handleViewDetails = async (category: CategoryForDropdownDTO) => {
         setSelectedCategory(category);
@@ -134,9 +170,14 @@ const CategoryManagementPage  = () => {
         setIsDeleteModalOpen(true);
     };
 
-    // Load data on mount
+    // Load categories when component mounts or toggle changes
     useEffect(() => {
         loadCategories();
+    }, [showInactiveOnly]);
+
+    useEffect(() => {
+        const userRole = authService.getCurrentUserRole();
+        setIsAdmin(userRole === 'ADMIN');
     }, []);
 
     if (error) {
@@ -161,7 +202,13 @@ const CategoryManagementPage  = () => {
                 {/* Header */}
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
                     <div className="flex items-center space-x-3">
-
+                        {isAdmin && (<CustomToggleOption
+                            value={showInactiveOnly}
+                            onChange={handleToggleChange}
+                            optionLabel="Προβολή Ανενεργών"
+                            className=""
+                            textClassName="text-white"
+                        />)}
                     </div>
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
@@ -174,17 +221,19 @@ const CategoryManagementPage  = () => {
 
                 {/* Categories List */}
                 <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                        <CustomCard
-                            className="bg-white/10 backdrop-blur-sm border-white/20"
-                        >
-                            <CategoryList
-                                categories={categories}
-                                loading={loading}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                onViewDetails={handleViewDetails}
-                            />
-                        </CustomCard>
+                    <CustomCard
+                        className="bg-white/10 backdrop-blur-sm border-white/20"
+                    >
+                        <CategoryList
+                            categories={categories}
+                            loading={loading}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onViewDetails={handleViewDetails}
+                            onRestore={showInactiveOnly ? handleRestoreCategory : undefined}
+                            showSoftDeleted={showInactiveOnly}
+                        />
+                    </CustomCard>
                 </div>
 
                 {/* Create Modal */}
@@ -214,8 +263,8 @@ const CategoryManagementPage  = () => {
                     onConfirm={handleDeleteCategory}
                     title="Διαγραφή Κατηγορίας"
                     message={ selectedCategory ?
-                    `Είστε σίγουροι ότι θέλετε να διαγράψετε την κατηγορία "${selectedCategory.name}"΄;`
-                    : ""}
+                        `Είστε σίγουροι ότι θέλετε να διαγράψετε την κατηγορία "${selectedCategory.name}"΄;`
+                        : ""}
                     warningMessage="Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
                 />
 

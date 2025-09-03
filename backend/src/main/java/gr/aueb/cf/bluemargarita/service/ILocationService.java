@@ -154,4 +154,14 @@ public interface ILocationService {
     List<LocationForDropdownDTO> getActiveLocationsForDropdown();
 
 
+    /**
+     * Retrieves inactive locations formatted for dropdown selections
+     * Returns minimal data optimized for form dropdowns and autocomplete components
+     * Results are sorted alphabetically by name for better user experience
+     *
+     * @return List of inactive locations with ID and name only, sorted alphabetically
+     */
+    List<LocationForDropdownDTO> getInactiveLocations();
+
+
 }

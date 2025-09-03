@@ -71,6 +71,20 @@ class LocationService {
         }
     }
 
+    async restoreLocation(locationId: number): Promise<LocationReadOnlyDTO> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${locationId}/restore`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Restore location error:', error);
+            throw error;
+        }
+    }
+
     async getLocationById(locationId: number): Promise<LocationReadOnlyDTO> {
         try {
             const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${locationId}`, {
@@ -147,6 +161,20 @@ class LocationService {
             return await response.json();
         } catch (error) {
             console.error('Get active locations for dropdown error:', error);
+            throw error;
+        }
+    }
+
+    async getInactiveLocations(): Promise<LocationForDropdownDTO[]> {
+        try {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/inactive-locations`, {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Get inactive locations for dropdown error:', error);
             throw error;
         }
     }
