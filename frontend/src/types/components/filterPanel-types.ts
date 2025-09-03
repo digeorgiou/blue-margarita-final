@@ -12,6 +12,7 @@ import type {SupplierReadOnlyDTO} from "../api/supplierInterface.ts";
 import { PurchaseReadOnlyDTO } from "../api/purchaseInterface";
 import { SupplierSearchResultDTO } from "../api/supplierInterface";
 import type {MispricedProductAlertDTO, ToDoTaskReadOnlyDTO} from "../api/dashboardInterface";
+import { UserReadOnlyDTO } from "../api/userInterface.ts";
 
 export type CustomerFilterPanelProps = {
     searchTerm: string;
@@ -271,4 +272,16 @@ export type TaskFilterPanelProps = {
 
     // Children (for rendering task results)
     children?: React.ReactNode;
+}
+
+export type UserFilterPanelProps = {
+    searchTerm: string;
+    onSearchTermChange: (term: string) => void;
+    searchResults: UserReadOnlyDTO[];
+    loading: boolean;
+    onViewDetails: (user: UserReadOnlyDTO) => void;
+    onEdit: (user: UserReadOnlyDTO) => void;
+    onDelete: (user: UserReadOnlyDTO) => void;
+    showInactiveOnly?: boolean;
+    onRestore?: (user: UserReadOnlyDTO) => void;
 }

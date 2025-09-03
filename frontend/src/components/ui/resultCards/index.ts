@@ -9,3 +9,4 @@ export { default as ExpenseCard } from '../resultCards/ExpenseCard';
 export { default as SupplierCard } from '../resultCards/SupplierCard';
 export { default as MispricedProductCard } from '../resultCards/MispricedProductCard';
 export { default as TaskCard } from '../resultCards/TaskCard';
+export { default as UserCard } from './UserCard';

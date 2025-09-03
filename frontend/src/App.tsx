@@ -23,6 +23,7 @@ import ProductSalesAnalyticsPage from "./pages/ProductSalesAnalyticsPage.tsx";
 import StockManagementPage from "./pages/StockManagementPage.tsx";
 import PurchaseManagementPage from "./pages/PurchaseManagementPage.tsx";
 import ProfitLossPage from "./pages/ProfitLossPage.tsx";
+import UserManagementPage from "./pages/UserManagementPage.tsx";
 
 import './styles/global-logo-background.css';
 
@@ -112,6 +113,8 @@ const App: React.FC = () => {
                     onNavigate={handleNavigation} />;
             case 'profit-losses':
                 return <ProfitLossPage />;
+            case 'user-management' :
+                return <UserManagementPage />;
             default:
                 return <Dashboard onNavigate={handleNavigation} />;
         }

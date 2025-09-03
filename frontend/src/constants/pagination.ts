@@ -9,5 +9,6 @@ export const DEFAULT_PAGE_SIZES = {
     PROCEDURES: 12,
     PRODUCTS: 12,
     STOCK: 12,
-    SUPPLIERS: 6
+    SUPPLIERS: 6,
+    USERS: 12
 };

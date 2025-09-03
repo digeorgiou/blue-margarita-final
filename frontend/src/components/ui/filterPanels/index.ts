@@ -9,3 +9,4 @@ export { default as StockManagementFilterPanel } from './StockManagementFilterPa
 export { default as MispricedProductFilterPanel } from './MispricedProductFilterPanel';
 export { default as TaskFilterPanel } from './TaskFilterPanel';
 export { default as PurchaseFilterPanel } from './PurchaseFilterPanel';
+export { default as UserFilterPanel } from './UserFilterPanel';

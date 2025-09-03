@@ -43,6 +43,10 @@ export { default as SupplierUpdateModal } from './supplier/SupplierUpdateModal'
 
 export { default as TaskModal } from './task/TaskModal'
 
+export { default as UserCreateModal } from './user/UserCreateModal';
+export { default as UserUpdateModal } from './user/UserUpdateModal';
+export { default as UserDetailModal } from './user/UserDetailModal';
+
 export { default as BaseFormModal } from './common/BaseFormModal'
 export { default as ConfirmDeleteModal } from './common/ConfirmDeleteModal'
 export { default as ProductUsageModal } from './common/ProductUsageModal'

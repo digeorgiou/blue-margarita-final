@@ -3,6 +3,8 @@ package gr.aueb.cf.bluemargarita.service;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.UserFilters;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserUpdateDTO;
@@ -72,6 +74,14 @@ public interface IUserService {
      * @return List of all active users
      */
     List<UserReadOnlyDTO> getAllActiveUsers();
+
+    /**
+     * Retrieves users with pagination based on filter criteria
+     * Supports filtering by username (partial match) and active status
+     * @param filters Filter criteria including pagination info
+     * @return Paginated result of users matching filters
+     */
+    Paginated<UserReadOnlyDTO> getUsersFilteredPaginated(UserFilters filters);
 
     /**
      * Retrieves a user by username

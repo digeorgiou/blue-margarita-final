@@ -12,7 +12,7 @@ import {
     Truck,
     Receipt,
     TrendingUp,
-    Settings
+    Settings,
 } from 'lucide-react';
 import { IoHammerOutline } from "react-icons/io5";
 import { GiDiamondRing } from "react-icons/gi";
@@ -99,6 +99,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
             label: 'Κέρδη/Ζημίες',
             icon: <TrendingUp className="w-5 h-5" />,
             href: 'profit-losses'
+        },
+        {
+            id: 'user-management',
+            label: 'Χρήστες',
+            icon: <Users className="w-5 h-5"/>,
+            href: 'user-management'
         }
     ];
 

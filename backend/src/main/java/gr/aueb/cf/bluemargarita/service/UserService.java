@@ -3,12 +3,20 @@ package gr.aueb.cf.bluemargarita.service;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityAlreadyExistsException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityInvalidArgumentException;
 import gr.aueb.cf.bluemargarita.core.exceptions.EntityNotFoundException;
+import gr.aueb.cf.bluemargarita.core.filters.LocationFilters;
+import gr.aueb.cf.bluemargarita.core.filters.Paginated;
+import gr.aueb.cf.bluemargarita.core.filters.UserFilters;
+import gr.aueb.cf.bluemargarita.core.specifications.LocationSpecification;
+import gr.aueb.cf.bluemargarita.core.specifications.UserSpecification;
 import gr.aueb.cf.bluemargarita.dto.user.UserInsertDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserReadOnlyDTO;
 import gr.aueb.cf.bluemargarita.dto.user.UserUpdateDTO;
 import gr.aueb.cf.bluemargarita.mapper.Mapper;
+import gr.aueb.cf.bluemargarita.model.Location;
 import gr.aueb.cf.bluemargarita.model.User;
 import gr.aueb.cf.bluemargarita.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,6 +177,16 @@ public class UserService implements IUserService{
 
     @Override
     @Transactional(readOnly = true)
+    public Paginated<UserReadOnlyDTO> getUsersFilteredPaginated(UserFilters filters) {
+        var filtered = userRepository.findAll(
+                getSpecsFromFilters(filters),
+                filters.getPageable()
+        );
+        return new Paginated<>(filtered.map(mapper::mapToUserReadOnlyDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public UserReadOnlyDTO getUserByUsername(String username) throws EntityNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User", "User with username " + username + " not found"));
@@ -205,6 +223,12 @@ public class UserService implements IUserService{
             throw new EntityNotFoundException("User", "No authenticated user found");
         }
         return currentUser;
+    }
+
+    private Specification<User> getSpecsFromFilters(UserFilters filters) {
+        return Specification
+                .where(UserSpecification.usernameLike(filters.getUsername()))
+                .and(UserSpecification.userIsActive(filters.getIsActive()));
     }
 
 }
