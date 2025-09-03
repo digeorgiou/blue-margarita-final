@@ -80,7 +80,7 @@ public interface ICategoryService {
     /**
      * Retrieves categories with pagination based on filter criteria
      * @param filters Filter criteria including pagination info
-     * @return Paginated result of categories matching filters
+     * @return List of categories matching filters
      */
-    Paginated<CategoryReadOnlyDTO> getCategoriesFilteredPaginated(CategoryFilters filters);
+    List<CategoryForDropdownDTO> getCategoriesFilteredPaginated(CategoryFilters filters);
 }

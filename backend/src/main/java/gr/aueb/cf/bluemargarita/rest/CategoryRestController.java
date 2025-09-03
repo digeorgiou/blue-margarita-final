@@ -211,33 +211,23 @@ public class CategoryRestController {
                             description = "Paginated list of categories",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = Paginated.class)
+                                    schema = @Schema(implementation = CategoryForDropdownDTO.class)
                             )
                     )
             }
     )
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Paginated<CategoryReadOnlyDTO>> getCategoriesFilteredPaginated(
+    public ResponseEntity<List<CategoryForDropdownDTO>> getCategoriesFilteredPaginated(
             @Parameter(description = "Category name filter") @RequestParam(required = false) String name,
-            @Parameter(description = "Active status filter") @RequestParam(required = false) Boolean isActive,
-            @Parameter(description = "Page number (0-based)") @RequestParam(required = false, defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(required = false, defaultValue = "20") int pageSize,
-            @Parameter(description = "Sort field") @RequestParam(required = false, defaultValue = "name") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(required = false, defaultValue = "ASC") String sortDirection) {
+            @Parameter(description = "Active status filter") @RequestParam(required = false) Boolean isActive ){
 
         CategoryFilters filters = CategoryFilters.builder()
                 .name(name)
                 .isActive(isActive)
                 .build();
 
-        // Set pagination properties using request parameters (with defaults)
-        filters.setPage(page);
-        filters.setPageSize(pageSize);
-        filters.setSortBy(sortBy);
-        filters.setSortDirection(Sort.Direction.valueOf(sortDirection.toUpperCase()));
-
-        Paginated<CategoryReadOnlyDTO> categories = categoryService.getCategoriesFilteredPaginated(filters);
+        List<CategoryForDropdownDTO> categories = categoryService.getCategoriesFilteredPaginated(filters);
         return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 

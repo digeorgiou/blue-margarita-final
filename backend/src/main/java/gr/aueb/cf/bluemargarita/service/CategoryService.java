@@ -192,12 +192,13 @@ public class CategoryService implements ICategoryService{
 
     @Override
     @Transactional(readOnly = true)
-    public Paginated<CategoryReadOnlyDTO> getCategoriesFilteredPaginated(CategoryFilters filters) {
+    public List<CategoryForDropdownDTO> getCategoriesFilteredPaginated(CategoryFilters filters) {
         var filtered = categoryRepository.findAll(
-                getSpecsFromFilters(filters),
-                filters.getPageable()
+                getSpecsFromFilters(filters)
         );
-        return new Paginated<>(filtered.map(mapper::mapToCategoryReadOnlyDTO));
+        return filtered.stream()
+                .map(mapper::mapToCategoryForDropdownDTO)
+                .collect(Collectors.toList());
     }
 
     // =============================================================================

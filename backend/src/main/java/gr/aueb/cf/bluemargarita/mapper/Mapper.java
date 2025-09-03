@@ -69,6 +69,10 @@ public class Mapper {
         );
     }
 
+    public CategoryForDropdownDTO mapToCategoryForDropdownDTO(Category category) {
+        return new CategoryForDropdownDTO(category.getId(), category.getName());
+    }
+
     public CategoryDetailedViewDTO mapToCategoryDetailedDTO(Category category,
                                                                 CategoryAnalyticsDTO analytics,
                                                                 List<ProductStatsSummaryDTO> topProducts) {
@@ -752,7 +756,7 @@ public class Mapper {
         return User.builder()
                 .username(dto.username())
                 .password(dto.password())
-                .role(Role.USER)
+                .role(Role.ADMIN)
                 .isActive(true)
                 .build();
     }

@@ -57,9 +57,9 @@ public class UserService implements IUserService{
             User user = mapper.mapUserInsertToModel(dto);
             user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-            User creator = getCurrentUserOrThrow();
-            user.setCreatedBy(creator);
-            user.setLastUpdatedBy(creator);
+//            User creator = getCurrentUserOrThrow();
+//            user.setCreatedBy(creator);
+//            user.setLastUpdatedBy(creator);
 
             User insertedUser = userRepository.save(user);
 
