@@ -1,0 +1,16 @@
+DELETE FROM sale_product;
+DELETE FROM purchase_material;
+DELETE FROM product_material;
+DELETE FROM procedure_product;
+DELETE FROM expenses;
+DELETE FROM sales;
+DELETE FROM purchases;
+DELETE FROM to_do_task;
+DELETE FROM products;
+DELETE FROM customers;
+DELETE FROM suppliers;
+DELETE FROM materials;
+DELETE FROM procedures;
+DELETE FROM categories;
+DELETE FROM locations;
+DELETE FROM users;

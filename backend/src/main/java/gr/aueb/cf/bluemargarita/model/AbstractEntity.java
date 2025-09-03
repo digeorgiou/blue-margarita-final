@@ -22,7 +22,7 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class AbstractEntity {
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     @CreatedDate
     private LocalDateTime createdAt;
 
@@ -40,7 +40,7 @@ public abstract class AbstractEntity {
     @JoinColumn(name = "last_updated_by", nullable = true)
     private User lastUpdatedBy;
 
-    @Column(unique = true, updatable = false, nullable = false, length = 36)
+    @Column(updatable = false, nullable = false, length = 36)
     private String uuid;
 
     @PrePersist
