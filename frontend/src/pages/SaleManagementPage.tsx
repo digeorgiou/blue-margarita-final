@@ -393,7 +393,7 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
                                     <div className="flex">
                                         <div className="ml-3">
                                             <p className="text-sm text-yellow-700">
-                                                <strong>Πάρα πολλά αποτελέσματα για σύνοψη:</strong> Βρέθηκαν {formatNumber(searchResults.totalElements)} έξοδα.
+                                                <strong>Πάρα πολλά αποτελέσματα για σύνοψη:</strong> Βρέθηκαν {formatNumber(searchResults.totalElements)} πωλήσεις.
                                                 Η σύνοψη εμφανίζεται μόνο για ≤100 αποτελέσματα για λόγους απόδοσης.
                                             </p>
                                             <p className="text-sm text-yellow-600">

@@ -156,7 +156,7 @@ export type SaleFilterPanelProps = {
 
     // Payment method filter
     paymentMethodFilter: string;
-    onPaymentMethodFilterChange: (value: string) => void;
+    onPaymentMethodFilterChange: (value: string | number) => void;
     paymentMethods: PaymentMethodDTO[];
 
     // Wholesale filter

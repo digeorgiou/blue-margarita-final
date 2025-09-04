@@ -22,5 +22,5 @@ export interface UserUpdateDTO {
     username: string;
     password: string;
     confirmedPassword: string;
-    role?: 'USER' | 'ADMIN';
+    role: 'USER' | 'ADMIN';
 }

@@ -20,7 +20,7 @@ const UserCreateModal: React.FC<UserCreateModalProps> = ({
         username: '',
         password: '',
         confirmedPassword: '',
-        role: 'USER' as 'USER' | 'ADMIN'
+        role: 'USER'
     });
 
     const [submitting, setSubmitting] = useState(false);
@@ -41,20 +41,6 @@ const UserCreateModal: React.FC<UserCreateModalProps> = ({
         clearErrors();
         onClose();
     };
-    //
-    // const handleInputChange = (field: keyof UserInsertDTO, value: string | number) => {
-    //     setFormData(prev => ({ ...prev, [field]: value }));
-    //
-    //     // Clear field error when user starts typing
-    //     if (fieldErrors[field]) {
-    //         clearFieldError(field);
-    //     }
-    //
-    //     // Clear general error when user makes changes
-    //     if (generalError) {
-    //         clearErrors();
-    //     }
-    // };
 
     const validateForm = (): boolean => {
         if (!formData.username.trim()) {
@@ -166,10 +152,9 @@ const UserCreateModal: React.FC<UserCreateModalProps> = ({
 
                 <CustomSelect
                     label="Ρόλος"
-                    value={formData.role}
+                    value={formData.role || 'USER'}
                     onChange={(value) => setFormData({...formData, role: value as 'USER' | 'ADMIN'})}
                     options={roleOptions}
-                    error={fieldErrors.role}
                     icon={<Shield className="w-4 h-4" />}
                     disabled={submitting}
                 />

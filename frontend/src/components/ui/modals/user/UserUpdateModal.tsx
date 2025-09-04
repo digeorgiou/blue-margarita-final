@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BaseFormModal } from '..';
-import { Button, Alert } from '../../common';
+import { Alert } from '../../common';
 import { CustomTextInput, CustomSelect } from '../../inputs';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import { User, Lock, Shield } from 'lucide-react';
 import type { UserReadOnlyDTO, UserUpdateDTO } from '../../../../types/api/userInterface';
-import {MaterialUpdateDTO} from "../../../../types/api/materialInterface.ts";
 
 interface UserUpdateModalProps {
     isOpen: boolean;
@@ -33,8 +32,7 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
         fieldErrors,
         generalError,
         handleApiError,
-        clearErrors,
-        clearFieldError
+        clearErrors
     } = useFormErrorHandler();
 
     // Populate form when user changes
@@ -90,20 +88,6 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
         setSubmitting(false);
         clearErrors();
         onClose();
-    };
-
-    const handleInputChange = (field: keyof Omit<UserUpdateDTO, 'userId'>, value: string | number) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-
-        // Clear field error when user starts typing
-        if (fieldErrors[field]) {
-            clearFieldError(field);
-        }
-
-        // Clear general error when user makes changes
-        if (generalError) {
-            clearErrors();
-        }
     };
 
     const passwordsMatch = !formData.password || formData.password === formData.confirmedPassword;
@@ -173,7 +157,6 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
                     value={formData.role}
                     onChange={(value) => setFormData({...formData, role: value as 'USER' | 'ADMIN'})}
                     options={roleOptions}
-                    error={fieldErrors.role}
                     icon={<Shield className="w-4 h-4" />}
                     disabled={submitting}
                 />
