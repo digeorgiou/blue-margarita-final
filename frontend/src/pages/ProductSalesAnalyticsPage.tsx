@@ -189,7 +189,7 @@ const ProductSalesAnalyticsPage: React.FC<ProductSalesAnalyticsPageProps> = ({
                         </CustomCard>
 
                         <CustomCard
-                            title="Συνολικές Πωλήσεις"
+                            title="Πωλήσεις στο επιλεγμένο διάστημα"
                             icon={<DollarSign className="text-green-600" />}
                             className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200"
                         >

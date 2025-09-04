@@ -7,7 +7,7 @@ export type AlertProps = {
 }
 
 export type LoadingSpinnerProps = {
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'xs' |'sm' | 'md' | 'lg';
     message?: string;
 }
 

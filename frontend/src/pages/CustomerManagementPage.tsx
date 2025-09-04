@@ -109,6 +109,10 @@ const CustomerManagementPage = () => {
         searchCustomers(0, pageSize);
     }, [showInactiveOnly]);
 
+    useEffect(() => {
+        searchCustomers();
+    }, [currentPage, pageSize]);
+
     // Modal handlers
     const handleViewDetails = async (customer: CustomerListItemDTO) => {
         setSelectedCustomer(customer);

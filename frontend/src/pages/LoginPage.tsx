@@ -117,7 +117,7 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
                 {/* Login Card */}
                 <Card
-                    title="Welcome Back"
+                    title="Καλώς Ήρθατε"
                     icon="🔐"
                     className="mb-6"
                 >
@@ -163,11 +163,10 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         >
                             {loading ? (
                                 <div className="flex items-center justify-center">
-                                    <LoadingSpinner />
-                                    <span className="ml-2">Signing in...</span>
+                                    <LoadingSpinner size="xs" message="Είσοδος στην εφαρμογή..."/>
                                 </div>
                             ) : (
-                                'Sign In'
+                                'Είσοδος'
                             )}
                         </Button>
                     </form>
@@ -176,16 +175,19 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 {/* Help Card */}
                 <Card className="text-center">
                     <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-gray-900">Need Help?</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">Χρειάζεστε βοήθεια?</h3>
                         <div className="space-y-2 text-sm text-gray-600">
                             <p>
-                                <strong>Demo Credentials:</strong><br />
-                                Username: demo<br />
-                                Password: demo123
+                                <strong>Demo Admin User:</strong><br />
+                                Username: admin<br />
+                                Password: 12345
                             </p>
-                            <p className="text-xs">
-                                Contact your administrator if you need access to the system.
+                            <p>
+                            <strong>Demo Simple User:</strong><br />
+                            Username: maria<br />
+                            Password: 12345
                             </p>
+
                         </div>
                     </div>
                 </Card>

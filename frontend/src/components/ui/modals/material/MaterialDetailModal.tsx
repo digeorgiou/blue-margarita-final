@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../common';
 import { MaterialDetailModalProps } from "../../../../types/components/modal-types.ts";
-import { formatCurrency, formatDate, formatNumber, formatQuantity } from "../../../../utils/formatters.ts";
+import { formatCurrency, formatDate, formatNumber, formatQuantity, formatPercentage } from "../../../../utils/formatters.ts";
 
 const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                                                      isOpen,
@@ -266,7 +266,7 @@ const MaterialDetailModal: React.FC<MaterialDetailModalProps> = ({
                                                     {category.categoryName}
                                                 </h4>
                                                 <p className="text-sm text-gray-600">
-                                                    {category.productCount} προϊόντα ({category.percentage}%)
+                                                    {category.productCount} προϊόντα ({formatPercentage(category.percentage)}%)
                                                 </p>
                                             </div>
                                         </div>

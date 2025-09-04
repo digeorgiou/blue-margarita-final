@@ -7,6 +7,11 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
                                                        }) => {
     // Size configurations
     const sizeConfig = {
+        xs: {
+            spinner: 'h-4 w-4',
+            container: '',
+            text: 'text-xs'
+        },
         sm: {
             spinner: 'h-6 w-6',
             container: 'min-h-[200px]',

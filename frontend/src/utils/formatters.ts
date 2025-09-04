@@ -45,8 +45,8 @@ export const formatQuantity = (quantity: number, unit: string) => {
     return `${formatNumber(quantity)} ${unit}`;
 };
 
-export const formatPercentage = (num: number) => {
-    return `${num.toFixed(1)}%`;
+export const formatPercentage = (num: number, decimals: number = 2) => {
+    return `${num.toFixed(decimals)}%`;
 };
 
 export const formatTaskDate = (task: { date: string; daysFromToday: number }): string => {

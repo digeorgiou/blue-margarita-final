@@ -165,8 +165,9 @@ const SaleManagementPage: React.FC<SaleManagementPageProps> = ({ onNavigate }) =
         }
     };
 
-    const handlePaymentMethodFilterChange = (value: string) => {
-        setPaymentMethodFilter(value);
+    const handlePaymentMethodFilterChange = (value: string | number) => {
+        const stringValue = typeof value === 'number' ? String(value) : value;
+        setPaymentMethodFilter(stringValue);
     };
 
     // PRODUCT SEARCH

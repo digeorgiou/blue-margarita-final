@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Button, LoadingSpinner } from '../../common';
 import { ProcedureDetailModalProps } from "../../../../types/components/modal-types.ts";
-import { formatCurrency, formatDate, formatNumber } from "../../../../utils/formatters.ts";
+import { formatCurrency, formatDate, formatNumber, formatPercentage } from "../../../../utils/formatters.ts";
 
 const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                                                        isOpen,
@@ -218,7 +218,7 @@ const ProcedureDetailModal: React.FC<ProcedureDetailModalProps> = ({
                                                     {category.categoryName}
                                                 </h4>
                                                 <p className="text-sm text-gray-600">
-                                                    {category.productCount} προϊόντα ({category.percentage}%)
+                                                    {category.productCount} προϊόντα ({formatPercentage(category.percentage)}%)
                                                 </p>
                                             </div>
                                         </div>
