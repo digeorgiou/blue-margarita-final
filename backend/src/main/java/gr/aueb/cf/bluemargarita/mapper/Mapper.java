@@ -756,14 +756,14 @@ public class Mapper {
         return User.builder()
                 .username(dto.username())
                 .password(dto.password())
-                .role(Role.ADMIN)
+                .role(Role.valueOf(dto.role()))
                 .isActive(true)
                 .build();
     }
 
     public User mapUserUpdateToModel(UserUpdateDTO dto, User existingUser){
         existingUser.setUsername(dto.username());
-        // Add other fields if needed for updates
+        existingUser.setRole(Role.valueOf(dto.role()));
         return existingUser;
     }
 

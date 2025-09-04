@@ -52,52 +52,45 @@ public class UserService implements IUserService{
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserReadOnlyDTO createUser(UserInsertDTO dto) throws EntityAlreadyExistsException {
+    public UserReadOnlyDTO createUser(UserInsertDTO dto) throws EntityNotFoundException, EntityAlreadyExistsException {
 
-        LOGGER.info("Starting user creation for username: {}", dto.username());
+        validateUniqueUsername(dto.username());
 
-        if(userRepository.existsByUsername(dto.username())){
-            throw new EntityAlreadyExistsException("User",
-                    "Το username " + dto.username() + " χρησιμοποιείται ήδη");
+        User user = mapper.mapUserInsertToModel(dto);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        User creator = getCurrentUser();
+
+        if (creator != null) {
+            user.setCreatedBy(creator);
+            user.setLastUpdatedBy(creator);
         }
 
-        try {
-            User user = mapper.mapUserInsertToModel(dto);
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        User insertedUser = userRepository.save(user);
+        LOGGER.info("User with username = {} inserted with ID = {}", dto.username(), insertedUser.getId());
 
-//            User creator = getCurrentUserOrThrow();
-//            user.setCreatedBy(creator);
-//            user.setLastUpdatedBy(creator);
-
-            User insertedUser = userRepository.save(user);
-
-            LOGGER.info("User with username = {} inserted with ID = {}", dto.username(), insertedUser.getId());
-
-            return mapper.mapToUserReadOnlyDTO(insertedUser);
-
-        } catch (Exception e) {
-            LOGGER.error("Error creating user with username: {}", dto.username(), e);
-            throw new RuntimeException("Failed to create user: " + e.getMessage(), e);
-        }
+        return mapper.mapToUserReadOnlyDTO(insertedUser);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserReadOnlyDTO updateUser(UserUpdateDTO dto) throws EntityNotFoundException, EntityAlreadyExistsException {
 
-        User existingUser =
-                userRepository.findById(dto.userId()).orElseThrow(()-> new EntityNotFoundException("User",
-                        "User with id " + dto.userId() + " was not found"));
+        User existingUser = getUserEntityById(dto.userId());
 
-        if(! existingUser.getUsername().equals(dto.username()) && userRepository.existsByUsername(dto.username())){
-            throw new EntityAlreadyExistsException("User",
-                    "Το username " + dto.username() + " χρησιμοποιείται ήδη");
+        if(! existingUser.getUsername().equals(dto.username())){
+            validateUniqueUsername(dto.username());
         }
 
         User updatedUser = mapper.mapUserUpdateToModel(dto, existingUser);
 
-        User updater = getCurrentUserOrThrow();
-        updatedUser.setLastUpdatedBy(updater);
+        User updater = getCurrentUser();
+        if (updater != null) {
+            updatedUser.setLastUpdatedBy(updater);
+        }
+        if (dto.password() != null && !dto.password().trim().isEmpty()) {
+            updatedUser.setPassword(passwordEncoder.encode(dto.password()));
+        }
 
         User savedUser = userRepository.save(updatedUser);
 
@@ -216,6 +209,19 @@ public class UserService implements IUserService{
 
         return null; // No authenticated user (e.g., during registration)
     }
+
+    private User getUserEntityById(Long id) throws EntityNotFoundException {
+        return userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("User",
+                "User with id " + id + " was not found"));
+    }
+
+    private void validateUniqueUsername(String username) throws EntityAlreadyExistsException {
+            if (userRepository.existsByUsername(username)) {
+                throw new EntityAlreadyExistsException("User", "Υπάρχει ήδη χρήστης με username "
+                        + username);
+            }
+        }
+
 
     public User getCurrentUserOrThrow() throws EntityNotFoundException {
         User currentUser = getCurrentUser();

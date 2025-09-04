@@ -17,6 +17,10 @@ public record UserInsertDTO(
 
         @NotEmpty(message = "Παρακαλώ εισάγετε κωδικό")
         @Size(min = 4, max = 30, message = "Ο κωδικός πρέπει να έχει 4 ως 30 χαρακτήρες")
-        String confirmedPassword
+        String confirmedPassword,
+
+        @NotEmpty(message = "Παρακαλώ επιλέξτε ρόλο")
+        @Pattern(regexp = "^(ADMIN|USER)$", message = "Ο ρόλος πρέπει να είναι ADMIN ή USER")
+        String role
 )
 {}

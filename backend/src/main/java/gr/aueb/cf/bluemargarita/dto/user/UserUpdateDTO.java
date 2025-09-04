@@ -13,11 +13,11 @@ public record UserUpdateDTO(
         @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "Το username μπορεί να περιέχει μόνο γράμματα, αριθμούς και _")
         String username,
 
-        @NotEmpty(message = "Παρακαλώ εισάγετε κωδικό")
-        @Size(min = 4, max = 30, message = "Ο κωδικός πρέπει να έχει 4 ως 30 χαρακτήρες")
+        @NotEmpty(message = "Παρακαλώ επιλέξτε ρόλο")
+        @Pattern(regexp = "^(ADMIN|USER)$", message = "Ο ρόλος πρέπει να είναι ADMIN ή USER")
+        String role,
+
         String password,
 
-        @NotEmpty(message = "Παρακαλώ εισάγετε κωδικό")
-        @Size(min = 4, max = 30, message = "Ο κωδικός πρέπει να έχει 4 ως 30 χαρακτήρες")
         String confirmedPassword
 ) {}

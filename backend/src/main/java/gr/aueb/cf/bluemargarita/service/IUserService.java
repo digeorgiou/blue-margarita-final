@@ -23,7 +23,7 @@ public interface IUserService {
      * @return Created user as DTO
      * @throws EntityAlreadyExistsException if username already exists
      */
-    UserReadOnlyDTO createUser(UserInsertDTO dto) throws EntityAlreadyExistsException;
+    UserReadOnlyDTO createUser(UserInsertDTO dto) throws EntityAlreadyExistsException, EntityNotFoundException;
 
     /**
      * Updates an existing user's information

@@ -23,7 +23,7 @@ class UserService {
 
     async createUser(userData: UserInsertDTO): Promise<UserReadOnlyDTO> {
         try {
-            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/register`, {
                 method: 'POST',
                 headers: {
                     ...this.getAuthHeaders(),
@@ -41,7 +41,7 @@ class UserService {
 
     async updateUser(userData: UserUpdateDTO): Promise<UserReadOnlyDTO> {
         try {
-            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/${userData.userId}`, {
+            const response = await ApiErrorHandler.enhancedFetch(`${API_BASE_URL}/update/${userData.userId}`, {
                 method: 'PUT',
                 headers: {
                     ...this.getAuthHeaders(),

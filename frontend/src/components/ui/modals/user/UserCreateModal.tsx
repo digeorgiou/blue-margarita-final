@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { BaseFormModal } from '..';
-import { Button, Alert } from '../../common';
 import { CustomTextInput, CustomSelect } from '../../inputs';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import { User, Lock, Shield } from 'lucide-react';
@@ -17,7 +16,7 @@ const UserCreateModal: React.FC<UserCreateModalProps> = ({
                                                              onClose,
                                                              onSubmit
                                                          }) => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<UserInsertDTO>({
         username: '',
         password: '',
         confirmedPassword: '',
@@ -25,35 +24,12 @@ const UserCreateModal: React.FC<UserCreateModalProps> = ({
     });
 
     const [submitting, setSubmitting] = useState(false);
-    const { fieldErrors, generalError, handleApiError, clearErrors } = useFormErrorHandler();
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (formData.password !== formData.confirmedPassword) {
-            return; // Form validation will handle this
-        }
-
-        try {
-            setSubmitting(true);
-            clearErrors();
-
-            await onSubmit(formData);
-
-            // Reset form and close modal
-            setFormData({
-                username: '',
-                password: '',
-                confirmedPassword: '',
-                role: 'USER'
-            });
-            onClose();
-        } catch (error) {
-            await handleApiError(error);
-        } finally {
-            setSubmitting(false);
-        }
-    };
+    const {
+        fieldErrors,
+        generalError,
+        handleApiError,
+        clearErrors,
+    } = useFormErrorHandler();
 
     const handleClose = () => {
         setFormData({
@@ -65,6 +41,64 @@ const UserCreateModal: React.FC<UserCreateModalProps> = ({
         clearErrors();
         onClose();
     };
+    //
+    // const handleInputChange = (field: keyof UserInsertDTO, value: string | number) => {
+    //     setFormData(prev => ({ ...prev, [field]: value }));
+    //
+    //     // Clear field error when user starts typing
+    //     if (fieldErrors[field]) {
+    //         clearFieldError(field);
+    //     }
+    //
+    //     // Clear general error when user makes changes
+    //     if (generalError) {
+    //         clearErrors();
+    //     }
+    // };
+
+    const validateForm = (): boolean => {
+        if (!formData.username.trim()) {
+            return false;
+        }
+        if (!formData.password.trim()) {
+            return false;
+        }
+        if (!formData.confirmedPassword.trim()) {
+            return false;
+        }
+        if (formData.password !== formData.confirmedPassword) {
+            return false;
+        }
+        return true;
+    };
+
+    const handleSubmit = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        setSubmitting(true);
+        clearErrors();
+
+        try {
+            const dataToSubmit: UserInsertDTO = {
+                username: formData.username.trim(),
+                password: formData.password.trim(),
+                confirmedPassword: formData.confirmedPassword.trim(),
+                role: formData.role
+            };
+
+            await onSubmit(dataToSubmit);
+            handleClose(); // Close modal on success
+        } catch (error) {
+            // The hook will handle displaying the error
+            await handleApiError(error);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+
 
     const passwordsMatch = formData.password === formData.confirmedPassword || !formData.confirmedPassword;
 
@@ -73,13 +107,26 @@ const UserCreateModal: React.FC<UserCreateModalProps> = ({
         { value: 'ADMIN', label: 'Διαχειριστής' }
     ];
 
+    const isFormValid = formData.username.trim().length > 0 &&
+        formData.password.trim().length > 0 &&
+        formData.confirmedPassword.trim().length > 0
+
     return (
-        <BaseFormModal isOpen={isOpen} onClose={handleClose} title="Δημιουργία Νέου Χρήστη">
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <BaseFormModal
+            isOpen={isOpen}
+            onClose={handleClose}
+            onSubmit={handleSubmit}
+            title="Δημιουργία Νέου Χρήστη"
+            submitText="Δημιουργία"
+            isValid={isFormValid}
+        >
+            <div className="space-y-4">
                 {generalError && (
-                    <Alert variant="error">
-                        {generalError}
-                    </Alert>
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm text-red-800">
+                            {generalError}
+                        </p>
+                    </div>
                 )}
 
                 <CustomTextInput
@@ -126,25 +173,7 @@ const UserCreateModal: React.FC<UserCreateModalProps> = ({
                     icon={<Shield className="w-4 h-4" />}
                     disabled={submitting}
                 />
-
-                <div className="flex justify-end space-x-3 pt-4">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={handleClose}
-                        disabled={submitting}
-                    >
-                        Ακύρωση
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={submitting || !passwordsMatch || !formData.username || !formData.password}
-                    >
-                        {submitting ? 'Δημιουργία...' : 'Δημιουργία'}
-                    </Button>
-                </div>
-            </form>
+            </div>
         </BaseFormModal>
     );
 };

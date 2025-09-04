@@ -5,6 +5,7 @@ import { CustomTextInput, CustomSelect } from '../../inputs';
 import { useFormErrorHandler } from '../../../../hooks/useFormErrorHandler';
 import { User, Lock, Shield } from 'lucide-react';
 import type { UserReadOnlyDTO, UserUpdateDTO } from '../../../../types/api/userInterface';
+import {MaterialUpdateDTO} from "../../../../types/api/materialInterface.ts";
 
 interface UserUpdateModalProps {
     isOpen: boolean;
@@ -27,7 +28,14 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
     });
 
     const [submitting, setSubmitting] = useState(false);
-    const { fieldErrors, generalError, handleApiError, clearErrors } = useFormErrorHandler();
+
+    const {
+        fieldErrors,
+        generalError,
+        handleApiError,
+        clearErrors,
+        clearFieldError
+    } = useFormErrorHandler();
 
     // Populate form when user changes
     useEffect(() => {
@@ -41,10 +49,14 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
         }
     }, [user]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const validateForm = (): boolean => {
+        return formData.username.trim().length > 0
+    };
 
-        if (!user) return;
+    const handleSubmit = async () => {
+        if (!validateForm() || !user) {
+            return;
+        }
 
         if (formData.password && formData.password !== formData.confirmedPassword) {
             return; // Form validation will handle this
@@ -58,8 +70,7 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
                 userId: user.id,
                 ...formData
             });
-
-            onClose();
+            handleClose()
         } catch (error) {
             await handleApiError(error);
         } finally {
@@ -76,8 +87,23 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
                 role: user.role
             });
         }
+        setSubmitting(false);
         clearErrors();
         onClose();
+    };
+
+    const handleInputChange = (field: keyof Omit<UserUpdateDTO, 'userId'>, value: string | number) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+
+        // Clear field error when user starts typing
+        if (fieldErrors[field]) {
+            clearFieldError(field);
+        }
+
+        // Clear general error when user makes changes
+        if (generalError) {
+            clearErrors();
+        }
     };
 
     const passwordsMatch = !formData.password || formData.password === formData.confirmedPassword;
@@ -87,10 +113,21 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
         { value: 'ADMIN', label: 'Διαχειριστής' }
     ];
 
+    const isFormValid = formData.username.trim().length > 0 &&
+        formData.role.trim().length > 0 &&
+        passwordsMatch;
+
     if (!user) return null;
 
     return (
-        <BaseFormModal isOpen={isOpen} onClose={handleClose} title="Επεξεργασία Χρήστη">
+        <BaseFormModal
+            isOpen={isOpen}
+            onClose={handleClose}
+            onSubmit={handleSubmit}
+            title="Επεξεργασία Χρήστη"
+            submitText="Ενημέρωση"
+            isValid={isFormValid}
+        >
             <form onSubmit={handleSubmit} className="space-y-4">
                 {generalError && (
                     <Alert variant="error">
@@ -140,24 +177,6 @@ const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
                     icon={<Shield className="w-4 h-4" />}
                     disabled={submitting}
                 />
-
-                <div className="flex justify-end space-x-3 pt-4">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={handleClose}
-                        disabled={submitting}
-                    >
-                        Ακύρωση
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={submitting || !passwordsMatch || !formData.username}
-                    >
-                        {submitting ? 'Ενημέρωση...' : 'Ενημέρωση'}
-                    </Button>
-                </div>
             </form>
         </BaseFormModal>
     );

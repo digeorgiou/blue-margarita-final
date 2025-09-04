@@ -43,7 +43,6 @@ const UserCard: React.FC<UserCardProps> = ({
                             </h3>
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
                                 <span className="flex items-center">
-                                    {getRoleIcon(user.role)}
                                     <span className="ml-1">{getRoleLabel(user.role)}</span>
                                 </span>
                                 <span>Δημιουργήθηκε: {new Date(user.createdAt).toLocaleDateString('el-GR')}</span>

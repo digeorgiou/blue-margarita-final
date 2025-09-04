@@ -13,4 +13,7 @@ DELETE FROM materials;
 DELETE FROM procedures;
 DELETE FROM categories;
 DELETE FROM locations;
+
+SET FOREIGN_KEY_CHECKS = 0;
 DELETE FROM users;
+SET FOREIGN_KEY_CHECKS = 1;

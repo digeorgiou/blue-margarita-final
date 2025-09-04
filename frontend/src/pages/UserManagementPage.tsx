@@ -148,7 +148,6 @@ const UserManagementPage = () => {
     const handleCreateUser = async (data: UserInsertDTO) => {
         try {
             await userService.createUser(data);
-            setIsCreateModalOpen(false);
             await searchUsers();
             setSuccessMessage({
                 title: 'Επιτυχής Δημιουργία',
@@ -163,8 +162,6 @@ const UserManagementPage = () => {
     const handleUpdateUser = async (data: UserUpdateDTO) => {
         try {
             await userService.updateUser(data);
-            setIsUpdateModalOpen(false);
-            setSelectedUser(null);
             await searchUsers();
             setSuccessMessage({
                 title: 'Επιτυχής Ενημέρωση',
@@ -268,17 +265,13 @@ const UserManagementPage = () => {
                     onSubmit={handleCreateUser}
                 />
 
-                {selectedUser && (
-                    <UserUpdateModal
-                        isOpen={isUpdateModalOpen}
-                        onClose={() => {
-                            setIsUpdateModalOpen(false);
-                            setSelectedUser(null);
-                        }}
-                        onSubmit={handleUpdateUser}
-                        user={selectedUser}
-                    />
-                )}
+
+                <UserUpdateModal
+                    isOpen={isUpdateModalOpen}
+                    onClose={() => {setIsUpdateModalOpen(false)}}
+                    onSubmit={handleUpdateUser}
+                    user={selectedUser}
+                />
 
                 <ConfirmDeleteModal
                     isOpen={isDeleteModalOpen}

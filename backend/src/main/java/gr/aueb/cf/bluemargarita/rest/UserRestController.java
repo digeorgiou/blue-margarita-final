@@ -59,10 +59,10 @@ public class UserRestController {
                     )
             }
     )
-    @PostMapping("/users/register")
+    @PostMapping("/register")
     public ResponseEntity<UserReadOnlyDTO> registerUser(
             @Valid @RequestBody UserInsertDTO userInsertDTO,
-            BindingResult bindingResult) throws ValidationException, EntityAlreadyExistsException {
+            BindingResult bindingResult) throws ValidationException, EntityAlreadyExistsException, EntityNotFoundException {
 
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
@@ -102,7 +102,7 @@ public class UserRestController {
                     )
             }
     )
-    @GetMapping("/users/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<UserReadOnlyDTO> getUserById(@PathVariable Long id,
                                                        Authentication authentication)
             throws EntityNotFoundException, EntityNotAuthorizedException {
@@ -159,8 +159,9 @@ public class UserRestController {
                     )
             }
     )
-    @PutMapping("/users/update")
+    @PutMapping("/update/{id}")
     public ResponseEntity<UserReadOnlyDTO> updateUser(
+            @PathVariable Long id,
             @Valid @RequestBody UserUpdateDTO userUpdateDTO,
             BindingResult bindingResult) throws ValidationException, EntityNotFoundException, EntityAlreadyExistsException {
 
@@ -198,7 +199,7 @@ public class UserRestController {
                     )
             }
     )
-    @DeleteMapping("/users/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) throws EntityNotFoundException {
         userService.deleteUser(id);
