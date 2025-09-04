@@ -25,7 +25,8 @@ including inventory management, sales tracking, customer management, and financi
 ### Technical Features
 - **JWT Authentication**: Secure token-based authentication system
 - **RESTful API**: Well-documented API with OpenAPI/Swagger documentation
-- **Responsive Design**: Modern React frontend with Tailwind CSS
+- **Mobile-Friendly Design**: Fully responsive interface optimized for desktop, tablet, and mobile devices
+- **Modern UI/UX**: Clean, professional interface built with React and Tailwind CSS
 - **Data Validation**: Comprehensive input validation on both frontend and backend
 - **Pagination & Filtering**: Efficient data handling for large datasets
 
@@ -70,7 +71,7 @@ cd bluemargarita
 
 ### 2. Database Setup
 
-#### Create MySQL Database
+#### Create MySQL Database (Run this script in MySQL)
 ```sql
 CREATE DATABASE bluemargaritadb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'springuser'@'localhost' IDENTIFIED BY '12345';
@@ -119,13 +120,13 @@ On the first run, uncomment the following lines in `backend/src/main/resources/a
 
 ```properties
 # Uncomment these lines in application-test.properties for initial setup
-spring.jpa.hibernate.ddl-auto=update
 spring.sql.init.mode=always
 spring.sql.init.data-locations=classpath:sql/delete.sql,classpath:sql/01users.sql,classpath:sql/02locations.sql,\
   classpath:sql/03categories.sql,classpath:sql/04procedures.sql,classpath:sql/05materials.sql,\
   classpath:sql/06suppliers.sql,classpath:sql/07customers.sql,classpath:sql/08products.sql,\
   classpath:sql/09product_material.sql,classpath:sql/10procedure_product.sql, classpath:sql/11sales.sql,\
-  classpath:sql/12purchases.sql,classpath:sql/13expenses.sql,classpath:sql/14purchase_material.sql,classpath:sql/15sale_product.sql
+  classpath:sql/12purchases.sql,classpath:sql/13expenses.sql,classpath:sql/14purchase_material.sql,classpath:sql/15sale_product.sql,\
+  classpath:sql/16tasks.sql
 spring.sql.init.encoding=UTF-8
 spring.sql.init.platform=mysql
 spring.sql.init.continue-on-error=false
@@ -133,7 +134,6 @@ spring.sql.init.continue-on-error=false
 
 After the initial setup with sample data, **comment out these lines again** and use:
 ```properties
-spring.jpa.hibernate.ddl-auto=update
 spring.sql.init.mode=never
 ```
 

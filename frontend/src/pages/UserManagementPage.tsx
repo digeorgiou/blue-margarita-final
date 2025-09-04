@@ -196,9 +196,8 @@ const UserManagementPage = () => {
         <div className="min-h-screen p-4">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                        <h1 className="text-3xl font-bold text-white">Διαχείριση Χρηστών</h1>
                         {isAdmin && (
                             <CustomToggleOption
                                 value={showInactiveOnly}

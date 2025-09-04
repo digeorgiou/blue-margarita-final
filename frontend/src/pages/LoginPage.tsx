@@ -187,6 +187,10 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                             Username: maria<br />
                             Password: 12345
                             </p>
+                            <p className="text-xs">
+                                Ο admin μπορεί να διαχειριστεί χρήστες, να δει κέρδη/ζημιίεςcan καθως επίσης και να δει/διαχειριστεί
+                                soft-deleted αντικείμενα.
+                            </p>
 
                         </div>
                     </div>

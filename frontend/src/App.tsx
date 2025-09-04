@@ -59,8 +59,22 @@ const App: React.FC = () => {
         });
     };
 
+    const isAdminRoute = (page: string): boolean => {
+        return ['profit-losses', 'user-management'].includes(page);
+    };
+
     // Render page content based on currentPage
     const renderPageContent = () => {
+
+        if (isAdminRoute(navigationState.page)) {
+            const userRole = authService.getCurrentUserRole();
+            if (userRole !== 'ADMIN') {
+                // Redirect non-admin users to dashboard
+                setNavigationState({ page: 'dashboard' });
+                return <Dashboard onNavigate={handleNavigation} />;
+            }
+        }
+
         switch (navigationState.page) {
             case 'dashboard':
                 return <Dashboard onNavigate={handleNavigation} />;

@@ -13,7 +13,8 @@ import {
     ClipboardPenLine,
     Gem,
     Truck, Edit,
-    Settings, TrendingUp
+    Settings, TrendingUp,
+    CircleUserRound
 } from 'lucide-react';
 import { GiDiamondRing, GiPayMoney } from 'react-icons/gi';
 import { FaEuroSign } from "react-icons/fa6";
@@ -105,10 +106,14 @@ const Header: React.FC<HeaderProps> = ({
             'profit-losses' : {
                 title: "Προβολή Κερδών/Ζημιών",
                 icon: <TrendingUp className="w-9 h-9" />
-            }
+            },
+            'user-management' : {
+            title: "Διαχείριση Χρηστών",
+                icon: <CircleUserRound className="w-9 h-9" />
+        }
         };
         return pageInfo[currentPage || 'dashboard'] || {
-            title: 'Blue Margarita',
+            title: 'Αρχική Σελίδα',
             icon: <Home className="w-9 h-9" />,
             description: 'Welcome to your business dashboard'
         };

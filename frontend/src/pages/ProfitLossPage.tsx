@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, CustomCard } from '../components/ui/common';
+import { CustomDateInput } from "../components/ui/inputs";
 import { profitLossService } from '../services/profitLossService';
 import { ProfitLossReportDTO, ProfitLossPageInitData } from '../types/api/profitLossInterface.ts'
 import { useFormErrorHandler } from '../hooks/useFormErrorHandler';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Search, ChevronDown, ChevronUp  } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Search, ChevronDown, ChevronUp, Calendar  } from 'lucide-react';
 import { getExpenseTypeDisplayName } from "../utils/EnumUtils.ts";
 
 const ProfitLossPage = () => {
@@ -410,37 +411,28 @@ const ProfitLossPage = () => {
                 <CustomCard>
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Από :
-                                </label>
-                                <input
-                                    type="date"
-                                    value={dateFrom}
-                                    onChange={(e) => setDateFrom(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    max={dateTo || undefined}
-                                />
-                            </div>
+                            <CustomDateInput
+                                label="Από"
+                                value={dateFrom}
+                                onChange={setDateFrom}
+                                icon={<Calendar className="w-5 h-5 text-blue-500" />}
+                                required
+                            />
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Έως:
-                                </label>
-                                <input
-                                    type="date"
-                                    value={dateTo}
-                                    onChange={(e) => setDateTo(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    min={dateFrom || undefined}
-                                />
-                            </div>
+                            <CustomDateInput
+                                label="Έως"
+                                value={dateTo}
+                                onChange={setDateTo}
+                                icon={<Calendar className="w-5 h-5 text-blue-500" />}
+                                required
+                            />
 
                             <div>
                                 <Button
                                     onClick={handleGenerateCustomReport}
                                     disabled={!dateFrom || !dateTo || customReportLoading}
                                     className="w-full flex items-center justify-center space-x-2"
+                                    variant="primary"
                                 >
                                     {customReportLoading ? (
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

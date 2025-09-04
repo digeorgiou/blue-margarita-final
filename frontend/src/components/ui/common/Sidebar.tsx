@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {SidebarProps, NavigationItem} from "../../../types/components/common-types.ts";
 import {
     ShoppingCart,
@@ -13,9 +13,11 @@ import {
     Receipt,
     TrendingUp,
     Settings,
+    CircleUserRound
 } from 'lucide-react';
 import { IoHammerOutline } from "react-icons/io5";
 import { GiDiamondRing } from "react-icons/gi";
+import { authService } from "../../../services/authService";
 
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
@@ -26,7 +28,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
         return window.innerWidth < 1024;
     });
 
-    const navigationItems: NavigationItem[] = [
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const userRole = authService.getCurrentUserRole();
+        setIsAdmin(userRole === 'ADMIN');
+    }, []);
+
+    const allNavigationItems: NavigationItem[] = [
         {
             id: 'dashboard',
             label: 'Αρχική',
@@ -94,19 +103,24 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
             icon: <Receipt className="w-5 h-5" />,
             href: 'expenses'
         },
-        {
-            id: 'profit-losses',
-            label: 'Κέρδη/Ζημίες',
-            icon: <TrendingUp className="w-5 h-5" />,
-            href: 'profit-losses'
-        },
-        {
-            id: 'user-management',
-            label: 'Χρήστες',
-            icon: <Users className="w-5 h-5"/>,
-            href: 'user-management'
-        }
+        // ADMIN ONLY ITEMS - Only show to admin users
+        ...(isAdmin ? [
+            {
+                id: 'profit-losses',
+                label: 'Κέρδη/Ζημίες',
+                icon: <TrendingUp className="w-5 h-5" />,
+                href: 'profit-losses'
+            },
+            {
+                id: 'user-management',
+                label: 'Χρήστες',
+                icon: <CircleUserRound className="w-5 h-5" />,
+                href: 'user-management'
+            }
+        ] : [])
     ];
+
+    const navigationItems = allNavigationItems;
 
     const handleNavigation = (page: string) => {
         onNavigate(page);
