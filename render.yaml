@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: bluemargarita-backend
+    env: java
+    buildCommand: cd backend && ./gradlew clean build -x test
+    startCommand: cd backend && java -Dserver.port=$PORT -jar build/libs/*.jar
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bluemargarita-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://bluemargarita-frontend.onrender.com
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+
+databases:
+  - name: bluemargarita-db
+    databaseName: bluemargaritadb
+    user: bluemargarita_user

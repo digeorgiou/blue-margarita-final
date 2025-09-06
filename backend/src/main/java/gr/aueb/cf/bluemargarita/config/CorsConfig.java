@@ -32,21 +32,14 @@ public class CorsConfig implements WebMvcConfigurer {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow specific origins - mainly for production
+        // Support both development and production origins
         configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins));
 
-        // Allow all HTTP methods needed for REST API
         configuration.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
-
-        // Allow all headers
         configuration.setAllowedHeaders(List.of("*"));
-
-        // Allow credentials (important for JWT tokens)
         configuration.setAllowCredentials(true);
-
-        // Cache preflight response for 1 hour
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

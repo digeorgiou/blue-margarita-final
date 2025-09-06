@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BlueMargarita - Jewelry Business Management System
 
 A comprehensive full-stack web application for managing jewelry business operations, 
@@ -212,3 +213,7 @@ bluemargarita/
 - Passwords are encrypted with BCrypt
 - Input validation on both frontend and backend
 - CORS properly configured for allowed origins
+=======
+# blue-margarita-render
+a web app for managing sales, purchases, products , customers etc. of a small jewelry business. Developed using spring boot and react
+>>>>>>> 73c32595235db51b9c04d0b202863a2a37b4d1ab
