@@ -6,9 +6,7 @@ services:
     startCommand: cd backend && java -Dserver.port=$PORT -jar build/libs/*.jar
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: bluemargarita-db
-          property: externalConnectionString
+        value: jdbc:postgresql://bluemargarita_user:7WrCF4uzAhDQVSNOIRnGxIoqCcYN6bCo@dpg-d2ucdb0gjchc73c4cve0-a.frankfurt-postgres.render.com:5432/bluemargaritadb
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
