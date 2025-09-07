@@ -91,7 +91,7 @@ public class SecurityConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder() {
         // BCrypt with strength 11 for good security vs performance balance
-        return new BCryptPasswordEncoder(11);
+        return new BCryptPasswordEncoder(10);
     }
 
     @Bean
