@@ -5,20 +5,6 @@ services:
     buildCommand: cd backend && ./gradlew clean build -x test
     startCommand: cd backend && java -Dserver.port=$PORT -jar build/libs/*.jar
     envVars:
-      - key: DB_HOST
-        value: dpg-d2ucdb0gjchc73c4cve0-a.frankfurt-postgres.render.com
-      - key: DB_PORT
-        value: 5432
-      - key: DB_NAME
-        value: bluemargaritadb
-      - key: DB_USERNAME
-        value: bluemargarita_user
-      - key: DB_PASSWORD
-        value: 7WrCF4uzAhDQVSNOIRnGxIoqCcYN6bCo
-      - key: JWT_SECRET_KEY
-        value: myBluemargaritaSecretKey2024!@#$%^&*()_+1234567890
-      - key: CORS_ORIGINS
-        value: https://bluemargarita-frontend.onrender.com
       - key: SPRING_PROFILES_ACTIVE
         value: production
 
