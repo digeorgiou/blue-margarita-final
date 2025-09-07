@@ -56,7 +56,7 @@ public class AuthenticationRestController {
             }
     )
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponseDTO> authenticate(
+    public ResponseEntity<?> authenticate(
             @Valid @RequestBody AuthenticationRequestDTO authenticationRequestDTO,
             BindingResult bindingResult) {
 
@@ -68,7 +68,11 @@ public class AuthenticationRestController {
             if (bindingResult.hasErrors()) {
                 log.warn("Authentication failed due to validation errors for username: {}",
                         authenticationRequestDTO.username());
-                return ResponseEntity.badRequest().build();
+
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Validation failed");
+                errorResponse.put("message", "Invalid request data");
+                return ResponseEntity.badRequest().body(errorResponse);
             }
 
             // Authenticate user
@@ -80,12 +84,20 @@ public class AuthenticationRestController {
         } catch (EntityNotAuthorizedException e) {
             log.warn("Authentication failed for username: {} - {}",
                     authenticationRequestDTO.username(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Authentication failed");
+            errorResponse.put("message", "Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
 
         } catch (Exception e) {
             log.error("Unexpected error during authentication for username: {}",
                     authenticationRequestDTO.username(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal server error");
+            errorResponse.put("message", "An unexpected error occurred");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
