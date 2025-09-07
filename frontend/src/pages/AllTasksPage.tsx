@@ -224,7 +224,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = () => {
                         <TaskFilterPanel
                             statusFilter={statusFilter}
                             onStatusFilterChange={(value) => {
-                                setStatusFilter(value);
+                                setStatusFilter(String(value));
                                 setCurrentPage(0); // Reset to first page
                             }}
                             dateFromFilter={dateFromFilter}

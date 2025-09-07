@@ -11,7 +11,6 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                                                                                      selectedCategoryId,
                                                                                      onCategoryIdChange,
                                                                                      selectedIssueType,
-                                                                                     onIssueTypeChange,
                                                                                      thresholdPercentage,
                                                                                      onThresholdPercentageChange,
                                                                                      categories,
@@ -79,7 +78,7 @@ const MispricedProductFilterPanel: React.FC<MispricedProductFilterPanelProps> = 
                     <CustomSelect
                         label="Τύπος Προβλήματος"
                         value={selectedIssueType || ''}
-                        onChange={(value) => onIssueTypeChange(value || undefined)}
+                        onChange={(value) => onCategoryIdChange(value ? Number(value) : undefined)}
                         options={issueTypeOptions}
                         icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
                         placeholder=""

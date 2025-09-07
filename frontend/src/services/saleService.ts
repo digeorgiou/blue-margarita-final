@@ -1,9 +1,10 @@
 import { authService } from './authService';
 import { ApiErrorHandler } from '../utils/apiErrorHandler';
 import {
-    SaleDetailedViewDTO,
     PaymentMethodDTO,
 } from '../types/api/recordSaleInterface';
+import { SaleDetailedViewDTO } from "../types/api/saleInterface.ts";
+import { PaymentMethod, getPaymentMethodLabel } from "../types/api/dashboardInterface.ts";
 
 import { SaleReadOnlyDTO, SaleUpdateDTO, PaginatedFilteredSalesWithSummary, SaleFilters } from '../types/api/saleInterface.ts'
 

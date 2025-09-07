@@ -23,8 +23,10 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          mui: ['@mui/material', '@mui/icons-material'],
           routing: ['react-router-dom'],
+          icons: ['lucide-react', 'react-icons'],
+          forms: ['react-hook-form', '@hookform/resolvers'],
+          utils: ['axios', 'yup']
         },
       },
     },

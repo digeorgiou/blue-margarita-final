@@ -4,7 +4,7 @@ import {
     StockManagementDTO,
     StockUpdateDTO,
     StockUpdateResultDTO,
-    StockManagementFilters, StockLimitUpdateDTO
+    StockManagementFilters, StockLimitUpdateDTO, StockLimitUpdateResultDTO
 } from '../types/api/stockManagementInterface';
 import { ProductSearchResultDTO } from '../types/api/productInterface';
 import { Paginated } from '../types/api/dashboardInterface';

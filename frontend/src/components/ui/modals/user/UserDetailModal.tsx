@@ -25,7 +25,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
     const roleInfo = getRoleInfo(user.role);
 
     return (
-        <BaseFormModal isOpen={isOpen} onClose={onClose} title="Στοιχεία Χρήστη">
+        <BaseFormModal isOpen={isOpen} onClose={onClose} title="Στοιχεία Χρήστη" onSubmit={async() => {}}>
             <div className="space-y-6">
                 {/* Basic Info */}
                 <div className="bg-gray-50 rounded-lg p-4">

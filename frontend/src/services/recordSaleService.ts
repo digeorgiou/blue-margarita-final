@@ -3,8 +3,9 @@ import {
     CartItemDTO, PriceCalculationRequestDTO, PriceCalculationResponseDTO,
     ProductSearchResultDTO,
     RecordPageDataDTO,
-    RecordSaleRequestDTO, SaleDetailedViewDTO
+    RecordSaleRequestDTO
 } from "../types/api/recordSaleInterface.ts";
+import { SaleDetailedViewDTO } from "../types/api/saleInterface.ts";
 import {CustomerSearchResultDTO} from "../types/api/customerInterface.ts";
 
 const API_BASE_URL = "/api/record-sale"
