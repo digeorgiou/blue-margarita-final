@@ -17,9 +17,7 @@ const decodeJwt = (token: string): any => {
     }
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-console.log('🔍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-console.log('🔍 Final API_BASE_URL:', API_BASE_URL);
+const API_BASE_URL = 'https://blue-margarita-final.onrender.com/api';
 
 class AuthService {
     private getStoredToken(): string | null {
