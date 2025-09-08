@@ -4,6 +4,7 @@ import gr.aueb.cf.bluemargarita.authentication.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -48,6 +49,7 @@ public class SecurityConfiguration {
                 // Define authorization rules
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints - no authentication required
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/authenticate").permitAll()
                         .requestMatchers("/api/users/register").permitAll()
 

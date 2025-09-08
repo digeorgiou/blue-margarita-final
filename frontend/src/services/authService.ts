@@ -18,8 +18,8 @@ const decodeJwt = (token: string): any => {
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-console.log('Environment variable VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-console.log('Final API_BASE_URL being used:', API_BASE_URL);
+console.log('🔍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+console.log('🔍 Final API_BASE_URL:', API_BASE_URL);
 
 class AuthService {
     private getStoredToken(): string | null {
