@@ -26,7 +26,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>,
     /**
      * Simple method to sum all expenses between dates
      */
-    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE " +
+    @Query("SELECT COALESCE(SUM(e.amount), 0.0) FROM Expense e WHERE " +
             "e.expenseDate >= :startDate AND e.expenseDate <= :endDate")
     BigDecimal sumExpensesBetweenDates(@Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate);
@@ -42,24 +42,21 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>,
 
 
     @Query("SELECT DISTINCT e.expenseType FROM Expense e WHERE " +
-            "(:dateFrom IS NULL OR e.expenseDate >= :dateFrom) AND " +
-            "(:dateTo IS NULL OR e.expenseDate <= :dateTo) " +
+            "e.expenseDate >= :dateFrom AND e.expenseDate <= :dateTo " +
             "ORDER BY e.expenseType")
     List<ExpenseType> findDistinctExpenseTypesByDateRange(@Param("dateFrom") LocalDate dateFrom,
                                                           @Param("dateTo") LocalDate dateTo);
 
-    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE " +
+    @Query("SELECT COALESCE(SUM(e.amount), 0.0) FROM Expense e WHERE " +
             "e.expenseType = :expenseType AND " +
-            "(:dateFrom IS NULL OR e.expenseDate >= :dateFrom) AND " +
-            "(:dateTo IS NULL OR e.expenseDate <= :dateTo)")
+            "e.expenseDate >= :dateFrom AND e.expenseDate <= :dateTo")
     BigDecimal sumAmountByTypeAndDateRange(@Param("expenseType") ExpenseType expenseType,
                                            @Param("dateFrom") LocalDate dateFrom,
                                            @Param("dateTo") LocalDate dateTo);
 
     @Query("SELECT COUNT(e) FROM Expense e WHERE " +
             "e.expenseType = :expenseType AND " +
-            "(:dateFrom IS NULL OR e.expenseDate >= :dateFrom) AND " +
-            "(:dateTo IS NULL OR e.expenseDate <= :dateTo)")
+            "e.expenseDate >= :dateFrom AND e.expenseDate <= :dateTo")
     Long countByTypeAndDateRange(@Param("expenseType") ExpenseType expenseType,
                                  @Param("dateFrom") LocalDate dateFrom,
                                  @Param("dateTo") LocalDate dateTo);

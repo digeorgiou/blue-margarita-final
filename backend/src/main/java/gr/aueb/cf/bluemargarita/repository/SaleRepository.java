@@ -21,7 +21,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     @Query("SELECT COUNT(s) FROM Sale s WHERE s.location.id = :locationId")
     Integer countByLocationId(@Param("locationId") Long locationId);
 
-    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.location.id = :locationId")
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0.0) FROM Sale s WHERE s.location.id = :locationId")
     BigDecimal sumRevenueByLocationId(@Param("locationId") Long locationId);
 
     @Query("SELECT MAX(s.saleDate) FROM Sale s WHERE s.location.id = :locationId")
@@ -38,7 +38,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
             @Param("endDate") LocalDate endDate
     );
 
-    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.location.id = :locationId AND s.saleDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0.0) FROM Sale s WHERE s.location.id = :locationId AND s.saleDate BETWEEN :startDate AND :endDate")
     BigDecimal sumRevenueByLocationIdAndDateRange(
             @Param("locationId") Long locationId,
             @Param("startDate") LocalDate startDate,
@@ -52,7 +52,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     @Query("SELECT COUNT(s) FROM Sale s WHERE s.customer.id = :customerId")
     Integer countByCustomerId(@Param("customerId") Long customerId);
 
-    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.customer.id = :customerId")
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0.0) FROM Sale s WHERE s.customer.id = :customerId")
     BigDecimal sumRevenueByCustomerId(@Param("customerId") Long customerId);
 
     @Query("SELECT MAX(s.saleDate) FROM Sale s WHERE s.customer.id = :customerId")
@@ -67,7 +67,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
                                           @Param("startDate") LocalDate startDate,
                                           @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0.0) FROM Sale s WHERE s.customer.id = :customerId AND s.saleDate BETWEEN :startDate AND :endDate")
     BigDecimal sumRevenueByCustomerIdAndDateRange(@Param("customerId") Long customerId,
                                                   @Param("startDate") LocalDate startDate,
                                                   @Param("endDate") LocalDate endDate);
@@ -79,7 +79,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long>,
     @Query("SELECT COUNT(s) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
     Integer countSalesByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT COALESCE(SUM(s.finalTotalPrice), 0.0) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")
     BigDecimal sumRevenueByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     @Query("SELECT AVG(s.finalTotalPrice) FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate")

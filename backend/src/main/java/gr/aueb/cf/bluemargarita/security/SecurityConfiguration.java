@@ -63,6 +63,18 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/suppliers/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/dashboard/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/tasks/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/profit-loss/**").hasAnyRole("USER", "ADMIN")
+
+                        // Add any other missing endpoints
+                        .requestMatchers("/api/products/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/sales/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/purchases/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/expenses/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/stock-management/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/locations/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/categories/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/materials/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/procedures/**").hasAnyRole("USER", "ADMIN")
 
                         // All other requests require authentication
                         .anyRequest().authenticated()
