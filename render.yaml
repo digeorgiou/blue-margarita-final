@@ -8,6 +8,14 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: production
 
+  - type: static
+    name: bluemargarita
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+
 databases:
   - name: bluemargarita-db
     databaseName: bluemargaritadb

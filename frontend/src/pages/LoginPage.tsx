@@ -171,7 +171,7 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         </Button>
                     </form>
                 </Card>
-                
+
             </div>
         </div>
     );
