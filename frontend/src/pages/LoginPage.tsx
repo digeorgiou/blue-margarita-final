@@ -171,31 +171,7 @@ const Login: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         </Button>
                     </form>
                 </Card>
-
-                {/* Help Card */}
-                <Card className="text-center">
-                    <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-gray-900">Χρειάζεστε βοήθεια?</h3>
-                        <div className="space-y-2 text-sm text-gray-600">
-                            <p>
-                                <strong>Demo Admin User:</strong><br />
-                                Username: admin<br />
-                                Password: 12345
-                            </p>
-                            <p>
-                            <strong>Demo Simple User:</strong><br />
-                            Username: maria<br />
-                            Password: 12345
-                            </p>
-                            <p className="text-xs">
-                                Ο admin μπορεί να διαχειριστεί χρήστες, να δει κέρδη/ζημιίεςcan καθως επίσης και να δει/διαχειριστεί
-                                soft-deleted αντικείμενα.
-                            </p>
-
-                        </div>
-                    </div>
-                </Card>
-
+                
             </div>
         </div>
     );
