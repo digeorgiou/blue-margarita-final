@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
@@ -101,6 +102,14 @@ public class AuthenticationRestController {
             errorResponse.put("message", "An unexpected error occurred");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+
+    @GetMapping("/test-password")
+    public String testPassword() {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(10);
+        String hash = encoder.encode("12345");
+        boolean matches = encoder.matches("12345", hash);
+        return "Generated hash: " + hash + " - Matches: " + matches;
     }
 
     @Operation(
