@@ -105,6 +105,10 @@ class AuthService {
         try {
             console.log('Attempting authentication for user:', credentials.username);
 
+            console.log('API_BASE_URL:', API_BASE_URL);
+            console.log('Full URL:', `${API_BASE_URL}/auth/authenticate`);
+            console.log('Headers being sent:', this.getAuthHeaders());
+
             const response = await fetch(`${API_BASE_URL}/auth/authenticate`, {
                 method: 'POST',
                 headers: this.getAuthHeaders(),
