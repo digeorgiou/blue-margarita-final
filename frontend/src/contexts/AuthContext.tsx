@@ -25,6 +25,17 @@ const decodeJwt = (token: string): any => {
     }
 };
 
+// Simple token expiration check
+const isTokenExpired = (token: string): boolean => {
+    try {
+        const decoded = decodeJwt(token);
+        if (!decoded?.exp) return true;
+        return decoded.exp < Date.now() / 1000;
+    } catch {
+        return true;
+    }
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<UserReadOnly | null>(null);
     const [token, setToken] = useState<string | null>(null);
@@ -36,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (!decoded) return null;
 
         return {
-            id: decoded.userId || decoded.sub, // Check both userId and sub (subject) claims
+            id: decoded.userId || decoded.sub,
             username: decoded.username || decoded.sub,
             role: decoded.role || 'USER',
             isActive: true,
@@ -54,13 +65,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             try {
                 const storedToken = authService.getToken();
                 if (storedToken) {
+                    // Check if token is expired first
+                    if (isTokenExpired(storedToken)) {
+                        console.log('Token expired, clearing...');
+                        await authService.logout();
+                        return;
+                    }
+
                     const isValid = await authService.validateToken();
                     if (isValid) {
                         setToken(storedToken);
                         const userInfo = extractUserFromToken(storedToken);
                         setUser(userInfo);
                     } else {
-                        // Token is invalid, clear it
                         await authService.logout();
                     }
                 }
