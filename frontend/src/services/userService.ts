@@ -7,7 +7,7 @@ import {
 } from "../types/api/userInterface.ts";
 import { Paginated } from "../types/api/dashboardInterface.ts";
 
-const API_BASE_URL = '/api/users';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/users';
 
 class UserService {
 

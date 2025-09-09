@@ -9,7 +9,7 @@ import {
 import { ProductSearchResultDTO } from '../types/api/productInterface';
 import { Paginated } from '../types/api/dashboardInterface';
 
-const API_BASE_URL = '/api/stock-management';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/stock-management';
 
 class StockManagementService {
 

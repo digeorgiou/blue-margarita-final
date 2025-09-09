@@ -10,7 +10,7 @@ import {
 } from "../types/api/materialInterface.ts";
 import { Paginated } from "../types/api/dashboardInterface.ts";
 
-const API_BASE_URL = '/api/materials';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/materials';
 
 class MaterialService {
 

@@ -12,7 +12,7 @@ import {
 } from "../types/api/productInterface.ts";
 import {MispricedProductAlertDTO, Paginated} from "../types/api/dashboardInterface.ts";
 
-const API_BASE_URL = '/api/products';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/products';
 
 class ProductService {
 

@@ -9,7 +9,7 @@ import { PaymentMethod, getPaymentMethodLabel } from "../types/api/dashboardInte
 import { SaleReadOnlyDTO, SaleUpdateDTO, PaginatedFilteredSalesWithSummary, SaleFilters } from '../types/api/saleInterface.ts'
 
 
-const API_BASE_URL = '/api/sales';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/sales';
 
 class SaleService {
 

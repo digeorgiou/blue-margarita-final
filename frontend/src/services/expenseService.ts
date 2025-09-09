@@ -9,7 +9,7 @@ import {
     ExpenseTypeBreakdownDTO,
 } from '../types/api/expenseInterface';
 
-const API_BASE_URL = '/api/expense-management';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/expense-management';
 
 class ExpenseService {
 

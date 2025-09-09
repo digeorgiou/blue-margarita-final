@@ -9,7 +9,7 @@ import {
 } from "../types/api/purchaseInterface.ts";
 
 
-const API_BASE_URL = '/api/purchases';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/purchases';
 
 class PurchaseService {
 

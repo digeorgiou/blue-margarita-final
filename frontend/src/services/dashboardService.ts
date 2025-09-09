@@ -15,7 +15,7 @@ import {
     SalesSummaryDTO
 } from "../types/api/dashboardInterface.ts";
 
-const API_BASE_URL = '/api/dashboard';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/dashboard';
 
 class DashboardService {
     private getAuthHeaders(): HeadersInit {

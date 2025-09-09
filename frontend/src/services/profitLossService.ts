@@ -2,7 +2,7 @@ import { authService } from './authService';
 import { ProfitLossReportDTO, ProfitLossPageInitData} from "../types/api/profitLossInterface.ts";
 import { ApiErrorHandler } from '../utils/apiErrorHandler';
 
-const API_BASE_URL = '/api/profit-loss';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/profit-loss';
 
 class ProfitLossService {
 

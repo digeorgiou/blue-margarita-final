@@ -12,7 +12,7 @@ import {
     PurchaseDetailedViewDTO
 } from "../types/api/purchaseInterface.ts";
 
-const API_BASE_URL = "/api/record-purchase";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/record-purchase';
 
 class RecordPurchaseService {
 

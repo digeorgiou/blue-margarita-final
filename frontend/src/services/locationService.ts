@@ -9,7 +9,7 @@ import {
 } from "../types/api/locationInterface.ts";
 import { Paginated } from "../types/api/dashboardInterface.ts";
 
-const API_BASE_URL = '/api/locations';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/locations';
 
 class LocationService {
 

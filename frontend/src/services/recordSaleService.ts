@@ -8,7 +8,7 @@ import {
 import { SaleDetailedViewDTO } from "../types/api/saleInterface.ts";
 import {CustomerSearchResultDTO} from "../types/api/customerInterface.ts";
 
-const API_BASE_URL = "/api/record-sale"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/record-sale';
 
 class RecordSaleService {
 

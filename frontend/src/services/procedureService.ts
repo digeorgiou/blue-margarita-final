@@ -1,5 +1,3 @@
-// Updated procedureService.ts - Following CustomerService pattern with ApiErrorHandler
-
 import { authService } from './authService';
 import { ApiErrorHandler } from '../utils/apiErrorHandler';
 import {
@@ -12,7 +10,7 @@ import {
 import { ProductUsageDTO} from "../types/api/materialInterface.ts";
 import { Paginated } from "../types/api/dashboardInterface.ts";
 
-const API_BASE_URL = '/api/procedures';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/procedures';
 
 class ProcedureService {
 
